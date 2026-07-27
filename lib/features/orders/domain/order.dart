@@ -18,6 +18,8 @@ class AppOrder with _$AppOrder {
     required double price,
     required double total,
     @JsonKey(defaultValue: 'pending') @Default('pending') String status,
+    @Default(0.0) double paidAmount,
+    @Default(false) bool isCredit,
     String? notes,
     @TimestampConverter() required DateTime createdAt,
   }) = _AppOrder;

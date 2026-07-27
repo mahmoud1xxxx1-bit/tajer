@@ -26,6 +26,8 @@ class OrderRepository {
             data['customerId'] = data['customerId']?.toString() ?? '';
             data['customerName'] = data['customerName']?.toString() ?? '';
             data['status'] = data['status']?.toString() ?? 'pending';
+            data['paidAmount'] = (data['paidAmount'] ?? 0.0).toDouble();
+            data['isCredit'] = data['isCredit'] ?? false;
             return AppOrder.fromJson(data);
           },
           toFirestore: (order, _) => order.toJson(),
@@ -53,6 +55,7 @@ class OrderRepository {
 
       final currentTotalPurchases = (customerDoc.data()?['totalPurchases'] as num?)?.toDouble() ?? 0.0;
       final currentOrderCount = customerDoc.data()?['orderCount'] as int? ?? 0;
+      final currentTotalDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
 
       // Update product inventory
       transaction.update(productRef, {
@@ -61,9 +64,11 @@ class OrderRepository {
       });
 
       // Update customer stats
+      final debtIncrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
       transaction.update(customerRef, {
         'totalPurchases': currentTotalPurchases + order.total,
         'orderCount': currentOrderCount + 1,
+        'totalDebt': currentTotalDebt + debtIncrease,
         'lastPurchaseDate': FieldValue.serverTimestamp(),
       });
 
@@ -95,11 +100,16 @@ class OrderRepository {
       if (customerDoc.exists) {
         final currentTotalPurchases = (customerDoc.data()?['totalPurchases'] as num?)?.toDouble() ?? 0.0;
         final currentOrderCount = customerDoc.data()?['orderCount'] as int? ?? 0;
+        final currentTotalDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
+        
         // Revert customer stats
         final newOrderCount = currentOrderCount - 1;
+        final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
+        
         transaction.update(customerRef, {
           'totalPurchases': (currentTotalPurchases - order.total).clamp(0.0, double.infinity),
           'orderCount': newOrderCount < 0 ? 0 : newOrderCount,
+          'totalDebt': (currentTotalDebt - debtDecrease).clamp(0.0, double.infinity),
           'updatedAt': FieldValue.serverTimestamp(),
         });
       }

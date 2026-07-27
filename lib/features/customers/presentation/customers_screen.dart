@@ -4,6 +4,8 @@ import '../data/customer_repository.dart';
 import 'add_customer_dialog.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../../core/theme/glass_card.dart';
+import '../../../core/services/pdf_service.dart';
+import '../../orders/data/order_repository.dart';
 
 class CustomersScreen extends ConsumerWidget {
   const CustomersScreen({super.key});
@@ -110,6 +112,15 @@ class CustomersScreen extends ConsumerWidget {
                               fontSize: 16,
                             ),
                           ),
+                          if (customer.totalDebt > 0)
+                            Text(
+                              'دين: ${customer.totalDebt} ريال',
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
                           Container(
                             margin: const EdgeInsets.only(top: 4),
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -160,6 +171,17 @@ class CustomersScreen extends ConsumerWidget {
                                 ],
                               ),
                             );
+                          } else if (value == 'print') {
+                            final orders = ref.read(ordersStreamProvider).value ?? [];
+                            try {
+                              await PdfService.printCustomerStatement(customer, orders);
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('خطأ في الطباعة: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
+                                );
+                              }
+                            }
                           }
                         },
                         itemBuilder: (context) => [
@@ -170,6 +192,16 @@ class CustomersScreen extends ConsumerWidget {
                                 Icon(Icons.edit, size: 20),
                                 SizedBox(width: 8),
                                 Text('تعديل', style: TextStyle(fontFamily: 'Tajawal')),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'print',
+                            child: Row(
+                              children: [
+                                Icon(Icons.print_outlined, size: 20),
+                                SizedBox(width: 8),
+                                Text('طباعة كشف حساب', style: TextStyle(fontFamily: 'Tajawal')),
                               ],
                             ),
                           ),

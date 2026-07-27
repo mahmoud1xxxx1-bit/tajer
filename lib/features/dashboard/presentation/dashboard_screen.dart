@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../products/presentation/products_screen.dart';
 import '../../customers/presentation/customers_screen.dart';
 import '../../orders/presentation/orders_screen.dart';
+import '../../reports/presentation/reports_screen.dart';
 import '../../orders/data/order_repository.dart';
 import '../../products/data/product_repository.dart';
 import '../../../core/theme/glass_card.dart';
@@ -30,6 +31,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       const OrdersScreen(),
       const ProductsScreen(),
       const CustomersScreen(),
+      const ReportsScreen(),
     ];
 
     return Scaffold(
@@ -64,6 +66,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
             icon: Icon(Icons.people_outline),
             selectedIcon: Icon(Icons.people),
             label: 'العملاء',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.bar_chart_outlined),
+            selectedIcon: Icon(Icons.bar_chart),
+            label: 'التقارير',
           ),
         ],
       ),
@@ -189,6 +196,14 @@ class DashboardHome extends ConsumerWidget {
                       color: Theme.of(context).colorScheme.secondary,
                       onTap: () {
                         onNavigateToTab(3);
+                      },
+                    ),
+                    _QuickAction(
+                      icon: Icons.bar_chart_rounded,
+                      label: 'التقارير',
+                      color: Colors.teal,
+                      onTap: () {
+                        onNavigateToTab(4);
                       },
                     ),
                   ],

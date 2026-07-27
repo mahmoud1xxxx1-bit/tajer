@@ -20,12 +20,15 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
   String? _selectedProductId;
   final _quantityController = TextEditingController();
   final _notesController = TextEditingController();
+  final _paidAmountController = TextEditingController();
+  bool _isCredit = false;
   bool _isLoading = false;
 
   @override
   void dispose() {
     _quantityController.dispose();
     _notesController.dispose();
+    _paidAmountController.dispose();
     super.dispose();
   }
 
@@ -57,6 +60,18 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
         throw Exception('الكمية المطلوبة غير متوفرة في المخزون');
       }
 
+      double paidAmount = total;
+      if (_isCredit) {
+        if (_paidAmountController.text.isNotEmpty) {
+          paidAmount = double.tryParse(_paidAmountController.text) ?? 0.0;
+        } else {
+          paidAmount = 0.0;
+        }
+        if (paidAmount > total) {
+          throw Exception('المبلغ المدفوع لا يمكن أن يكون أكبر من الإجمالي');
+        }
+      }
+
       final newOrder = AppOrder(
         id: const Uuid().v4(),
         merchantId: user.uid,
@@ -67,6 +82,8 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
         quantity: quantity,
         price: selectedProduct.price,
         total: total,
+        paidAmount: paidAmount,
+        isCredit: _isCredit,
         notes: _notesController.text.trim(),
         createdAt: DateTime.now(),
       );
@@ -152,6 +169,36 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
               ),
               maxLines: 2,
             ),
+            const SizedBox(height: 16),
+
+            // Credit / Debt Section
+            SwitchListTile(
+              title: const Text('بيع آجل (دين)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              subtitle: const Text('تسجيل الطلب كدين على العميل', style: TextStyle(fontFamily: 'Tajawal')),
+              value: _isCredit,
+              onChanged: (val) {
+                setState(() {
+                  _isCredit = val;
+                  if (!val) {
+                    _paidAmountController.clear();
+                  }
+                });
+              },
+            ),
+            
+            if (_isCredit) ...[
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _paidAmountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'المبلغ المدفوع مقدماً (اختياري)',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.payments_outlined),
+                ),
+              ),
+            ],
+            
             const SizedBox(height: 24),
 
             ElevatedButton(

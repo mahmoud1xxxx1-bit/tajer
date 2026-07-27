@@ -4,6 +4,7 @@ import '../data/order_repository.dart';
 import 'add_order_dialog.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../../core/theme/glass_card.dart';
+import '../../../core/services/pdf_service.dart';
 
 class OrdersScreen extends ConsumerWidget {
   const OrdersScreen({super.key});
@@ -90,6 +91,19 @@ class OrdersScreen extends ConsumerWidget {
                             Text('${order.productName} (x${order.quantity})', style: const TextStyle(fontFamily: 'Tajawal')),
                           ],
                         ),
+                        if (order.isCredit) ...[
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(Icons.money_off, size: 14, color: Colors.red),
+                              const SizedBox(width: 4),
+                              Text(
+                                'بيع آجل (دُفع: ${order.paidAmount} / الباقي: ${order.total - order.paidAmount})',
+                                style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -165,6 +179,16 @@ class OrdersScreen extends ConsumerWidget {
                                 );
                               }
                             }
+                          } else if (value == 'print') {
+                            try {
+                              await PdfService.printInvoice(order);
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('خطأ في الطباعة: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
+                                );
+                              }
+                            }
                           }
                         },
                         itemBuilder: (context) => [
@@ -187,6 +211,17 @@ class OrdersScreen extends ConsumerWidget {
                           const PopupMenuItem(
                             value: 'status_cancelled',
                             child: Text('إلغاء الطلب 🔴', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                          ),
+                          const PopupMenuDivider(),
+                          const PopupMenuItem(
+                            value: 'print',
+                            child: Row(
+                              children: [
+                                Icon(Icons.print_outlined, size: 20),
+                                SizedBox(width: 8),
+                                Text('طباعة الفاتورة PDF', style: TextStyle(fontFamily: 'Tajawal')),
+                              ],
+                            ),
                           ),
                           const PopupMenuDivider(),
                           const PopupMenuItem(
