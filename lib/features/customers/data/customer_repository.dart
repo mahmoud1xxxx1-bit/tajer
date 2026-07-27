@@ -15,7 +15,15 @@ class CustomerRepository {
         .collection('customers')
         .where('merchantId', isEqualTo: merchantId)
         .withConverter(
-          fromFirestore: (snapshot, _) => Customer.fromJson(snapshot.data()!),
+          fromFirestore: (snapshot, _) {
+            final data = snapshot.data()!;
+            data['id'] = snapshot.id;
+            data['name'] = data['name']?.toString() ?? '';
+            data['phone'] = data['phone']?.toString() ?? '';
+            data['totalPurchases'] = (data['totalPurchases'] ?? 0.0).toDouble();
+            data['orderCount'] = (data['orderCount'] ?? 0).toInt();
+            return Customer.fromJson(data);
+          },
           toFirestore: (customer, _) => customer.toJson(),
         );
   }

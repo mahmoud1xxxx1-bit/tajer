@@ -15,7 +15,15 @@ class ProductRepository {
         .collection('products')
         .where('merchantId', isEqualTo: merchantId)
         .withConverter(
-          fromFirestore: (snapshot, _) => Product.fromJson(snapshot.data()!),
+          fromFirestore: (snapshot, _) {
+            final data = snapshot.data()!;
+            data['id'] = snapshot.id;
+            // Also ensure numeric/string types don't crash if malformed
+            data['price'] = (data['price'] ?? 0.0).toDouble();
+            data['quantity'] = (data['quantity'] ?? 0).toInt();
+            data['name'] = data['name']?.toString() ?? '';
+            return Product.fromJson(data);
+          },
           toFirestore: (product, _) => product.toJson(),
         );
   }
