@@ -64,7 +64,7 @@ class _LanguageSelector extends ConsumerWidget {
           }
         },
         items: [
-          DropdownMenuItem(value: AppLocalizations.of(context)!.text_111, style: TextStyle(fontFamily: 'Tajawal'))),
+          DropdownMenuItem(value: 'ar', child: Text(AppLocalizations.of(context)!.text_111, style: TextStyle(fontFamily: 'Tajawal'))),
           DropdownMenuItem(value: 'en', child: Text('English')),
         ],
       ),

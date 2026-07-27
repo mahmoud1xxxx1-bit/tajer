@@ -178,7 +178,7 @@ class CustomersScreen extends ConsumerWidget {
                           } else if (value == 'print') {
                             final orders = ref.read(ordersStreamProvider).value ?? [];
                             try {
-                              await PdfService.printCustomerStatement(customer, orders, currency);
+                              await PdfService.printCustomerStatement(context, customer, orders, currency);
                             } catch (e) {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(

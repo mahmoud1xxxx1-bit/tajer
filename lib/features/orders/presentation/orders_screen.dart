@@ -136,7 +136,7 @@ class OrdersScreen extends ConsumerWidget {
                               border: Border.all(color: _getStatusColor(order.status).withOpacity(0.5)),
                             ),
                             child: Text(
-                              _getStatusLabel(order.status),
+                              _getStatusLabel(context, order.status),
                               style: TextStyle(
                                 color: _getStatusColor(order.status),
                                 fontSize: 12,
@@ -186,7 +186,7 @@ class OrdersScreen extends ConsumerWidget {
                             }
                           } else if (value == 'print') {
                             try {
-                              await PdfService.printInvoice(order, currency);
+                              await PdfService.printInvoice(context, order, currency);
                             } catch (e) {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -289,12 +289,12 @@ class OrdersScreen extends ConsumerWidget {
     }
   }
 
-  String _getStatusLabel(String status) {
+  String _getStatusLabel(BuildContext context, String status) {
     switch (status) {
-      case AppLocalizations.of(context)!.text_95;
-      case AppLocalizations.of(context)!.text_96;
-      case AppLocalizations.of(context)!.text_97;
-      case AppLocalizations.of(context)!.text_98;
+      case 'processing': return AppLocalizations.of(context)!.text_95;
+      case 'shipped': return AppLocalizations.of(context)!.text_96;
+      case 'delivered': return AppLocalizations.of(context)!.text_97;
+      case 'cancelled': return AppLocalizations.of(context)!.text_98;
       case 'pending':
       default:
         return AppLocalizations.of(context)!.text_99;
