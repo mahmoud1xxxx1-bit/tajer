@@ -14,7 +14,7 @@ class Customer with _$Customer {
     required String phone,
     @Default(0.0) double totalPurchases,
     @Default(0) int orderCount,
-    @TimestampConverter() DateTime? lastPurchaseDate,
+    @NullableTimestampConverter() DateTime? lastPurchaseDate,
     @TimestampConverter() required DateTime createdAt,
   }) = _Customer;
 

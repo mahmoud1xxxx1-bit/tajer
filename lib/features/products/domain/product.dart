@@ -19,18 +19,34 @@ class Product with _$Product {
   factory Product.fromJson(Map<String, dynamic> json) => _$ProductFromJson(json);
 }
 
-class TimestampConverter implements JsonConverter<DateTime?, Object?> {
+class TimestampConverter implements JsonConverter<DateTime, Object> {
   const TimestampConverter();
 
   @override
-  DateTime? fromJson(Object? json) {
-    if (json == null) return null;
+  DateTime fromJson(Object json) {
     if (json is Timestamp) {
       return json.toDate();
     }
     if (json is String) {
       return DateTime.parse(json);
     }
+    return DateTime.now();
+  }
+
+  @override
+  Object toJson(DateTime object) {
+    return Timestamp.fromDate(object);
+  }
+}
+
+class NullableTimestampConverter implements JsonConverter<DateTime?, Object?> {
+  const NullableTimestampConverter();
+
+  @override
+  DateTime? fromJson(Object? json) {
+    if (json == null) return null;
+    if (json is Timestamp) return json.toDate();
+    if (json is String) return DateTime.parse(json);
     return DateTime.now();
   }
 

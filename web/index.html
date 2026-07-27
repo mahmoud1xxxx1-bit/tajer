@@ -47,6 +47,15 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script>
+    // Unregister any existing service workers to ensure we always get the latest version
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+          registration.unregister();
+        } 
+      });
+    }
+
     // Append a timestamp to bypass CDN cache for flutter_bootstrap.js
     var script = document.createElement("script");
     script.src = "flutter_bootstrap.js?v=" + new Date().getTime();

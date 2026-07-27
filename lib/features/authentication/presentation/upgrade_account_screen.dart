@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../authentication/data/auth_repository.dart';
 
 class UpgradeAccountScreen extends ConsumerStatefulWidget {
@@ -19,30 +20,36 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
   Future<void> _linkGoogleAccount() async {
     setState(() => _isLoading = true);
     try {
-      final googleSignIn = GoogleSignIn();
-      final googleUser = await googleSignIn.signIn();
-      if (googleUser == null) throw Exception('تم إلغاء تسجيل الدخول');
-
-      final googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
       final user = ref.read(authRepositoryProvider).currentUser;
-      if (user != null) {
-        await user.linkWithCredential(credential);
-        setState(() => _isGoogleLinked = true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم ربط الحساب بنجاح!')),
+      if (user == null) throw Exception('المستخدم غير مسجل الدخول');
+
+      if (kIsWeb) {
+        await user.linkWithPopup(GoogleAuthProvider());
+      } else {
+        final googleSignIn = GoogleSignIn();
+        final googleUser = await googleSignIn.signIn();
+        if (googleUser == null) throw Exception('تم إلغاء تسجيل الدخول');
+
+        final googleAuth = await googleUser.authentication;
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
         );
+        await user.linkWithCredential(credential);
       }
+
+      setState(() => _isGoogleLinked = true);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم ربط الحساب بنجاح!')),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('خطأ في الربط: $e')),
       );
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
