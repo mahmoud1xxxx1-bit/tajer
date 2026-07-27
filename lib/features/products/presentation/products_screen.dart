@@ -159,16 +159,17 @@ class ProductsScreen extends ConsumerWidget {
                               ],
                             ),
                           ),
-                          PopupMenuItem(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                Icon(Icons.delete, color: Colors.red, size: 20),
-                                SizedBox(width: 8),
-                                Text(l10n.delete, style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
-                              ],
+                          if (ref.read(appUserProvider).value?.role != 'cashier')
+                            PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(Icons.delete, color: Colors.red, size: 20),
+                                  SizedBox(width: 8),
+                                  Text(l10n.delete, style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                                ],
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ],

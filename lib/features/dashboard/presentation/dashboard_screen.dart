@@ -10,6 +10,7 @@ import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../authentication/data/auth_repository.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -145,6 +146,15 @@ class DashboardHome extends ConsumerWidget {
                 context.push('/inventory_logs');
               },
             ),
+            if (ref.read(appUserProvider).value?.role == 'merchant')
+              ListTile(
+                leading: Icon(Icons.manage_accounts),
+                title: Text('الموظفين والصلاحيات (Pro)', style: TextStyle(fontFamily: 'Tajawal', color: Colors.orange)),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/employees');
+                },
+              ),
           ],
         ),
       ),

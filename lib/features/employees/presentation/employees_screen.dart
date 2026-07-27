@@ -92,7 +92,8 @@ class EmployeesScreen extends ConsumerWidget {
 
   void _showEmployeeDialog(BuildContext context, WidgetRef ref, Employee? employee) {
     final nameController = TextEditingController(text: employee?.name);
-    final pinController = TextEditingController(text: employee?.pin);
+    final emailController = TextEditingController(text: employee?.email);
+    final passwordController = TextEditingController();
     String selectedRole = employee?.role ?? 'cashier';
 
     showDialog(
@@ -107,25 +108,33 @@ class EmployeesScreen extends ConsumerWidget {
                 children: [
                   TextField(
                     controller: nameController,
-                    decoration: const InputDecoration(labelText: AppLocalizations.of(context)!.text_2e8b17, border: OutlineInputBorder()),
+                    decoration: const InputDecoration(labelText: 'الاسم', border: OutlineInputBorder()),
                     style: TextStyle(fontFamily: 'Tajawal'),
                   ),
                   SizedBox(height: 16),
                   TextField(
-                    controller: pinController,
-                    decoration: const InputDecoration(labelText: AppLocalizations.of(context)!.text_edefdd, border: OutlineInputBorder()),
-                    keyboardType: TextInputType.number,
-                    maxLength: 4,
-                    obscureText: true,
+                    controller: emailController,
+                    decoration: const InputDecoration(labelText: 'البريد الإلكتروني', border: OutlineInputBorder()),
+                    keyboardType: TextInputType.emailAddress,
                     style: TextStyle(fontFamily: 'Tajawal'),
+                    enabled: employee == null, // Cannot change email after creation
                   ),
+                  if (employee == null) ...[
+                    SizedBox(height: 16),
+                    TextField(
+                      controller: passwordController,
+                      decoration: const InputDecoration(labelText: 'كلمة المرور', border: OutlineInputBorder()),
+                      obscureText: true,
+                      style: TextStyle(fontFamily: 'Tajawal'),
+                    ),
+                  ],
                   SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: selectedRole,
-                    decoration: const InputDecoration(labelText: AppLocalizations.of(context)!.text_d71138, border: OutlineInputBorder()),
+                    decoration: const InputDecoration(labelText: 'الصلاحية', border: OutlineInputBorder()),
                     items: [
-                      DropdownMenuItem(value: AppLocalizations.of(context)!.text_4a9a3e, style: TextStyle(fontFamily: 'Tajawal'))),
-                      DropdownMenuItem(value: AppLocalizations.of(context)!.text_547790, style: TextStyle(fontFamily: 'Tajawal'))),
+                      DropdownMenuItem(value: 'admin', child: Text('مدير', style: TextStyle(fontFamily: 'Tajawal'))),
+                      DropdownMenuItem(value: 'cashier', child: Text('كاشير', style: TextStyle(fontFamily: 'Tajawal'))),
                     ],
                     onChanged: (val) {
                       if (val != null) setState(() => selectedRole = val);
@@ -137,30 +146,35 @@ class EmployeesScreen extends ConsumerWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text(AppLocalizations.of(context)!.text_b9568e, style: TextStyle(fontFamily: 'Tajawal')),
+                child: Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
               ),
               ElevatedButton(
                 onPressed: () {
                   final name = nameController.text.trim();
-                  final pin = pinController.text.trim();
-                  if (name.isEmpty || pin.length < 4) return;
+                  final email = emailController.text.trim();
+                  final password = passwordController.text;
+                  if (name.isEmpty || email.isEmpty) return;
+                  if (employee == null && password.length < 6) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('كلمة المرور يجب أن تكون 6 أحرف على الأقل')));
+                    return;
+                  }
 
                   final newEmployee = Employee(
                     id: employee?.id ?? const Uuid().v4(),
                     name: name,
-                    pin: pin,
+                    email: email,
                     role: selectedRole,
                     createdAt: employee?.createdAt ?? DateTime.now(),
                   );
 
                   if (employee == null) {
-                    ref.read(employeeRepositoryProvider)?.addEmployee(newEmployee);
+                    ref.read(employeeRepositoryProvider)?.addEmployee(newEmployee, password);
                   } else {
                     ref.read(employeeRepositoryProvider)?.updateEmployee(newEmployee);
                   }
                   Navigator.pop(context);
                 },
-                child: Text(AppLocalizations.of(context)!.text_871a08, style: TextStyle(fontFamily: 'Tajawal')),
+                child: Text('حفظ', style: TextStyle(fontFamily: 'Tajawal')),
               ),
             ],
           );

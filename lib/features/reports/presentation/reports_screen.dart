@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../data/reports_service.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
+import '../../authentication/data/auth_repository.dart';
 
 class ReportsScreen extends ConsumerWidget {
   const ReportsScreen({super.key});
@@ -44,15 +45,17 @@ class ReportsScreen extends ConsumerWidget {
                     color: Colors.green,
                   ),
                 ),
-                SizedBox(width: 12),
-                Expanded(
-                  child: _SummaryCard(
-                    title: AppLocalizations.of(context)!.text_106,
-                    value: '${reportsService.netProfit} ${currentCurrency.code}',
-                    icon: Icons.savings,
-                    color: Colors.blue,
+                if (ref.read(appUserProvider).value?.role != 'cashier') ...[
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: _SummaryCard(
+                      title: AppLocalizations.of(context)!.text_106,
+                      value: '${reportsService.netProfit} ${currentCurrency.code}',
+                      icon: Icons.savings,
+                      color: Colors.blue,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
             SizedBox(height: 12),

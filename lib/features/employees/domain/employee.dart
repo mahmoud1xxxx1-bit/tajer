@@ -3,14 +3,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class Employee {
   final String id;
   final String name;
-  final String pin;
+  final String email;
   final String role; // 'admin', 'cashier'
   final DateTime createdAt;
 
   Employee({
     required this.id,
     required this.name,
-    required this.pin,
+    required this.email,
     required this.role,
     required this.createdAt,
   });
@@ -19,7 +19,7 @@ class Employee {
     return Employee(
       id: json['id'] as String,
       name: json['name'] as String,
-      pin: json['pin'] as String,
+      email: json['email'] as String? ?? '',
       role: json['role'] as String? ?? 'cashier',
       createdAt: json['createdAt'] != null
           ? (json['createdAt'] as Timestamp).toDate()
@@ -31,7 +31,7 @@ class Employee {
     return {
       'id': id,
       'name': name,
-      'pin': pin,
+      'email': email,
       'role': role,
       'createdAt': Timestamp.fromDate(createdAt),
     };
