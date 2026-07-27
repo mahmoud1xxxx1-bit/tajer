@@ -7,7 +7,9 @@ const Sidebar = () => {
   const location = useLocation();
 
   const handleLogout = () => {
+    localStorage.removeItem('isSupport');
     signOut(auth);
+    window.location.reload();
   };
 
   const navItems = [

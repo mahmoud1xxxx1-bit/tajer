@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { auth } from './firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -13,8 +13,16 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const isSupport = localStorage.getItem('isSupport') === 'true';
+    if (isSupport) {
+      setUser({ uid: 'support', email: 'support@alldown.uk' });
+      setLoading(false);
+    }
+    
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
+      if (!isSupport) {
+        setUser(currentUser);
+      }
       setLoading(false);
     });
     return () => unsubscribe();

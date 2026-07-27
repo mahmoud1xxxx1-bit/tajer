@@ -13,6 +13,9 @@ class AppUser with _$AppUser {
     @Default('guest') String plan,
     required DateTime createdAt,
     @Default(true) bool isAnonymous,
+    @Default('merchant') String role,
+    String? merchantId,
+    @Default({}) Map<String, dynamic> permissions,
   }) = _AppUser;
 
   factory AppUser.fromJson(Map<String, dynamic> json) => _$AppUserFromJson(json);

@@ -3,7 +3,13 @@ const { Client } = require('ssh2');
 const conn = new Client();
 conn.on('ready', () => {
   console.log('Client :: ready');
-  conn.exec('flutter --version', (err, stream) => {
+  const commands = [
+    'cd /root/tajer-src/tajer',
+    'export PATH="$PATH:/root/flutter/bin"',
+    'flutter pub get',
+    'dart run build_runner build -d',
+  ];
+  conn.exec(commands.join(' && '), (err, stream) => {
     if (err) throw err;
     stream.on('close', (code, signal) => {
       console.log('Stream :: close :: code: ' + code + ', signal: ' + signal);

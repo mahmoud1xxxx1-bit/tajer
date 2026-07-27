@@ -17,12 +17,13 @@ conn.on('ready', () => {
       
       const script = `
         cd /home/alldown.uk/public_html
+        rm -rf tajer-admin-src
         unzip -o tajer-admin.zip -d tajer-admin-src
-        cd tajer-admin-src
+        cd tajer-admin-src/tajer-admin-web
         npm install
         npm run build
-        rm -rf ../admin
-        cp -r dist ../admin
+        rm -rf ../../admin
+        cp -r dist ../../admin
         echo "Done building admin panel"
       `;
       
