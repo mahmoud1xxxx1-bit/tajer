@@ -8,6 +8,7 @@ import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/subscriptions/presentation/paywall_screen.dart';
 import '../features/admin/presentation/admin_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/admin/data/admin_service.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateChangesProvider);
@@ -17,12 +18,17 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isAuthenticated = authState.value != null;
       final isStartupRoute = state.uri.path == '/';
+      final isAdmin = ref.watch(isAdminStreamProvider).value ?? false;
 
       if (!isAuthenticated && !isStartupRoute) {
         return '/';
       }
 
       if (isAuthenticated && isStartupRoute) {
+        return isAdmin ? '/admin' : '/dashboard';
+      }
+
+      if (state.uri.path == '/admin' && !isAdmin) {
         return '/dashboard';
       }
 
