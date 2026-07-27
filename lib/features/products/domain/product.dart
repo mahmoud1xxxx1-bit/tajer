@@ -19,15 +19,15 @@ class Product with _$Product {
   factory Product.fromJson(Map<String, dynamic> json) => _$ProductFromJson(json);
 }
 
-class TimestampConverter implements JsonConverter<DateTime, Object> {
+class TimestampConverter implements JsonConverter<DateTime?, Object?> {
   const TimestampConverter();
 
   @override
-  DateTime fromJson(Object json) {
+  DateTime? fromJson(Object? json) {
+    if (json == null) return null;
     if (json is Timestamp) {
       return json.toDate();
     }
-    // Handle string format or other if necessary, but firestore uses Timestamp
     if (json is String) {
       return DateTime.parse(json);
     }
@@ -35,7 +35,8 @@ class TimestampConverter implements JsonConverter<DateTime, Object> {
   }
 
   @override
-  Object toJson(DateTime object) {
+  Object? toJson(DateTime? object) {
+    if (object == null) return null;
     return Timestamp.fromDate(object);
   }
 }
