@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/admin_repository.dart';
-import '../../core/theme/glass_card.dart';
+import '../../../core/theme/glass_card.dart';
 import 'package:go_router/go_router.dart';
 import '../../authentication/data/auth_repository.dart';
 

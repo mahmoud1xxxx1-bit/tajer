@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/customer_repository.dart';
 import 'add_customer_dialog.dart';
 import '../../core/services/guest_limit_service.dart';
-import '../../core/theme/glass_card.dart';
+import '../../../core/theme/glass_card.dart';
 
 class CustomersScreen extends ConsumerWidget {
   const CustomersScreen({super.key});
