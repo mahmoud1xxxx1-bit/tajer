@@ -77,6 +77,7 @@ class DashboardHome extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ordersAsync = ref.watch(ordersStreamProvider);
+    final productsAsync = ref.watch(productsStreamProvider);
     final currentCurrency = ref.watch(currencyProvider);
 
     return Scaffold(
@@ -96,11 +97,40 @@ class DashboardHome extends ConsumerWidget {
           final totalSales = orders.fold<double>(0, (sum, order) => sum + order.total);
           final ordersCount = orders.length;
 
+          // Low stock calculation
+          final lowStockProducts = productsAsync.value?.where((p) => p.quantity <= 5).toList() ?? [];
+
           return Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            child: ListView(
               children: [
+                if (lowStockProducts.isNotEmpty) ...[
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.red.withOpacity(0.5)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.warning_amber_rounded, color: Colors.red),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'تنبيه: يوجد ${lowStockProducts.length} منتج يوشك على النفاذ من المخزون!',
+                            style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => onNavigateToTab(2), // 2 is Products tab
+                          child: const Text('عرض', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const Text(
                   'ملخص الأداء',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),

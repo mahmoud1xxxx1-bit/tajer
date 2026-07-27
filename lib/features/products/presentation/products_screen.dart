@@ -67,12 +67,24 @@ class ProductsScreen extends ConsumerWidget {
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Row(
                       children: [
-                        Icon(Icons.inventory_2, size: 16, color: Theme.of(context).colorScheme.secondary),
+                        Icon(
+                          Icons.inventory_2, 
+                          size: 16, 
+                          color: product.quantity <= 5 ? Colors.red : Theme.of(context).colorScheme.secondary
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           'المخزون: ${product.quantity}',
-                          style: const TextStyle(fontFamily: 'Tajawal'),
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            color: product.quantity <= 5 ? Colors.red : null,
+                            fontWeight: product.quantity <= 5 ? FontWeight.bold : FontWeight.normal,
+                          ),
                         ),
+                        if (product.quantity <= 5) ...[
+                          const SizedBox(width: 4),
+                          const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 16),
+                        ],
                       ],
                     ),
                   ),

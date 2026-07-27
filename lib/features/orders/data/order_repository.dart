@@ -25,6 +25,7 @@ class OrderRepository {
             data['productName'] = data['productName']?.toString() ?? '';
             data['customerId'] = data['customerId']?.toString() ?? '';
             data['customerName'] = data['customerName']?.toString() ?? '';
+            data['status'] = data['status']?.toString() ?? 'pending';
             return AppOrder.fromJson(data);
           },
           toFirestore: (order, _) => order.toJson(),
@@ -105,6 +106,44 @@ class OrderRepository {
 
       // Delete order
       transaction.delete(orderRef);
+    });
+  }
+
+  Future<void> updateOrderStatus(AppOrder order, String newStatus) async {
+    if (order.status == newStatus) return;
+
+    await _firestore.runTransaction((transaction) async {
+      final orderRef = _firestore.collection('orders').doc(order.id);
+      final productRef = _firestore.collection('products').doc(order.productId);
+
+      if (newStatus == 'cancelled' && order.status != 'cancelled') {
+        // Restoring inventory
+        final productDoc = await transaction.get(productRef);
+        if (productDoc.exists) {
+          final currentQty = productDoc.data()?['quantity'] as int? ?? 0;
+          transaction.update(productRef, {
+            'quantity': currentQty + order.quantity,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+      } else if (order.status == 'cancelled' && newStatus != 'cancelled') {
+        // Reducing inventory again
+        final productDoc = await transaction.get(productRef);
+        if (productDoc.exists) {
+          final currentQty = productDoc.data()?['quantity'] as int? ?? 0;
+          if (currentQty < order.quantity) {
+            throw Exception('الكمية غير كافية لإعادة تفعيل الطلب');
+          }
+          transaction.update(productRef, {
+            'quantity': currentQty - order.quantity,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        } else {
+          throw Exception('المنتج غير موجود');
+        }
+      }
+
+      transaction.update(orderRef, {'status': newStatus});
     });
   }
 

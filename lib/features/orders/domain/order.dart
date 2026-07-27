@@ -17,6 +17,7 @@ class AppOrder with _$AppOrder {
     required int quantity,
     required double price,
     required double total,
+    @JsonKey(defaultValue: 'pending') @Default('pending') String status,
     String? notes,
     @TimestampConverter() required DateTime createdAt,
   }) = _AppOrder;

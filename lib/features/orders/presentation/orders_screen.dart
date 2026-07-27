@@ -96,18 +96,43 @@ class OrdersScreen extends ConsumerWidget {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        '${order.total} ريال',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.secondary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '${order.total} ريال',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.secondary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: _getStatusColor(order.status).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: _getStatusColor(order.status).withOpacity(0.5)),
+                            ),
+                            child: Text(
+                              _getStatusLabel(order.status),
+                              style: TextStyle(
+                                color: _getStatusColor(order.status),
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Tajawal',
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: 4),
                       PopupMenuButton<String>(
                         icon: const Icon(Icons.more_vert),
-                        onSelected: (value) {
+                        onSelected: (value) async {
+                          final repo = ref.read(orderRepositoryProvider);
                           if (value == 'delete') {
                             showDialog(
                               context: context,
@@ -121,7 +146,7 @@ class OrdersScreen extends ConsumerWidget {
                                   ),
                                   TextButton(
                                     onPressed: () {
-                                      ref.read(orderRepositoryProvider).deleteOrder(order);
+                                      repo.deleteOrder(order);
                                       Navigator.pop(context);
                                     },
                                     child: const Text('حذف واسترجاع', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
@@ -129,16 +154,48 @@ class OrdersScreen extends ConsumerWidget {
                                 ],
                               ),
                             );
+                          } else if (value.startsWith('status_')) {
+                            final newStatus = value.replaceFirst('status_', '');
+                            try {
+                              await repo.updateOrderStatus(order, newStatus);
+                            } catch (e) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(e.toString(), style: const TextStyle(fontFamily: 'Tajawal'))),
+                                );
+                              }
+                            }
                           }
                         },
                         itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'status_pending',
+                            child: Text('قيد الانتظار 🟡', style: TextStyle(fontFamily: 'Tajawal')),
+                          ),
+                          const PopupMenuItem(
+                            value: 'status_processing',
+                            child: Text('قيد التجهيز 🔵', style: TextStyle(fontFamily: 'Tajawal')),
+                          ),
+                          const PopupMenuItem(
+                            value: 'status_shipped',
+                            child: Text('تم الشحن 🟠', style: TextStyle(fontFamily: 'Tajawal')),
+                          ),
+                          const PopupMenuItem(
+                            value: 'status_delivered',
+                            child: Text('مكتمل 🟢', style: TextStyle(fontFamily: 'Tajawal')),
+                          ),
+                          const PopupMenuItem(
+                            value: 'status_cancelled',
+                            child: Text('إلغاء الطلب 🔴', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                          ),
+                          const PopupMenuDivider(),
                           const PopupMenuItem(
                             value: 'delete',
                             child: Row(
                               children: [
                                 Icon(Icons.delete, color: Colors.red, size: 20),
                                 SizedBox(width: 8),
-                                Text('إلغاء وحذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                                Text('حذف نهائي', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
                               ],
                             ),
                           ),
@@ -178,5 +235,29 @@ class OrdersScreen extends ConsumerWidget {
         icon: const Icon(Icons.add_shopping_cart),
       ),
     );
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'processing': return Colors.blue;
+      case 'shipped': return Colors.orange;
+      case 'delivered': return Colors.green;
+      case 'cancelled': return Colors.red;
+      case 'pending':
+      default:
+        return Colors.amber.shade700;
+    }
+  }
+
+  String _getStatusLabel(String status) {
+    switch (status) {
+      case 'processing': return 'قيد التجهيز';
+      case 'shipped': return 'تم الشحن';
+      case 'delivered': return 'مكتمل';
+      case 'cancelled': return 'ملغي';
+      case 'pending':
+      default:
+        return 'قيد الانتظار';
+    }
   }
 }
