@@ -6,7 +6,8 @@ import '../data/product_repository.dart';
 import '../domain/product.dart';
 
 class AddProductDialog extends ConsumerStatefulWidget {
-  const AddProductDialog({super.key});
+  final Product? productToEdit;
+  const AddProductDialog({super.key, this.productToEdit});
 
   @override
   ConsumerState<AddProductDialog> createState() => _AddProductDialogState();
@@ -18,6 +19,16 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
   final _priceController = TextEditingController();
   final _quantityController = TextEditingController();
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.productToEdit != null) {
+      _nameController.text = widget.productToEdit!.name;
+      _priceController.text = widget.productToEdit!.price.toString();
+      _quantityController.text = widget.productToEdit!.quantity.toString();
+    }
+  }
 
   @override
   void dispose() {
@@ -38,17 +49,22 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
 
       final productRepo = ref.read(productRepositoryProvider);
 
+      final isEditing = widget.productToEdit != null;
       final newProduct = Product(
-        id: const Uuid().v4(),
-        merchantId: user.uid,
+        id: isEditing ? widget.productToEdit!.id : const Uuid().v4(),
+        merchantId: isEditing ? widget.productToEdit!.merchantId : user.uid,
         name: _nameController.text.trim(),
         price: double.parse(_priceController.text),
         quantity: int.parse(_quantityController.text),
-        createdAt: DateTime.now(),
+        createdAt: isEditing ? widget.productToEdit!.createdAt : DateTime.now(),
         updatedAt: DateTime.now(),
       );
 
-      await productRepo.addProduct(newProduct);
+      if (isEditing) {
+        await productRepo.updateProduct(newProduct);
+      } else {
+        await productRepo.addProduct(newProduct);
+      }
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
@@ -64,6 +80,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.productToEdit != null;
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Form(
@@ -72,9 +89,9 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'إضافة منتج جديد',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+            Text(
+              isEditing ? 'تعديل بيانات المنتج' : 'إضافة منتج جديد',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -122,7 +139,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
               ),
               child: _isLoading
                   ? const CircularProgressIndicator()
-                  : const Text('إضافة المنتج', style: TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
+                  : Text(isEditing ? 'حفظ التعديلات' : 'إضافة المنتج', style: const TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
             ),
             const SizedBox(height: 16),
           ],

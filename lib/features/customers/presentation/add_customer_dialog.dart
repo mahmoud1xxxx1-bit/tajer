@@ -6,7 +6,8 @@ import '../data/customer_repository.dart';
 import '../domain/customer.dart';
 
 class AddCustomerDialog extends ConsumerStatefulWidget {
-  const AddCustomerDialog({super.key});
+  final Customer? customerToEdit;
+  const AddCustomerDialog({super.key, this.customerToEdit});
 
   @override
   ConsumerState<AddCustomerDialog> createState() => _AddCustomerDialogState();
@@ -17,6 +18,15 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.customerToEdit != null) {
+      _nameController.text = widget.customerToEdit!.name;
+      _phoneController.text = widget.customerToEdit!.phone;
+    }
+  }
 
   @override
   void dispose() {
@@ -36,15 +46,23 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
 
       final customerRepo = ref.read(customerRepositoryProvider);
 
+      final isEditing = widget.customerToEdit != null;
       final newCustomer = Customer(
-        id: const Uuid().v4(),
-        merchantId: user.uid,
+        id: isEditing ? widget.customerToEdit!.id : const Uuid().v4(),
+        merchantId: isEditing ? widget.customerToEdit!.merchantId : user.uid,
         name: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
-        createdAt: DateTime.now(),
+        createdAt: isEditing ? widget.customerToEdit!.createdAt : DateTime.now(),
+        totalPurchases: isEditing ? widget.customerToEdit!.totalPurchases : 0.0,
+        orderCount: isEditing ? widget.customerToEdit!.orderCount : 0,
+        updatedAt: isEditing ? DateTime.now() : null,
       );
 
-      await customerRepo.addCustomer(newCustomer);
+      if (isEditing) {
+        await customerRepo.updateCustomer(newCustomer);
+      } else {
+        await customerRepo.addCustomer(newCustomer);
+      }
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
@@ -60,6 +78,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.customerToEdit != null;
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Form(
@@ -68,9 +87,9 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'إضافة عميل جديد',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+            Text(
+              isEditing ? 'تعديل بيانات العميل' : 'إضافة عميل جديد',
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -100,7 +119,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
               ),
               child: _isLoading
                   ? const CircularProgressIndicator()
-                  : const Text('إضافة العميل', style: TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
+                  : Text(isEditing ? 'حفظ التعديلات' : 'إضافة العميل', style: const TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
             ),
             const SizedBox(height: 16),
           ],

@@ -95,29 +95,95 @@ class CustomersScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  trailing: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        '${customer.totalPurchases} ريال',
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '${customer.totalPurchases} ريال',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Container(
+                            margin: const EdgeInsets.only(top: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '${customer.orderCount} طلبات',
+                              style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.secondary),
+                            ),
+                          ),
+                        ],
                       ),
-                      Container(
-                        margin: const EdgeInsets.only(top: 4),
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          '${customer.orderCount} طلبات',
-                          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.secondary),
-                        ),
+                      const SizedBox(width: 8),
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert),
+                        onSelected: (value) {
+                          if (value == 'edit') {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              builder: (context) => Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                                ),
+                                child: AddCustomerDialog(customerToEdit: customer),
+                              ),
+                            );
+                          } else if (value == 'delete') {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('حذف العميل', style: TextStyle(fontFamily: 'Tajawal')),
+                                content: const Text('هل أنت متأكد من حذف هذا العميل؟', style: TextStyle(fontFamily: 'Tajawal')),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      ref.read(customerRepositoryProvider).deleteCustomer(customer.id);
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'edit',
+                            child: Row(
+                              children: [
+                                Icon(Icons.edit, size: 20),
+                                SizedBox(width: 8),
+                                Text('تعديل', style: TextStyle(fontFamily: 'Tajawal')),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete, color: Colors.red, size: 20),
+                                SizedBox(width: 8),
+                                Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

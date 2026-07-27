@@ -93,13 +93,58 @@ class OrdersScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  trailing: Text(
-                    '${order.total} ريال',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.secondary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${order.total} ريال',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.secondary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      PopupMenuButton<String>(
+                        icon: const Icon(Icons.more_vert),
+                        onSelected: (value) {
+                          if (value == 'delete') {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('حذف الطلب', style: TextStyle(fontFamily: 'Tajawal')),
+                                content: const Text('هل أنت متأكد من حذف هذا الطلب؟ سيتم استرجاع كمية المنتج للمخزون.', style: TextStyle(fontFamily: 'Tajawal')),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      ref.read(orderRepositoryProvider).deleteOrder(order);
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text('حذف واسترجاع', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete, color: Colors.red, size: 20),
+                                SizedBox(width: 8),
+                                Text('إلغاء وحذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               );
