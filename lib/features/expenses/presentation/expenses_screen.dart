@@ -144,14 +144,25 @@ class ExpensesScreen extends ConsumerWidget {
                 if (user == null) return;
                 
                 final amount = double.tryParse(amountController.text) ?? 0.0;
-                if (titleController.text.isEmpty || amount <= 0) return;
+                if (titleController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('الرجاء إدخال البيان (اسم المصروف)')),
+                  );
+                  return;
+                }
+                if (amount <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('الرجاء إدخال مبلغ صحيح أكبر من الصفر')),
+                  );
+                  return;
+                }
 
                 final expense = Expense(
                   id: const Uuid().v4(),
                   merchantId: user.uid,
-                  title: titleController.text,
+                  title: titleController.text.trim(),
                   amount: amount,
-                  category: categoryController.text,
+                  category: categoryController.text.trim(),
                   date: DateTime.now(),
                   createdAt: DateTime.now(),
                 );
