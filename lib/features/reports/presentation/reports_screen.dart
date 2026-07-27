@@ -4,6 +4,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import '../data/reports_service.dart';
 import '../../../core/theme/glass_card.dart';
+import '../../../core/providers/settings_provider.dart';
 
 class ReportsScreen extends ConsumerWidget {
   const ReportsScreen({super.key});
@@ -11,6 +12,7 @@ class ReportsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reportsService = ref.watch(reportsServiceProvider);
+    final currentCurrency = ref.watch(currencyProvider);
 
     if (reportsService == null) {
       return const Scaffold(
@@ -36,7 +38,7 @@ class ReportsScreen extends ConsumerWidget {
                 Expanded(
                   child: _SummaryCard(
                     title: 'إجمالي المبيعات',
-                    value: '${reportsService.totalRevenue} ريال',
+                    value: '${reportsService.totalRevenue} ${currentCurrency.code}',
                     icon: Icons.account_balance_wallet,
                     color: Colors.green,
                   ),
@@ -44,9 +46,31 @@ class ReportsScreen extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: _SummaryCard(
-                    title: 'إجمالي الديون',
-                    value: '${reportsService.totalDebt} ريال',
+                    title: 'صافي الربح',
+                    value: '${reportsService.netProfit} ${currentCurrency.code}',
+                    icon: Icons.savings,
+                    color: Colors.blue,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _SummaryCard(
+                    title: 'إجمالي المصروفات',
+                    value: '${reportsService.totalExpenses} ${currentCurrency.code}',
                     icon: Icons.money_off,
+                    color: Colors.orange,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _SummaryCard(
+                    title: 'إجمالي الديون (الآجل)',
+                    value: '${reportsService.totalDebt} ${currentCurrency.code}',
+                    icon: Icons.warning_amber_rounded,
                     color: Colors.red,
                   ),
                 ),
@@ -150,7 +174,7 @@ class ReportsScreen extends ConsumerWidget {
                       title: Text(item.product.name, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                       subtitle: Text('${item.quantitySold} وحدة مباعة', style: const TextStyle(fontFamily: 'Tajawal')),
                       trailing: Text(
-                        '${item.totalRevenue} ريال',
+                        '${item.totalRevenue} ${currentCurrency.code}',
                         style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold),
                       ),
                     ),

@@ -4,6 +4,7 @@ import '../data/product_repository.dart';
 import 'add_product_dialog.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../../core/theme/glass_card.dart';
+import '../../../core/providers/settings_provider.dart';
 
 class ProductsScreen extends ConsumerWidget {
   const ProductsScreen({super.key});
@@ -11,6 +12,7 @@ class ProductsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final productsAsyncValue = ref.watch(productsStreamProvider);
+    final currentCurrency = ref.watch(currencyProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -98,7 +100,7 @@ class ProductsScreen extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          '${product.price} ريال',
+                          '${product.price} ${currentCurrency.code}',
                           style: TextStyle(
                             color: Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.bold,

@@ -6,6 +6,9 @@ import '../../products/data/product_repository.dart';
 import '../../customers/data/customer_repository.dart';
 import '../data/order_repository.dart';
 import '../domain/order.dart';
+import '../../inventory_log/data/inventory_log_repository.dart';
+import '../../../core/utils/barcode_scanner_screen.dart';
+import '../../products/domain/product.dart';
 
 class AddOrderDialog extends ConsumerStatefulWidget {
   const AddOrderDialog({super.key});
@@ -21,15 +24,48 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
   final _quantityController = TextEditingController();
   final _notesController = TextEditingController();
   final _paidAmountController = TextEditingController();
+  final _barcodeController = TextEditingController();
   bool _isCredit = false;
   bool _isLoading = false;
+  
+  List<Product> _products = [];
 
   @override
   void dispose() {
     _quantityController.dispose();
     _notesController.dispose();
     _paidAmountController.dispose();
+    _barcodeController.dispose();
     super.dispose();
+  }
+
+  Future<void> _scanBarcode() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const BarcodeScannerScreen()),
+    );
+    if (result != null && result is String) {
+      setState(() {
+        _barcodeController.text = result;
+      });
+      _findProductByBarcode(result);
+    }
+  }
+
+  void _findProductByBarcode(String barcode) {
+    try {
+      final product = _products.firstWhere((p) => p.barcode == barcode);
+      setState(() {
+        _selectedProductId = product.id;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تم اختيار المنتج: ${product.name}', style: const TextStyle(fontFamily: 'Tajawal'))),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('لم يتم العثور على منتج بهذا الباركود', style: TextStyle(fontFamily: 'Tajawal'))),
+      );
+    }
   }
 
   Future<void> _submit() async {
@@ -44,13 +80,11 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       if (user == null) throw Exception('المستخدم غير مسجل');
 
       final orderRepo = ref.read(orderRepositoryProvider);
+      final logRepo = ref.read(inventoryLogRepositoryProvider);
 
-      // Fetch Product and Customer names/details from the stream for simplicity
-      // In production, we might fetch it directly from the repo if the stream is large
-      final products = ref.read(productsStreamProvider).value ?? [];
       final customers = ref.read(customersStreamProvider).value ?? [];
 
-      final selectedProduct = products.firstWhere((p) => p.id == _selectedProductId);
+      final selectedProduct = _products.firstWhere((p) => p.id == _selectedProductId);
       final selectedCustomer = customers.firstWhere((c) => c.id == _selectedCustomerId);
 
       final quantity = int.parse(_quantityController.text);
@@ -89,6 +123,17 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       );
 
       await orderRepo.createOrder(newOrder);
+
+      // Log inventory change
+      await logRepo?.logChange(
+        productId: selectedProduct.id,
+        productName: selectedProduct.name,
+        previousQuantity: selectedProduct.quantity,
+        newQuantity: selectedProduct.quantity - quantity,
+        reason: 'طلب مبيعات جديد (فاتورة)',
+        userEmail: user.email,
+      );
+
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
@@ -100,7 +145,6 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -136,15 +180,40 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
             ),
             const SizedBox(height: 16),
 
+            // Barcode search
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _barcodeController,
+                    decoration: const InputDecoration(
+                      labelText: 'بحث بالباركود',
+                      border: OutlineInputBorder(),
+                    ),
+                    onFieldSubmitted: (val) => _findProductByBarcode(val.trim()),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: _scanBarcode,
+                  icon: const Icon(Icons.qr_code_scanner, color: Colors.blue, size: 32),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
             // Product Dropdown
             productsState.when(
-              data: (products) => DropdownButtonFormField<String>(
-                value: _selectedProductId,
-                decoration: const InputDecoration(labelText: 'المنتج', border: OutlineInputBorder()),
-                items: products.map((p) => DropdownMenuItem(value: p.id, child: Text('${p.name} (متاح: ${p.quantity})', style: const TextStyle(fontFamily: 'Tajawal')))).toList(),
-                onChanged: (val) => setState(() => _selectedProductId = val),
-                validator: (val) => val == null ? 'يرجى اختيار المنتج' : null,
-              ),
+              data: (products) {
+                _products = products;
+                return DropdownButtonFormField<String>(
+                  value: _selectedProductId,
+                  decoration: const InputDecoration(labelText: 'أو اختر المنتج من القائمة', border: OutlineInputBorder()),
+                  items: products.map((p) => DropdownMenuItem(value: p.id, child: Text('${p.name} (متاح: ${p.quantity})', style: const TextStyle(fontFamily: 'Tajawal')))).toList(),
+                  onChanged: (val) => setState(() => _selectedProductId = val),
+                  validator: (val) => val == null ? 'يرجى اختيار المنتج' : null,
+                );
+              },
               loading: () => const CircularProgressIndicator(),
               error: (e, st) => Text('خطأ في تحميل المنتجات: $e'),
             ),

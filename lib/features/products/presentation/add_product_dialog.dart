@@ -4,6 +4,10 @@ import 'package:uuid/uuid.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/product_repository.dart';
 import '../domain/product.dart';
+import '../../categories/data/category_repository.dart';
+import '../../categories/domain/category.dart';
+import '../../inventory_log/data/inventory_log_repository.dart';
+import '../../../core/utils/barcode_scanner_screen.dart';
 
 class AddProductDialog extends ConsumerStatefulWidget {
   final Product? productToEdit;
@@ -18,6 +22,8 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
   final _nameController = TextEditingController();
   final _priceController = TextEditingController();
   final _quantityController = TextEditingController();
+  final _barcodeController = TextEditingController();
+  String? _selectedCategoryId;
   bool _isLoading = false;
 
   @override
@@ -27,6 +33,8 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       _nameController.text = widget.productToEdit!.name;
       _priceController.text = widget.productToEdit!.price.toString();
       _quantityController.text = widget.productToEdit!.quantity.toString();
+      _barcodeController.text = widget.productToEdit!.barcode ?? '';
+      _selectedCategoryId = widget.productToEdit!.categoryId;
     }
   }
 
@@ -35,7 +43,20 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     _nameController.dispose();
     _priceController.dispose();
     _quantityController.dispose();
+    _barcodeController.dispose();
     super.dispose();
+  }
+
+  Future<void> _scanBarcode() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const BarcodeScannerScreen()),
+    );
+    if (result != null && result is String) {
+      setState(() {
+        _barcodeController.text = result;
+      });
+    }
   }
 
   Future<void> _submit() async {
@@ -48,22 +69,48 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       if (user == null) throw Exception('المستخدم غير مسجل');
 
       final productRepo = ref.read(productRepositoryProvider);
+      final logRepo = ref.read(inventoryLogRepositoryProvider);
 
       final isEditing = widget.productToEdit != null;
+      final newQuantity = int.parse(_quantityController.text);
+      final previousQuantity = isEditing ? widget.productToEdit!.quantity : 0;
+      
       final newProduct = Product(
         id: isEditing ? widget.productToEdit!.id : const Uuid().v4(),
         merchantId: isEditing ? widget.productToEdit!.merchantId : user.uid,
         name: _nameController.text.trim(),
         price: double.parse(_priceController.text),
-        quantity: int.parse(_quantityController.text),
+        quantity: newQuantity,
+        categoryId: _selectedCategoryId,
+        barcode: _barcodeController.text.trim().isEmpty ? null : _barcodeController.text.trim(),
         createdAt: isEditing ? widget.productToEdit!.createdAt : DateTime.now(),
         updatedAt: DateTime.now(),
       );
 
       if (isEditing) {
         await productRepo.updateProduct(newProduct);
+        if (newQuantity != previousQuantity) {
+          await logRepo?.logChange(
+            productId: newProduct.id,
+            productName: newProduct.name,
+            previousQuantity: previousQuantity,
+            newQuantity: newQuantity,
+            reason: 'تعديل يدوي من الإعدادات',
+            userEmail: user.email,
+          );
+        }
       } else {
         await productRepo.addProduct(newProduct);
+        if (newQuantity > 0) {
+          await logRepo?.logChange(
+            productId: newProduct.id,
+            productName: newProduct.name,
+            previousQuantity: 0,
+            newQuantity: newQuantity,
+            reason: 'إضافة منتج جديد',
+            userEmail: user.email,
+          );
+        }
       }
       if (mounted) Navigator.pop(context);
     } catch (e) {
@@ -77,10 +124,11 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.productToEdit != null;
+    final categoriesAsync = ref.watch(categoriesStreamProvider);
+
     return Padding(
       padding: const EdgeInsets.all(24.0),
       child: Form(
@@ -95,6 +143,44 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _barcodeController,
+                    decoration: const InputDecoration(
+                      labelText: 'الباركود',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: _scanBarcode,
+                  icon: const Icon(Icons.qr_code_scanner, color: Colors.blue, size: 32),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            categoriesAsync.when(
+              data: (categories) {
+                return DropdownButtonFormField<String>(
+                  value: _selectedCategoryId,
+                  decoration: const InputDecoration(
+                    labelText: 'التصنيف',
+                    border: OutlineInputBorder(),
+                  ),
+                  items: [
+                    const DropdownMenuItem(value: null, child: Text('بدون تصنيف', style: TextStyle(fontFamily: 'Tajawal'))),
+                    ...categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: const TextStyle(fontFamily: 'Tajawal')))),
+                  ],
+                  onChanged: (value) => setState(() => _selectedCategoryId = value),
+                );
+              },
+              loading: () => const CircularProgressIndicator(),
+              error: (e, st) => const Text('خطأ في تحميل التصنيفات'),
+            ),
+            const SizedBox(height: 16),
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(
@@ -111,7 +197,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                     controller: _priceController,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
-                      labelText: 'السعر (ريال)',
+                      labelText: 'السعر',
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) => value!.isEmpty ? 'مطلوب' : null,

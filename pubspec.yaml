@@ -39,6 +39,9 @@ dependencies:
   # Monetization
   in_app_purchase: ^3.1.13
 
+  # Scanner
+  mobile_scanner: ^5.1.1
+
   # Charts and Reports
   fl_chart: ^0.68.0
 

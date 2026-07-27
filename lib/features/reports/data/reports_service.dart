@@ -3,6 +3,8 @@ import '../../orders/data/order_repository.dart';
 import '../../orders/domain/order.dart';
 import '../../products/data/product_repository.dart';
 import '../../products/domain/product.dart';
+import '../../expenses/data/expense_repository.dart';
+import '../../expenses/domain/expense.dart';
 
 class SalesData {
   final DateTime date;
@@ -22,12 +24,17 @@ class ProductSales {
 class ReportsService {
   final List<AppOrder> orders;
   final List<Product> products;
+  final List<Expense> expenses;
 
-  ReportsService(this.orders, this.products);
+  ReportsService(this.orders, this.products, this.expenses);
 
   double get totalRevenue => orders.where((o) => o.status != 'cancelled').fold(0.0, (sum, order) => sum + order.total);
   
   double get totalDebt => orders.where((o) => o.status != 'cancelled' && o.isCredit).fold(0.0, (sum, order) => sum + (order.total - order.paidAmount));
+
+  double get totalExpenses => expenses.fold(0.0, (sum, expense) => sum + expense.amount);
+
+  double get netProfit => totalRevenue - totalExpenses;
 
   List<SalesData> getDailySales() {
     final Map<String, double> dailyMap = {};
@@ -76,10 +83,11 @@ class ReportsService {
 final reportsServiceProvider = Provider<ReportsService?>((ref) {
   final ordersState = ref.watch(ordersStreamProvider);
   final productsState = ref.watch(productsStreamProvider);
+  final expensesState = ref.watch(expensesStreamProvider);
 
-  if (ordersState.value == null || productsState.value == null) {
+  if (ordersState.value == null || productsState.value == null || expensesState.value == null) {
     return null; // Still loading
   }
 
-  return ReportsService(ordersState.value!, productsState.value!);
+  return ReportsService(ordersState.value!, productsState.value!, expensesState.value!);
 });

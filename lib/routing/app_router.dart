@@ -9,6 +9,10 @@ import '../features/subscriptions/presentation/paywall_screen.dart';
 import '../features/admin/presentation/admin_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/admin/data/admin_service.dart';
+import '../features/expenses/presentation/expenses_screen.dart';
+import '../features/suppliers/presentation/suppliers_screen.dart';
+import '../features/categories/presentation/categories_screen.dart';
+import '../features/inventory_log/presentation/inventory_logs_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateChangesProvider);
@@ -59,6 +63,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin',
         builder: (context, state) => const AdminScreen(),
+      ),
+      GoRoute(
+        path: '/expenses',
+        builder: (context, state) => const ExpensesScreen(),
+      ),
+      GoRoute(
+        path: '/suppliers',
+        builder: (context, state) => const SuppliersScreen(),
+      ),
+      GoRoute(
+        path: '/categories',
+        builder: (context, state) => const CategoriesScreen(),
+      ),
+      GoRoute(
+        path: '/inventory_logs',
+        builder: (context, state) => const InventoryLogsScreen(),
       ),
     ],
   );

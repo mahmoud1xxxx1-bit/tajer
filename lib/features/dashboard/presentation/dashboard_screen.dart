@@ -100,6 +100,51 @@ class DashboardHome extends ConsumerWidget {
           ),
         ],
       ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blueAccent,
+              ),
+              child: Text('قائمة الإدارة', style: TextStyle(color: Colors.white, fontSize: 24, fontFamily: 'Tajawal')),
+            ),
+            ListTile(
+              leading: const Icon(Icons.money_off),
+              title: const Text('المصروفات', style: TextStyle(fontFamily: 'Tajawal')),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/expenses');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.business),
+              title: const Text('الموردين', style: TextStyle(fontFamily: 'Tajawal')),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/suppliers');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.category),
+              title: const Text('التصنيفات', style: TextStyle(fontFamily: 'Tajawal')),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/categories');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.history),
+              title: const Text('سجل المخزون', style: TextStyle(fontFamily: 'Tajawal')),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/inventory_logs');
+              },
+            ),
+          ],
+        ),
+      ),
       body: ordersAsync.when(
         data: (orders) {
           final totalSales = orders.fold<double>(0, (sum, order) => sum + order.total);

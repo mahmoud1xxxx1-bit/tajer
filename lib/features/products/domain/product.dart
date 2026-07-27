@@ -10,6 +10,8 @@ class Product with _$Product {
     required String id,
     required String merchantId,
     required String name,
+    String? categoryId,
+    String? barcode,
     required double price,
     required int quantity,
     @TimestampConverter() required DateTime createdAt,
