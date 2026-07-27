@@ -4,10 +4,15 @@ const conn = new Client();
 conn.on('ready', () => {
   console.log('Client :: ready');
   const commands = [
-    'cd /root/tajer-src/tajer',
+    'rm -rf /root/tajer-web-build',
+    'git clone https://github.com/mahmoud1xxxx1-bit/tajer.git /root/tajer-web-build',
+    'cd /root/tajer-web-build',
     'export PATH="$PATH:/root/flutter/bin"',
     'flutter pub get',
-    'dart run build_runner build -d',
+    'flutter build web --base-href "/admin/" --web-renderer canvaskit',
+    'rm -rf /home/alldown.uk/public_html/admin/*',
+    'cp -r build/web/* /home/alldown.uk/public_html/admin/',
+    'echo "Deployment successful"'
   ];
   conn.exec(commands.join(' && '), (err, stream) => {
     if (err) throw err;
