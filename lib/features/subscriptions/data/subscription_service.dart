@@ -2,11 +2,12 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../authentication/data/auth_repository.dart';
 
 class SubscriptionService {
-  final InAppPurchase _iap = InAppPurchase.instance;
+  InAppPurchase? _iap;
   final AuthRepository _authRepo;
   final FirebaseFirestore _firestore;
 
@@ -16,11 +17,14 @@ class SubscriptionService {
   static const String _kPremiumSubscriptionId = 'premium_monthly_10';
 
   SubscriptionService(this._authRepo, this._firestore) {
-    _initIAP();
+    if (!kIsWeb) {
+      _iap = InAppPurchase.instance;
+      _initIAP();
+    }
   }
 
   void _initIAP() {
-    final purchaseUpdated = _iap.purchaseStream;
+    final purchaseUpdated = _iap!.purchaseStream;
     _subscription = purchaseUpdated.listen((purchaseDetailsList) {
       _listenToPurchaseUpdated(purchaseDetailsList);
     }, onDone: () {
@@ -44,7 +48,7 @@ class SubscriptionService {
         }
         
         if (purchaseDetails.pendingCompletePurchase) {
-          await _iap.completePurchase(purchaseDetails);
+          await _iap!.completePurchase(purchaseDetails);
         }
       }
     }
@@ -61,7 +65,9 @@ class SubscriptionService {
   }
 
   Future<List<ProductDetails>> fetchProducts() async {
-    final bool available = await _iap.isAvailable();
+    if (kIsWeb) return [];
+    
+    final bool available = await _iap!.isAvailable();
     if (!available) {
       return [];
     }
@@ -69,7 +75,7 @@ class SubscriptionService {
     // Only fetch for android since user mentioned Google Play specifically, 
     // but the library supports iOS as well if set up.
     Set<String> kIds = <String>{_kPremiumSubscriptionId};
-    final ProductDetailsResponse response = await _iap.queryProductDetails(kIds);
+    final ProductDetailsResponse response = await _iap!.queryProductDetails(kIds);
     if (response.notFoundIDs.isNotEmpty) {
       // Product IDs not found on the store
     }
@@ -79,11 +85,13 @@ class SubscriptionService {
   Future<void> buyPremium(ProductDetails productDetails) async {
     final PurchaseParam purchaseParam = PurchaseParam(productDetails: productDetails);
     // Since it's a subscription, we use buyNonConsumable
-    await _iap.buyNonConsumable(purchaseParam: purchaseParam);
+    if (kIsWeb) return;
+    await _iap!.buyNonConsumable(purchaseParam: purchaseParam);
   }
   
   Future<void> restorePurchases() async {
-    await _iap.restorePurchases();
+    if (kIsWeb) return;
+    await _iap!.restorePurchases();
   }
 
   void dispose() {

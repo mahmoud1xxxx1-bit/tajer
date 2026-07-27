@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../data/subscription_service.dart';
+import 'package:flutter/foundation.dart';
 import '../../authentication/data/auth_repository.dart';
 
 class PaywallScreen extends ConsumerWidget {
@@ -46,6 +47,18 @@ class PaywallScreen extends ConsumerWidget {
                 ElevatedButton(
                   onPressed: () => context.push('/upgrade'),
                   child: const Text('ربط الحساب الآن', style: TextStyle(fontFamily: 'Tajawal')),
+                ),
+              ] else if (kIsWeb) ...[
+                const Text(
+                  'عملية شراء الباقات ودفع الاشتراكات (10 دولار/شهرياً) متاحة فقط عبر تطبيق الأندرويد من متجر Google Play، ولا يمكن الدفع عبر متصفح الويب.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.blue, fontFamily: 'Tajawal', fontSize: 16),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'يرجى تحميل التطبيق على هاتفك لإتمام عملية الترقية والدفع.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontFamily: 'Tajawal'),
                 ),
               ] else ...[
                 productAsync.when(
