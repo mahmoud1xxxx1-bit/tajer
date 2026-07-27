@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/order_repository.dart';
 import 'add_order_dialog.dart';
+import '../../core/services/guest_limit_service.dart';
+import '../../core/theme/glass_card.dart';
 
 class OrdersScreen extends ConsumerWidget {
   const OrdersScreen({super.key});
@@ -30,28 +32,51 @@ class OrdersScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             itemBuilder: (context, index) {
               final order = orders[index];
-              return Card(
-                elevation: 2,
+              return GlassCard(
                 margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(4),
                 child: ListTile(
+                  leading: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(Icons.shopping_bag_outlined, color: Theme.of(context).colorScheme.primary),
+                  ),
                   title: Text(
                     'طلب #${order.id.substring(0, 5).toUpperCase()}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16),
                   ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 4),
-                      Text('العميل: ${order.customerName}', style: const TextStyle(fontFamily: 'Tajawal')),
-                      Text('المنتج: ${order.productName} (x${order.quantity})', style: const TextStyle(fontFamily: 'Tajawal')),
-                    ],
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.person_outline, size: 14, color: Colors.grey),
+                            const SizedBox(width: 4),
+                            Text(order.customerName, style: const TextStyle(fontFamily: 'Tajawal')),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            const Icon(Icons.inventory_2_outlined, size: 14, color: Colors.grey),
+                            const SizedBox(width: 4),
+                            Text('${order.productName} (x${order.quantity})', style: const TextStyle(fontFamily: 'Tajawal')),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                   trailing: Text(
                     '${order.total} ريال',
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
+                      color: Theme.of(context).colorScheme.secondary,
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 18,
                     ),
                   ),
                 ),
@@ -65,17 +90,22 @@ class OrdersScreen extends ConsumerWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            builder: (context) => Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
+        onPressed: () async {
+          final canAdd = await GuestLimitService.canAddOrder(context, ref);
+          if (!canAdd) return;
+
+          if (context.mounted) {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              builder: (context) => Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: const AddOrderDialog(),
               ),
-              child: const AddOrderDialog(),
-            ),
-          );
+            );
+          }
         },
         label: const Text('طلب جديد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         icon: const Icon(Icons.add_shopping_cart),

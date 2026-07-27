@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../products/presentation/products_screen.dart';
 import '../../customers/presentation/customers_screen.dart';
-import '../../orders/presentation/orders_screen.dart';
 import '../../orders/data/order_repository.dart';
+import '../../core/theme/glass_card.dart';
+import '../../core/providers/settings_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -70,6 +71,7 @@ class DashboardHome extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ordersAsync = ref.watch(ordersStreamProvider);
+    final currentCurrency = ref.watch(currencyProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -103,9 +105,9 @@ class DashboardHome extends ConsumerWidget {
                     Expanded(
                       child: _StatCard(
                         title: 'إجمالي المبيعات',
-                        value: '$totalSales ريال',
-                        icon: Icons.attach_money,
-                        color: Colors.green,
+                        value: '$totalSales ${currentCurrency.code}',
+                        icon: Icons.account_balance_wallet_outlined,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -113,12 +115,48 @@ class DashboardHome extends ConsumerWidget {
                       child: _StatCard(
                         title: 'عدد الطلبات',
                         value: '$ordersCount',
-                        icon: Icons.shopping_cart,
-                        color: Colors.blue,
+                        icon: Icons.shopping_bag_outlined,
+                        color: Theme.of(context).colorScheme.secondary,
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 24),
+                const Text(
+                  'أوامر سريعة',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _QuickAction(
+                      icon: Icons.add_shopping_cart,
+                      label: 'طلب جديد',
+                      color: Theme.of(context).colorScheme.primary,
+                      onTap: () {
+                        // Open Orders Screen and tap FAB logically
+                        context.push('/orders');
+                      },
+                    ),
+                    _QuickAction(
+                      icon: Icons.person_add_alt_1_outlined,
+                      label: 'عميل جديد',
+                      color: Theme.of(context).colorScheme.secondary,
+                      onTap: () {
+                        context.push('/customers');
+                      },
+                    ),
+                    _QuickAction(
+                      icon: Icons.add_box_outlined,
+                      label: 'منتج جديد',
+                      color: Colors.deepPurpleAccent,
+                      onTap: () {
+                        context.push('/products');
+                      },
+                    ),
+                  ],
+                )
               ],
             ),
           );
@@ -145,20 +183,56 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Icon(icon, size: 40, color: color),
-            const SizedBox(height: 8),
-            Text(title, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-            const SizedBox(height: 4),
-            Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          ],
-        ),
+    return GlassCard(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, size: 28, color: color),
+          ),
+          const SizedBox(height: 16),
+          Text(title, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey, fontSize: 14)),
+          const SizedBox(height: 4),
+          Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _QuickAction({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          GlassCard(
+            width: 70,
+            height: 70,
+            child: Icon(icon, color: color, size: 30),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        ],
       ),
     );
   }

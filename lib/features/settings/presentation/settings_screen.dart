@@ -35,6 +35,7 @@ class SettingsScreen extends ConsumerWidget {
           const Divider(),
           _LanguageSelector(),
           _CurrencySelector(),
+          _ThemeSelector(),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
@@ -94,10 +95,34 @@ class _CurrencySelector extends ConsumerWidget {
         items: AppCurrency.values.map((AppCurrency curr) {
           return DropdownMenuItem<AppCurrency>(
             value: curr,
-            // Fallback for translations if context doesn't have it yet
             child: Text(curr.code, style: const TextStyle(fontFamily: 'Tajawal')),
           );
         }).toList(),
+      ),
+    );
+  }
+}
+
+class _ThemeSelector extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeMode = ref.watch(themeProvider);
+
+    return ListTile(
+      leading: const Icon(Icons.brightness_6),
+      title: const Text('المظهر', style: TextStyle(fontFamily: 'Tajawal')),
+      trailing: DropdownButton<ThemeMode>(
+        value: themeMode,
+        onChanged: (ThemeMode? newValue) {
+          if (newValue != null) {
+            ref.read(themeProvider.notifier).setThemeMode(newValue);
+          }
+        },
+        items: const [
+          DropdownMenuItem(value: ThemeMode.system, child: Text('تلقائي', style: TextStyle(fontFamily: 'Tajawal'))),
+          DropdownMenuItem(value: ThemeMode.light, child: Text('فاتح', style: TextStyle(fontFamily: 'Tajawal'))),
+          DropdownMenuItem(value: ThemeMode.dark, child: Text('داكن', style: TextStyle(fontFamily: 'Tajawal'))),
+        ],
       ),
     );
   }

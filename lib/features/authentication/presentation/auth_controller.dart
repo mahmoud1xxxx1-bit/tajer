@@ -17,4 +17,12 @@ class AuthController extends _$AuthController {
       await repo.signInAnonymously();
     });
   }
+
+  Future<void> linkWithGoogle() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      final repo = ref.read(authRepositoryProvider);
+      await repo.linkWithGoogle();
+    });
+  }
 }

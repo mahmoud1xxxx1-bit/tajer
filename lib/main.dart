@@ -7,6 +7,7 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'firebase_options.dart';
 import 'routing/app_router.dart';
 import 'core/providers/settings_provider.dart';
+import 'core/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -33,6 +34,7 @@ class TajerApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final goRouter = ref.watch(goRouterProvider);
     final locale = ref.watch(localeProvider);
+    final themeMode = ref.watch(themeProvider);
 
     return MaterialApp.router(
       title: 'Tajer',
@@ -48,23 +50,9 @@ class TajerApp extends ConsumerWidget {
         Locale('ar'),
         Locale('en'),
       ],
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue.shade900,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        fontFamily: 'Tajawal',
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue.shade900,
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-        fontFamily: 'Tajawal',
-      ),
-      themeMode: ThemeMode.system,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: themeMode,
       routerConfig: goRouter,
     );
   }

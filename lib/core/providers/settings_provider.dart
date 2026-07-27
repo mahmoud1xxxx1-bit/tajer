@@ -53,3 +53,18 @@ class CurrencyNotifier extends Notifier<AppCurrency> {
 final currencyProvider = NotifierProvider<CurrencyNotifier, AppCurrency>(() {
   return CurrencyNotifier();
 });
+
+class ThemeModeNotifier extends Notifier<ThemeMode> {
+  @override
+  ThemeMode build() {
+    return ThemeMode.system;
+  }
+
+  void setThemeMode(ThemeMode mode) {
+    state = mode;
+  }
+}
+
+final themeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(() {
+  return ThemeModeNotifier();
+});

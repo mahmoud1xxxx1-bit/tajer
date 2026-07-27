@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/product_repository.dart';
 import 'add_product_dialog.dart';
+import '../../core/services/guest_limit_service.dart';
+import '../../core/theme/glass_card.dart';
 
 class ProductsScreen extends ConsumerWidget {
   const ProductsScreen({super.key});
@@ -30,49 +32,65 @@ class ProductsScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             itemBuilder: (context, index) {
               final product = products[index];
-              return Card(
-                elevation: 2,
+              return GlassCard(
                 margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(4),
+                onLongPress: () {
+                  // Delete confirmation
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('حذف المنتج', style: TextStyle(fontFamily: 'Tajawal')),
+                      content: const Text('هل أنت متأكد من حذف هذا المنتج؟', style: TextStyle(fontFamily: 'Tajawal')),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            ref.read(productRepositoryProvider).deleteProduct(product.id);
+                            Navigator.pop(context);
+                          },
+                          child: const Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                        ),
+                      ],
+                    ),
+                  );
+                },
                 child: ListTile(
                   title: Text(
                     product.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 18),
                   ),
-                  subtitle: Text(
-                    'الكمية المتاحة: ${product.quantity}',
-                    style: const TextStyle(fontFamily: 'Tajawal'),
-                  ),
-                  trailing: Text(
-                    '${product.price} ريال',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Row(
+                      children: [
+                        Icon(Icons.inventory_2, size: 16, color: Theme.of(context).colorScheme.secondary),
+                        const SizedBox(width: 4),
+                        Text(
+                          'المخزون: ${product.quantity}',
+                          style: const TextStyle(fontFamily: 'Tajawal'),
+                        ),
+                      ],
                     ),
                   ),
-                  onLongPress: () {
-                    // Delete confirmation
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('حذف المنتج', style: TextStyle(fontFamily: 'Tajawal')),
-                        content: const Text('هل أنت متأكد من حذف هذا المنتج؟', style: TextStyle(fontFamily: 'Tajawal')),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              ref.read(productRepositoryProvider).deleteProduct(product.id);
-                              Navigator.pop(context);
-                            },
-                            child: const Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
-                          ),
-                        ],
+                  trailing: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${product.price} ريال',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
               );
             },
@@ -84,17 +102,22 @@ class ProductsScreen extends ConsumerWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            builder: (context) => Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
+        onPressed: () async {
+          final canAdd = await GuestLimitService.canAddProduct(context, ref);
+          if (!canAdd) return;
+
+          if (context.mounted) {
+            showModalBottomSheet(
+              context: context,
+              isScrollControlled: true,
+              builder: (context) => Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: const AddProductDialog(),
               ),
-              child: const AddProductDialog(),
-            ),
-          );
+            );
+          }
         },
         label: const Text('إضافة منتج', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         icon: const Icon(Icons.add),
