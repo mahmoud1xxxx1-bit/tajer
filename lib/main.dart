@@ -40,13 +40,13 @@ class TajerApp extends ConsumerWidget {
       title: 'Tajer',
       debugShowCheckedModeBanner: false,
       locale: locale,
-      localizationsDelegates: const [
+      localizationsDelegates: [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: const [
+      supportedLocales: [
         Locale('ar'),
         Locale('en'),
       ],
