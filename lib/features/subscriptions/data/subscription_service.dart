@@ -58,7 +58,7 @@ class SubscriptionService {
     final user = _authRepo.currentUser;
     if (user != null) {
       // Grant Premium in Firestore
-      await _firestore.collection('users').doc(userId).update({
+      await _firestore.collection('users').doc(user.uid).update({
         'plan': 'premium',
       });
     }

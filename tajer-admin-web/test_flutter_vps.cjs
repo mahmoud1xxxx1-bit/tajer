@@ -8,7 +8,10 @@ conn.on('ready', () => {
     'git pull origin main',
     'export PATH="$PATH:/root/flutter/bin"',
     'flutter pub get',
-    'dart run build_runner build -d'
+    'flutter build web --base-href "/admin/"',
+    'rm -rf /home/alldown.uk/public_html/admin/*',
+    'cp -r build/web/* /home/alldown.uk/public_html/admin/',
+    'echo "Deployment successful"'
   ];
   conn.exec(commands.join(' && '), (err, stream) => {
     if (err) throw err;
