@@ -1,0 +1,41 @@
+name: Build Android App Bundle
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+
+    - name: Decode Keystore
+      run: |
+        echo "Keystore is already in repository as tajer-release.jks"
+
+    - name: Install dependencies
+      run: flutter pub get
+
+    - name: Build Android App Bundle
+      run: flutter build appbundle --release
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: app-release
+        path: build/app/outputs/bundle/release/app-release.aab
