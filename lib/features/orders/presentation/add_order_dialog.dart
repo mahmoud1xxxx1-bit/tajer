@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -60,7 +60,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
         _selectedProductId = product.id;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ØªÙ… Ø§Ø®ØªÙŠØ§Ø± Ø§Ù„Ù…Ù†ØªØ¬: ${product.name}', style: TextStyle(fontFamily: 'Tajawal'))),
+        SnackBar(content: Text('تم اختيار المنتج: ${product.name}', style: TextStyle(fontFamily: 'Tajawal'))),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -263,7 +263,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
               TextFormField(
                 controller: _paidAmountController,
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: AppLocalizations.of(context)!.text_85,
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.payments_outlined),

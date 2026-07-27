@@ -1,4 +1,4 @@
-﻿import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -67,7 +67,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ø­Ø¯Ø« Ø®Ø·Ø£: $e', style: TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(content: Text('حدث خطأ: $e', style: TextStyle(fontFamily: 'Tajawal'))),
         );
       }
     } finally {
@@ -95,7 +95,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
             SizedBox(height: 24),
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.text_50,
                 border: OutlineInputBorder(),
               ),
@@ -105,7 +105,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
             TextFormField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.text_52,
                 border: OutlineInputBorder(),
               ),

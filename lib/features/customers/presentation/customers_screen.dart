@@ -189,7 +189,7 @@ class CustomersScreen extends ConsumerWidget {
                           }
                         },
                         itemBuilder: (context) => [
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'edit',
                             child: Row(
                               children: [
@@ -199,7 +199,7 @@ class CustomersScreen extends ConsumerWidget {
                               ],
                             ),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'print',
                             child: Row(
                               children: [
@@ -209,7 +209,7 @@ class CustomersScreen extends ConsumerWidget {
                               ],
                             ),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'delete',
                             child: Row(
                               children: [

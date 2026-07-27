@@ -108,13 +108,13 @@ class EmployeesScreen extends ConsumerWidget {
                 children: [
                   TextField(
                     controller: nameController,
-                    decoration: const InputDecoration(labelText: 'الاسم', border: OutlineInputBorder()),
+                    decoration: InputDecoration(labelText: 'الاسم', border: OutlineInputBorder()),
                     style: TextStyle(fontFamily: 'Tajawal'),
                   ),
                   SizedBox(height: 16),
                   TextField(
                     controller: emailController,
-                    decoration: const InputDecoration(labelText: 'البريد الإلكتروني', border: OutlineInputBorder()),
+                    decoration: InputDecoration(labelText: 'البريد الإلكتروني', border: OutlineInputBorder()),
                     keyboardType: TextInputType.emailAddress,
                     style: TextStyle(fontFamily: 'Tajawal'),
                     enabled: employee == null, // Cannot change email after creation
@@ -123,7 +123,7 @@ class EmployeesScreen extends ConsumerWidget {
                     SizedBox(height: 16),
                     TextField(
                       controller: passwordController,
-                      decoration: const InputDecoration(labelText: 'كلمة المرور', border: OutlineInputBorder()),
+                      decoration: InputDecoration(labelText: 'كلمة المرور', border: OutlineInputBorder()),
                       obscureText: true,
                       style: TextStyle(fontFamily: 'Tajawal'),
                     ),
@@ -131,7 +131,7 @@ class EmployeesScreen extends ConsumerWidget {
                   SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: selectedRole,
-                    decoration: const InputDecoration(labelText: 'الصلاحية', border: OutlineInputBorder()),
+                    decoration: InputDecoration(labelText: 'الصلاحية', border: OutlineInputBorder()),
                     items: [
                       DropdownMenuItem(value: 'admin', child: Text('مدير', style: TextStyle(fontFamily: 'Tajawal'))),
                       DropdownMenuItem(value: 'cashier', child: Text('كاشير', style: TextStyle(fontFamily: 'Tajawal'))),

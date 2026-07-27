@@ -1,4 +1,4 @@
-﻿import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -64,7 +64,7 @@ class SuppliersScreen extends ConsumerWidget {
           );
         },
         loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('Ø®Ø·Ø£: $e')),
+        error: (e, st) => Center(child: Text('خطأ: $e')),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddSupplierDialog(context, ref),
@@ -89,19 +89,19 @@ class SuppliersScreen extends ConsumerWidget {
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: AppLocalizations.of(context)!.text_127),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_127),
                 ),
                 SizedBox(height: 12),
                 TextField(
                   controller: phoneController,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(labelText: AppLocalizations.of(context)!.text_128),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_128),
                 ),
                 SizedBox(height: 12),
                 TextField(
                   controller: debtController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: AppLocalizations.of(context)!.text_129),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_129),
                 ),
               ],
             ),
@@ -154,19 +154,19 @@ class SuppliersScreen extends ConsumerWidget {
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: AppLocalizations.of(context)!.text_127),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_127),
                 ),
                 SizedBox(height: 12),
                 TextField(
                   controller: phoneController,
                   keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(labelText: AppLocalizations.of(context)!.text_128),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_128),
                 ),
                 SizedBox(height: 12),
                 TextField(
                   controller: debtController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: AppLocalizations.of(context)!.text_131),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_131),
                 ),
               ],
             ),

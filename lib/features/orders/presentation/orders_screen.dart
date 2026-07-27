@@ -197,28 +197,28 @@ class OrdersScreen extends ConsumerWidget {
                           }
                         },
                         itemBuilder: (context) => [
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'status_pending',
                             child: Text(AppLocalizations.of(context)!.text_88, style: TextStyle(fontFamily: 'Tajawal')),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'status_processing',
                             child: Text(AppLocalizations.of(context)!.text_89, style: TextStyle(fontFamily: 'Tajawal')),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'status_shipped',
                             child: Text(AppLocalizations.of(context)!.text_90, style: TextStyle(fontFamily: 'Tajawal')),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'status_delivered',
                             child: Text(AppLocalizations.of(context)!.text_91, style: TextStyle(fontFamily: 'Tajawal')),
                           ),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'status_cancelled',
                             child: Text(AppLocalizations.of(context)!.text_92, style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
                           ),
                           const PopupMenuDivider(),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'print',
                             child: Row(
                               children: [

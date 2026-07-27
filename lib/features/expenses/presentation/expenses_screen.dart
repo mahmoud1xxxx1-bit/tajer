@@ -1,4 +1,4 @@
-﻿import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -66,7 +66,7 @@ class ExpensesScreen extends ConsumerWidget {
                             SizedBox(height: 4),
                             Text(DateFormat('yyyy/MM/dd').format(expense.date)),
                             if (expense.category != null && expense.category!.isNotEmpty)
-                              Text('Ø§Ù„ØªØµÙ†ÙŠÙ: ${expense.category}', style: TextStyle(color: Colors.grey)),
+                              Text('التصنيف: ${expense.category}', style: TextStyle(color: Colors.grey)),
                           ],
                         ),
                         trailing: Row(
@@ -93,7 +93,7 @@ class ExpensesScreen extends ConsumerWidget {
           );
         },
         loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('Ø®Ø·Ø£: $e')),
+        error: (e, st) => Center(child: Text('خطأ: $e')),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddExpenseDialog(context, ref),
@@ -118,18 +118,18 @@ class ExpensesScreen extends ConsumerWidget {
               children: [
                 TextField(
                   controller: titleController,
-                  decoration: const InputDecoration(labelText: AppLocalizations.of(context)!.text_68),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_68),
                 ),
                 SizedBox(height: 12),
                 TextField(
                   controller: amountController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: AppLocalizations.of(context)!.text_69),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_69),
                 ),
                 SizedBox(height: 12),
                 TextField(
                   controller: categoryController,
-                  decoration: const InputDecoration(labelText: AppLocalizations.of(context)!.text_70),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_70),
                 ),
               ],
             ),

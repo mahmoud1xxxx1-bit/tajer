@@ -1,4 +1,4 @@
-﻿import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -49,7 +49,7 @@ class CategoriesScreen extends ConsumerWidget {
           );
         },
         loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('Ø®Ø·Ø£: $e')),
+        error: (e, st) => Center(child: Text('خطأ: $e')),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddCategoryDialog(context, ref),
@@ -68,7 +68,7 @@ class CategoriesScreen extends ConsumerWidget {
           title: Text(AppLocalizations.of(context)!.text_41, style: TextStyle(fontFamily: 'Tajawal')),
           content: TextField(
             controller: nameController,
-            decoration: const InputDecoration(labelText: AppLocalizations.of(context)!.text_42),
+            decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_42),
           ),
           actions: [
             TextButton(
@@ -108,7 +108,7 @@ class CategoriesScreen extends ConsumerWidget {
           title: Text(AppLocalizations.of(context)!.text_45, style: TextStyle(fontFamily: 'Tajawal')),
           content: TextField(
             controller: nameController,
-            decoration: const InputDecoration(labelText: AppLocalizations.of(context)!.text_42),
+            decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_42),
           ),
           actions: [
             TextButton(

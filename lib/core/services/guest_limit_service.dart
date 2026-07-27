@@ -1,4 +1,4 @@
-﻿import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/authentication/data/auth_repository.dart';
@@ -44,7 +44,7 @@ class GuestLimitService {
     } catch (e) {
       // If error fetching count, allow or deny? We deny to be safe and notify user.
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ø®Ø·Ø£ ÙÙŠ Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø§Ù„Ù‚ÙŠÙˆØ¯: $e')),
+        SnackBar(content: Text('خطأ في التحقق من القيود: $e')),
       );
       return false;
     }
@@ -112,7 +112,7 @@ class GuestLimitService {
         Navigator.pop(context); // close loading
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('ÙØ´Ù„ Ø§Ù„Ø±Ø¨Ø·: $e', style: TextStyle(fontFamily: 'Tajawal')),
+            content: Text('فشل الربط: $e', style: TextStyle(fontFamily: 'Tajawal')),
             backgroundColor: Colors.red,
           ),
         );
