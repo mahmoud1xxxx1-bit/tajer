@@ -84,9 +84,10 @@ class OrderRepository {
         final currentTotalPurchases = (customerDoc.data()?['totalPurchases'] as num?)?.toDouble() ?? 0.0;
         final currentOrderCount = customerDoc.data()?['orderCount'] as int? ?? 0;
         // Revert customer stats
+        final newOrderCount = currentOrderCount - 1;
         transaction.update(customerRef, {
           'totalPurchases': (currentTotalPurchases - order.total).clamp(0.0, double.infinity),
-          'orderCount': (currentOrderCount - 1).clamp(0, int.MAX_VALUE),
+          'orderCount': newOrderCount < 0 ? 0 : newOrderCount,
           'updatedAt': FieldValue.serverTimestamp(),
         });
       }
