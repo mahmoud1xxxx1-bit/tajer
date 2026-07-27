@@ -28,6 +28,12 @@ class ReportsService {
 
   ReportsService(this.orders, this.products, this.expenses);
 
+  ReportsService filterByDate(DateTime start, DateTime end) {
+    final filteredOrders = orders.where((o) => o.createdAt.isAfter(start) && o.createdAt.isBefore(end)).toList();
+    final filteredExpenses = expenses.where((e) => e.date.isAfter(start) && e.date.isBefore(end)).toList();
+    return ReportsService(filteredOrders, products, filteredExpenses);
+  }
+
   double get totalRevenue => orders.where((o) => o.status != 'cancelled').fold(0.0, (sum, order) => sum + order.total);
   
   double get totalDebt => orders.where((o) => o.status != 'cancelled' && o.isCredit).fold(0.0, (sum, order) => sum + (order.total - order.paidAmount));

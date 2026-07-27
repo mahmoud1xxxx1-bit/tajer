@@ -7,33 +7,117 @@ import '../data/reports_service.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../data/pdf_service.dart';
+import 'package:printing/printing.dart';
 
-class ReportsScreen extends ConsumerWidget {
+class ReportsScreen extends ConsumerStatefulWidget {
   const ReportsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final reportsService = ref.watch(reportsServiceProvider);
+  ConsumerState<ReportsScreen> createState() => _ReportsScreenState();
+}
+
+class _ReportsScreenState extends ConsumerState<ReportsScreen> {
+  String _selectedFilter = 'اليوم';
+
+  ReportsService _getFilteredService(ReportsService service) {
+    final now = DateTime.now();
+    DateTime start;
+    DateTime end = DateTime(now.year, now.month, now.day, 23, 59, 59);
+
+    switch (_selectedFilter) {
+      case 'اليوم':
+        start = DateTime(now.year, now.month, now.day);
+        break;
+      case 'أسبوع':
+        start = now.subtract(const Duration(days: 7));
+        break;
+      case 'شهر':
+        start = DateTime(now.year, now.month - 1, now.day);
+        break;
+      case 'ربع سنوي':
+        start = DateTime(now.year, now.month - 3, now.day);
+        break;
+      case 'نصف سنوي':
+        start = DateTime(now.year, now.month - 6, now.day);
+        break;
+      case 'سنة':
+        start = DateTime(now.year - 1, now.month, now.day);
+        break;
+      default:
+        start = DateTime(now.year, now.month, now.day);
+    }
+
+    return service.filterByDate(start, end);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final baseReportsService = ref.watch(reportsServiceProvider);
     final currentCurrency = ref.watch(currencyProvider);
 
-    if (reportsService == null) {
+    if (baseReportsService == null) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
+    final reportsService = _getFilteredService(baseReportsService);
     final dailySales = reportsService.getDailySales();
     final bestSellers = reportsService.getBestSellers();
 
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.text_104, style: TextStyle(fontFamily: 'Tajawal')),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.picture_as_pdf),
+            onPressed: () async {
+              if (reportsService == null) return;
+              try {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('جاري تجهيز التقرير...', style: TextStyle(fontFamily: 'Tajawal'))),
+                );
+                final pdfData = await PdfService.generateReportPdf(reportsService, _selectedFilter, currentCurrency.code);
+                await Printing.sharePdf(bytes: pdfData, filename: 'report.pdf');
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('حدث خطأ أثناء استخراج التقرير', style: TextStyle(fontFamily: 'Tajawal'))),
+                );
+              }
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Filter and PDF Button
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                DropdownButton<String>(
+                  value: _selectedFilter,
+                  items: ['اليوم', 'أسبوع', 'شهر', 'ربع سنوي', 'نصف سنوي', 'سنة'].map((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value, style: TextStyle(fontFamily: 'Tajawal')),
+                    );
+                  }).toList(),
+                  onChanged: (newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        _selectedFilter = newValue;
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
+            SizedBox(height: 16),
+            
             // Summary Cards
             Row(
               children: [
