@@ -1,3 +1,4 @@
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -16,12 +17,12 @@ class ExpensesScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('المصروفات', style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(AppLocalizations.of(context)!.text_64, style: TextStyle(fontFamily: 'Tajawal')),
       ),
       body: expensesAsync.when(
         data: (expenses) {
           if (expenses.isEmpty) {
-            return const Center(child: Text('لا يوجد مصروفات حالياً', style: TextStyle(fontFamily: 'Tajawal')));
+            return Center(child: Text(AppLocalizations.of(context)!.text_65, style: TextStyle(fontFamily: 'Tajawal')));
           }
           
           final totalExpenses = expenses.fold<double>(0, (sum, expense) => sum + expense.amount);
@@ -29,19 +30,19 @@ class ExpensesScreen extends ConsumerWidget {
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: EdgeInsets.all(16.0),
                 child: GlassCard(
-                  padding: const EdgeInsets.all(20),
+                  padding: EdgeInsets.all(20),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'إجمالي المصروفات',
+                      Text(
+                        AppLocalizations.of(context)!.text_66,
                         style: TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
                       ),
                       Text(
                         '$totalExpenses',
-                        style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.red),
+                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.red),
                       ),
                     ],
                   ),
@@ -49,23 +50,23 @@ class ExpensesScreen extends ConsumerWidget {
               ),
               Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: EdgeInsets.symmetric(horizontal: 16),
                   itemCount: expenses.length,
                   itemBuilder: (context, index) {
                     final expense = expenses[index];
                     return GlassCard(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(16),
+                      margin: EdgeInsets.only(bottom: 12),
+                      padding: EdgeInsets.all(16),
                       child: ListTile(
                         contentPadding: EdgeInsets.zero,
-                        title: Text(expense.title, style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
+                        title: Text(expense.title, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const SizedBox(height: 4),
+                            SizedBox(height: 4),
                             Text(DateFormat('yyyy/MM/dd').format(expense.date)),
                             if (expense.category != null && expense.category!.isNotEmpty)
-                              Text('التصنيف: ${expense.category}', style: const TextStyle(color: Colors.grey)),
+                              Text('التصنيف: ${expense.category}', style: TextStyle(color: Colors.grey)),
                           ],
                         ),
                         trailing: Row(
@@ -73,10 +74,10 @@ class ExpensesScreen extends ConsumerWidget {
                           children: [
                             Text(
                               '-${expense.amount}',
-                              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
+                              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
                             ),
                             IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.grey),
+                              icon: Icon(Icons.delete, color: Colors.grey),
                               onPressed: () {
                                 ref.read(expenseRepositoryProvider)?.deleteExpense(expense.id);
                               },
@@ -91,12 +92,12 @@ class ExpensesScreen extends ConsumerWidget {
             ],
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('خطأ: $e')),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddExpenseDialog(context, ref),
-        child: const Icon(Icons.add),
+        child: Icon(Icons.add),
       ),
     );
   }
@@ -110,25 +111,25 @@ class ExpensesScreen extends ConsumerWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('إضافة مصروف جديد', style: TextStyle(fontFamily: 'Tajawal')),
+          title: Text(AppLocalizations.of(context)!.text_67, style: TextStyle(fontFamily: 'Tajawal')),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: titleController,
-                  decoration: const InputDecoration(labelText: 'البيان (مثال: إيجار المحل)'),
+                  decoration: const InputDecoration(labelText: AppLocalizations.of(context)!.text_68),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 TextField(
                   controller: amountController,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'المبلغ'),
+                  decoration: const InputDecoration(labelText: AppLocalizations.of(context)!.text_69),
                 ),
-                const SizedBox(height: 12),
+                SizedBox(height: 12),
                 TextField(
                   controller: categoryController,
-                  decoration: const InputDecoration(labelText: 'التصنيف (اختياري)'),
+                  decoration: const InputDecoration(labelText: AppLocalizations.of(context)!.text_70),
                 ),
               ],
             ),
@@ -136,7 +137,7 @@ class ExpensesScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('إلغاء'),
+              child: Text(AppLocalizations.of(context)!.text_43),
             ),
             ElevatedButton(
               onPressed: () {
@@ -146,13 +147,13 @@ class ExpensesScreen extends ConsumerWidget {
                 final amount = double.tryParse(amountController.text) ?? 0.0;
                 if (titleController.text.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('الرجاء إدخال البيان (اسم المصروف)')),
+                    SnackBar(content: Text(AppLocalizations.of(context)!.text_71)),
                   );
                   return;
                 }
                 if (amount <= 0) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('الرجاء إدخال مبلغ صحيح أكبر من الصفر')),
+                    SnackBar(content: Text(AppLocalizations.of(context)!.text_72)),
                   );
                   return;
                 }
@@ -170,7 +171,7 @@ class ExpensesScreen extends ConsumerWidget {
                 ref.read(expenseRepositoryProvider)?.addExpense(expense);
                 Navigator.pop(context);
               },
-              child: const Text('حفظ'),
+              child: Text(AppLocalizations.of(context)!.text_44),
             ),
           ],
         );

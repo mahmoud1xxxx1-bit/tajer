@@ -60,11 +60,11 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
         _selectedProductId = product.id;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('تم اختيار المنتج: ${product.name}', style: const TextStyle(fontFamily: 'Tajawal'))),
+        SnackBar(content: Text('تم اختيار المنتج: ${product.name}', style: TextStyle(fontFamily: 'Tajawal'))),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('لم يتم العثور على منتج بهذا الباركود', style: TextStyle(fontFamily: 'Tajawal'))),
+        SnackBar(content: Text(AppLocalizations.of(context)!.text_79, style: TextStyle(fontFamily: 'Tajawal'))),
       );
     }
   }
@@ -78,7 +78,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
 
     try {
       final user = ref.read(authRepositoryProvider).currentUser;
-      if (user == null) throw Exception('المستخدم غير مسجل');
+      if (user == null) throw Exception(AppLocalizations.of(context)!.text_47);
 
       final orderRepo = ref.read(orderRepositoryProvider);
       final logRepo = ref.read(inventoryLogRepositoryProvider);
@@ -92,7 +92,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       final total = selectedProduct.price * quantity;
 
       if (selectedProduct.quantity < quantity) {
-        throw Exception('الكمية المطلوبة غير متوفرة في المخزون');
+        throw Exception(AppLocalizations.of(context)!.text_80);
       }
 
       double paidAmount = total;
@@ -103,7 +103,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
           paidAmount = 0.0;
         }
         if (paidAmount > total) {
-          throw Exception('المبلغ المدفوع لا يمكن أن يكون أكبر من الإجمالي');
+          throw Exception(AppLocalizations.of(context)!.text_81);
         }
       }
 
@@ -131,7 +131,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
         productName: selectedProduct.name,
         previousQuantity: selectedProduct.quantity,
         newQuantity: selectedProduct.quantity - quantity,
-        reason: 'طلب مبيعات جديد',
+        reason: AppLocalizations.of(context)!.text_82,
         userEmail: user.email,
       );
 
@@ -140,7 +140,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.error}: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(content: Text('${l10n.error}: $e', style: TextStyle(fontFamily: 'Tajawal'))),
         );
       }
     } finally {
@@ -155,7 +155,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
     final customersState = ref.watch(customersStreamProvider);
 
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: EdgeInsets.all(24.0),
       child: Form(
         key: _formKey,
         child: Column(
@@ -164,24 +164,24 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
           children: [
             Text(
               l10n.add,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             
             // Customer Dropdown
             customersState.when(
               data: (customers) => DropdownButtonFormField<String>(
                 value: _selectedCustomerId,
                 decoration: InputDecoration(labelText: l10n.customers, border: const OutlineInputBorder()),
-                items: customers.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: const TextStyle(fontFamily: 'Tajawal')))).toList(),
+                items: customers.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: TextStyle(fontFamily: 'Tajawal')))).toList(),
                 onChanged: (val) => setState(() => _selectedCustomerId = val),
                 validator: (val) => val == null ? l10n.requiredField : null,
               ),
               loading: () => const CircularProgressIndicator(),
               error: (e, st) => Text('${l10n.error}: $e'),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // Barcode search
             Row(
@@ -196,14 +196,14 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
                     onFieldSubmitted: (val) => _findProductByBarcode(val.trim()),
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 IconButton(
                   onPressed: _scanBarcode,
-                  icon: const Icon(Icons.qr_code_scanner, color: Colors.blue, size: 32),
+                  icon: Icon(Icons.qr_code_scanner, color: Colors.blue, size: 32),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // Product Dropdown
             productsState.when(
@@ -212,7 +212,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
                 return DropdownButtonFormField<String>(
                   value: _selectedProductId,
                   decoration: InputDecoration(labelText: l10n.products, border: const OutlineInputBorder()),
-                  items: products.map((p) => DropdownMenuItem(value: p.id, child: Text('${p.name} (${l10n.quantity}: ${p.quantity})', style: const TextStyle(fontFamily: 'Tajawal')))).toList(),
+                  items: products.map((p) => DropdownMenuItem(value: p.id, child: Text('${p.name} (${l10n.quantity}: ${p.quantity})', style: TextStyle(fontFamily: 'Tajawal')))).toList(),
                   onChanged: (val) => setState(() => _selectedProductId = val),
                   validator: (val) => val == null ? l10n.requiredField : null,
                 );
@@ -220,7 +220,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
               loading: () => const CircularProgressIndicator(),
               error: (e, st) => Text('${l10n.error}: $e'),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             TextFormField(
               controller: _quantityController,
@@ -231,7 +231,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
               ),
               validator: (value) => value!.isEmpty ? l10n.requiredField : null,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             
             TextFormField(
               controller: _notesController,
@@ -241,12 +241,12 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
               ),
               maxLines: 2,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
 
             // Credit / Debt Section
             SwitchListTile(
-              title: const Text('بيع آجل (دين)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-              subtitle: const Text('تسجيل الطلب كدين على العميل', style: TextStyle(fontFamily: 'Tajawal')),
+              title: Text(AppLocalizations.of(context)!.text_83, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              subtitle: Text(AppLocalizations.of(context)!.text_84, style: TextStyle(fontFamily: 'Tajawal')),
               value: _isCredit,
               onChanged: (val) {
                 setState(() {
@@ -259,30 +259,30 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
             ),
             
             if (_isCredit) ...[
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               TextFormField(
                 controller: _paidAmountController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(
-                  labelText: 'المبلغ المدفوع مقدماً (اختياري)',
+                  labelText: AppLocalizations.of(context)!.text_85,
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.payments_outlined),
                 ),
               ),
             ],
             
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             ElevatedButton(
               onPressed: _isLoading ? null : _submit,
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: EdgeInsets.symmetric(vertical: 16),
               ),
               child: _isLoading
                   ? const CircularProgressIndicator()
-                  : Text(l10n.confirm, style: const TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
+                  : Text(l10n.confirm, style: TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
           ],
         ),
       ),

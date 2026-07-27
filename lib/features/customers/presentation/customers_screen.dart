@@ -1,3 +1,4 @@
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/customer_repository.dart';
@@ -19,14 +20,14 @@ class CustomersScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إدارة العملاء', style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(AppLocalizations.of(context)!.text_55, style: TextStyle(fontFamily: 'Tajawal')),
       ),
       body: customersAsyncValue.when(
         data: (customers) {
           if (customers.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
-                'لا يوجد عملاء بعد.\nاضغط على + لإضافة عميل جديد.',
+                AppLocalizations.of(context)!.text_56,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontFamily: 'Tajawal', fontSize: 16),
               ),
@@ -34,29 +35,29 @@ class CustomersScreen extends ConsumerWidget {
           }
           return ListView.builder(
             itemCount: customers.length,
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16),
             itemBuilder: (context, index) {
               final customer = customers[index];
               return GlassCard(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(4),
+                margin: EdgeInsets.only(bottom: 12),
+                padding: EdgeInsets.all(4),
                 onLongPress: () {
                   showDialog(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: const Text('حذف العميل', style: TextStyle(fontFamily: 'Tajawal')),
-                      content: const Text('هل أنت متأكد من حذف هذا العميل؟', style: TextStyle(fontFamily: 'Tajawal')),
+                      title: Text(AppLocalizations.of(context)!.text_57, style: TextStyle(fontFamily: 'Tajawal')),
+                      content: Text(AppLocalizations.of(context)!.text_58, style: TextStyle(fontFamily: 'Tajawal')),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
+                          child: Text(AppLocalizations.of(context)!.text_43, style: TextStyle(fontFamily: 'Tajawal')),
                         ),
                         TextButton(
                           onPressed: () {
                             ref.read(customerRepositoryProvider).deleteCustomer(customer.id);
                             Navigator.pop(context);
                           },
-                          child: const Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                          child: Text(AppLocalizations.of(context)!.text_59, style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
                         ),
                       ],
                     ),
@@ -80,22 +81,22 @@ class CustomersScreen extends ConsumerWidget {
                     alignment: Alignment.center,
                     child: Text(
                       customer.name.substring(0, 1).toUpperCase(),
-                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 20),
                     ),
                   ),
                   title: Text(
                     customer.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 18),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 18),
                   ),
                   subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 4.0),
+                    padding: EdgeInsets.only(top: 4.0),
                     child: Row(
                       children: [
-                        const Icon(Icons.phone, size: 14, color: Colors.grey),
-                        const SizedBox(width: 4),
+                        Icon(Icons.phone, size: 14, color: Colors.grey),
+                        SizedBox(width: 4),
                         Text(
                           customer.phone,
-                          style: const TextStyle(fontFamily: 'Tajawal'),
+                          style: TextStyle(fontFamily: 'Tajawal'),
                         ),
                       ],
                     ),
@@ -118,15 +119,15 @@ class CustomersScreen extends ConsumerWidget {
                           if (customer.totalDebt > 0)
                             Text(
                               'دين: ${customer.totalDebt} $currency',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Colors.red,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
                               ),
                             ),
                           Container(
-                            margin: const EdgeInsets.only(top: 4),
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            margin: EdgeInsets.only(top: 4),
+                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
                               color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
@@ -138,9 +139,9 @@ class CustomersScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(width: 8),
+                      SizedBox(width: 8),
                       PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert),
+                        icon: Icon(Icons.more_vert),
                         onSelected: (value) async {
                           if (value == 'edit') {
                             showModalBottomSheet(
@@ -157,19 +158,19 @@ class CustomersScreen extends ConsumerWidget {
                             showDialog(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: const Text('حذف العميل', style: TextStyle(fontFamily: 'Tajawal')),
-                                content: const Text('هل أنت متأكد من حذف هذا العميل؟', style: TextStyle(fontFamily: 'Tajawal')),
+                                title: Text(AppLocalizations.of(context)!.text_57, style: TextStyle(fontFamily: 'Tajawal')),
+                                content: Text(AppLocalizations.of(context)!.text_58, style: TextStyle(fontFamily: 'Tajawal')),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(context),
-                                    child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
+                                    child: Text(AppLocalizations.of(context)!.text_43, style: TextStyle(fontFamily: 'Tajawal')),
                                   ),
                                   TextButton(
                                     onPressed: () {
                                       ref.read(customerRepositoryProvider).deleteCustomer(customer.id);
                                       Navigator.pop(context);
                                     },
-                                    child: const Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                                    child: Text(AppLocalizations.of(context)!.text_59, style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
                                   ),
                                 ],
                               ),
@@ -181,7 +182,7 @@ class CustomersScreen extends ConsumerWidget {
                             } catch (e) {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('خطأ في الطباعة: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
+                                  SnackBar(content: Text('خطأ في الطباعة: $e', style: TextStyle(fontFamily: 'Tajawal'))),
                                 );
                               }
                             }
@@ -194,7 +195,7 @@ class CustomersScreen extends ConsumerWidget {
                               children: [
                                 Icon(Icons.edit, size: 20),
                                 SizedBox(width: 8),
-                                Text('تعديل', style: TextStyle(fontFamily: 'Tajawal')),
+                                Text(AppLocalizations.of(context)!.text_60, style: TextStyle(fontFamily: 'Tajawal')),
                               ],
                             ),
                           ),
@@ -204,7 +205,7 @@ class CustomersScreen extends ConsumerWidget {
                               children: [
                                 Icon(Icons.print_outlined, size: 20),
                                 SizedBox(width: 8),
-                                Text('طباعة كشف حساب', style: TextStyle(fontFamily: 'Tajawal')),
+                                Text(AppLocalizations.of(context)!.text_61, style: TextStyle(fontFamily: 'Tajawal')),
                               ],
                             ),
                           ),
@@ -214,7 +215,7 @@ class CustomersScreen extends ConsumerWidget {
                               children: [
                                 Icon(Icons.delete, color: Colors.red, size: 20),
                                 SizedBox(width: 8),
-                                Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                                Text(AppLocalizations.of(context)!.text_59, style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
                               ],
                             ),
                           ),
@@ -227,9 +228,9 @@ class CustomersScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(
-          child: Text('حدث خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal')),
+          child: Text('حدث خطأ: $e', style: TextStyle(fontFamily: 'Tajawal')),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -250,8 +251,8 @@ class CustomersScreen extends ConsumerWidget {
             );
           }
         },
-        label: const Text('إضافة عميل', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-        icon: const Icon(Icons.person_add),
+        label: Text(AppLocalizations.of(context)!.text_62, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        icon: Icon(Icons.person_add),
       ),
     );
   }

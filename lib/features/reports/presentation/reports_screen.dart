@@ -1,3 +1,4 @@
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -25,10 +26,10 @@ class ReportsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('التقارير والأرباح', style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(AppLocalizations.of(context)!.text_104, style: TextStyle(fontFamily: 'Tajawal')),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -37,16 +38,16 @@ class ReportsScreen extends ConsumerWidget {
               children: [
                 Expanded(
                   child: _SummaryCard(
-                    title: 'إجمالي المبيعات',
+                    title: AppLocalizations.of(context)!.text_105,
                     value: '${reportsService.totalRevenue} ${currentCurrency.code}',
                     icon: Icons.account_balance_wallet,
                     color: Colors.green,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: _SummaryCard(
-                    title: 'صافي الربح',
+                    title: AppLocalizations.of(context)!.text_106,
                     value: '${reportsService.netProfit} ${currentCurrency.code}',
                     icon: Icons.savings,
                     color: Colors.blue,
@@ -54,21 +55,21 @@ class ReportsScreen extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
                   child: _SummaryCard(
-                    title: 'إجمالي المصروفات',
+                    title: AppLocalizations.of(context)!.text_66,
                     value: '${reportsService.totalExpenses} ${currentCurrency.code}',
                     icon: Icons.money_off,
                     color: Colors.orange,
                   ),
                 ),
-                const SizedBox(width: 12),
+                SizedBox(width: 12),
                 Expanded(
                   child: _SummaryCard(
-                    title: 'إجمالي الديون (الآجل)',
+                    title: AppLocalizations.of(context)!.text_107,
                     value: '${reportsService.totalDebt} ${currentCurrency.code}',
                     icon: Icons.warning_amber_rounded,
                     color: Colors.red,
@@ -76,20 +77,20 @@ class ReportsScreen extends ConsumerWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             
             // Sales Chart
-            const Text(
-              'المبيعات اليومية',
+            Text(
+              AppLocalizations.of(context)!.text_108,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             GlassCard(
-              padding: const EdgeInsets.all(16),
+              padding: EdgeInsets.all(16),
               child: SizedBox(
                 height: 250,
                 child: dailySales.isEmpty 
-                  ? const Center(child: Text('لا توجد مبيعات بعد', style: TextStyle(fontFamily: 'Tajawal')))
+                  ? Center(child: Text(AppLocalizations.of(context)!.text_109, style: TextStyle(fontFamily: 'Tajawal')))
                   : LineChart(
                       LineChartData(
                         gridData: const FlGridData(show: false),
@@ -103,14 +104,14 @@ class ReportsScreen extends ConsumerWidget {
                                 if (value.toInt() >= 0 && value.toInt() < dailySales.length) {
                                   final date = dailySales[value.toInt()].date;
                                   return Padding(
-                                    padding: const EdgeInsets.only(top: 8.0),
+                                    padding: EdgeInsets.only(top: 8.0),
                                     child: Text(
                                       '${date.day}/${date.month}',
-                                      style: const TextStyle(fontSize: 10, fontFamily: 'Tajawal'),
+                                      style: TextStyle(fontSize: 10, fontFamily: 'Tajawal'),
                                     ),
                                   );
                                 }
-                                return const Text('');
+                                return Text('');
                               },
                               reservedSize: 30,
                             ),
@@ -121,7 +122,7 @@ class ReportsScreen extends ConsumerWidget {
                               reservedSize: 40,
                               getTitlesWidget: (value, meta) => Text(
                                 '${value.toInt()}',
-                                style: const TextStyle(fontSize: 10, fontFamily: 'Tajawal'),
+                                style: TextStyle(fontSize: 10, fontFamily: 'Tajawal'),
                               ),
                             ),
                           ),
@@ -147,16 +148,16 @@ class ReportsScreen extends ConsumerWidget {
                     ),
               ),
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
 
             // Best Sellers
-            const Text(
-              'الأكثر مبيعاً',
+            Text(
+              AppLocalizations.of(context)!.text_110,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             if (bestSellers.isEmpty)
-              const Center(child: Text('لا توجد مبيعات بعد', style: TextStyle(fontFamily: 'Tajawal')))
+              Center(child: Text(AppLocalizations.of(context)!.text_109, style: TextStyle(fontFamily: 'Tajawal')))
             else
               ListView.builder(
                 shrinkWrap: true,
@@ -165,14 +166,14 @@ class ReportsScreen extends ConsumerWidget {
                 itemBuilder: (context, index) {
                   final item = bestSellers[index];
                   return GlassCard(
-                    margin: const EdgeInsets.only(bottom: 8),
+                    margin: EdgeInsets.only(bottom: 8),
                     child: ListTile(
                       leading: CircleAvatar(
                         backgroundColor: Theme.of(context).colorScheme.secondary.withOpacity(0.2),
                         child: Text('${index + 1}', style: TextStyle(color: Theme.of(context).colorScheme.secondary, fontWeight: FontWeight.bold)),
                       ),
-                      title: Text(item.product.name, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                      subtitle: Text('${item.quantitySold} وحدة مباعة', style: const TextStyle(fontFamily: 'Tajawal')),
+                      title: Text(item.product.name, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                      subtitle: Text('${item.quantitySold} وحدة مباعة', style: TextStyle(fontFamily: 'Tajawal')),
                       trailing: Text(
                         '${item.totalRevenue} ${currentCurrency.code}',
                         style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold),
@@ -204,23 +205,23 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Icon(icon, color: color, size: 24),
-              const SizedBox(width: 8),
+              SizedBox(width: 8),
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(fontSize: 14, fontFamily: 'Tajawal'),
+                  style: TextStyle(fontSize: 14, fontFamily: 'Tajawal'),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: 12),
           Text(
             value,
             style: TextStyle(

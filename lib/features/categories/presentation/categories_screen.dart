@@ -1,3 +1,4 @@
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -15,26 +16,26 @@ class CategoriesScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إدارة التصنيفات', style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(AppLocalizations.of(context)!.text_39, style: TextStyle(fontFamily: 'Tajawal')),
       ),
       body: categoriesAsync.when(
         data: (categories) {
           if (categories.isEmpty) {
-            return const Center(child: Text('لا يوجد تصنيفات حالياً', style: TextStyle(fontFamily: 'Tajawal')));
+            return Center(child: Text(AppLocalizations.of(context)!.text_40, style: TextStyle(fontFamily: 'Tajawal')));
           }
           
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16),
             itemCount: categories.length,
             itemBuilder: (context, index) {
               final category = categories[index];
               return GlassCard(
-                margin: const EdgeInsets.only(bottom: 12),
+                margin: EdgeInsets.only(bottom: 12),
                 child: ListTile(
-                  leading: const Icon(Icons.category, color: Colors.blue),
-                  title: Text(category.name, style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
+                  leading: Icon(Icons.category, color: Colors.blue),
+                  title: Text(category.name, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
                   trailing: IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.red),
+                    icon: Icon(Icons.delete, color: Colors.red),
                     onPressed: () {
                       ref.read(categoryRepositoryProvider)?.deleteCategory(category.id);
                     },
@@ -47,12 +48,12 @@ class CategoriesScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('خطأ: $e')),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddCategoryDialog(context, ref),
-        child: const Icon(Icons.add),
+        child: Icon(Icons.add),
       ),
     );
   }
@@ -64,15 +65,15 @@ class CategoriesScreen extends ConsumerWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('إضافة تصنيف جديد', style: TextStyle(fontFamily: 'Tajawal')),
+          title: Text(AppLocalizations.of(context)!.text_41, style: TextStyle(fontFamily: 'Tajawal')),
           content: TextField(
             controller: nameController,
-            decoration: const InputDecoration(labelText: 'اسم التصنيف'),
+            decoration: const InputDecoration(labelText: AppLocalizations.of(context)!.text_42),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('إلغاء'),
+              child: Text(AppLocalizations.of(context)!.text_43),
             ),
             ElevatedButton(
               onPressed: () {
@@ -89,7 +90,7 @@ class CategoriesScreen extends ConsumerWidget {
                 ref.read(categoryRepositoryProvider)?.addCategory(category);
                 Navigator.pop(context);
               },
-              child: const Text('حفظ'),
+              child: Text(AppLocalizations.of(context)!.text_44),
             ),
           ],
         );
@@ -104,15 +105,15 @@ class CategoriesScreen extends ConsumerWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('تعديل التصنيف', style: TextStyle(fontFamily: 'Tajawal')),
+          title: Text(AppLocalizations.of(context)!.text_45, style: TextStyle(fontFamily: 'Tajawal')),
           content: TextField(
             controller: nameController,
-            decoration: const InputDecoration(labelText: 'اسم التصنيف'),
+            decoration: const InputDecoration(labelText: AppLocalizations.of(context)!.text_42),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('إلغاء'),
+              child: Text(AppLocalizations.of(context)!.text_43),
             ),
             ElevatedButton(
               onPressed: () {
@@ -122,7 +123,7 @@ class CategoriesScreen extends ConsumerWidget {
                 ref.read(categoryRepositoryProvider)?.updateCategory(updatedCategory);
                 Navigator.pop(context);
               },
-              child: const Text('تحديث'),
+              child: Text(AppLocalizations.of(context)!.text_46),
             ),
           ],
         );

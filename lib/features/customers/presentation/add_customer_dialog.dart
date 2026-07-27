@@ -1,3 +1,4 @@
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -42,7 +43,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
     
     try {
       final user = ref.read(authRepositoryProvider).currentUser;
-      if (user == null) throw Exception('المستخدم غير مسجل');
+      if (user == null) throw Exception(AppLocalizations.of(context)!.text_47);
 
       final customerRepo = ref.read(customerRepositoryProvider);
 
@@ -66,7 +67,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('حدث خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(content: Text('حدث خطأ: $e', style: TextStyle(fontFamily: 'Tajawal'))),
         );
       }
     } finally {
@@ -79,7 +80,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
   Widget build(BuildContext context) {
     final isEditing = widget.customerToEdit != null;
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: EdgeInsets.all(24.0),
       child: Form(
         key: _formKey,
         child: Column(
@@ -87,40 +88,40 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              isEditing ? 'تعديل بيانات العميل' : 'إضافة عميل جديد',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+              isEditing ? AppLocalizations.of(context)!.text_48 : AppLocalizations.of(context)!.text_49,
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(
-                labelText: 'اسم العميل',
+                labelText: AppLocalizations.of(context)!.text_50,
                 border: OutlineInputBorder(),
               ),
-              validator: (value) => value!.isEmpty ? 'مطلوب' : null,
+              validator: (value) => value!.isEmpty ? AppLocalizations.of(context)!.text_51 : null,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             TextFormField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
               decoration: const InputDecoration(
-                labelText: 'رقم الهاتف',
+                labelText: AppLocalizations.of(context)!.text_52,
                 border: OutlineInputBorder(),
               ),
-              validator: (value) => value!.isEmpty ? 'مطلوب' : null,
+              validator: (value) => value!.isEmpty ? AppLocalizations.of(context)!.text_51 : null,
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             ElevatedButton(
               onPressed: _isLoading ? null : _submit,
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: EdgeInsets.symmetric(vertical: 16),
               ),
               child: _isLoading
                   ? const CircularProgressIndicator()
-                  : Text(isEditing ? 'حفظ التعديلات' : 'إضافة العميل', style: const TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
+                  : Text(isEditing ? AppLocalizations.of(context)!.text_53 : AppLocalizations.of(context)!.text_54, style: TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
           ],
         ),
       ),

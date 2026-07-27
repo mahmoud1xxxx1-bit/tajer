@@ -1,3 +1,4 @@
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'auth_controller.dart';
@@ -27,35 +28,35 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
       body: Center(
         child: authState.when(
           data: (_) => const CircularProgressIndicator(),
-          loading: () => const Column(
+          loading: () => Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircularProgressIndicator(),
               SizedBox(height: 16),
               Text(
-                'تهيئة مساحة العمل الخاصة بك...',
+                AppLocalizations.of(context)!.text_27,
                 style: TextStyle(fontSize: 16, fontFamily: 'Tajawal'),
               ),
             ],
           ),
           error: (error, stack) => Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: EdgeInsets.all(24.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline, color: Colors.red, size: 48),
-                const SizedBox(height: 16),
+                Icon(Icons.error_outline, color: Colors.red, size: 48),
+                SizedBox(height: 16),
                 Text(
                   'حدث خطأ في الاتصال: $error',
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.red),
+                  style: TextStyle(color: Colors.red),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () {
                     ref.read(authControllerProvider.notifier).signInAnonymously();
                   },
-                  child: const Text('إعادة المحاولة'),
+                  child: Text(AppLocalizations.of(context)!.text_28),
                 ),
               ],
             ),

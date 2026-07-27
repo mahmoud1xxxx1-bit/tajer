@@ -1,3 +1,4 @@
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../authentication/data/auth_repository.dart';
@@ -43,15 +44,15 @@ class OrderRepository {
       final orderRef = _firestore.collection('orders').doc(order.id);
 
       final productDoc = await transaction.get(productRef);
-      if (!productDoc.exists) throw Exception('المنتج غير موجود');
+      if (!productDoc.exists) throw Exception(AppLocalizations.of(context)!.text_75);
 
       final currentQuantity = productDoc.data()?['quantity'] as int? ?? 0;
       if (currentQuantity < order.quantity) {
-        throw Exception('الكمية غير كافية في المخزون');
+        throw Exception(AppLocalizations.of(context)!.text_76);
       }
 
       final customerDoc = await transaction.get(customerRef);
-      if (!customerDoc.exists) throw Exception('العميل غير موجود');
+      if (!customerDoc.exists) throw Exception(AppLocalizations.of(context)!.text_77);
 
       final currentTotalPurchases = (customerDoc.data()?['totalPurchases'] as num?)?.toDouble() ?? 0.0;
       final currentOrderCount = customerDoc.data()?['orderCount'] as int? ?? 0;
@@ -142,14 +143,14 @@ class OrderRepository {
         if (productDoc.exists) {
           final currentQty = productDoc.data()?['quantity'] as int? ?? 0;
           if (currentQty < order.quantity) {
-            throw Exception('الكمية غير كافية لإعادة تفعيل الطلب');
+            throw Exception(AppLocalizations.of(context)!.text_78);
           }
           transaction.update(productRef, {
             'quantity': currentQty - order.quantity,
             'updatedAt': FieldValue.serverTimestamp(),
           });
         } else {
-          throw Exception('المنتج غير موجود');
+          throw Exception(AppLocalizations.of(context)!.text_75);
         }
       }
 

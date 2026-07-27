@@ -1,3 +1,4 @@
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -46,14 +47,14 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
     setState(() => _isLoading = true);
     try {
       final user = ref.read(authRepositoryProvider).currentUser;
-      if (user == null) throw Exception('المستخدم غير مسجل الدخول');
+      if (user == null) throw Exception(AppLocalizations.of(context)!.text_29);
 
       if (kIsWeb) {
         await user.linkWithPopup(GoogleAuthProvider());
       } else {
         final googleSignIn = GoogleSignIn();
         final googleUser = await googleSignIn.signIn();
-        if (googleUser == null) throw Exception('تم إلغاء تسجيل الدخول');
+        if (googleUser == null) throw Exception(AppLocalizations.of(context)!.text_30);
 
         final googleAuth = await googleUser.authentication;
         final credential = GoogleAuthProvider.credential(
@@ -66,7 +67,7 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
       setState(() => _isGoogleLinked = true);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم ربط الحساب بنجاح!')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.text_31)),
         );
       }
     } catch (e) {
@@ -86,7 +87,7 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
     final phone = _phoneController.text.trim();
     if (phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('يرجى إدخال رقم الهاتف')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.text_32)),
       );
       return;
     }
@@ -110,43 +111,43 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إكمال التسجيل', style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(AppLocalizations.of(context)!.text_33, style: TextStyle(fontFamily: 'Tajawal')),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'لحماية بياناتك من الضياع، يرجى ربط حسابك بـ Google وإدخال رقم للتواصل.',
+            Text(
+              AppLocalizations.of(context)!.text_34,
               style: TextStyle(fontSize: 16, fontFamily: 'Tajawal'),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 32),
+            SizedBox(height: 32),
             if (!_isGoogleLinked)
               ElevatedButton.icon(
                 onPressed: _isLoading ? null : _linkGoogleAccount,
-                icon: const Icon(Icons.g_mobiledata, size: 32),
-                label: const Text('الربط بحساب Google', style: TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
+                icon: Icon(Icons.g_mobiledata, size: 32),
+                label: Text(AppLocalizations.of(context)!.text_35, style: TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: EdgeInsets.symmetric(vertical: 12),
                 ),
               )
             else
-              const Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.check_circle, color: Colors.green),
                   SizedBox(width: 8),
-                  Text('تم ربط الحساب بنجاح', style: TextStyle(fontFamily: 'Tajawal', color: Colors.green, fontWeight: FontWeight.bold)),
+                  Text(AppLocalizations.of(context)!.text_36, style: TextStyle(fontFamily: 'Tajawal', color: Colors.green, fontWeight: FontWeight.bold)),
                 ],
               ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             TextField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
               decoration: const InputDecoration(
-                labelText: 'رقم الهاتف (الواتساب)',
+                labelText: AppLocalizations.of(context)!.text_37,
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.phone),
               ),
@@ -156,11 +157,11 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
             ElevatedButton(
               onPressed: (_isGoogleLinked && !_isLoading) ? _saveProfile : null,
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: EdgeInsets.symmetric(vertical: 16),
               ),
               child: _isLoading 
                 ? const CircularProgressIndicator()
-                : const Text('حفظ والمتابعة', style: TextStyle(fontSize: 18, fontFamily: 'Tajawal')),
+                : Text(AppLocalizations.of(context)!.text_38, style: TextStyle(fontSize: 18, fontFamily: 'Tajawal')),
             ),
           ],
         ),

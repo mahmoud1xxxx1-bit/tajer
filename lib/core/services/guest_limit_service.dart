@@ -1,3 +1,4 @@
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/authentication/data/auth_repository.dart';
@@ -60,23 +61,23 @@ class GuestLimitService {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('وصلت للحد الأقصى!', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-        content: const Text(
-          'حسابك الحالي هو حساب ضيف تجريبي. لقد وصلت للحد الأقصى المسموح به للإضافات.\n\nيرجى ربط حسابك بـ Google للاستمرار في استخدام التطبيق مجاناً وبدون قيود، وحفظ بياناتك من الضياع.',
+        title: Text(AppLocalizations.of(context)!.text_1, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        content: Text(
+          AppLocalizations.of(context)!.text_2,
           style: TextStyle(fontFamily: 'Tajawal', height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('لاحقاً', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+            child: Text(AppLocalizations.of(context)!.text_3, style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
           ),
           ElevatedButton.icon(
             onPressed: () {
               Navigator.pop(context);
               _linkWithGoogle(context, ref);
             },
-            icon: const Icon(Icons.login),
-            label: const Text('ربط بحساب Google', style: TextStyle(fontFamily: 'Tajawal')),
+            icon: Icon(Icons.login),
+            label: Text(AppLocalizations.of(context)!.text_4, style: TextStyle(fontFamily: 'Tajawal')),
             style: ElevatedButton.styleFrom(
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor: Colors.white,
@@ -92,7 +93,7 @@ class GuestLimitService {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
+      builder: (_) => Center(child: CircularProgressIndicator()),
     );
 
     try {
@@ -100,8 +101,8 @@ class GuestLimitService {
       if (context.mounted) {
         Navigator.pop(context); // close loading
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم ترقية الحساب بنجاح! يمكنك الآن الاستمرار بلا قيود.', style: TextStyle(fontFamily: 'Tajawal')),
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.text_5, style: TextStyle(fontFamily: 'Tajawal')),
             backgroundColor: Colors.green,
           ),
         );
@@ -111,7 +112,7 @@ class GuestLimitService {
         Navigator.pop(context); // close loading
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('فشل الربط: $e', style: const TextStyle(fontFamily: 'Tajawal')),
+            content: Text('فشل الربط: $e', style: TextStyle(fontFamily: 'Tajawal')),
             backgroundColor: Colors.red,
           ),
         );

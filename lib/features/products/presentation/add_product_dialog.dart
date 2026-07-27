@@ -67,7 +67,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     
     try {
       final user = ref.read(authRepositoryProvider).currentUser;
-      if (user == null) throw Exception('المستخدم غير مسجل');
+      if (user == null) throw Exception(AppLocalizations.of(context)!.text_47);
 
       final productRepo = ref.read(productRepositoryProvider);
       final logRepo = ref.read(inventoryLogRepositoryProvider);
@@ -96,7 +96,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             productName: newProduct.name,
             previousQuantity: previousQuantity,
             newQuantity: newQuantity,
-            reason: 'تعديل يدوي',
+            reason: AppLocalizations.of(context)!.text_100,
             userEmail: user.email,
           );
         }
@@ -108,7 +108,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             productName: newProduct.name,
             previousQuantity: 0,
             newQuantity: newQuantity,
-            reason: 'إضافة منتج',
+            reason: AppLocalizations.of(context)!.text_101,
             userEmail: user.email,
           );
         }
@@ -118,7 +118,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.error}: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(content: Text('${l10n.error}: $e', style: TextStyle(fontFamily: 'Tajawal'))),
         );
       }
     } finally {
@@ -133,7 +133,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     final categoriesAsync = ref.watch(categoriesStreamProvider);
 
     return Padding(
-      padding: const EdgeInsets.all(24.0),
+      padding: EdgeInsets.all(24.0),
       child: Form(
         key: _formKey,
         child: Column(
@@ -142,10 +142,10 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
           children: [
             Text(
               isEditing ? l10n.edit : l10n.add,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             Row(
               children: [
                 Expanded(
@@ -157,14 +157,14 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 IconButton(
                   onPressed: _scanBarcode,
-                  icon: const Icon(Icons.qr_code_scanner, color: Colors.blue, size: 32),
+                  icon: Icon(Icons.qr_code_scanner, color: Colors.blue, size: 32),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             categoriesAsync.when(
               data: (categories) {
                 return DropdownButtonFormField<String>(
@@ -174,8 +174,8 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                     border: const OutlineInputBorder(),
                   ),
                   items: [
-                    DropdownMenuItem(value: null, child: Text(l10n.noCategory, style: const TextStyle(fontFamily: 'Tajawal'))),
-                    ...categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: const TextStyle(fontFamily: 'Tajawal')))),
+                    DropdownMenuItem(value: null, child: Text(l10n.noCategory, style: TextStyle(fontFamily: 'Tajawal'))),
+                    ...categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: TextStyle(fontFamily: 'Tajawal')))),
                   ],
                   onChanged: (value) => setState(() => _selectedCategoryId = value),
                 );
@@ -183,7 +183,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
               loading: () => const CircularProgressIndicator(),
               error: (e, st) => Text(l10n.error),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(
@@ -192,7 +192,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
               ),
               validator: (value) => value!.isEmpty ? l10n.requiredField : null,
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
             Row(
               children: [
                 Expanded(
@@ -206,7 +206,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                     validator: (value) => value!.isEmpty ? l10n.requiredField : null,
                   ),
                 ),
-                const SizedBox(width: 16),
+                SizedBox(width: 16),
                 Expanded(
                   child: TextFormField(
                     controller: _quantityController,
@@ -220,17 +220,17 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            SizedBox(height: 24),
             ElevatedButton(
               onPressed: _isLoading ? null : _submit,
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
+                padding: EdgeInsets.symmetric(vertical: 16),
               ),
               child: _isLoading
                   ? const CircularProgressIndicator()
-                  : Text(l10n.save, style: const TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
+                  : Text(l10n.save, style: TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 16),
           ],
         ),
       ),

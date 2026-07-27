@@ -50,28 +50,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
         },
         destinations: [
           NavigationDestination(
-            icon: const Icon(Icons.dashboard_outlined),
-            selectedIcon: const Icon(Icons.dashboard),
+            icon: Icon(Icons.dashboard_outlined),
+            selectedIcon: Icon(Icons.dashboard),
             label: l10n.dashboard,
           ),
           NavigationDestination(
-            icon: const Icon(Icons.shopping_cart_outlined),
-            selectedIcon: const Icon(Icons.shopping_cart),
+            icon: Icon(Icons.shopping_cart_outlined),
+            selectedIcon: Icon(Icons.shopping_cart),
             label: l10n.orders,
           ),
           NavigationDestination(
-            icon: const Icon(Icons.inventory_2_outlined),
-            selectedIcon: const Icon(Icons.inventory_2),
+            icon: Icon(Icons.inventory_2_outlined),
+            selectedIcon: Icon(Icons.inventory_2),
             label: l10n.products,
           ),
           NavigationDestination(
-            icon: const Icon(Icons.people_outline),
-            selectedIcon: const Icon(Icons.people),
+            icon: Icon(Icons.people_outline),
+            selectedIcon: Icon(Icons.people),
             label: l10n.customers,
           ),
           NavigationDestination(
-            icon: const Icon(Icons.bar_chart_outlined),
-            selectedIcon: const Icon(Icons.bar_chart),
+            icon: Icon(Icons.bar_chart_outlined),
+            selectedIcon: Icon(Icons.bar_chart),
             label: l10n.reports,
           ),
         ],
@@ -93,10 +93,10 @@ class DashboardHome extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.dashboard, style: const TextStyle(fontFamily: 'Tajawal')),
+        title: Text(l10n.dashboard, style: TextStyle(fontFamily: 'Tajawal')),
         actions: [
           IconButton(
-            icon: const Icon(Icons.settings),
+            icon: Icon(Icons.settings),
             onPressed: () {
               context.push('/settings');
             },
@@ -111,35 +111,35 @@ class DashboardHome extends ConsumerWidget {
               decoration: const BoxDecoration(
                 color: Colors.blueAccent,
               ),
-              child: Text(l10n.managementAndInventory, style: const TextStyle(color: Colors.white, fontSize: 24, fontFamily: 'Tajawal')),
+              child: Text(l10n.managementAndInventory, style: TextStyle(color: Colors.white, fontSize: 24, fontFamily: 'Tajawal')),
             ),
             ListTile(
-              leading: const Icon(Icons.money_off),
-              title: Text(l10n.expenses, style: const TextStyle(fontFamily: 'Tajawal')),
+              leading: Icon(Icons.money_off),
+              title: Text(l10n.expenses, style: TextStyle(fontFamily: 'Tajawal')),
               onTap: () {
                 Navigator.pop(context);
                 context.push('/expenses');
               },
             ),
             ListTile(
-              leading: const Icon(Icons.business),
-              title: Text(l10n.suppliers, style: const TextStyle(fontFamily: 'Tajawal')),
+              leading: Icon(Icons.business),
+              title: Text(l10n.suppliers, style: TextStyle(fontFamily: 'Tajawal')),
               onTap: () {
                 Navigator.pop(context);
                 context.push('/suppliers');
               },
             ),
             ListTile(
-              leading: const Icon(Icons.category),
-              title: Text(l10n.categories, style: const TextStyle(fontFamily: 'Tajawal')),
+              leading: Icon(Icons.category),
+              title: Text(l10n.categories, style: TextStyle(fontFamily: 'Tajawal')),
               onTap: () {
                 Navigator.pop(context);
                 context.push('/categories');
               },
             ),
             ListTile(
-              leading: const Icon(Icons.history),
-              title: Text(l10n.inventoryLog, style: const TextStyle(fontFamily: 'Tajawal')),
+              leading: Icon(Icons.history),
+              title: Text(l10n.inventoryLog, style: TextStyle(fontFamily: 'Tajawal')),
               onTap: () {
                 Navigator.pop(context);
                 context.push('/inventory_logs');
@@ -157,13 +157,13 @@ class DashboardHome extends ConsumerWidget {
           final lowStockProducts = productsAsync.value?.where((p) => p.quantity <= 5).toList() ?? [];
 
           return Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: EdgeInsets.all(16.0),
             child: ListView(
               children: [
                 if (lowStockProducts.isNotEmpty) ...[
                   Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.all(12),
+                    margin: EdgeInsets.only(bottom: 16),
+                    padding: EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: Colors.red.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -171,17 +171,17 @@ class DashboardHome extends ConsumerWidget {
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.warning_amber_rounded, color: Colors.red),
-                        const SizedBox(width: 8),
+                        Icon(Icons.warning_amber_rounded, color: Colors.red),
+                        SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'تنبيه: يوجد ${lowStockProducts.length} منتج يوشك على النفاذ من المخزون!',
-                            style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
                           ),
                         ),
                         TextButton(
                           onPressed: () => onNavigateToTab(2), // 2 is Products tab
-                          child: const Text('عرض', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                          child: Text(AppLocalizations.of(context)!.text_63, style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
                         ),
                       ],
                     ),
@@ -189,9 +189,9 @@ class DashboardHome extends ConsumerWidget {
                 ],
                 Text(
                   l10n.reports,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
@@ -202,7 +202,7 @@ class DashboardHome extends ConsumerWidget {
                         color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    SizedBox(width: 16),
                     Expanded(
                       child: _StatCard(
                         title: l10n.ordersCount,
@@ -213,12 +213,12 @@ class DashboardHome extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 Text(
                   l10n.quickActions,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -256,12 +256,12 @@ class DashboardHome extends ConsumerWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                SizedBox(height: 24),
                 Text(
                   l10n.managementAndInventory,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
                 ),
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -303,7 +303,7 @@ class DashboardHome extends ConsumerWidget {
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('خطأ: $e')),
       ),
     );
@@ -326,22 +326,22 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GlassCard(
-      padding: const EdgeInsets.all(20.0),
+      padding: EdgeInsets.all(20.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: color.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, size: 28, color: color),
           ),
-          const SizedBox(height: 16),
-          Text(title, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey, fontSize: 14)),
-          const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          SizedBox(height: 16),
+          Text(title, style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey, fontSize: 14)),
+          SizedBox(height: 4),
+          Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -372,8 +372,8 @@ class _QuickAction extends StatelessWidget {
             height: 70,
             child: Icon(icon, color: color, size: 30),
           ),
-          const SizedBox(height: 8),
-          Text(label, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+          SizedBox(height: 8),
+          Text(label, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         ],
       ),
     );

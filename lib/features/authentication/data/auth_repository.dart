@@ -1,3 +1,4 @@
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
@@ -22,7 +23,7 @@ class AuthRepository {
       final user = userCredential.user;
       
       if (user == null) {
-        throw Exception("فشل في تسجيل الدخول المجهول");
+        throw Exception(AppLocalizations.of(context)!.text_26);
       }
 
       // Check if user exists in Firestore, if not create them

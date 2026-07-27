@@ -13,30 +13,30 @@ class SettingsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.settings, style: const TextStyle(fontFamily: 'Tajawal')),
+        title: Text(l10n.settings, style: TextStyle(fontFamily: 'Tajawal')),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(16),
         children: [
           ListTile(
-            leading: const Icon(Icons.verified_user),
-            title: Text(l10n.upgradeAccount, style: const TextStyle(fontFamily: 'Tajawal')),
+            leading: Icon(Icons.verified_user),
+            title: Text(l10n.upgradeAccount, style: TextStyle(fontFamily: 'Tajawal')),
             onTap: () => context.push('/upgrade'),
           ),
           ListTile(
-            leading: const Icon(Icons.workspace_premium, color: Colors.amber),
-            title: Text(l10n.subscriptions, style: const TextStyle(fontFamily: 'Tajawal')),
+            leading: Icon(Icons.workspace_premium, color: Colors.amber),
+            title: Text(l10n.subscriptions, style: TextStyle(fontFamily: 'Tajawal')),
             onTap: () => context.push('/paywall'),
           ),
 
-          const Divider(),
+          Divider(),
           _LanguageSelector(),
           _CurrencySelector(),
           _ThemeSelector(),
-          const Divider(),
+          Divider(),
           ListTile(
-            leading: const Icon(Icons.logout, color: Colors.red),
-            title: Text(l10n.logout, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red)),
+            leading: Icon(Icons.logout, color: Colors.red),
+            title: Text(l10n.logout, style: TextStyle(fontFamily: 'Tajawal', color: Colors.red)),
             onTap: () {
               ref.read(authRepositoryProvider).signOut();
             },
@@ -54,8 +54,8 @@ class _LanguageSelector extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
 
     return ListTile(
-      leading: const Icon(Icons.language),
-      title: Text(l10n.language, style: const TextStyle(fontFamily: 'Tajawal')),
+      leading: Icon(Icons.language),
+      title: Text(l10n.language, style: TextStyle(fontFamily: 'Tajawal')),
       trailing: DropdownButton<String>(
         value: locale.languageCode,
         onChanged: (String? newValue) {
@@ -63,8 +63,8 @@ class _LanguageSelector extends ConsumerWidget {
             ref.read(localeProvider.notifier).setLocale(Locale(newValue));
           }
         },
-        items: const [
-          DropdownMenuItem(value: 'ar', child: Text('العربية', style: TextStyle(fontFamily: 'Tajawal'))),
+        items: [
+          DropdownMenuItem(value: AppLocalizations.of(context)!.text_111, style: TextStyle(fontFamily: 'Tajawal'))),
           DropdownMenuItem(value: 'en', child: Text('English')),
         ],
       ),
@@ -79,8 +79,8 @@ class _CurrencySelector extends ConsumerWidget {
     final currency = ref.watch(currencyProvider);
 
     return ListTile(
-      leading: const Icon(Icons.attach_money),
-      title: Text(l10n.currency, style: const TextStyle(fontFamily: 'Tajawal')),
+      leading: Icon(Icons.attach_money),
+      title: Text(l10n.currency, style: TextStyle(fontFamily: 'Tajawal')),
       trailing: DropdownButton<AppCurrency>(
         value: currency,
         onChanged: (AppCurrency? newValue) {
@@ -91,7 +91,7 @@ class _CurrencySelector extends ConsumerWidget {
         items: AppCurrency.values.map((AppCurrency curr) {
           return DropdownMenuItem<AppCurrency>(
             value: curr,
-            child: Text(curr.code, style: const TextStyle(fontFamily: 'Tajawal')),
+            child: Text(curr.code, style: TextStyle(fontFamily: 'Tajawal')),
           );
         }).toList(),
       ),
@@ -106,8 +106,8 @@ class _ThemeSelector extends ConsumerWidget {
     final themeMode = ref.watch(themeProvider);
 
     return ListTile(
-      leading: const Icon(Icons.brightness_6),
-      title: Text(l10n.theme, style: const TextStyle(fontFamily: 'Tajawal')),
+      leading: Icon(Icons.brightness_6),
+      title: Text(l10n.theme, style: TextStyle(fontFamily: 'Tajawal')),
       trailing: DropdownButton<ThemeMode>(
         value: themeMode,
         onChanged: (ThemeMode? newValue) {
@@ -116,9 +116,9 @@ class _ThemeSelector extends ConsumerWidget {
           }
         },
         items: [
-          DropdownMenuItem(value: ThemeMode.system, child: Text(l10n.themeSystem, style: const TextStyle(fontFamily: 'Tajawal'))),
-          DropdownMenuItem(value: ThemeMode.light, child: Text(l10n.themeLight, style: const TextStyle(fontFamily: 'Tajawal'))),
-          DropdownMenuItem(value: ThemeMode.dark, child: Text(l10n.themeDark, style: const TextStyle(fontFamily: 'Tajawal'))),
+          DropdownMenuItem(value: ThemeMode.system, child: Text(l10n.themeSystem, style: TextStyle(fontFamily: 'Tajawal'))),
+          DropdownMenuItem(value: ThemeMode.light, child: Text(l10n.themeLight, style: TextStyle(fontFamily: 'Tajawal'))),
+          DropdownMenuItem(value: ThemeMode.dark, child: Text(l10n.themeDark, style: TextStyle(fontFamily: 'Tajawal'))),
         ],
       ),
     );

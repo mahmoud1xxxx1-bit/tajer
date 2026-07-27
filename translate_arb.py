@@ -1,73 +1,14 @@
-{
-  "@@locale": "en",
-  "appTitle": "Tajer",
-  "loginTitle": "Login",
-  "products": "Products",
-  "customers": "Customers",
-  "orders": "Orders",
-  "settings": "Settings",
-  "dashboard": "Dashboard",
-  "adminPanel": "Super Admin Panel",
-  "expenses": "Expenses",
-  "suppliers": "Suppliers",
-  "categories": "Categories",
-  "inventoryLog": "Inventory Log",
-  "reports": "Reports",
-  "totalSales": "Total Sales",
-  "ordersCount": "Orders Count",
-  "quickActions": "Quick Actions",
-  "managementAndInventory": "Management & Inventory",
-  "add": "Add",
-  "edit": "Edit",
-  "delete": "Delete",
-  "save": "Save",
-  "cancel": "Cancel",
-  "confirm": "Confirm",
-  "update": "Update",
-  "name": "Name",
-  "price": "Price",
-  "quantity": "Quantity",
-  "barcode": "Barcode",
-  "category": "Category",
-  "phone": "Phone Number",
-  "email": "Email",
-  "password": "Password",
-  "notes": "Notes",
-  "date": "Date",
-  "scanBarcode": "Scan Barcode",
-  "searchByBarcode": "Search by Barcode",
-  "productName": "Product Name",
-  "availableQuantity": "Available Quantity",
-  "noCategory": "Uncategorized",
-  "logout": "Logout",
-  "upgradeAccount": "Upgrade Account (Link Google)",
-  "subscriptions": "Subscriptions & Plans",
-  "language": "App Language",
-  "currency": "Base Currency",
-  "theme": "Theme",
-  "themeSystem": "System",
-  "themeLight": "Light",
-  "themeDark": "Dark",
-  "error": "An error occurred",
-  "success": "Success",
-  "loading": "Loading...",
-  "requiredField": "Required",
-  "currency_SAR": "Saudi Riyal",
-  "currency_USD": "US Dollar",
-  "currency_YER": "Yemeni Rial",
-  "currency_AED": "UAE Dirham",
-  "currency_JOD": "Jordanian Dinar",
-  "currency_IQD": "Iraqi Dinar",
-  "currency_SYP": "Syrian Pound",
-  "currency_LBP": "Lebanese Pound",
-  "currency_KWD": "Kuwaiti Dinar",
-  "currency_EGP": "Egyptian Pound",
-  "currency_DZD": "Algerian Dinar",
-  "currency_LYD": "Libyan Dinar",
-  "currency_MAD": "Moroccan Dirham",
-  "currency_BHD": "Bahraini Dinar",
-  "currency_QAR": "Qatari Riyal",
-  "currency_OMR": "Omani Rial",
+import json
+import os
+
+with open('extracted.json', 'r', encoding='utf-8') as f:
+    extracted = json.load(f)
+
+# Manually translate a few key ones or use a generic approach
+# I will use a generic English translation for all, as this is just an example, 
+# but I should try to make it look professional.
+
+translations = {
   "text_1": "Reached maximum limit!",
   "text_2": "Your current account is a guest account. You have reached the maximum allowed limit for additions.\\n\\nPlease link your account to Google to continue using the app for free without limits, and to save your data from being lost.",
   "text_3": "Later",
@@ -200,3 +141,29 @@
   "text_130": "Edit Supplier",
   "text_131": "Update Debts"
 }
+
+ar_path = 'lib/l10n/app_ar.arb'
+en_path = 'lib/l10n/app_en.arb'
+
+if os.path.exists(ar_path):
+    with open(ar_path, 'r', encoding='utf-8') as f:
+        existing_ar = json.load(f)
+else:
+    existing_ar = {}
+
+if os.path.exists(en_path):
+    with open(en_path, 'r', encoding='utf-8') as f:
+        existing_en = json.load(f)
+else:
+    existing_en = {}
+
+existing_ar.update(extracted)
+existing_en.update(translations)
+
+with open(ar_path, 'w', encoding='utf-8') as f:
+    json.dump(existing_ar, f, ensure_ascii=False, indent=2)
+
+with open(en_path, 'w', encoding='utf-8') as f:
+    json.dump(existing_en, f, ensure_ascii=False, indent=2)
+
+print("Updated ARB files.")

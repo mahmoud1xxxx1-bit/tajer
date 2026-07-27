@@ -20,44 +20,44 @@ class OrdersScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.orders, style: const TextStyle(fontFamily: 'Tajawal')),
+        title: Text(l10n.orders, style: TextStyle(fontFamily: 'Tajawal')),
       ),
       body: ordersAsyncValue.when(
         data: (orders) {
           if (orders.isEmpty) {
             return Center(
               child: Text(
-                'لا توجد طلبات بعد.\nاضغط على + لإنشاء طلب جديد.',
+                AppLocalizations.of(context)!.text_86,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16),
+                style: TextStyle(fontFamily: 'Tajawal', fontSize: 16),
               ),
             );
           }
           return ListView.builder(
             itemCount: orders.length,
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.all(16),
             itemBuilder: (context, index) {
               final order = orders[index];
               return GlassCard(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(4),
+                margin: EdgeInsets.only(bottom: 12),
+                padding: EdgeInsets.all(4),
                 onLongPress: () {
                   showDialog(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: Text(l10n.delete, style: const TextStyle(fontFamily: 'Tajawal')),
-                      content: const Text('هل أنت متأكد من حذف هذا الطلب؟ سيتم استرجاع كمية المنتج للمخزون.', style: TextStyle(fontFamily: 'Tajawal')),
+                      title: Text(l10n.delete, style: TextStyle(fontFamily: 'Tajawal')),
+                      content: Text(AppLocalizations.of(context)!.text_87, style: TextStyle(fontFamily: 'Tajawal')),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: Text(l10n.cancel, style: const TextStyle(fontFamily: 'Tajawal')),
+                          child: Text(l10n.cancel, style: TextStyle(fontFamily: 'Tajawal')),
                         ),
                         TextButton(
                           onPressed: () {
                             ref.read(orderRepositoryProvider).deleteOrder(order);
                             Navigator.pop(context);
                           },
-                          child: Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                          child: Text(l10n.delete, style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
                         ),
                       ],
                     ),
@@ -65,7 +65,7 @@ class OrdersScreen extends ConsumerWidget {
                 },
                 child: ListTile(
                   leading: Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: EdgeInsets.all(10),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -74,37 +74,37 @@ class OrdersScreen extends ConsumerWidget {
                   ),
                   title: Text(
                     'طلب #${order.id.substring(0, 5).toUpperCase()}',
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16),
+                    style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16),
                   ),
                   subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
+                    padding: EdgeInsets.only(top: 8.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.person_outline, size: 14, color: Colors.grey),
-                            const SizedBox(width: 4),
-                            Text(order.customerName, style: const TextStyle(fontFamily: 'Tajawal')),
+                            Icon(Icons.person_outline, size: 14, color: Colors.grey),
+                            SizedBox(width: 4),
+                            Text(order.customerName, style: TextStyle(fontFamily: 'Tajawal')),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(Icons.inventory_2_outlined, size: 14, color: Colors.grey),
-                            const SizedBox(width: 4),
-                            Text('${order.productName} (x${order.quantity})', style: const TextStyle(fontFamily: 'Tajawal')),
+                            Icon(Icons.inventory_2_outlined, size: 14, color: Colors.grey),
+                            SizedBox(width: 4),
+                            Text('${order.productName} (x${order.quantity})', style: TextStyle(fontFamily: 'Tajawal')),
                           ],
                         ),
                         if (order.isCredit) ...[
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4),
                           Row(
                             children: [
-                              const Icon(Icons.money_off, size: 14, color: Colors.red),
-                              const SizedBox(width: 4),
+                              Icon(Icons.money_off, size: 14, color: Colors.red),
+                              SizedBox(width: 4),
                               Text(
                                 'بيع آجل (دُفع: ${order.paidAmount} / الباقي: ${order.total - order.paidAmount})',
-                                style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold),
+                                style: TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold),
                               ),
                             ],
                           ),
@@ -127,9 +127,9 @@ class OrdersScreen extends ConsumerWidget {
                               fontSize: 16,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: _getStatusColor(order.status).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(8),
@@ -147,28 +147,28 @@ class OrdersScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(width: 4),
+                      SizedBox(width: 4),
                       PopupMenuButton<String>(
-                        icon: const Icon(Icons.more_vert),
+                        icon: Icon(Icons.more_vert),
                         onSelected: (value) async {
                           final repo = ref.read(orderRepositoryProvider);
                           if (value == 'delete') {
                             showDialog(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: Text(l10n.delete, style: const TextStyle(fontFamily: 'Tajawal')),
-                                content: const Text('هل أنت متأكد من حذف هذا الطلب؟ سيتم استرجاع كمية المنتج للمخزون.', style: TextStyle(fontFamily: 'Tajawal')),
+                                title: Text(l10n.delete, style: TextStyle(fontFamily: 'Tajawal')),
+                                content: Text(AppLocalizations.of(context)!.text_87, style: TextStyle(fontFamily: 'Tajawal')),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(context),
-                                    child: Text(l10n.cancel, style: const TextStyle(fontFamily: 'Tajawal')),
+                                    child: Text(l10n.cancel, style: TextStyle(fontFamily: 'Tajawal')),
                                   ),
                                   TextButton(
                                     onPressed: () {
                                       repo.deleteOrder(order);
                                       Navigator.pop(context);
                                     },
-                                    child: Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                                    child: Text(l10n.delete, style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
                                   ),
                                 ],
                               ),
@@ -180,7 +180,7 @@ class OrdersScreen extends ConsumerWidget {
                             } catch (e) {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(e.toString(), style: const TextStyle(fontFamily: 'Tajawal'))),
+                                  SnackBar(content: Text(e.toString(), style: TextStyle(fontFamily: 'Tajawal'))),
                                 );
                               }
                             }
@@ -190,7 +190,7 @@ class OrdersScreen extends ConsumerWidget {
                             } catch (e) {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('خطأ في الطباعة: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
+                                  SnackBar(content: Text('خطأ في الطباعة: $e', style: TextStyle(fontFamily: 'Tajawal'))),
                                 );
                               }
                             }
@@ -199,23 +199,23 @@ class OrdersScreen extends ConsumerWidget {
                         itemBuilder: (context) => [
                           const PopupMenuItem(
                             value: 'status_pending',
-                            child: Text('قيد الانتظار 🟡', style: TextStyle(fontFamily: 'Tajawal')),
+                            child: Text(AppLocalizations.of(context)!.text_88, style: TextStyle(fontFamily: 'Tajawal')),
                           ),
                           const PopupMenuItem(
                             value: 'status_processing',
-                            child: Text('قيد التجهيز 🔵', style: TextStyle(fontFamily: 'Tajawal')),
+                            child: Text(AppLocalizations.of(context)!.text_89, style: TextStyle(fontFamily: 'Tajawal')),
                           ),
                           const PopupMenuItem(
                             value: 'status_shipped',
-                            child: Text('تم الشحن 🟠', style: TextStyle(fontFamily: 'Tajawal')),
+                            child: Text(AppLocalizations.of(context)!.text_90, style: TextStyle(fontFamily: 'Tajawal')),
                           ),
                           const PopupMenuItem(
                             value: 'status_delivered',
-                            child: Text('مكتمل 🟢', style: TextStyle(fontFamily: 'Tajawal')),
+                            child: Text(AppLocalizations.of(context)!.text_91, style: TextStyle(fontFamily: 'Tajawal')),
                           ),
                           const PopupMenuItem(
                             value: 'status_cancelled',
-                            child: Text('إلغاء الطلب 🔴', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                            child: Text(AppLocalizations.of(context)!.text_92, style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
                           ),
                           const PopupMenuDivider(),
                           const PopupMenuItem(
@@ -224,7 +224,7 @@ class OrdersScreen extends ConsumerWidget {
                               children: [
                                 Icon(Icons.print_outlined, size: 20),
                                 SizedBox(width: 8),
-                                Text('طباعة الفاتورة PDF', style: TextStyle(fontFamily: 'Tajawal')),
+                                Text(AppLocalizations.of(context)!.text_93, style: TextStyle(fontFamily: 'Tajawal')),
                               ],
                             ),
                           ),
@@ -233,9 +233,9 @@ class OrdersScreen extends ConsumerWidget {
                             value: 'delete',
                             child: Row(
                               children: [
-                                const Icon(Icons.delete, color: Colors.red, size: 20),
-                                const SizedBox(width: 8),
-                                Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                                Icon(Icons.delete, color: Colors.red, size: 20),
+                                SizedBox(width: 8),
+                                Text(l10n.delete, style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
                               ],
                             ),
                           ),
@@ -248,9 +248,9 @@ class OrdersScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(
-          child: Text('${l10n.error}: $e', style: const TextStyle(fontFamily: 'Tajawal')),
+          child: Text('${l10n.error}: $e', style: TextStyle(fontFamily: 'Tajawal')),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -271,8 +271,8 @@ class OrdersScreen extends ConsumerWidget {
             );
           }
         },
-        label: const Text('طلب جديد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-        icon: const Icon(Icons.add_shopping_cart),
+        label: Text(AppLocalizations.of(context)!.text_94, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        icon: Icon(Icons.add_shopping_cart),
       ),
     );
   }
@@ -291,13 +291,13 @@ class OrdersScreen extends ConsumerWidget {
 
   String _getStatusLabel(String status) {
     switch (status) {
-      case 'processing': return 'قيد التجهيز';
-      case 'shipped': return 'تم الشحن';
-      case 'delivered': return 'مكتمل';
-      case 'cancelled': return 'ملغي';
+      case AppLocalizations.of(context)!.text_95;
+      case AppLocalizations.of(context)!.text_96;
+      case AppLocalizations.of(context)!.text_97;
+      case AppLocalizations.of(context)!.text_98;
       case 'pending':
       default:
-        return 'قيد الانتظار';
+        return AppLocalizations.of(context)!.text_99;
     }
   }
 }
