@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 class GlassCard extends StatelessWidget {
   final Widget child;
@@ -43,33 +44,40 @@ class GlassCard extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: onTap,
-              onLongPress: onLongPress,
-              child: Container(
-                padding: padding,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(borderRadius),
-                  color: isDark 
-                      ? Colors.white.withOpacity(0.05)
-                      : Colors.white.withOpacity(0.6),
-                  border: Border.all(
-                    color: isDark
-                        ? Colors.white.withOpacity(0.1)
-                        : Colors.white.withOpacity(0.4),
-                    width: 1.5,
-                  ),
-                ),
-                child: child,
-              ),
+        child: kIsWeb 
+          ? _buildContent(context, isDark)
+          : BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
+              child: _buildContent(context, isDark),
+            ),
+      ),
+    );
+  }
+
+  Widget _buildContent(BuildContext context, bool isDark) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        child: Container(
+          padding: padding,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(borderRadius),
+            color: isDark 
+                ? Colors.white.withOpacity(0.05)
+                : Colors.white.withOpacity(0.6),
+            border: Border.all(
+              color: isDark
+                  ? Colors.white.withOpacity(0.1)
+                  : Colors.white.withOpacity(0.4),
+              width: 1.5,
             ),
           ),
+          child: child,
         ),
       ),
     );
+  }
   }
 }
