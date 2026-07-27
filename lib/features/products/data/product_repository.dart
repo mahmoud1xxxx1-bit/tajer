@@ -22,6 +22,7 @@ class ProductRepository {
             data['price'] = (data['price'] ?? 0.0).toDouble();
             data['quantity'] = (data['quantity'] ?? 0).toInt();
             data['name'] = data['name']?.toString() ?? '';
+            data['merchantId'] = data['merchantId']?.toString() ?? '';
             return Product.fromJson(data);
           },
           toFirestore: (product, _) => product.toJson(),

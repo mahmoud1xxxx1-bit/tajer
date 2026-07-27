@@ -18,10 +18,13 @@ class OrderRepository {
           fromFirestore: (snapshot, _) {
             final data = snapshot.data()!;
             data['id'] = snapshot.id;
+            data['merchantId'] = data['merchantId']?.toString() ?? '';
             data['quantity'] = (data['quantity'] ?? 0).toInt();
             data['total'] = (data['total'] ?? 0.0).toDouble();
             data['productId'] = data['productId']?.toString() ?? '';
+            data['productName'] = data['productName']?.toString() ?? '';
             data['customerId'] = data['customerId']?.toString() ?? '';
+            data['customerName'] = data['customerName']?.toString() ?? '';
             return AppOrder.fromJson(data);
           },
           toFirestore: (order, _) => order.toJson(),

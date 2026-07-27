@@ -18,6 +18,7 @@ class CustomerRepository {
           fromFirestore: (snapshot, _) {
             final data = snapshot.data()!;
             data['id'] = snapshot.id;
+            data['merchantId'] = data['merchantId']?.toString() ?? '';
             data['name'] = data['name']?.toString() ?? '';
             data['phone'] = data['phone']?.toString() ?? '';
             data['totalPurchases'] = (data['totalPurchases'] ?? 0.0).toDouble();
