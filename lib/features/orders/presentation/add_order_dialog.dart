@@ -42,16 +42,6 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
 
       final orderRepo = ref.read(orderRepositoryProvider);
 
-      // Guest Limit Check for Orders
-      final currentCount = await orderRepo.getOrderCount(user.uid);
-      if (currentCount >= 20) {
-        if (mounted) {
-          Navigator.pop(context);
-          _showLimitReachedDialog(context);
-        }
-        return;
-      }
-
       // Fetch Product and Customer names/details from the stream for simplicity
       // In production, we might fetch it directly from the repo if the stream is large
       final products = ref.read(productsStreamProvider).value ?? [];
@@ -94,32 +84,6 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
     }
   }
 
-  void _showLimitReachedDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('وصلت للحد الأقصى!', style: TextStyle(fontFamily: 'Tajawal')),
-        content: const Text(
-          'لا يمكنك إنشاء أكثر من 20 طلب كضيف.\nيرجى ربط حسابك بـ Google للاستمرار.',
-          style: TextStyle(fontFamily: 'Tajawal'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // TODO: Implement Google Sign In Linking
-              Navigator.pop(context);
-            },
-            child: const Text('المتابعة مع Google', style: TextStyle(fontFamily: 'Tajawal')),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {

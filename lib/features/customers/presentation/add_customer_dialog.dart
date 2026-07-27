@@ -35,17 +35,6 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
       if (user == null) throw Exception('المستخدم غير مسجل');
 
       final customerRepo = ref.read(customerRepositoryProvider);
-      
-      // Guest Limit Check
-      final currentCount = await customerRepo.getCustomerCount(user.uid);
-      if (currentCount >= 20) {
-        // Enforce limit logic
-        if (mounted) {
-          Navigator.pop(context); // Close the dialog
-          _showLimitReachedDialog(context);
-        }
-        return;
-      }
 
       final newCustomer = Customer(
         id: const Uuid().v4(),
@@ -68,32 +57,6 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
     }
   }
 
-  void _showLimitReachedDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('وصلت للحد الأقصى!', style: TextStyle(fontFamily: 'Tajawal')),
-        content: const Text(
-          'لا يمكنك إضافة أكثر من 20 عميل كضيف.\nيرجى ربط حسابك بـ Google للاستمرار.',
-          style: TextStyle(fontFamily: 'Tajawal'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // TODO: Implement Google Sign In Linking
-              Navigator.pop(context);
-            },
-            child: const Text('المتابعة مع Google', style: TextStyle(fontFamily: 'Tajawal')),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {

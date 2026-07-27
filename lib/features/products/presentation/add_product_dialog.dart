@@ -37,17 +37,6 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       if (user == null) throw Exception('المستخدم غير مسجل');
 
       final productRepo = ref.read(productRepositoryProvider);
-      
-      // Guest Limit Check
-      final currentCount = await productRepo.getProductCount(user.uid);
-      if (currentCount >= 3) {
-        // Enforce limit logic
-        if (mounted) {
-          Navigator.pop(context); // Close the dialog
-          _showLimitReachedDialog(context);
-        }
-        return;
-      }
 
       final newProduct = Product(
         id: const Uuid().v4(),
@@ -72,32 +61,6 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     }
   }
 
-  void _showLimitReachedDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: const Text('وصلت للحد الأقصى!', style: TextStyle(fontFamily: 'Tajawal')),
-        content: const Text(
-          'لا يمكنك إضافة أكثر من 3 منتجات كضيف.\nيرجى ربط حسابك بـ Google للاستمرار.',
-          style: TextStyle(fontFamily: 'Tajawal'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // TODO: Implement Google Sign In Linking
-              Navigator.pop(context);
-            },
-            child: const Text('المتابعة مع Google', style: TextStyle(fontFamily: 'Tajawal')),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {

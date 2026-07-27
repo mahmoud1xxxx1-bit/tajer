@@ -60,6 +60,42 @@ class OrderRepository {
     });
   }
 
+  Future<void> deleteOrder(AppOrder order) async {
+    await _firestore.runTransaction((transaction) async {
+      final productRef = _firestore.collection('products').doc(order.productId);
+      final customerRef = _firestore.collection('customers').doc(order.customerId);
+      final orderRef = _firestore.collection('orders').doc(order.id);
+
+      final orderDoc = await transaction.get(orderRef);
+      if (!orderDoc.exists) return; // Already deleted
+
+      final productDoc = await transaction.get(productRef);
+      if (productDoc.exists) {
+        final currentQuantity = productDoc.data()?['quantity'] as int? ?? 0;
+        // Restore inventory
+        transaction.update(productRef, {
+          'quantity': currentQuantity + order.quantity,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      final customerDoc = await transaction.get(customerRef);
+      if (customerDoc.exists) {
+        final currentTotalPurchases = (customerDoc.data()?['totalPurchases'] as num?)?.toDouble() ?? 0.0;
+        final currentOrderCount = customerDoc.data()?['orderCount'] as int? ?? 0;
+        // Revert customer stats
+        transaction.update(customerRef, {
+          'totalPurchases': (currentTotalPurchases - order.total).clamp(0.0, double.infinity),
+          'orderCount': (currentOrderCount - 1).clamp(0, int.MAX_VALUE),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      // Delete order
+      transaction.delete(orderRef);
+    });
+  }
+
   Future<int> getOrderCount(String merchantId) async {
     final snapshot = await _firestore
         .collection('orders')

@@ -35,6 +35,28 @@ class OrdersScreen extends ConsumerWidget {
               return GlassCard(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(4),
+                onLongPress: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('حذف الطلب', style: TextStyle(fontFamily: 'Tajawal')),
+                      content: const Text('هل أنت متأكد من حذف هذا الطلب؟ سيتم استرجاع كمية المنتج للمخزون.', style: TextStyle(fontFamily: 'Tajawal')),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            ref.read(orderRepositoryProvider).deleteOrder(order);
+                            Navigator.pop(context);
+                          },
+                          child: const Text('حذف واسترجاع', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                        ),
+                      ],
+                    ),
+                  );
+                },
                 child: ListTile(
                   leading: Container(
                     padding: const EdgeInsets.all(10),
