@@ -19,7 +19,7 @@ class AppNotification {
   factory AppNotification.fromJson(Map<String, dynamic> json, String docId) {
     return AppNotification(
       id: docId,
-      title: json[AppLocalizations.of(context)!.text_9cc775,
+      title: json['title'] as String? ?? '',
       message: json['message'] as String? ?? '',
       createdAt: json['createdAt'] != null
           ? (json['createdAt'] as Timestamp).toDate()

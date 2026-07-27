@@ -41,7 +41,7 @@ class EmployeesScreen extends ConsumerWidget {
                     child: Icon(Icons.person),
                   ),
                   title: Text(emp.name, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                  subtitle: Text(emp.role == AppLocalizations.of(context)!.text_ce360b : AppLocalizations.of(context)!.text_c9ff42, style: TextStyle(fontFamily: 'Tajawal')),
+                  subtitle: Text(emp.role == 'cashier' ? AppLocalizations.of(context)!.text_ce360b : AppLocalizations.of(context)!.text_c9ff42, style: TextStyle(fontFamily: 'Tajawal')),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
