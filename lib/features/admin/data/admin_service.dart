@@ -11,8 +11,23 @@ class AdminService {
   Future<bool> isUserAdmin(String? email) async {
     if (email == null || email.isEmpty) return false;
     try {
-      final doc = await _firestore.collection('admins').doc(email.toLowerCase()).get();
-      return doc.exists;
+      final docRef = _firestore.collection('admins').doc(email.toLowerCase());
+      final doc = await docRef.get();
+      
+      if (doc.exists) return true;
+
+      // Bootstrap logic: If the admins collection is completely empty,
+      // make the first user who logs in an admin.
+      final adminsSnapshot = await _firestore.collection('admins').limit(1).get();
+      if (adminsSnapshot.docs.isEmpty) {
+        await docRef.set({
+          'createdAt': FieldValue.serverTimestamp(),
+          'grantedAutomatically': true,
+        });
+        return true;
+      }
+
+      return false;
     } catch (e) {
       return false;
     }
