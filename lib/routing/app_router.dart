@@ -12,13 +12,14 @@ import '../features/admin/data/admin_service.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateChangesProvider);
+  final isAdminState = ref.watch(isAdminStreamProvider);
 
   return GoRouter(
     initialLocation: '/',
     redirect: (context, state) {
       final isAuthenticated = authState.value != null;
       final isStartupRoute = state.uri.path == '/';
-      final isAdmin = ref.watch(isAdminStreamProvider).value ?? false;
+      final isAdmin = isAdminState.value ?? false;
 
       if (!isAuthenticated && !isStartupRoute) {
         return '/';

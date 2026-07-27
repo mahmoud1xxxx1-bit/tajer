@@ -1,84 +1,97 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/subscription_repository.dart';
+import 'package:go_router/go_router.dart';
+import '../data/subscription_service.dart';
+import '../../authentication/data/auth_repository.dart';
 
 class PaywallScreen extends ConsumerWidget {
   const PaywallScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final productAsync = ref.watch(premiumProductDetailsProvider);
+    final isGuest = ref.watch(authRepositoryProvider).currentUser?.isAnonymous ?? true;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('ترقية الحساب', style: TextStyle(fontFamily: 'Tajawal')),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => Navigator.pop(context),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.star, size: 80, color: Colors.amber),
+              const SizedBox(height: 24),
+              const Text(
+                'باقة تاجـــر برو 🚀',
+                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'استمتع بإضافة منتجات وعملاء لا محدودين، مع دعم فني متقدم وإحصائيات مفصلة.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16, fontFamily: 'Tajawal'),
+              ),
+              const SizedBox(height: 32),
+              
+              if (isGuest) ...[
+                const Text(
+                  'يجب عليك ربط حسابك بـ Google أولاً لتتمكن من الاشتراك في الباقة.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.red, fontFamily: 'Tajawal'),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => context.push('/upgrade'),
+                  child: const Text('ربط الحساب الآن', style: TextStyle(fontFamily: 'Tajawal')),
+                ),
+              ] else ...[
+                productAsync.when(
+                  data: (product) {
+                    if (product == null) {
+                      return const Text(
+                        'لا يوجد اشتراكات متاحة حالياً. الرجاء المحاولة لاحقاً.',
+                        style: TextStyle(fontFamily: 'Tajawal'),
+                      );
+                    }
+                    
+                    return Column(
+                      children: [
+                        Text(
+                          '${product.price} / ${product.title}',
+                          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: () {
+                            ref.read(subscriptionServiceProvider).buyPremium(product);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.amber,
+                            foregroundColor: Colors.black,
+                            padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
+                          ),
+                          child: const Text('اشترك الآن', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            ref.read(subscriptionServiceProvider).restorePurchases();
+                          },
+                          child: const Text('استعادة المشتريات السابقة', style: TextStyle(fontFamily: 'Tajawal')),
+                        ),
+                      ],
+                    );
+                  },
+                  loading: () => const CircularProgressIndicator(),
+                  error: (err, stack) => Text('حدث خطأ: $err', style: const TextStyle(fontFamily: 'Tajawal')),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const Icon(Icons.workspace_premium, size: 80, color: Colors.amber),
-            const SizedBox(height: 24),
-            const Text(
-              'باقة تاجر برو',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'افتح كافة ميزات التطبيق بلا حدود وتمتع بتجربة احترافية لإدارة تجارتك.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, fontFamily: 'Tajawal'),
-            ),
-            const SizedBox(height: 32),
-            _FeatureRow(icon: Icons.check_circle, text: 'عدد لا محدود من المنتجات'),
-            const SizedBox(height: 12),
-            _FeatureRow(icon: Icons.check_circle, text: 'عدد لا محدود من العملاء والطلبات'),
-            const SizedBox(height: 12),
-            _FeatureRow(icon: Icons.check_circle, text: 'حفظ آمن للبيانات السحابية'),
-            const Spacer(),
-            ElevatedButton(
-              onPressed: () {
-                // TODO: Trigger RevenueCat purchase flow
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('سيتم تفعيل الدفع لاحقاً')),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: Colors.amber.shade700,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text(
-                'اشترك الآن - 29 ريال/شهرياً',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
-              ),
-            ),
-            const SizedBox(height: 24),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FeatureRow extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _FeatureRow({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.green),
-        const SizedBox(width: 12),
-        Text(text, style: const TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
-      ],
     );
   }
 }
