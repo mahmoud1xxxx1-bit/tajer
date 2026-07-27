@@ -44,8 +44,6 @@ class SettingsScreen extends ConsumerWidget {
               ref.read(authRepositoryProvider).signOut();
             },
           ),
-            },
-          ),
         ],
       ),
     );
