@@ -1,0 +1,41 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+part 'product.freezed.dart';
+part 'product.g.dart';
+
+@freezed
+class Product with _$Product {
+  const factory Product({
+    required String id,
+    required String merchantId,
+    required String name,
+    required double price,
+    required int quantity,
+    @TimestampConverter() required DateTime createdAt,
+    @TimestampConverter() required DateTime updatedAt,
+  }) = _Product;
+
+  factory Product.fromJson(Map<String, dynamic> json) => _$ProductFromJson(json);
+}
+
+class TimestampConverter implements JsonConverter<DateTime, Object> {
+  const TimestampConverter();
+
+  @override
+  DateTime fromJson(Object json) {
+    if (json is Timestamp) {
+      return json.toDate();
+    }
+    // Handle string format or other if necessary, but firestore uses Timestamp
+    if (json is String) {
+      return DateTime.parse(json);
+    }
+    return DateTime.now();
+  }
+
+  @override
+  Object toJson(DateTime object) {
+    return Timestamp.fromDate(object);
+  }
+}

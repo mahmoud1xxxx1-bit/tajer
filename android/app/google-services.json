@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "88663100884",
+    "project_id": "tajer-19289",
+    "storage_bucket": "tajer-19289.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:88663100884:android:a6b808c88855fb2ea09a41",
+        "android_client_info": {
+          "package_name": "com.tajer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-h92OvXNt-sAalPSSIcjHKlU72hZX3O4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
