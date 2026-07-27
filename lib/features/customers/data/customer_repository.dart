@@ -14,7 +14,6 @@ class CustomerRepository {
     return _firestore
         .collection('customers')
         .where('merchantId', isEqualTo: merchantId)
-        .orderBy('createdAt', descending: true)
         .withConverter(
           fromFirestore: (snapshot, _) => Customer.fromJson(snapshot.data()!),
           toFirestore: (customer, _) => customer.toJson(),
@@ -57,6 +56,10 @@ Stream<List<Customer>> customersStream(CustomersStreamRef ref) {
 
   final repository = ref.watch(customerRepositoryProvider);
   return repository.queryCustomers(user.uid).snapshots().map(
-        (snapshot) => snapshot.docs.map((doc) => doc.data()).toList(),
+        (snapshot) {
+          final customers = snapshot.docs.map((doc) => doc.data()).toList();
+          customers.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return customers;
+        },
       );
 }

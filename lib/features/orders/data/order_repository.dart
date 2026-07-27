@@ -14,7 +14,6 @@ class OrderRepository {
     return _firestore
         .collection('orders')
         .where('merchantId', isEqualTo: merchantId)
-        .orderBy('createdAt', descending: true)
         .withConverter(
           fromFirestore: (snapshot, _) => AppOrder.fromJson(snapshot.data()!),
           toFirestore: (order, _) => order.toJson(),
@@ -83,6 +82,10 @@ Stream<List<AppOrder>> ordersStream(OrdersStreamRef ref) {
 
   final repository = ref.watch(orderRepositoryProvider);
   return repository.queryOrders(user.uid).snapshots().map(
-        (snapshot) => snapshot.docs.map((doc) => doc.data()).toList(),
+        (snapshot) {
+          final orders = snapshot.docs.map((doc) => doc.data()).toList();
+          orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return orders;
+        },
       );
 }

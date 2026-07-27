@@ -14,7 +14,6 @@ class ProductRepository {
     return _firestore
         .collection('products')
         .where('merchantId', isEqualTo: merchantId)
-        .orderBy('createdAt', descending: true)
         .withConverter(
           fromFirestore: (snapshot, _) => Product.fromJson(snapshot.data()!),
           toFirestore: (product, _) => product.toJson(),
@@ -57,6 +56,10 @@ Stream<List<Product>> productsStream(ProductsStreamRef ref) {
 
   final repository = ref.watch(productRepositoryProvider);
   return repository.queryProducts(user.uid).snapshots().map(
-        (snapshot) => snapshot.docs.map((doc) => doc.data()).toList(),
+        (snapshot) {
+          final products = snapshot.docs.map((doc) => doc.data()).toList();
+          products.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          return products;
+        },
       );
 }
