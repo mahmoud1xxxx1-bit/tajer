@@ -18,19 +18,23 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const DashboardHome(),
-    const OrdersScreen(),
-    const ProductsScreen(),
-    const CustomersScreen(),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final List<Widget> screens = [
+      DashboardHome(onNavigateToTab: (index) {
+        setState(() {
+          _currentIndex = index;
+        });
+      }),
+      const OrdersScreen(),
+      const ProductsScreen(),
+      const CustomersScreen(),
+    ];
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: _screens,
+        children: screens,
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
@@ -67,7 +71,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 }
 
 class DashboardHome extends ConsumerWidget {
-  const DashboardHome({super.key});
+  final void Function(int) onNavigateToTab;
+  const DashboardHome({super.key, required this.onNavigateToTab});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -133,27 +138,26 @@ class DashboardHome extends ConsumerWidget {
                   children: [
                     _QuickAction(
                       icon: Icons.add_shopping_cart,
-                      label: 'طلب جديد',
+                      label: 'الطلبات',
                       color: Theme.of(context).colorScheme.primary,
                       onTap: () {
-                        // Open Orders Screen and tap FAB logically
-                        context.push('/orders');
+                        onNavigateToTab(1);
                       },
                     ),
                     _QuickAction(
-                      icon: Icons.person_add_alt_1_outlined,
-                      label: 'عميل جديد',
-                      color: Theme.of(context).colorScheme.secondary,
-                      onTap: () {
-                        context.push('/customers');
-                      },
-                    ),
-                    _QuickAction(
-                      icon: Icons.add_box_outlined,
-                      label: 'منتج جديد',
+                      icon: Icons.inventory_2_outlined,
+                      label: 'المنتجات',
                       color: Colors.deepPurpleAccent,
                       onTap: () {
-                        context.push('/products');
+                        onNavigateToTab(2);
+                      },
+                    ),
+                    _QuickAction(
+                      icon: Icons.person_outline,
+                      label: 'العملاء',
+                      color: Theme.of(context).colorScheme.secondary,
+                      onTap: () {
+                        onNavigateToTab(3);
                       },
                     ),
                   ],
