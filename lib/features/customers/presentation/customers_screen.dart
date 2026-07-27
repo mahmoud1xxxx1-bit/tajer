@@ -7,12 +7,15 @@ import '../../../core/theme/glass_card.dart';
 import '../../../core/services/pdf_service.dart';
 import '../../orders/data/order_repository.dart';
 
+import '../../../core/providers/settings_provider.dart';
+
 class CustomersScreen extends ConsumerWidget {
   const CustomersScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final customersAsyncValue = ref.watch(customersStreamProvider);
+    final currency = ref.watch(currencyProvider).code;
 
     return Scaffold(
       appBar: AppBar(
@@ -105,7 +108,7 @@ class CustomersScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            '${customer.totalPurchases} ريال',
+                            '${customer.totalPurchases} $currency',
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.primary,
                               fontWeight: FontWeight.bold,
@@ -114,7 +117,7 @@ class CustomersScreen extends ConsumerWidget {
                           ),
                           if (customer.totalDebt > 0)
                             Text(
-                              'دين: ${customer.totalDebt} ريال',
+                              'دين: ${customer.totalDebt} $currency',
                               style: const TextStyle(
                                 color: Colors.red,
                                 fontWeight: FontWeight.bold,
@@ -138,7 +141,7 @@ class CustomersScreen extends ConsumerWidget {
                       const SizedBox(width: 8),
                       PopupMenuButton<String>(
                         icon: const Icon(Icons.more_vert),
-                        onSelected: (value) {
+                        onSelected: (value) async {
                           if (value == 'edit') {
                             showModalBottomSheet(
                               context: context,
@@ -174,7 +177,7 @@ class CustomersScreen extends ConsumerWidget {
                           } else if (value == 'print') {
                             final orders = ref.read(ordersStreamProvider).value ?? [];
                             try {
-                              await PdfService.printCustomerStatement(customer, orders);
+                              await PdfService.printCustomerStatement(customer, orders, currency);
                             } catch (e) {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(

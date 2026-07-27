@@ -16,7 +16,7 @@ class PdfService {
     return await PdfGoogleFonts.tajawalBold();
   }
 
-  static Future<void> printInvoice(AppOrder order) async {
+  static Future<void> printInvoice(AppOrder order, String currency) async {
     final font = await _getFont();
     final boldFont = await _getBoldFont();
     
@@ -100,7 +100,7 @@ class PdfService {
                           children: [
                             pw.Text('الإجمالي المستحق:', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                             pw.SizedBox(width: 20),
-                            pw.Text('${order.total} ريال'),
+                            pw.Text('${order.total} $currency'),
                           ],
                         ),
                         if (order.isCredit) ...[
@@ -110,7 +110,7 @@ class PdfService {
                             children: [
                               pw.Text('المبلغ المدفوع:', style: const pw.TextStyle(color: PdfColors.green700)),
                               pw.SizedBox(width: 20),
-                              pw.Text('${order.paidAmount} ريال', style: const pw.TextStyle(color: PdfColors.green700)),
+                              pw.Text('${order.paidAmount} $currency', style: const pw.TextStyle(color: PdfColors.green700)),
                             ],
                           ),
                           pw.SizedBox(height: 8),
@@ -119,7 +119,7 @@ class PdfService {
                             children: [
                               pw.Text('المتبقي (آجل):', style: pw.TextStyle(color: PdfColors.red700, fontWeight: pw.FontWeight.bold)),
                               pw.SizedBox(width: 20),
-                              pw.Text('${order.total - order.paidAmount} ريال', style: pw.TextStyle(color: PdfColors.red700, fontWeight: pw.FontWeight.bold)),
+                              pw.Text('${order.total - order.paidAmount} $currency', style: pw.TextStyle(color: PdfColors.red700, fontWeight: pw.FontWeight.bold)),
                             ],
                           ),
                         ]
@@ -147,7 +147,7 @@ class PdfService {
     );
   }
 
-  static Future<void> printCustomerStatement(Customer customer, List<AppOrder> orders) async {
+  static Future<void> printCustomerStatement(Customer customer, List<AppOrder> orders, String currency) async {
     final font = await _getFont();
     final boldFont = await _getBoldFont();
     
@@ -197,9 +197,9 @@ class PdfService {
                       pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.end,
                         children: [
-                          pw.Text('إجمالي المشتريات: ${customer.totalPurchases} ريال'),
+                          pw.Text('إجمالي المشتريات: ${customer.totalPurchases} $currency'),
                           pw.SizedBox(height: 4),
-                          pw.Text('إجمالي الديون: ${customer.totalDebt} ريال', style: pw.TextStyle(color: PdfColors.red800, fontWeight: pw.FontWeight.bold)),
+                          pw.Text('إجمالي الديون: ${customer.totalDebt} $currency', style: pw.TextStyle(color: PdfColors.red800, fontWeight: pw.FontWeight.bold)),
                         ],
                       ),
                     ],

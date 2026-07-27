@@ -6,12 +6,15 @@ import '../../../core/services/guest_limit_service.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/services/pdf_service.dart';
 
+import '../../../core/providers/settings_provider.dart';
+
 class OrdersScreen extends ConsumerWidget {
   const OrdersScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ordersAsyncValue = ref.watch(ordersStreamProvider);
+    final currency = ref.watch(currencyProvider).code;
 
     return Scaffold(
       appBar: AppBar(
@@ -115,7 +118,7 @@ class OrdersScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            '${order.total} ريال',
+                            '${order.total} $currency',
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.secondary,
                               fontWeight: FontWeight.bold,
@@ -181,7 +184,7 @@ class OrdersScreen extends ConsumerWidget {
                             }
                           } else if (value == 'print') {
                             try {
-                              await PdfService.printInvoice(order);
+                              await PdfService.printInvoice(order, currency);
                             } catch (e) {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
