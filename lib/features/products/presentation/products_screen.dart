@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tajer/l10n/app_localizations.dart';
 import '../data/product_repository.dart';
 import 'add_product_dialog.dart';
 import '../../../core/services/guest_limit_service.dart';
