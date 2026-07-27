@@ -1,4 +1,4 @@
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+﻿import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -66,7 +66,7 @@ class ExpensesScreen extends ConsumerWidget {
                             SizedBox(height: 4),
                             Text(DateFormat('yyyy/MM/dd').format(expense.date)),
                             if (expense.category != null && expense.category!.isNotEmpty)
-                              Text('التصنيف: ${expense.category}', style: TextStyle(color: Colors.grey)),
+                              Text('Ø§Ù„ØªØµÙ†ÙŠÙ: ${expense.category}', style: TextStyle(color: Colors.grey)),
                           ],
                         ),
                         trailing: Row(
@@ -93,7 +93,7 @@ class ExpensesScreen extends ConsumerWidget {
           );
         },
         loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('خطأ: $e')),
+        error: (e, st) => Center(child: Text('Ø®Ø·Ø£: $e')),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddExpenseDialog(context, ref),
@@ -160,7 +160,7 @@ class ExpensesScreen extends ConsumerWidget {
 
                 final expense = Expense(
                   id: const Uuid().v4(),
-                  merchantId: user.uid,
+                  merchantId: userId,
                   title: titleController.text.trim(),
                   amount: amount,
                   category: categoryController.text.trim(),
@@ -179,3 +179,4 @@ class ExpensesScreen extends ConsumerWidget {
     );
   }
 }
+

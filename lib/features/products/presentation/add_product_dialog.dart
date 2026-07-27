@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -78,7 +78,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       
       final newProduct = Product(
         id: isEditing ? widget.productToEdit!.id : const Uuid().v4(),
-        merchantId: isEditing ? widget.productToEdit!.merchantId : user.uid,
+        merchantId: isEditing ? widget.productToEdit!.merchantId : userId,
         name: _nameController.text.trim(),
         price: double.parse(_priceController.text),
         quantity: newQuantity,
@@ -237,3 +237,4 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     );
   }
 }
+

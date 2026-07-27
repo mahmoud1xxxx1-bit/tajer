@@ -32,9 +32,9 @@ class CategoryRepository {
 }
 
 final categoryRepositoryProvider = Provider<CategoryRepository?>((ref) {
-  final user = ref.watch(authRepositoryProvider).currentUser;
-  if (user == null) return null;
-  return CategoryRepository(FirebaseFirestore.instance, user.uid);
+  final appUser = ref.watch(appUserProvider).value;
+  if (appUser == null) return null;
+  return CategoryRepository(FirebaseFirestore.instance, appUser.merchantId ?? appUser.id);
 });
 
 final categoriesStreamProvider = StreamProvider<List<Category>>((ref) {

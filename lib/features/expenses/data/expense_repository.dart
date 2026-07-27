@@ -32,9 +32,9 @@ class ExpenseRepository {
 }
 
 final expenseRepositoryProvider = Provider<ExpenseRepository?>((ref) {
-  final user = ref.watch(authRepositoryProvider).currentUser;
-  if (user == null) return null;
-  return ExpenseRepository(FirebaseFirestore.instance, user.uid);
+  final appUser = ref.watch(appUserProvider).value;
+  if (appUser == null) return null;
+  return ExpenseRepository(FirebaseFirestore.instance, appUser.merchantId ?? appUser.id);
 });
 
 final expensesStreamProvider = StreamProvider<List<Expense>>((ref) {

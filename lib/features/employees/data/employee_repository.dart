@@ -32,9 +32,9 @@ class EmployeeRepository {
 }
 
 final employeeRepositoryProvider = Provider<EmployeeRepository?>((ref) {
-  final user = ref.watch(authRepositoryProvider).currentUser;
-  if (user == null) return null;
-  return EmployeeRepository(FirebaseFirestore.instance, user.uid);
+  final appUser = ref.watch(appUserProvider).value;
+  if (appUser == null) return null;
+  return EmployeeRepository(FirebaseFirestore.instance, appUser.merchantId ?? appUser.id);
 });
 
 final employeesStreamProvider = StreamProvider<List<Employee>>((ref) {

@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../domain/customer.dart';
@@ -60,11 +60,11 @@ CustomerRepository customerRepository(CustomerRepositoryRef ref) {
 
 @riverpod
 Stream<List<Customer>> customersStream(CustomersStreamRef ref) {
-  final user = ref.watch(authRepositoryProvider).currentUser;
-  if (user == null) return const Stream.empty();
+  final appUser = ref.watch(appUserProvider).value;
+  if (appUser == null) return const Stream.empty();
 
   final repository = ref.watch(customerRepositoryProvider);
-  return repository.queryCustomers(user.uid).snapshots().map(
+  return repository.queryCustomers(appUser.merchantId ?? appUser.id).snapshots().map(
         (snapshot) {
           final customers = snapshot.docs.map((doc) => doc.data()).toList();
           customers.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -72,3 +72,4 @@ Stream<List<Customer>> customersStream(CustomersStreamRef ref) {
         },
       );
 }
+

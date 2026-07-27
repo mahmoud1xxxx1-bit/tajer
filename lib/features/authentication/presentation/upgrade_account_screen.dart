@@ -46,7 +46,9 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
   Future<void> _linkGoogleAccount() async {
     setState(() => _isLoading = true);
     try {
-      final user = ref.read(authRepositoryProvider).currentUser;
+      final appUser = ref.read(appUserProvider).value;
+      if (appUser == null) throw Exception(AppLocalizations.of(context)!.text_29);
+      final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception(AppLocalizations.of(context)!.text_29);
 
       if (kIsWeb) {
@@ -73,7 +75,7 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطأ في الربط: $e')),
+          SnackBar(content: Text('Ø®Ø·Ø£ Ù ÙŠ Ø§Ù„Ø±Ø¨Ø·: $e')),
         );
       }
     } finally {
@@ -169,3 +171,4 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
     );
   }
 }
+

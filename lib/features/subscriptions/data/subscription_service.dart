@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
@@ -58,7 +58,7 @@ class SubscriptionService {
     final user = _authRepo.currentUser;
     if (user != null) {
       // Grant Premium in Firestore
-      await _firestore.collection('users').doc(user.uid).update({
+      await _firestore.collection('users').doc(userId).update({
         'plan': 'premium',
       });
     }
@@ -114,3 +114,4 @@ final premiumProductDetailsProvider = FutureProvider<ProductDetails?>((ref) asyn
   }
   return null;
 });
+

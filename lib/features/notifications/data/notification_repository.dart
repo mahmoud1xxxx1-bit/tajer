@@ -30,9 +30,9 @@ class NotificationRepository {
 }
 
 final notificationRepositoryProvider = Provider<NotificationRepository?>((ref) {
-  final user = ref.watch(authRepositoryProvider).currentUser;
-  if (user == null) return null;
-  return NotificationRepository(FirebaseFirestore.instance, user.uid);
+  final appUser = ref.watch(appUserProvider).value;
+  if (appUser == null) return null;
+  return NotificationRepository(FirebaseFirestore.instance, appUser.merchantId ?? appUser.id);
 });
 
 final notificationsStreamProvider = StreamProvider<List<AppNotification>>((ref) {

@@ -1,4 +1,4 @@
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+﻿import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -50,7 +50,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
       final isEditing = widget.customerToEdit != null;
       final newCustomer = Customer(
         id: isEditing ? widget.customerToEdit!.id : const Uuid().v4(),
-        merchantId: isEditing ? widget.customerToEdit!.merchantId : user.uid,
+        merchantId: isEditing ? widget.customerToEdit!.merchantId : userId,
         name: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
         createdAt: isEditing ? widget.customerToEdit!.createdAt : DateTime.now(),
@@ -67,7 +67,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('حدث خطأ: $e', style: TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(content: Text('Ø­Ø¯Ø« Ø®Ø·Ø£: $e', style: TextStyle(fontFamily: 'Tajawal'))),
         );
       }
     } finally {
@@ -128,3 +128,4 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
     );
   }
 }
+

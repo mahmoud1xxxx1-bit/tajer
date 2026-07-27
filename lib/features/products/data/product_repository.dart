@@ -60,11 +60,11 @@ ProductRepository productRepository(ProductRepositoryRef ref) {
 
 @riverpod
 Stream<List<Product>> productsStream(ProductsStreamRef ref) {
-  final user = ref.watch(authRepositoryProvider).currentUser;
-  if (user == null) return const Stream.empty();
+  final appUser = ref.watch(appUserProvider).value;
+  if (appUser == null) return const Stream.empty();
 
   final repository = ref.watch(productRepositoryProvider);
-  return repository.queryProducts(user.uid).snapshots().map(
+  return repository.queryProducts(appUser.merchantId ?? appUser.id).snapshots().map(
         (snapshot) {
           final products = snapshot.docs.map((doc) => doc.data()).toList();
           products.sort((a, b) => b.createdAt.compareTo(a.createdAt));

@@ -175,11 +175,11 @@ OrderRepository orderRepository(OrderRepositoryRef ref) {
 
 @riverpod
 Stream<List<AppOrder>> ordersStream(OrdersStreamRef ref) {
-  final user = ref.watch(authRepositoryProvider).currentUser;
-  if (user == null) return const Stream.empty();
+  final appUser = ref.watch(appUserProvider).value;
+  if (appUser == null) return const Stream.empty();
 
   final repository = ref.watch(orderRepositoryProvider);
-  return repository.queryOrders(user.uid).snapshots().map(
+  return repository.queryOrders(appUser.merchantId ?? appUser.id).snapshots().map(
         (snapshot) {
           final orders = snapshot.docs.map((doc) => doc.data()).toList();
           orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));

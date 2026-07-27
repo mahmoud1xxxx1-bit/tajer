@@ -48,9 +48,9 @@ class InventoryLogRepository {
 }
 
 final inventoryLogRepositoryProvider = Provider<InventoryLogRepository?>((ref) {
-  final user = ref.watch(authRepositoryProvider).currentUser;
-  if (user == null) return null;
-  return InventoryLogRepository(FirebaseFirestore.instance, user.uid);
+  final appUser = ref.watch(appUserProvider).value;
+  if (appUser == null) return null;
+  return InventoryLogRepository(FirebaseFirestore.instance, appUser.merchantId ?? appUser.id);
 });
 
 final inventoryLogsStreamProvider = StreamProvider<List<InventoryLog>>((ref) {

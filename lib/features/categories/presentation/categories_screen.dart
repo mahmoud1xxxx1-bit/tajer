@@ -1,4 +1,4 @@
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+﻿import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -49,7 +49,7 @@ class CategoriesScreen extends ConsumerWidget {
           );
         },
         loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('خطأ: $e')),
+        error: (e, st) => Center(child: Text('Ø®Ø·Ø£: $e')),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddCategoryDialog(context, ref),
@@ -82,7 +82,7 @@ class CategoriesScreen extends ConsumerWidget {
 
                 final category = Category(
                   id: const Uuid().v4(),
-                  merchantId: user.uid,
+                  merchantId: userId,
                   name: nameController.text,
                   createdAt: DateTime.now(),
                 );
@@ -131,3 +131,4 @@ class CategoriesScreen extends ConsumerWidget {
     );
   }
 }
+

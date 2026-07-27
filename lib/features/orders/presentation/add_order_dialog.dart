@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -60,7 +60,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
         _selectedProductId = product.id;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('تم اختيار المنتج: ${product.name}', style: TextStyle(fontFamily: 'Tajawal'))),
+        SnackBar(content: Text('ØªÙ… Ø§Ø®ØªÙŠØ§Ø± Ø§Ù„Ù…Ù†ØªØ¬: ${product.name}', style: TextStyle(fontFamily: 'Tajawal'))),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -109,7 +109,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
 
       final newOrder = AppOrder(
         id: const Uuid().v4(),
-        merchantId: user.uid,
+        merchantId: userId,
         customerId: selectedCustomer.id,
         customerName: selectedCustomer.name,
         productId: selectedProduct.id,
@@ -289,3 +289,4 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
     );
   }
 }
+

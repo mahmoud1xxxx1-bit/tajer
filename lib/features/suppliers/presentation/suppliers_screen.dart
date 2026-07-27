@@ -1,4 +1,4 @@
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+﻿import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -64,7 +64,7 @@ class SuppliersScreen extends ConsumerWidget {
           );
         },
         loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('خطأ: $e')),
+        error: (e, st) => Center(child: Text('Ø®Ø·Ø£: $e')),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddSupplierDialog(context, ref),
@@ -120,7 +120,7 @@ class SuppliersScreen extends ConsumerWidget {
 
                 final supplier = Supplier(
                   id: const Uuid().v4(),
-                  merchantId: user.uid,
+                  merchantId: userId,
                   name: nameController.text,
                   phone: phoneController.text,
                   totalDebt: double.tryParse(debtController.text) ?? 0.0,
@@ -200,3 +200,4 @@ class SuppliersScreen extends ConsumerWidget {
     );
   }
 }
+
