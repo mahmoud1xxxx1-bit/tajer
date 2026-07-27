@@ -48,3 +48,35 @@ jobs:
         with:
           name: tajer-web
           path: build/web
+
+      - name: Clean Target Directory on VPS
+        if: success()
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 163.245.218.57
+          username: root
+          password: ${{ secrets.VPS_PASSWORD }}
+          script: |
+            rm -rf /home/alldown.uk/public_html/taj/*
+
+      - name: Deploy to VPS
+        if: success()
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: 163.245.218.57
+          username: root
+          password: ${{ secrets.VPS_PASSWORD }}
+          source: "build/web/*"
+          target: "/home/alldown.uk/public_html/taj"
+          strip_components: 2
+
+      - name: Set Permissions on VPS
+        if: success()
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: 163.245.218.57
+          username: root
+          password: ${{ secrets.VPS_PASSWORD }}
+          script: |
+            chown -R nobody:nobody /home/alldown.uk/public_html/taj
+            chmod -R 755 /home/alldown.uk/public_html/taj
