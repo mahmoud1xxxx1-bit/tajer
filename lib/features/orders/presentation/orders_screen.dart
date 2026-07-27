@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../data/order_repository.dart';
 import 'add_order_dialog.dart';
 import '../../../core/services/guest_limit_service.dart';
@@ -13,21 +14,22 @@ class OrdersScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final ordersAsyncValue = ref.watch(ordersStreamProvider);
     final currency = ref.watch(currencyProvider).code;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الطلبات', style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(l10n.orders, style: const TextStyle(fontFamily: 'Tajawal')),
       ),
       body: ordersAsyncValue.when(
         data: (orders) {
           if (orders.isEmpty) {
-            return const Center(
+            return Center(
               child: Text(
                 'لا توجد طلبات بعد.\nاضغط على + لإنشاء طلب جديد.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontFamily: 'Tajawal', fontSize: 16),
+                style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16),
               ),
             );
           }
@@ -43,19 +45,19 @@ class OrdersScreen extends ConsumerWidget {
                   showDialog(
                     context: context,
                     builder: (context) => AlertDialog(
-                      title: const Text('حذف الطلب', style: TextStyle(fontFamily: 'Tajawal')),
+                      title: Text(l10n.delete, style: const TextStyle(fontFamily: 'Tajawal')),
                       content: const Text('هل أنت متأكد من حذف هذا الطلب؟ سيتم استرجاع كمية المنتج للمخزون.', style: TextStyle(fontFamily: 'Tajawal')),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
-                          child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
+                          child: Text(l10n.cancel, style: const TextStyle(fontFamily: 'Tajawal')),
                         ),
                         TextButton(
                           onPressed: () {
                             ref.read(orderRepositoryProvider).deleteOrder(order);
                             Navigator.pop(context);
                           },
-                          child: const Text('حذف واسترجاع', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                          child: Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
                         ),
                       ],
                     ),
@@ -154,19 +156,19 @@ class OrdersScreen extends ConsumerWidget {
                             showDialog(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: const Text('حذف الطلب', style: TextStyle(fontFamily: 'Tajawal')),
+                                title: Text(l10n.delete, style: const TextStyle(fontFamily: 'Tajawal')),
                                 content: const Text('هل أنت متأكد من حذف هذا الطلب؟ سيتم استرجاع كمية المنتج للمخزون.', style: TextStyle(fontFamily: 'Tajawal')),
                                 actions: [
                                   TextButton(
                                     onPressed: () => Navigator.pop(context),
-                                    child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
+                                    child: Text(l10n.cancel, style: const TextStyle(fontFamily: 'Tajawal')),
                                   ),
                                   TextButton(
                                     onPressed: () {
                                       repo.deleteOrder(order);
                                       Navigator.pop(context);
                                     },
-                                    child: const Text('حذف واسترجاع', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                                    child: Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
                                   ),
                                 ],
                               ),
@@ -227,13 +229,13 @@ class OrdersScreen extends ConsumerWidget {
                             ),
                           ),
                           const PopupMenuDivider(),
-                          const PopupMenuItem(
+                          PopupMenuItem(
                             value: 'delete',
                             child: Row(
                               children: [
-                                Icon(Icons.delete, color: Colors.red, size: 20),
-                                SizedBox(width: 8),
-                                Text('حذف نهائي', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                                const Icon(Icons.delete, color: Colors.red, size: 20),
+                                const SizedBox(width: 8),
+                                Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
                               ],
                             ),
                           ),
@@ -248,7 +250,7 @@ class OrdersScreen extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(
-          child: Text('حدث خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal')),
+          child: Text('${l10n.error}: $e', style: const TextStyle(fontFamily: 'Tajawal')),
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(

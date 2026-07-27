@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../products/presentation/products_screen.dart';
 import '../../customers/presentation/customers_screen.dart';
 import '../../orders/presentation/orders_screen.dart';
@@ -22,6 +23,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final List<Widget> screens = [
       DashboardHome(onNavigateToTab: (index) {
         setState(() {
@@ -46,31 +48,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
             _currentIndex = index;
           });
         },
-        destinations: const [
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: 'الرئيسية',
+            icon: const Icon(Icons.dashboard_outlined),
+            selectedIcon: const Icon(Icons.dashboard),
+            label: l10n.dashboard,
           ),
           NavigationDestination(
-            icon: Icon(Icons.shopping_cart_outlined),
-            selectedIcon: Icon(Icons.shopping_cart),
-            label: 'الطلبات',
+            icon: const Icon(Icons.shopping_cart_outlined),
+            selectedIcon: const Icon(Icons.shopping_cart),
+            label: l10n.orders,
           ),
           NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
-            label: 'المنتجات',
+            icon: const Icon(Icons.inventory_2_outlined),
+            selectedIcon: const Icon(Icons.inventory_2),
+            label: l10n.products,
           ),
           NavigationDestination(
-            icon: Icon(Icons.people_outline),
-            selectedIcon: Icon(Icons.people),
-            label: 'العملاء',
+            icon: const Icon(Icons.people_outline),
+            selectedIcon: const Icon(Icons.people),
+            label: l10n.customers,
           ),
           NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
-            selectedIcon: Icon(Icons.bar_chart),
-            label: 'التقارير',
+            icon: const Icon(Icons.bar_chart_outlined),
+            selectedIcon: const Icon(Icons.bar_chart),
+            label: l10n.reports,
           ),
         ],
       ),
@@ -84,13 +86,14 @@ class DashboardHome extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final ordersAsync = ref.watch(ordersStreamProvider);
     final productsAsync = ref.watch(productsStreamProvider);
     final currentCurrency = ref.watch(currencyProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('لوحة التحكم', style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(l10n.dashboard, style: const TextStyle(fontFamily: 'Tajawal')),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -104,15 +107,15 @@ class DashboardHome extends ConsumerWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(
+            DrawerHeader(
+              decoration: const BoxDecoration(
                 color: Colors.blueAccent,
               ),
-              child: Text('قائمة الإدارة', style: TextStyle(color: Colors.white, fontSize: 24, fontFamily: 'Tajawal')),
+              child: Text(l10n.managementAndInventory, style: const TextStyle(color: Colors.white, fontSize: 24, fontFamily: 'Tajawal')),
             ),
             ListTile(
               leading: const Icon(Icons.money_off),
-              title: const Text('المصروفات', style: TextStyle(fontFamily: 'Tajawal')),
+              title: Text(l10n.expenses, style: const TextStyle(fontFamily: 'Tajawal')),
               onTap: () {
                 Navigator.pop(context);
                 context.push('/expenses');
@@ -120,7 +123,7 @@ class DashboardHome extends ConsumerWidget {
             ),
             ListTile(
               leading: const Icon(Icons.business),
-              title: const Text('الموردين', style: TextStyle(fontFamily: 'Tajawal')),
+              title: Text(l10n.suppliers, style: const TextStyle(fontFamily: 'Tajawal')),
               onTap: () {
                 Navigator.pop(context);
                 context.push('/suppliers');
@@ -128,7 +131,7 @@ class DashboardHome extends ConsumerWidget {
             ),
             ListTile(
               leading: const Icon(Icons.category),
-              title: const Text('التصنيفات', style: TextStyle(fontFamily: 'Tajawal')),
+              title: Text(l10n.categories, style: const TextStyle(fontFamily: 'Tajawal')),
               onTap: () {
                 Navigator.pop(context);
                 context.push('/categories');
@@ -136,7 +139,7 @@ class DashboardHome extends ConsumerWidget {
             ),
             ListTile(
               leading: const Icon(Icons.history),
-              title: const Text('سجل المخزون', style: TextStyle(fontFamily: 'Tajawal')),
+              title: Text(l10n.inventoryLog, style: const TextStyle(fontFamily: 'Tajawal')),
               onTap: () {
                 Navigator.pop(context);
                 context.push('/inventory_logs');
@@ -184,16 +187,16 @@ class DashboardHome extends ConsumerWidget {
                     ),
                   ),
                 ],
-                const Text(
-                  'ملخص الأداء',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                Text(
+                  l10n.reports,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
                 ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
                     Expanded(
                       child: _StatCard(
-                        title: 'إجمالي المبيعات',
+                        title: l10n.totalSales,
                         value: '$totalSales ${currentCurrency.code}',
                         icon: Icons.account_balance_wallet_outlined,
                         color: Theme.of(context).colorScheme.primary,
@@ -202,7 +205,7 @@ class DashboardHome extends ConsumerWidget {
                     const SizedBox(width: 16),
                     Expanded(
                       child: _StatCard(
-                        title: 'عدد الطلبات',
+                        title: l10n.ordersCount,
                         value: '$ordersCount',
                         icon: Icons.shopping_bag_outlined,
                         color: Theme.of(context).colorScheme.secondary,
@@ -211,9 +214,9 @@ class DashboardHome extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'أوامر سريعة',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                Text(
+                  l10n.quickActions,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -221,7 +224,7 @@ class DashboardHome extends ConsumerWidget {
                   children: [
                     _QuickAction(
                       icon: Icons.add_shopping_cart,
-                      label: 'الطلبات',
+                      label: l10n.orders,
                       color: Theme.of(context).colorScheme.primary,
                       onTap: () {
                         onNavigateToTab(1);
@@ -229,7 +232,7 @@ class DashboardHome extends ConsumerWidget {
                     ),
                     _QuickAction(
                       icon: Icons.inventory_2_outlined,
-                      label: 'المنتجات',
+                      label: l10n.products,
                       color: Colors.deepPurpleAccent,
                       onTap: () {
                         onNavigateToTab(2);
@@ -237,7 +240,7 @@ class DashboardHome extends ConsumerWidget {
                     ),
                     _QuickAction(
                       icon: Icons.person_outline,
-                      label: 'العملاء',
+                      label: l10n.customers,
                       color: Theme.of(context).colorScheme.secondary,
                       onTap: () {
                         onNavigateToTab(3);
@@ -245,7 +248,7 @@ class DashboardHome extends ConsumerWidget {
                     ),
                     _QuickAction(
                       icon: Icons.bar_chart_rounded,
-                      label: 'التقارير',
+                      label: l10n.reports,
                       color: Colors.teal,
                       onTap: () {
                         onNavigateToTab(4);
@@ -254,9 +257,9 @@ class DashboardHome extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'الإدارة والمخزون',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                Text(
+                  l10n.managementAndInventory,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -264,7 +267,7 @@ class DashboardHome extends ConsumerWidget {
                   children: [
                     _QuickAction(
                       icon: Icons.money_off,
-                      label: 'المصروفات',
+                      label: l10n.expenses,
                       color: Colors.redAccent,
                       onTap: () {
                         context.push('/expenses');
@@ -272,7 +275,7 @@ class DashboardHome extends ConsumerWidget {
                     ),
                     _QuickAction(
                       icon: Icons.business,
-                      label: 'الموردين',
+                      label: l10n.suppliers,
                       color: Colors.blueAccent,
                       onTap: () {
                         context.push('/suppliers');
@@ -280,7 +283,7 @@ class DashboardHome extends ConsumerWidget {
                     ),
                     _QuickAction(
                       icon: Icons.category,
-                      label: 'التصنيفات',
+                      label: l10n.categories,
                       color: Colors.orangeAccent,
                       onTap: () {
                         context.push('/categories');
@@ -288,7 +291,7 @@ class DashboardHome extends ConsumerWidget {
                     ),
                     _QuickAction(
                       icon: Icons.history,
-                      label: 'سجل المخزون',
+                      label: l10n.inventoryLog,
                       color: Colors.purpleAccent,
                       onTap: () {
                         context.push('/inventory_logs');

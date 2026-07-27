@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../products/data/product_repository.dart';
 import '../../customers/data/customer_repository.dart';
@@ -130,15 +131,16 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
         productName: selectedProduct.name,
         previousQuantity: selectedProduct.quantity,
         newQuantity: selectedProduct.quantity - quantity,
-        reason: 'طلب مبيعات جديد (فاتورة)',
+        reason: 'طلب مبيعات جديد',
         userEmail: user.email,
       );
 
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('حدث خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(content: Text('${l10n.error}: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
         );
       }
     } finally {
@@ -148,6 +150,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final productsState = ref.watch(productsStreamProvider);
     final customersState = ref.watch(customersStreamProvider);
 
@@ -159,9 +162,9 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
-              'إنشاء طلب جديد',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+            Text(
+              l10n.add,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -170,13 +173,13 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
             customersState.when(
               data: (customers) => DropdownButtonFormField<String>(
                 value: _selectedCustomerId,
-                decoration: const InputDecoration(labelText: 'العميل', border: OutlineInputBorder()),
+                decoration: InputDecoration(labelText: l10n.customers, border: const OutlineInputBorder()),
                 items: customers.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: const TextStyle(fontFamily: 'Tajawal')))).toList(),
                 onChanged: (val) => setState(() => _selectedCustomerId = val),
-                validator: (val) => val == null ? 'يرجى اختيار العميل' : null,
+                validator: (val) => val == null ? l10n.requiredField : null,
               ),
               loading: () => const CircularProgressIndicator(),
-              error: (e, st) => Text('خطأ في تحميل العملاء: $e'),
+              error: (e, st) => Text('${l10n.error}: $e'),
             ),
             const SizedBox(height: 16),
 
@@ -186,9 +189,9 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
                 Expanded(
                   child: TextFormField(
                     controller: _barcodeController,
-                    decoration: const InputDecoration(
-                      labelText: 'بحث بالباركود',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.searchByBarcode,
+                      border: const OutlineInputBorder(),
                     ),
                     onFieldSubmitted: (val) => _findProductByBarcode(val.trim()),
                   ),
@@ -208,33 +211,33 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
                 _products = products;
                 return DropdownButtonFormField<String>(
                   value: _selectedProductId,
-                  decoration: const InputDecoration(labelText: 'أو اختر المنتج من القائمة', border: OutlineInputBorder()),
-                  items: products.map((p) => DropdownMenuItem(value: p.id, child: Text('${p.name} (متاح: ${p.quantity})', style: const TextStyle(fontFamily: 'Tajawal')))).toList(),
+                  decoration: InputDecoration(labelText: l10n.products, border: const OutlineInputBorder()),
+                  items: products.map((p) => DropdownMenuItem(value: p.id, child: Text('${p.name} (${l10n.quantity}: ${p.quantity})', style: const TextStyle(fontFamily: 'Tajawal')))).toList(),
                   onChanged: (val) => setState(() => _selectedProductId = val),
-                  validator: (val) => val == null ? 'يرجى اختيار المنتج' : null,
+                  validator: (val) => val == null ? l10n.requiredField : null,
                 );
               },
               loading: () => const CircularProgressIndicator(),
-              error: (e, st) => Text('خطأ في تحميل المنتجات: $e'),
+              error: (e, st) => Text('${l10n.error}: $e'),
             ),
             const SizedBox(height: 16),
 
             TextFormField(
               controller: _quantityController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'الكمية المطلوبة',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.quantity,
+                border: const OutlineInputBorder(),
               ),
-              validator: (value) => value!.isEmpty ? 'مطلوب' : null,
+              validator: (value) => value!.isEmpty ? l10n.requiredField : null,
             ),
             const SizedBox(height: 16),
             
             TextFormField(
               controller: _notesController,
-              decoration: const InputDecoration(
-                labelText: 'ملاحظات (اختياري)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.notes,
+                border: const OutlineInputBorder(),
               ),
               maxLines: 2,
             ),
@@ -277,7 +280,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
               ),
               child: _isLoading
                   ? const CircularProgressIndicator()
-                  : const Text('اعتماد الطلب', style: TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
+                  : Text(l10n.confirm, style: const TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
             ),
             const SizedBox(height: 16),
           ],

@@ -6,9 +6,7 @@ import '../features/authentication/presentation/startup_screen.dart';
 import '../features/authentication/presentation/upgrade_account_screen.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/subscriptions/presentation/paywall_screen.dart';
-import '../features/admin/presentation/admin_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
-import '../features/admin/data/admin_service.dart';
 import '../features/expenses/presentation/expenses_screen.dart';
 import '../features/suppliers/presentation/suppliers_screen.dart';
 import '../features/categories/presentation/categories_screen.dart';
@@ -16,24 +14,18 @@ import '../features/inventory_log/presentation/inventory_logs_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateChangesProvider);
-  final isAdminState = ref.watch(isAdminStreamProvider);
 
   return GoRouter(
     initialLocation: '/',
     redirect: (context, state) {
       final isAuthenticated = authState.value != null;
       final isStartupRoute = state.uri.path == '/';
-      final isAdmin = isAdminState.value ?? false;
 
       if (!isAuthenticated && !isStartupRoute) {
         return '/';
       }
 
       if (isAuthenticated && isStartupRoute) {
-        return isAdmin ? '/admin' : '/dashboard';
-      }
-
-      if (state.uri.path == '/admin' && !isAdmin) {
         return '/dashboard';
       }
 
@@ -59,10 +51,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/paywall',
         builder: (context, state) => const PaywallScreen(),
-      ),
-      GoRoute(
-        path: '/admin',
-        builder: (context, state) => const AdminScreen(),
       ),
       GoRoute(
         path: '/expenses',

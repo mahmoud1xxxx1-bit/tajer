@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/product_repository.dart';
 import '../domain/product.dart';
@@ -95,7 +96,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             productName: newProduct.name,
             previousQuantity: previousQuantity,
             newQuantity: newQuantity,
-            reason: 'تعديل يدوي من الإعدادات',
+            reason: 'تعديل يدوي',
             userEmail: user.email,
           );
         }
@@ -107,7 +108,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             productName: newProduct.name,
             previousQuantity: 0,
             newQuantity: newQuantity,
-            reason: 'إضافة منتج جديد',
+            reason: 'إضافة منتج',
             userEmail: user.email,
           );
         }
@@ -115,8 +116,9 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
+        final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('حدث خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(content: Text('${l10n.error}: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
         );
       }
     } finally {
@@ -126,6 +128,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isEditing = widget.productToEdit != null;
     final categoriesAsync = ref.watch(categoriesStreamProvider);
 
@@ -138,7 +141,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              isEditing ? 'تعديل بيانات المنتج' : 'إضافة منتج جديد',
+              isEditing ? l10n.edit : l10n.add,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
               textAlign: TextAlign.center,
             ),
@@ -148,9 +151,9 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                 Expanded(
                   child: TextFormField(
                     controller: _barcodeController,
-                    decoration: const InputDecoration(
-                      labelText: 'الباركود',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.barcode,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ),
@@ -166,28 +169,28 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
               data: (categories) {
                 return DropdownButtonFormField<String>(
                   value: _selectedCategoryId,
-                  decoration: const InputDecoration(
-                    labelText: 'التصنيف',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: l10n.category,
+                    border: const OutlineInputBorder(),
                   ),
                   items: [
-                    const DropdownMenuItem(value: null, child: Text('بدون تصنيف', style: TextStyle(fontFamily: 'Tajawal'))),
+                    DropdownMenuItem(value: null, child: Text(l10n.noCategory, style: const TextStyle(fontFamily: 'Tajawal'))),
                     ...categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: const TextStyle(fontFamily: 'Tajawal')))),
                   ],
                   onChanged: (value) => setState(() => _selectedCategoryId = value),
                 );
               },
               loading: () => const CircularProgressIndicator(),
-              error: (e, st) => const Text('خطأ في تحميل التصنيفات'),
+              error: (e, st) => Text(l10n.error),
             ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'اسم المنتج',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.productName,
+                border: const OutlineInputBorder(),
               ),
-              validator: (value) => value!.isEmpty ? 'مطلوب' : null,
+              validator: (value) => value!.isEmpty ? l10n.requiredField : null,
             ),
             const SizedBox(height: 16),
             Row(
@@ -196,11 +199,11 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                   child: TextFormField(
                     controller: _priceController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'السعر',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.price,
+                      border: const OutlineInputBorder(),
                     ),
-                    validator: (value) => value!.isEmpty ? 'مطلوب' : null,
+                    validator: (value) => value!.isEmpty ? l10n.requiredField : null,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -208,11 +211,11 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                   child: TextFormField(
                     controller: _quantityController,
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: 'الكمية المتاحة',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.availableQuantity,
+                      border: const OutlineInputBorder(),
                     ),
-                    validator: (value) => value!.isEmpty ? 'مطلوب' : null,
+                    validator: (value) => value!.isEmpty ? l10n.requiredField : null,
                   ),
                 ),
               ],
@@ -225,7 +228,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
               ),
               child: _isLoading
                   ? const CircularProgressIndicator()
-                  : Text(isEditing ? 'حفظ التعديلات' : 'إضافة المنتج', style: const TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
+                  : Text(l10n.save, style: const TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
             ),
             const SizedBox(height: 16),
           ],
