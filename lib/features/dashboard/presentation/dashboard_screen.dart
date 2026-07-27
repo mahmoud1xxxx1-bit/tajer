@@ -252,7 +252,50 @@ class DashboardHome extends ConsumerWidget {
                       },
                     ),
                   ],
-                )
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'الإدارة والمخزون',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _QuickAction(
+                      icon: Icons.money_off,
+                      label: 'المصروفات',
+                      color: Colors.redAccent,
+                      onTap: () {
+                        context.push('/expenses');
+                      },
+                    ),
+                    _QuickAction(
+                      icon: Icons.business,
+                      label: 'الموردين',
+                      color: Colors.blueAccent,
+                      onTap: () {
+                        context.push('/suppliers');
+                      },
+                    ),
+                    _QuickAction(
+                      icon: Icons.category,
+                      label: 'التصنيفات',
+                      color: Colors.orangeAccent,
+                      onTap: () {
+                        context.push('/categories');
+                      },
+                    ),
+                    _QuickAction(
+                      icon: Icons.history,
+                      label: 'سجل المخزون',
+                      color: Colors.purpleAccent,
+                      onTap: () {
+                        context.push('/inventory_logs');
+                      },
+                    ),
+                  ],
+                ),
               ],
             ),
           );
