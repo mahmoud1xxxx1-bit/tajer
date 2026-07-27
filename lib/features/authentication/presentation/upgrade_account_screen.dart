@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../authentication/data/auth_repository.dart';
 
 class UpgradeAccountScreen extends ConsumerStatefulWidget {
@@ -16,6 +17,30 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
   final _phoneController = TextEditingController();
   bool _isLoading = false;
   bool _isGoogleLinked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkInitialState();
+  }
+
+  Future<void> _checkInitialState() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      if (!user.isAnonymous || user.providerData.any((p) => p.providerId == 'google.com')) {
+        setState(() => _isGoogleLinked = true);
+      }
+      
+      // Fetch phone if exists
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (doc.exists && doc.data() != null) {
+        final phone = doc.data()!['phone'] as String?;
+        if (phone != null && phone.isNotEmpty) {
+          _phoneController.text = phone;
+        }
+      }
+    }
+  }
 
   Future<void> _linkGoogleAccount() async {
     setState(() => _isLoading = true);
@@ -39,13 +64,17 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
       }
 
       setState(() => _isGoogleLinked = true);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم ربط الحساب بنجاح!')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم ربط الحساب بنجاح!')),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('خطأ في الربط: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطأ في الربط: $e')),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -63,9 +92,18 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
     }
 
     setState(() => _isLoading = true);
-    // TODO: Update Firestore with the phone number
     
-    Navigator.pop(context); // Go back to dashboard/paywall
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'phone': phone,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
+    
+    if (mounted) {
+      Navigator.pop(context); // Go back to dashboard/paywall
+    }
   }
 
   @override
