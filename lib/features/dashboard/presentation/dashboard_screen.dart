@@ -146,7 +146,7 @@ class DashboardHome extends ConsumerWidget {
                 context.push('/inventory_logs');
               },
             ),
-            if (ref.read(appUserProvider).value?.role == 'merchant')
+            if (ref.watch(appUserProvider).value?.role == 'merchant')
               ListTile(
                 leading: Icon(Icons.manage_accounts),
                 title: Text('الموظفين والصلاحيات (Pro)', style: TextStyle(fontFamily: 'Tajawal', color: Colors.orange)),
