@@ -5,7 +5,8 @@ conn.on('ready', () => {
   console.log('Client :: ready');
   const commands = [
     'cd /root/tajer-web-build',
-    'git pull origin main',
+    'git fetch origin main',
+    'git reset --hard origin/main',
     'export PATH="$PATH:/root/flutter/bin"',
     'flutter pub get',
     'flutter gen-l10n',

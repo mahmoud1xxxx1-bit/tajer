@@ -44,15 +44,15 @@ class OrderRepository {
       final orderRef = _firestore.collection('orders').doc(order.id);
 
       final productDoc = await transaction.get(productRef);
-      if (!productDoc.exists) throw Exception(AppLocalizations.of(context)!.text_75);
+      if (!productDoc.exists) throw Exception("المنتج غير موجود");
 
       final currentQuantity = productDoc.data()?['quantity'] as int? ?? 0;
       if (currentQuantity < order.quantity) {
-        throw Exception(AppLocalizations.of(context)!.text_76);
+        throw Exception("الكمية المطلوبة غير متوفرة");
       }
 
       final customerDoc = await transaction.get(customerRef);
-      if (!customerDoc.exists) throw Exception(AppLocalizations.of(context)!.text_77);
+      if (!customerDoc.exists) throw Exception("العميل غير موجود");
 
       final currentTotalPurchases = (customerDoc.data()?['totalPurchases'] as num?)?.toDouble() ?? 0.0;
       final currentOrderCount = customerDoc.data()?['orderCount'] as int? ?? 0;
@@ -143,14 +143,14 @@ class OrderRepository {
         if (productDoc.exists) {
           final currentQty = productDoc.data()?['quantity'] as int? ?? 0;
           if (currentQty < order.quantity) {
-            throw Exception(AppLocalizations.of(context)!.text_78);
+            throw Exception("لا يوجد كمية كافية للإرجاع");
           }
           transaction.update(productRef, {
             'quantity': currentQty - order.quantity,
             'updatedAt': FieldValue.serverTimestamp(),
           });
         } else {
-          throw Exception(AppLocalizations.of(context)!.text_75);
+          throw Exception("المنتج غير موجود");
         }
       }
 

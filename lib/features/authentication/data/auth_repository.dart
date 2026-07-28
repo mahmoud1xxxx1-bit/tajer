@@ -23,7 +23,7 @@ class AuthRepository {
       final user = userCredential.user;
       
       if (user == null) {
-        throw Exception(AppLocalizations.of(context)!.text_26);
+        throw Exception("فشل تسجيل الدخول كمجهول");
       }
 
       // Check if user exists in Firestore, if not create them
@@ -131,4 +131,21 @@ AuthRepository authRepository(AuthRepositoryRef ref) {
 @riverpod
 Stream<User?> authStateChanges(AuthStateChangesRef ref) {
   return ref.watch(authRepositoryProvider).authStateChanges();
+}
+
+@riverpod
+Stream<AppUser?> appUser(AppUserRef ref) {
+  final user = ref.watch(authStateChangesProvider).value;
+  if (user == null) return Stream.value(null);
+
+  return FirebaseFirestore.instance
+      .collection('users')
+      .doc(user.uid)
+      .snapshots()
+      .map((snapshot) {
+    if (snapshot.exists && snapshot.data() != null) {
+      return AppUser.fromJson(snapshot.data()!);
+    }
+    return null;
+  });
 }

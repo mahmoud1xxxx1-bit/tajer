@@ -109,7 +109,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
 
       final newOrder = AppOrder(
         id: const Uuid().v4(),
-        merchantId: userId,
+        merchantId: user.uid,
         customerId: selectedCustomer.id,
         customerName: selectedCustomer.name,
         productId: selectedProduct.id,

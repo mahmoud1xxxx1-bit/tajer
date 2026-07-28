@@ -35,11 +35,11 @@ class GuestLimitService {
     int currentCount = 0;
     try {
       if (type == 'products') {
-        currentCount = await ref.read(productRepositoryProvider).getProductCount(userId);
+        currentCount = await ref.read(productRepositoryProvider).getProductCount(user.uid);
       } else if (type == 'customers') {
-        currentCount = await ref.read(customerRepositoryProvider).getCustomerCount(userId);
+        currentCount = await ref.read(customerRepositoryProvider).getCustomerCount(user.uid);
       } else if (type == 'orders') {
-        currentCount = await ref.read(orderRepositoryProvider).getOrderCount(userId);
+        currentCount = await ref.read(orderRepositoryProvider).getOrderCount(user.uid);
       }
     } catch (e) {
       // If error fetching count, allow or deny? We deny to be safe and notify user.

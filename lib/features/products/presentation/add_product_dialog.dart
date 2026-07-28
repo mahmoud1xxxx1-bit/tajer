@@ -78,7 +78,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       
       final newProduct = Product(
         id: isEditing ? widget.productToEdit!.id : const Uuid().v4(),
-        merchantId: isEditing ? widget.productToEdit!.merchantId : userId,
+        merchantId: isEditing ? widget.productToEdit!.merchantId : user.uid,
         name: _nameController.text.trim(),
         price: double.parse(_priceController.text),
         quantity: newQuantity,
