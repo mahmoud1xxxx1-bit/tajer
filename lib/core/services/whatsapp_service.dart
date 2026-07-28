@@ -12,7 +12,7 @@ class WhatsAppService {
     // Format the text invoice
     StringBuffer invoice = StringBuffer();
     invoice.writeln("🧾 *فاتورة مبيعات*");
-    invoice.writeln("التاريخ: ${DateFormatter.formatDate(order.createdAt)}");
+    invoice.writeln("التاريخ: ${AppDateFormatter.format(order.createdAt)}");
     invoice.writeln("العميل: ${order.customerName}");
     if (customerPhone != null && customerPhone.isNotEmpty) {
       invoice.writeln("الهاتف: $customerPhone");

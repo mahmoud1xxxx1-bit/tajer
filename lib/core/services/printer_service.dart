@@ -73,7 +73,7 @@ class PrinterService {
     bytes += generator.text('فاتورة مبيعات', styles: PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2));
     bytes += generator.emptyLines(1);
     bytes += generator.text('رقم الطلب: ${order.id.substring(0, 8)}');
-    bytes += generator.text('التاريخ: ${DateFormatter.formatDate(order.createdAt)}');
+    bytes += generator.text('التاريخ: ${AppDateFormatter.format(order.createdAt)}');
     bytes += generator.text('العميل: ${order.customerName}');
     bytes += generator.emptyLines(1);
     

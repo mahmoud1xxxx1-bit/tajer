@@ -50,7 +50,7 @@ class ExcelService {
     for (var order in reportsService.orders) {
       sheetObject.appendRow([
         TextCellValue(order.id.substring(0, 8)),
-        TextCellValue(DateFormatter.formatDate(order.createdAt)),
+        TextCellValue(AppDateFormatter.format(order.createdAt)),
         TextCellValue(order.customerName),
         TextCellValue(order.isCredit ? 'آجل' : 'نقدي'),
         TextCellValue('${order.total}'),
