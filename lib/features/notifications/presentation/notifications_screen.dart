@@ -14,12 +14,12 @@ class NotificationsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.text_27fa7a, style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text('الإشعارات', style: TextStyle(fontFamily: 'Tajawal')),
       ),
       body: notificationsAsync.when(
         data: (notifications) {
           if (notifications.isEmpty) {
-            return Center(child: Text(AppLocalizations.of(context)!.text_e9867f, style: TextStyle(fontFamily: 'Tajawal')));
+            return Center(child: Text('لا يوجد إشعارات', style: TextStyle(fontFamily: 'Tajawal')));
           }
           return ListView.builder(
             padding: EdgeInsets.all(16),

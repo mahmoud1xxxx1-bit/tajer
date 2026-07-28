@@ -6,6 +6,7 @@ import 'add_product_dialog.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
+import '../../authentication/data/auth_repository.dart';
 
 class ProductsScreen extends ConsumerWidget {
   const ProductsScreen({super.key});

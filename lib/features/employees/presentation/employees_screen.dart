@@ -15,19 +15,19 @@ class EmployeesScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.text_5a835a, style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text('الموظفين', style: TextStyle(fontFamily: 'Tajawal')),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           _showEmployeeDialog(context, ref, null);
         },
         icon: Icon(Icons.add),
-        label: Text(AppLocalizations.of(context)!.text_0deab6, style: TextStyle(fontFamily: 'Tajawal')),
+        label: Text('إضافة موظف', style: TextStyle(fontFamily: 'Tajawal')),
       ),
       body: employeesAsync.when(
         data: (employees) {
           if (employees.isEmpty) {
-            return Center(child: Text(AppLocalizations.of(context)!.text_552d4f, style: TextStyle(fontFamily: 'Tajawal')));
+            return Center(child: Text('لا يوجد موظفين', style: TextStyle(fontFamily: 'Tajawal')));
           }
           return ListView.builder(
             padding: EdgeInsets.all(16),
@@ -41,7 +41,7 @@ class EmployeesScreen extends ConsumerWidget {
                     child: Icon(Icons.person),
                   ),
                   title: Text(emp.name, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                  subtitle: Text(emp.role == 'cashier' ? AppLocalizations.of(context)!.text_ce360b : AppLocalizations.of(context)!.text_c9ff42, style: TextStyle(fontFamily: 'Tajawal')),
+                  subtitle: Text(emp.role == 'cashier' ? 'كاشير' : 'مدير', style: TextStyle(fontFamily: 'Tajawal')),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -70,12 +70,12 @@ class EmployeesScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.text_8a58d1, style: TextStyle(fontFamily: 'Tajawal')),
-        content: Text(AppLocalizations.of(context)!.text_91f0a4, style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text('حذف', style: TextStyle(fontFamily: 'Tajawal')),
+        content: Text('هل أنت متأكد؟', style: TextStyle(fontFamily: 'Tajawal')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context)!.text_b9568e, style: TextStyle(fontFamily: 'Tajawal')),
+            child: Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -83,7 +83,7 @@ class EmployeesScreen extends ConsumerWidget {
               ref.read(employeeRepositoryProvider)?.deleteEmployee(id);
               Navigator.pop(context);
             },
-            child: Text(AppLocalizations.of(context)!.text_3b9854, style: TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
+            child: Text('تأكيد', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
           ),
         ],
       ),
@@ -101,7 +101,7 @@ class EmployeesScreen extends ConsumerWidget {
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: Text(employee == null ? AppLocalizations.of(context)!.text_0deab6 : AppLocalizations.of(context)!.text_80bd1c, style: TextStyle(fontFamily: 'Tajawal')),
+            title: Text(employee == null ? 'إضافة موظف' : 'تعديل موظف', style: TextStyle(fontFamily: 'Tajawal')),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
