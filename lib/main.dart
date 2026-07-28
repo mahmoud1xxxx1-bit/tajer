@@ -66,16 +66,16 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Initialize Firebase App Check
-  FirebaseAppCheck.instance.activate(
-    androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
-    appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.appAttest,
-  ).catchError((e) {
-    debugPrint('Failed to initialize AppCheck: $e');
-  });
+  // Initialize Firebase App Check (Temporarily disabled to fix black screen)
+  // FirebaseAppCheck.instance.activate(
+  //   androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+  //   appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.appAttest,
+  // ).catchError((e) {
+  //   debugPrint('Failed to initialize AppCheck: $e');
+  // });
 
-  // Initialize RASP (Anti-Tampering)
-  _initFreeRasp();
+  // Initialize RASP (Anti-Tampering) (Temporarily disabled to fix black screen)
+  // _initFreeRasp();
 
   // Initialize Hive
   await Hive.initFlutter();
