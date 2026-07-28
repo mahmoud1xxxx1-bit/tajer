@@ -67,14 +67,12 @@ void main() async {
   );
 
   // Initialize Firebase App Check
-  try {
-    await FirebaseAppCheck.instance.activate(
-      androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
-      appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.appAttest,
-    );
-  } catch (e) {
+  FirebaseAppCheck.instance.activate(
+    androidProvider: kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+    appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.appAttest,
+  ).catchError((e) {
     debugPrint('Failed to initialize AppCheck: $e');
-  }
+  });
 
   // Initialize RASP (Anti-Tampering)
   _initFreeRasp();
