@@ -120,7 +120,7 @@ class SuppliersScreen extends ConsumerWidget {
 
                 final supplier = Supplier(
                   id: const Uuid().v4(),
-                  merchantId: userId,
+                  merchantId: user.uid,
                   name: nameController.text,
                   phone: phoneController.text,
                   totalDebt: double.tryParse(debtController.text) ?? 0.0,
