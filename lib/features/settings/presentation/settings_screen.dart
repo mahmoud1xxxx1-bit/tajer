@@ -29,9 +29,19 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => context.push('/paywall'),
           ),
           ListTile(
+            leading: Icon(Icons.email, color: Colors.blue),
+            title: Text('تسجيل الدخول / إنشاء حساب', style: TextStyle(fontFamily: 'Tajawal')),
+            onTap: () => context.push('/email_auth'),
+          ),
+          ListTile(
             leading: Icon(Icons.security, color: Colors.blue),
             title: Text('النسخ الاحتياطي والأمان', style: TextStyle(fontFamily: 'Tajawal')),
             onTap: () => context.push('/backup_security'),
+          ),
+          ListTile(
+            leading: Icon(Icons.print, color: Colors.indigo),
+            title: Text('إعدادات الطابعة الحرارية', style: TextStyle(fontFamily: 'Tajawal')),
+            onTap: () => context.push('/printer_settings'),
           ),
 
           Divider(),

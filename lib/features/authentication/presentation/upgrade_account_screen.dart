@@ -2,6 +2,7 @@ import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -127,7 +128,7 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 32),
-            if (!_isGoogleLinked)
+            if (!_isGoogleLinked) ...[
               ElevatedButton.icon(
                 onPressed: _isLoading ? null : _linkGoogleAccount,
                 icon: Icon(Icons.g_mobiledata, size: 32),
@@ -135,8 +136,19 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 12),
                 ),
-              )
-            else
+              ),
+              SizedBox(height: 16),
+              ElevatedButton.icon(
+                onPressed: _isLoading ? null : () => context.push('/email_auth'),
+                icon: Icon(Icons.email, size: 24),
+                label: Text('ربط باستخدام البريد الإلكتروني', style: TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  backgroundColor: Colors.grey[200],
+                  foregroundColor: Colors.blue[900],
+                ),
+              ),
+            ] else
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

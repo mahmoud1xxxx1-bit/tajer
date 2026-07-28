@@ -4,8 +4,9 @@ import 'package:tajer/l10n/app_localizations.dart';
 import '../data/order_repository.dart';
 import 'add_order_dialog.dart';
 import '../../../core/services/guest_limit_service.dart';
-import '../../../core/theme/glass_card.dart';
 import '../../../core/services/pdf_service.dart';
+import '../../../core/services/whatsapp_service.dart';
+import '../../../core/services/printer_service.dart';
 
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/utils/date_formatter.dart';
@@ -249,6 +250,128 @@ class OrdersScreen extends ConsumerWidget {
                                             }
                                           },
                                           style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
+                                          child: const Text('طباعة PDF', style: TextStyle(fontFamily: 'Tajawal')),
+                                        ),
+                                      ],
+                                    );
+                                  }
+                                );
+                              }
+                            );
+                          } else if (value == 'whatsapp') {
+                            showDialog(
+                              context: context,
+                              builder: (dialogContext) {
+                                final taxController = TextEditingController();
+                                bool applyTax = false;
+                                return StatefulBuilder(
+                                  builder: (context, setState) {
+                                    return AlertDialog(
+                                      title: Text('إرسال الفاتورة عبر واتساب', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          SwitchListTile(
+                                            title: Text('إضافة ضريبة للفاتورة', style: TextStyle(fontFamily: 'Tajawal')),
+                                            value: applyTax,
+                                            onChanged: (val) => setState(() => applyTax = val),
+                                          ),
+                                          if (applyTax)
+                                            TextField(
+                                              controller: taxController,
+                                              keyboardType: TextInputType.number,
+                                              decoration: const InputDecoration(
+                                                labelText: 'نسبة الضريبة (%)',
+                                                border: OutlineInputBorder(),
+                                                suffixText: '%',
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(dialogContext),
+                                          child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () async {
+                                            Navigator.pop(dialogContext);
+                                            double? tax;
+                                            if (applyTax && taxController.text.isNotEmpty) {
+                                              tax = double.tryParse(taxController.text);
+                                            }
+                                            try {
+                                              await WhatsAppService.sendInvoice(order, currency, taxPercentage: tax);
+                                            } catch (e) {
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text('خطأ: $e', style: TextStyle(fontFamily: 'Tajawal'))),
+                                                );
+                                              }
+                                            }
+                                          },
+                                          style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
+                                          child: const Text('إرسال الآن', style: TextStyle(fontFamily: 'Tajawal')),
+                                        ),
+                                      ],
+                                    );
+                                  }
+                                );
+                              }
+                            );
+                          } else if (value == 'thermal_print') {
+                            showDialog(
+                              context: context,
+                              builder: (dialogContext) {
+                                final taxController = TextEditingController();
+                                bool applyTax = false;
+                                return StatefulBuilder(
+                                  builder: (context, setState) {
+                                    return AlertDialog(
+                                      title: Text('الطباعة الحرارية', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          SwitchListTile(
+                                            title: Text('إضافة ضريبة للفاتورة', style: TextStyle(fontFamily: 'Tajawal')),
+                                            value: applyTax,
+                                            onChanged: (val) => setState(() => applyTax = val),
+                                          ),
+                                          if (applyTax)
+                                            TextField(
+                                              controller: taxController,
+                                              keyboardType: TextInputType.number,
+                                              decoration: const InputDecoration(
+                                                labelText: 'نسبة الضريبة (%)',
+                                                border: OutlineInputBorder(),
+                                                suffixText: '%',
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(dialogContext),
+                                          child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () async {
+                                            Navigator.pop(dialogContext);
+                                            double? tax;
+                                            if (applyTax && taxController.text.isNotEmpty) {
+                                              tax = double.tryParse(taxController.text);
+                                            }
+                                            try {
+                                              await PrinterService.printReceipt(order, currency, taxPercentage: tax);
+                                            } catch (e) {
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                  SnackBar(content: Text('خطأ في الطباعة الحرارية: $e', style: TextStyle(fontFamily: 'Tajawal'))),
+                                                );
+                                              }
+                                            }
+                                          },
+                                          style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, foregroundColor: Colors.white),
                                           child: const Text('طباعة', style: TextStyle(fontFamily: 'Tajawal')),
                                         ),
                                       ],
@@ -281,13 +404,33 @@ class OrdersScreen extends ConsumerWidget {
                             child: Text(AppLocalizations.of(context)!.text_92, style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
                           ),
                           const PopupMenuDivider(),
-                          PopupMenuItem(
+                          const PopupMenuItem(
                             value: 'print',
                             child: Row(
                               children: [
-                                Icon(Icons.print_outlined, size: 20),
+                                Icon(Icons.picture_as_pdf, color: Colors.red),
                                 SizedBox(width: 8),
-                                Text(AppLocalizations.of(context)!.text_93, style: TextStyle(fontFamily: 'Tajawal')),
+                                Text('طباعة PDF', style: TextStyle(fontFamily: 'Tajawal')),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'thermal_print',
+                            child: Row(
+                              children: [
+                                Icon(Icons.print, color: Colors.indigo),
+                                SizedBox(width: 8),
+                                Text('طباعة حرارية', style: TextStyle(fontFamily: 'Tajawal')),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'whatsapp',
+                            child: Row(
+                              children: [
+                                Icon(Icons.share, color: Colors.green),
+                                SizedBox(width: 8),
+                                Text('إرسال واتساب', style: TextStyle(fontFamily: 'Tajawal')),
                               ],
                             ),
                           ),

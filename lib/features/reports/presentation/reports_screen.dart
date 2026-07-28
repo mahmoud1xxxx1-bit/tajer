@@ -10,6 +10,7 @@ import '../../../core/providers/settings_provider.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/pdf_service.dart';
 import 'package:printing/printing.dart';
+import '../../../core/services/excel_service.dart';
 
 class ReportsScreen extends ConsumerStatefulWidget {
   const ReportsScreen({super.key});
@@ -72,12 +73,28 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         title: Text(AppLocalizations.of(context)!.text_104, style: TextStyle(fontFamily: 'Tajawal')),
         actions: [
           IconButton(
-            icon: Icon(Icons.picture_as_pdf),
+            icon: Icon(Icons.table_view, color: Colors.green),
             onPressed: () async {
               if (reportsService == null) return;
               try {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('جاري تجهيز التقرير...', style: TextStyle(fontFamily: 'Tajawal'))),
+                  SnackBar(content: Text('جاري تجهيز التقرير (إكسل)...', style: TextStyle(fontFamily: 'Tajawal'))),
+                );
+                await ExcelService.exportToExcel(reportsService, currentCurrency.code);
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('حدث خطأ أثناء تصدير إكسل: $e', style: TextStyle(fontFamily: 'Tajawal'))),
+                );
+              }
+            },
+          ),
+          IconButton(
+            icon: Icon(Icons.picture_as_pdf, color: Colors.red),
+            onPressed: () async {
+              if (reportsService == null) return;
+              try {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('جاري تجهيز التقرير (PDF)...', style: TextStyle(fontFamily: 'Tajawal'))),
                 );
                 final pdfData = await PdfService.generateReportPdf(reportsService, _selectedFilter, currentCurrency.code);
                 await Printing.sharePdf(bytes: pdfData, filename: 'report.pdf');

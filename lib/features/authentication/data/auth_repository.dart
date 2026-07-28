@@ -229,6 +229,92 @@ class AuthRepository {
       }
     }
   }
+
+  Future<void> signUpWithEmail(String email, String password, String name) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) throw Exception("No user logged in");
+      
+      if (currentUser.isAnonymous) {
+        final anonUid = currentUser.uid;
+        
+        // Capture old user document before creating new user
+        final oldUserDoc = await _firestore.collection('users').doc(anonUid).get();
+        
+        // This creates the user and signs them in automatically
+        final cred = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+        final newUser = cred.user;
+        
+        if (newUser != null) {
+          await newUser.updateDisplayName(name);
+          await newUser.sendEmailVerification();
+          
+          // Migrate root collections
+          await _migrateMerchantData(anonUid, newUser.uid);
+          
+          // Create the new user doc preserving the old data
+          Map<String, dynamic> newUserData = {
+            'isAnonymous': false,
+            'email': email,
+            'name': name,
+            'id': newUser.uid,
+            'createdAt': DateTime.now(),
+          };
+          
+          if (oldUserDoc.exists && oldUserDoc.data() != null) {
+            newUserData['plan'] = oldUserDoc.data()!['plan'];
+            newUserData['deviceId'] = oldUserDoc.data()!['deviceId'];
+            // Merge any other fields if necessary
+          }
+          
+          await _firestore.collection('users').doc(newUser.uid).set(newUserData, SetOptions(merge: true));
+          
+          // Delete anon user doc
+          await _firestore.collection('users').doc(anonUid).delete();
+        }
+      } else {
+        throw Exception("أنت مسجل الدخول بالفعل");
+      }
+    } catch (e) {
+      throw Exception("حدث خطأ أثناء إنشاء الحساب: $e");
+    }
+  }
+
+  Future<void> signInWithEmail(String email, String password) async {
+    try {
+      final currentUser = _auth.currentUser;
+      String? anonUid;
+      
+      if (currentUser != null && currentUser.isAnonymous) {
+        anonUid = currentUser.uid;
+      }
+      
+      final cred = await _auth.signInWithEmailAndPassword(email: email, password: password);
+      
+      if (anonUid != null && cred.user != null) {
+        await _migrateMerchantData(anonUid, cred.user!.uid);
+        await _firestore.collection('users').doc(anonUid).delete();
+      }
+    } catch (e) {
+      throw Exception("حدث خطأ أثناء تسجيل الدخول: $e");
+    }
+  }
+
+  Future<void> resetPassword(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } catch (e) {
+      throw Exception("حدث خطأ أثناء إرسال رابط استعادة كلمة المرور: $e");
+    }
+  }
+
+  Future<void> sendEmailVerification() async {
+    try {
+      await _auth.currentUser?.sendEmailVerification();
+    } catch (e) {
+      throw Exception("حدث خطأ أثناء إرسال رابط التفعيل: $e");
+    }
+  }
 }
 
 @riverpod

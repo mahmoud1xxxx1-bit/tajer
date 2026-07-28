@@ -4,10 +4,12 @@ import 'package:go_router/go_router.dart';
 import '../features/authentication/data/auth_repository.dart';
 import '../features/authentication/presentation/startup_screen.dart';
 import '../features/authentication/presentation/upgrade_account_screen.dart';
+import '../features/authentication/presentation/email_auth_screen.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/subscriptions/presentation/paywall_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/settings/presentation/backup_security_screen.dart';
+import '../features/settings/presentation/printer_settings_screen.dart';
 import '../features/expenses/presentation/expenses_screen.dart';
 import '../features/suppliers/presentation/suppliers_screen.dart';
 import '../features/categories/presentation/categories_screen.dart';
@@ -52,6 +54,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const UpgradeAccountScreen(),
       ),
       GoRoute(
+        path: '/email_auth',
+        builder: (context, state) => const EmailAuthScreen(),
+      ),
+      GoRoute(
         path: '/paywall',
         builder: (context, state) => const PaywallScreen(),
       ),
@@ -82,6 +88,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/backup_security',
         builder: (context, state) => const BackupSecurityScreen(),
+      ),
+      GoRoute(
+        path: '/printer_settings',
+        builder: (context, state) => const PrinterSettingsScreen(),
       ),
     ],
   );
