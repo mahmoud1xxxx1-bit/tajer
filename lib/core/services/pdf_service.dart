@@ -18,7 +18,7 @@ class PdfService {
     return await PdfGoogleFonts.tajawalBold();
   }
 
-  static Future<void> printInvoice(BuildContext buildContext, AppOrder order, String currency) async {
+  static Future<void> printInvoice(BuildContext buildContext, AppOrder order, String currency, {double? taxPercentage}) async {
     final font = await _getFont();
     final boldFont = await _getBoldFont();
     
@@ -105,6 +105,26 @@ class PdfService {
                             pw.Text('${order.total} $currency'),
                           ],
                         ),
+                        if (taxPercentage != null && taxPercentage > 0) ...[
+                          pw.SizedBox(height: 8),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                            children: [
+                              pw.Text('الضريبة ($taxPercentage%)', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                              pw.SizedBox(width: 20),
+                              pw.Text('${(order.total * (taxPercentage / 100)).toStringAsFixed(2)} $currency'),
+                            ],
+                          ),
+                          pw.SizedBox(height: 8),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                            children: [
+                              pw.Text('الإجمالي بعد الضريبة', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                              pw.SizedBox(width: 20),
+                              pw.Text('${(order.total + (order.total * (taxPercentage / 100))).toStringAsFixed(2)} $currency', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                            ],
+                          ),
+                        ],
                         if (order.isCredit) ...[
                           pw.SizedBox(height: 8),
                           pw.Row(
