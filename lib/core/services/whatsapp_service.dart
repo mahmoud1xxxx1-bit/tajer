@@ -4,7 +4,7 @@ import 'package:tajer/core/providers/settings_provider.dart';
 import 'package:tajer/core/utils/date_formatter.dart';
 
 class WhatsAppService {
-  static Future<void> sendInvoice(Order order, AppCurrency currency, {double? taxPercentage, String? customerPhone}) async {
+  static Future<void> sendInvoice(AppOrder order, AppCurrency currency, {double? taxPercentage, String? customerPhone}) async {
     // Determine the phone number to send to. 
     // Usually it would be from the customer object, but if they didn't provide one, they can't use this.
     // If we have customerPhone passed (e.g. from customer record), we use it.
@@ -12,18 +12,16 @@ class WhatsAppService {
     // Format the text invoice
     StringBuffer invoice = StringBuffer();
     invoice.writeln("🧾 *فاتورة مبيعات*");
-    invoice.writeln("التاريخ: ${DateFormatter.formatDate(order.date)}");
-    invoice.writeln("العميل: ${order.customerName ?? 'عميل عام'}");
-    if (order.customerPhone != null && order.customerPhone!.isNotEmpty) {
-      invoice.writeln("الهاتف: ${order.customerPhone}");
+    invoice.writeln("التاريخ: ${DateFormatter.formatDate(order.createdAt)}");
+    invoice.writeln("العميل: ${order.customerName}");
+    if (customerPhone != null && customerPhone.isNotEmpty) {
+      invoice.writeln("الهاتف: $customerPhone");
     }
     invoice.writeln("-------------------------");
     
-    for (var item in order.items) {
-      invoice.writeln("🔹 ${item.productName}");
-      invoice.writeln("   الكمية: ${item.quantity} x السعر: ${item.price} ${currency.code}");
-      invoice.writeln("   المجموع: ${item.total} ${currency.code}");
-    }
+    invoice.writeln("🔹 ${order.productName}");
+    invoice.writeln("   الكمية: ${order.quantity} x السعر: ${order.price} ${currency.code}");
+    invoice.writeln("   المجموع: ${order.total} ${currency.code}");
     
     invoice.writeln("-------------------------");
     double subtotal = order.total;
@@ -49,7 +47,7 @@ class WhatsAppService {
     String encodedMessage = Uri.encodeComponent(invoice.toString());
     
     // Check if phone number is available
-    String targetPhone = customerPhone ?? order.customerPhone ?? '';
+    String targetPhone = customerPhone ?? '';
     
     Uri whatsappUri;
     if (targetPhone.isNotEmpty) {

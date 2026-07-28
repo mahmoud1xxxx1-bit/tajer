@@ -52,7 +52,7 @@ class PrinterService {
     }
   }
 
-  static Future<void> printReceipt(Order order, AppCurrency currency, {double? taxPercentage}) async {
+  static Future<void> printReceipt(AppOrder order, AppCurrency currency, {double? taxPercentage}) async {
     bool isConnected = await PrintBluetoothThermal.connectionStatus;
     
     if (!isConnected) {
@@ -73,28 +73,26 @@ class PrinterService {
     bytes += generator.text('فاتورة مبيعات', styles: PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2));
     bytes += generator.emptyLines(1);
     bytes += generator.text('رقم الطلب: ${order.id.substring(0, 8)}');
-    bytes += generator.text('التاريخ: ${DateFormatter.formatDate(order.date)}');
-    bytes += generator.text('العميل: ${order.customerName ?? "عميل عام"}');
+    bytes += generator.text('التاريخ: ${DateFormatter.formatDate(order.createdAt)}');
+    bytes += generator.text('العميل: ${order.customerName}');
     bytes += generator.emptyLines(1);
     
     bytes += generator.hr();
 
-    // Items
-    for (var item in order.items) {
-      bytes += generator.text(item.productName, styles: PosStyles(bold: true));
-      bytes += generator.row([
-        PosColumn(
-          text: '${item.quantity} x ${item.price}',
-          width: 8,
-          styles: PosStyles(align: PosAlign.left),
-        ),
-        PosColumn(
-          text: '${item.total} ${currency.code}',
-          width: 4,
-          styles: PosStyles(align: PosAlign.right),
-        ),
-      ]);
-    }
+    // Item
+    bytes += generator.text(order.productName, styles: PosStyles(bold: true));
+    bytes += generator.row([
+      PosColumn(
+        text: '${order.quantity} x ${order.price}',
+        width: 8,
+        styles: PosStyles(align: PosAlign.left),
+      ),
+      PosColumn(
+        text: '${order.total} ${currency.code}',
+        width: 4,
+        styles: PosStyles(align: PosAlign.right),
+      ),
+    ]);
 
     bytes += generator.hr();
 

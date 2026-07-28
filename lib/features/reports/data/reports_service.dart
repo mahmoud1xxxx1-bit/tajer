@@ -5,6 +5,10 @@ import '../../products/data/product_repository.dart';
 import '../../products/domain/product.dart';
 import '../../expenses/data/expense_repository.dart';
 import '../../expenses/domain/expense.dart';
+import '../../customers/domain/customer.dart';
+import '../../suppliers/domain/supplier.dart';
+import '../../customers/data/customer_repository.dart';
+import '../../suppliers/data/supplier_repository.dart';
 
 class SalesData {
   final DateTime date;
@@ -25,13 +29,15 @@ class ReportsService {
   final List<AppOrder> orders;
   final List<Product> products;
   final List<Expense> expenses;
+  final List<Customer> customers;
+  final List<Supplier> suppliers;
 
-  ReportsService(this.orders, this.products, this.expenses);
+  ReportsService(this.orders, this.products, this.expenses, this.customers, this.suppliers);
 
   ReportsService filterByDate(DateTime start, DateTime end) {
     final filteredOrders = orders.where((o) => o.createdAt.isAfter(start) && o.createdAt.isBefore(end)).toList();
     final filteredExpenses = expenses.where((e) => e.date.isAfter(start) && e.date.isBefore(end)).toList();
-    return ReportsService(filteredOrders, products, filteredExpenses);
+    return ReportsService(filteredOrders, products, filteredExpenses, customers, suppliers);
   }
 
   double get totalRevenue => orders.where((o) => o.status != 'cancelled').fold(0.0, (sum, order) => sum + order.total);
@@ -90,10 +96,18 @@ final reportsServiceProvider = Provider<ReportsService?>((ref) {
   final ordersState = ref.watch(ordersStreamProvider);
   final productsState = ref.watch(productsStreamProvider);
   final expensesState = ref.watch(expensesStreamProvider);
+  final customersState = ref.watch(customersStreamProvider);
+  final suppliersState = ref.watch(suppliersStreamProvider);
 
-  if (ordersState.value == null || productsState.value == null || expensesState.value == null) {
+  if (ordersState.value == null || productsState.value == null || expensesState.value == null || customersState.value == null || suppliersState.value == null) {
     return null; // Still loading
   }
 
-  return ReportsService(ordersState.value!, productsState.value!, expensesState.value!);
+  return ReportsService(
+    ordersState.value!,
+    productsState.value!,
+    expensesState.value!,
+    customersState.value!,
+    suppliersState.value!,
+  );
 });

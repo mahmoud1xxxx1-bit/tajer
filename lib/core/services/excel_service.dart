@@ -50,8 +50,8 @@ class ExcelService {
     for (var order in reportsService.orders) {
       sheetObject.appendRow([
         TextCellValue(order.id.substring(0, 8)),
-        TextCellValue(DateFormatter.formatDate(order.date)),
-        TextCellValue(order.customerName ?? 'عميل عام'),
+        TextCellValue(DateFormatter.formatDate(order.createdAt)),
+        TextCellValue(order.customerName),
         TextCellValue(order.isCredit ? 'آجل' : 'نقدي'),
         TextCellValue('${order.total}'),
         TextCellValue('${order.paidAmount}'),
@@ -67,20 +67,18 @@ class ExcelService {
     sheetObject.appendRow([
       TextCellValue('اسم المنتج'),
       TextCellValue('التصنيف'),
-      TextCellValue('سعر الشراء'),
-      TextCellValue('سعر البيع'),
+      TextCellValue('السعر'),
       TextCellValue('الكمية المتوفرة'),
-      TextCellValue('قيمة المخزون (بيع)'),
+      TextCellValue('قيمة المخزون'),
     ]);
 
     for (var product in reportsService.products) {
       sheetObject.appendRow([
         TextCellValue(product.name),
-        TextCellValue(product.categoryId),
-        TextCellValue('${product.purchasePrice}'),
-        TextCellValue('${product.salePrice}'),
+        TextCellValue(product.categoryId ?? ''),
+        TextCellValue('${product.price}'),
         TextCellValue('${product.quantity}'),
-        TextCellValue('${product.quantity * product.salePrice}'),
+        TextCellValue('${product.quantity * product.price}'),
       ]);
     }
   }
@@ -117,7 +115,7 @@ class ExcelService {
     for (var supplier in suppliersWithDebt) {
       sheetObject.appendRow([
         TextCellValue(supplier.name),
-        TextCellValue(supplier.phone),
+        TextCellValue(supplier.phone ?? ''),
         TextCellValue('${supplier.totalDebt}'),
       ]);
     }
