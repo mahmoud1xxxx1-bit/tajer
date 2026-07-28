@@ -53,20 +53,8 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) throw Exception(AppLocalizations.of(context)!.text_29);
 
-      if (kIsWeb) {
-        await user.linkWithPopup(GoogleAuthProvider());
-      } else {
-        final googleSignIn = GoogleSignIn();
-        final googleUser = await googleSignIn.signIn();
-        if (googleUser == null) throw Exception(AppLocalizations.of(context)!.text_30);
-
-        final googleAuth = await googleUser.authentication;
-        final credential = GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
-          idToken: googleAuth.idToken,
-        );
-        await user.linkWithCredential(credential);
-      }
+      final authRepo = ref.read(authRepositoryProvider);
+      await authRepo.linkWithGoogle();
 
       setState(() => _isGoogleLinked = true);
       if (mounted) {
