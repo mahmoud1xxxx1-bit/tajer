@@ -1,85 +1,109 @@
 import 'package:tajer/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../features/authentication/data/auth_repository.dart';
 import '../../features/authentication/presentation/auth_controller.dart';
-import '../../features/products/data/product_repository.dart';
-import '../../features/customers/data/customer_repository.dart';
-import '../../features/orders/data/order_repository.dart';
+import 'limits_service.dart';
 
 class GuestLimitService {
   static Future<bool> canAddProduct(BuildContext context, WidgetRef ref) async {
-    return _checkLimit(context, ref, limit: 3, type: 'products');
+    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddProduct(user));
   }
 
   static Future<bool> canAddCustomer(BuildContext context, WidgetRef ref) async {
-    return _checkLimit(context, ref, limit: 20, type: 'customers');
+    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddCustomer(user));
   }
 
   static Future<bool> canAddOrder(BuildContext context, WidgetRef ref) async {
-    return _checkLimit(context, ref, limit: 20, type: 'orders');
+    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddOrder(user));
+  }
+
+  static Future<bool> canAddExpense(BuildContext context, WidgetRef ref) async {
+    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddExpense(user));
+  }
+
+  static Future<bool> canAddCategory(BuildContext context, WidgetRef ref) async {
+    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddCategory(user));
+  }
+
+  static Future<bool> canAddSupplier(BuildContext context, WidgetRef ref) async {
+    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddSupplier(user));
+  }
+
+  static Future<bool> canAddEmployee(BuildContext context, WidgetRef ref) async {
+    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddEmployee(user));
   }
 
   static Future<bool> _checkLimit(
     BuildContext context,
-    WidgetRef ref, {
-    required int limit,
-    required String type,
-  }) async {
-    final user = ref.read(authRepositoryProvider).currentUser;
-    if (user == null) return false;
+    WidgetRef ref,
+    Future<bool> Function(dynamic user) checkFunction,
+  ) async {
+    // Show loading
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
 
-    // If not anonymous, no limits apply for now (can expand later based on plans)
-    if (!user.isAnonymous) return true;
-
-    int currentCount = 0;
     try {
-      if (type == 'products') {
-        currentCount = await ref.read(productRepositoryProvider).getProductCount(user.uid);
-      } else if (type == 'customers') {
-        currentCount = await ref.read(customerRepositoryProvider).getCustomerCount(user.uid);
-      } else if (type == 'orders') {
-        currentCount = await ref.read(orderRepositoryProvider).getOrderCount(user.uid);
+      final user = ref.read(appUserProvider).value;
+      if (user == null) {
+        if (context.mounted) Navigator.pop(context);
+        return false;
       }
+
+      final canAdd = await checkFunction(user);
+      
+      if (context.mounted) {
+        Navigator.pop(context); // close loading
+      }
+
+      if (!canAdd) {
+        if (user.plan == 'banned_device') {
+          if (context.mounted) _showBannedDeviceDialog(context, ref);
+        } else {
+          if (context.mounted) _showUpgradeDialog(context, ref);
+        }
+        return false;
+      }
+
+      return true;
     } catch (e) {
-      // If error fetching count, allow or deny? We deny to be safe and notify user.
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('خطأ في التحقق من القيود: $e')),
-      );
+      if (context.mounted) {
+        Navigator.pop(context); // close loading
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('خطأ في التحقق من القيود: $e')),
+        );
+      }
       return false;
     }
-
-    if (currentCount >= limit) {
-      _showUpgradeDialog(context, ref);
-      return false;
-    }
-
-    return true;
   }
 
   static void _showUpgradeDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.text_1, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        title: Text('ترقية الباقة', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange)),
         content: Text(
-          AppLocalizations.of(context)!.text_2,
+          'لقد وصلت للحد الأقصى المسموح به في الباقة المجانية. للتمتع بميزات لا محدودة، يرجى الترقية إلى الباقة الاحترافية (Pro).',
           style: TextStyle(fontFamily: 'Tajawal', height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context)!.text_3, style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+            child: Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
           ),
           ElevatedButton.icon(
             onPressed: () {
               Navigator.pop(context);
-              _linkWithGoogle(context, ref);
+              context.push('/subscription');
             },
-            icon: Icon(Icons.login),
-            label: Text(AppLocalizations.of(context)!.text_4, style: TextStyle(fontFamily: 'Tajawal')),
+            icon: Icon(Icons.star),
+            label: Text('الترقية الآن (10\$/شهر)', style: TextStyle(fontFamily: 'Tajawal')),
             style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
+              backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
             ),
           ),
@@ -88,36 +112,36 @@ class GuestLimitService {
     );
   }
 
-  static Future<void> _linkWithGoogle(BuildContext context, WidgetRef ref) async {
-    // Show a loading overlay or just use the controller
+  static void _showBannedDeviceDialog(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (_) => Center(child: CircularProgressIndicator()),
+      builder: (context) => AlertDialog(
+        title: Text('تم استهلاك الباقة المجانية', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
+        content: Text(
+          'عذراً، لقد تم اكتشاف استخدام سابق للباقة المجانية على هذا الجهاز. يرجى الترقية إلى الباقة الاحترافية (Pro) أو تسجيل الدخول بحسابك السابق لاستعادة بياناتك.',
+          style: TextStyle(fontFamily: 'Tajawal', height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              context.push('/subscription');
+            },
+            icon: Icon(Icons.star),
+            label: Text('الترقية الآن (10\$/شهر)', style: TextStyle(fontFamily: 'Tajawal')),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
     );
-
-    try {
-      await ref.read(authControllerProvider.notifier).linkWithGoogle();
-      if (context.mounted) {
-        Navigator.pop(context); // close loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context)!.text_5, style: TextStyle(fontFamily: 'Tajawal')),
-            backgroundColor: Colors.green,
-          ),
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        Navigator.pop(context); // close loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('فشل الربط: $e', style: TextStyle(fontFamily: 'Tajawal')),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
   }
 }
 

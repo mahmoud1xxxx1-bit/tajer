@@ -4,6 +4,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'dart:io' show Platform;
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 import '../domain/app_user.dart';
 
 part 'auth_repository.g.dart';
@@ -16,6 +20,28 @@ class AuthRepository {
 
   Stream<User?> authStateChanges() => _auth.authStateChanges();
   User? get currentUser => _auth.currentUser;
+
+  Future<String> _getDeviceId() async {
+    if (kIsWeb) {
+      final prefs = await SharedPreferences.getInstance();
+      String? webId = prefs.getString('web_device_id');
+      if (webId == null) {
+        webId = const Uuid().v4();
+        await prefs.setString('web_device_id', webId);
+      }
+      return webId;
+    }
+    
+    final deviceInfo = DeviceInfoPlugin();
+    if (Platform.isAndroid) {
+      final androidInfo = await deviceInfo.androidInfo;
+      return androidInfo.id; // Unique ID for Android device
+    } else if (Platform.isIOS) {
+      final iosInfo = await deviceInfo.iosInfo;
+      return iosInfo.identifierForVendor ?? const Uuid().v4(); // Unique ID for iOS device
+    }
+    return const Uuid().v4();
+  }
 
   Future<AppUser> signInAnonymously() async {
     try {
@@ -31,11 +57,31 @@ class AuthRepository {
       final docSnap = await docRef.get();
 
       if (!docSnap.exists) {
+        final deviceId = await _getDeviceId();
+        
+        // Anti-Abuse: Check if this device was already used by another free account
+        final deviceRegistryRef = _firestore.collection('device_registry').doc(deviceId);
+        final deviceDoc = await deviceRegistryRef.get();
+        
+        String assignedPlan = 'guest';
+        
+        if (deviceDoc.exists) {
+          // Device has been used before, prevent new free account from getting limits
+          assignedPlan = 'banned_device';
+        } else {
+          // Register this device
+          await deviceRegistryRef.set({
+            'firstUsedBy': user.uid,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        }
+
         final appUser = AppUser(
           id: user.uid,
           createdAt: DateTime.now(),
           isAnonymous: true,
-          plan: 'guest',
+          plan: assignedPlan,
+          deviceId: deviceId,
         );
         await docRef.set(appUser.toJson());
         return appUser;

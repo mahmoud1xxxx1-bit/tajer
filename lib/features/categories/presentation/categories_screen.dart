@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/theme/glass_card.dart';
+import '../../../core/services/guest_limit_service.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/category_repository.dart';
 import '../domain/category.dart';
@@ -52,7 +53,11 @@ class CategoriesScreen extends ConsumerWidget {
         error: (e, st) => Center(child: Text('خطأ: $e')),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddCategoryDialog(context, ref),
+        onPressed: () async {
+          final canAdd = await GuestLimitService.canAddCategory(context, ref);
+          if (!canAdd) return;
+          if (context.mounted) _showAddCategoryDialog(context, ref);
+        },
         child: Icon(Icons.add),
       ),
     );

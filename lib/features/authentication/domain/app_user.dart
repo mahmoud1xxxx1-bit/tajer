@@ -15,6 +15,7 @@ class AppUser with _$AppUser {
     @Default(true) bool isAnonymous,
     @Default('merchant') String role,
     String? merchantId,
+    String? deviceId,
     @Default({}) Map<String, dynamic> permissions,
   }) = _AppUser;
 

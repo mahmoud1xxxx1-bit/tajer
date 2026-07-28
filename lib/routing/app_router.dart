@@ -12,6 +12,7 @@ import '../features/suppliers/presentation/suppliers_screen.dart';
 import '../features/categories/presentation/categories_screen.dart';
 import '../features/inventory_log/presentation/inventory_logs_screen.dart';
 import '../features/employees/presentation/employees_screen.dart';
+import '../features/subscription/presentation/subscription_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateChangesProvider);
@@ -72,6 +73,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/employees',
         builder: (context, state) => const EmployeesScreen(),
+      ),
+      GoRoute(
+        path: '/subscription',
+        builder: (context, state) => const SubscriptionScreen(),
       ),
     ],
   );

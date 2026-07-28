@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/theme/glass_card.dart';
+import '../../../core/services/guest_limit_service.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/expense_repository.dart';
 import '../domain/expense.dart';
@@ -96,7 +97,11 @@ class ExpensesScreen extends ConsumerWidget {
         error: (e, st) => Center(child: Text('خطأ: $e')),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddExpenseDialog(context, ref),
+        onPressed: () async {
+          final canAdd = await GuestLimitService.canAddExpense(context, ref);
+          if (!canAdd) return;
+          if (context.mounted) _showAddExpenseDialog(context, ref);
+        },
         child: Icon(Icons.add),
       ),
     );

@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../data/employee_repository.dart';
 import '../domain/employee.dart';
 import '../../../core/theme/glass_card.dart';
+import '../../../core/services/guest_limit_service.dart';
 
 class EmployeesScreen extends ConsumerWidget {
   const EmployeesScreen({super.key});
@@ -18,8 +19,10 @@ class EmployeesScreen extends ConsumerWidget {
         title: Text('الموظفين', style: TextStyle(fontFamily: 'Tajawal')),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          _showEmployeeDialog(context, ref, null);
+        onPressed: () async {
+          final canAdd = await GuestLimitService.canAddEmployee(context, ref);
+          if (!canAdd) return;
+          if (context.mounted) _showEmployeeDialog(context, ref, null);
         },
         icon: Icon(Icons.add),
         label: Text('إضافة موظف', style: TextStyle(fontFamily: 'Tajawal')),

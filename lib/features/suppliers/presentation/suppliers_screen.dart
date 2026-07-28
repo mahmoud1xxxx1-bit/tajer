@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
+import '../../../core/services/guest_limit_service.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/supplier_repository.dart';
 import '../domain/supplier.dart';
@@ -67,7 +68,11 @@ class SuppliersScreen extends ConsumerWidget {
         error: (e, st) => Center(child: Text('خطأ: $e')),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddSupplierDialog(context, ref),
+        onPressed: () async {
+          final canAdd = await GuestLimitService.canAddSupplier(context, ref);
+          if (!canAdd) return;
+          if (context.mounted) _showAddSupplierDialog(context, ref);
+        },
         child: Icon(Icons.add),
       ),
     );

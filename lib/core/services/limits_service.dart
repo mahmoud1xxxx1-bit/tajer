@@ -1,0 +1,72 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../features/authentication/data/auth_repository.dart';
+import '../../features/authentication/domain/app_user.dart';
+
+part 'limits_service.g.dart';
+
+class LimitsService {
+  final FirebaseFirestore _firestore;
+
+  LimitsService(this._firestore);
+
+  static const int maxCustomers = 20;
+  static const int maxOrders = 20;
+  static const int maxProducts = 5;
+  static const int maxExpenses = 10;
+  static const int maxCategories = 5;
+  static const int maxSuppliers = 5;
+  static const int maxEmployees = 1;
+
+  Future<bool> canAddCustomer(AppUser user) async {
+    return _canAdd(user, 'customers', maxCustomers);
+  }
+
+  Future<bool> canAddOrder(AppUser user) async {
+    return _canAdd(user, 'orders', maxOrders);
+  }
+
+  Future<bool> canAddProduct(AppUser user) async {
+    return _canAdd(user, 'products', maxProducts);
+  }
+
+  Future<bool> canAddExpense(AppUser user) async {
+    return _canAdd(user, 'expenses', maxExpenses);
+  }
+
+  Future<bool> canAddCategory(AppUser user) async {
+    return _canAdd(user, 'categories', maxCategories);
+  }
+
+  Future<bool> canAddSupplier(AppUser user) async {
+    return _canAdd(user, 'suppliers', maxSuppliers);
+  }
+
+  Future<bool> canAddEmployee(AppUser user) async {
+    return _canAdd(user, 'employees', maxEmployees);
+  }
+
+  Future<bool> _canAdd(AppUser user, String collectionName, int maxLimit) async {
+    // Banned devices cannot add anything (0 limit)
+    if (user.plan == 'banned_device') return false;
+
+    // Pro users have unlimited access
+    if (user.plan == 'pro') return true;
+
+    // Check count for free/guest users
+    final String merchantId = user.merchantId ?? user.id;
+    final snapshot = await _firestore
+        .collection(collectionName)
+        .where('merchantId', isEqualTo: merchantId)
+        .count()
+        .get();
+
+    final currentCount = snapshot.count ?? 0;
+    return currentCount < maxLimit;
+  }
+}
+
+@riverpod
+LimitsService limitsService(LimitsServiceRef ref) {
+  return LimitsService(FirebaseFirestore.instance);
+}
