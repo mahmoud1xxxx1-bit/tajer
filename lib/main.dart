@@ -54,7 +54,7 @@ void _initFreeRasp() {
 void _handleThreat(String threat) {
   debugPrint('CRITICAL SECURITY THREAT DETECTED: $threat');
   if (kReleaseMode) {
-    exit(0); // Immediately kill the app in production if a threat is detected
+    // exit(0); // Temporarily disabled for user testing
   }
 }
 
