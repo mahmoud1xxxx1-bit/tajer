@@ -11,6 +11,8 @@ import '../../../core/services/printer_service.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/utils/date_formatter.dart';
 
+import '../../../core/theme/glass_card.dart';
+
 class OrdersScreen extends ConsumerWidget {
   const OrdersScreen({super.key});
 
