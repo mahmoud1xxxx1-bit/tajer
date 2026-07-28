@@ -7,6 +7,7 @@ import '../features/authentication/presentation/upgrade_account_screen.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/subscriptions/presentation/paywall_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/settings/presentation/backup_security_screen.dart';
 import '../features/expenses/presentation/expenses_screen.dart';
 import '../features/suppliers/presentation/suppliers_screen.dart';
 import '../features/categories/presentation/categories_screen.dart';
@@ -77,6 +78,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/subscription',
         builder: (context, state) => const SubscriptionScreen(),
+      ),
+      GoRoute(
+        path: '/backup_security',
+        builder: (context, state) => const BackupSecurityScreen(),
       ),
     ],
   );

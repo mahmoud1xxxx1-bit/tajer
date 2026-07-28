@@ -134,7 +134,10 @@ class AuthRepository {
             if (e.code == 'credential-already-in-use') {
               // The Google account is already linked. Sign in with it.
               final anonUid = currentUser.uid;
-              await _auth.signInWithPopup(googleProvider);
+              final cred = await _auth.signInWithPopup(googleProvider);
+              if (cred.user != null) {
+                await _migrateMerchantData(anonUid, cred.user!.uid);
+              }
               await _firestore.collection('users').doc(anonUid).delete();
             } else {
               rethrow;
@@ -167,7 +170,10 @@ class AuthRepository {
           } on FirebaseAuthException catch (e) {
             if (e.code == 'credential-already-in-use') {
               final anonUid = currentUser.uid;
-              await _auth.signInWithCredential(credential);
+              final cred = await _auth.signInWithCredential(credential);
+              if (cred.user != null) {
+                await _migrateMerchantData(anonUid, cred.user!.uid);
+              }
               await _firestore.collection('users').doc(anonUid).delete();
             } else {
               rethrow;
@@ -180,6 +186,47 @@ class AuthRepository {
       }
     } catch (e) {
       throw Exception("حدث خطأ أثناء الربط بحساب جوجل: $e");
+    }
+  }
+
+  Future<void> _migrateMerchantData(String oldUid, String newUid) async {
+    // 0. Migrate User Plan (Subscription)
+    final oldUserDoc = await _firestore.collection('users').doc(oldUid).get();
+    if (oldUserDoc.exists) {
+      final oldData = oldUserDoc.data();
+      if (oldData != null && oldData.containsKey('plan')) {
+        await _firestore.collection('users').doc(newUid).set({
+          'plan': oldData['plan'],
+        }, SetOptions(merge: true));
+      }
+    }
+
+    // 1. Root collections with 'merchantId'
+    final rootCollections = ['products', 'orders', 'customers'];
+    for (final collection in rootCollections) {
+      final snapshot = await _firestore.collection(collection).where('merchantId', isEqualTo: oldUid).get();
+      if (snapshot.docs.isNotEmpty) {
+        final batch = _firestore.batch();
+        for (final doc in snapshot.docs) {
+          batch.update(doc.reference, {'merchantId': newUid});
+        }
+        await batch.commit();
+      }
+    }
+
+    // 2. Subcollections under merchants/oldUid
+    final subcollections = ['categories', 'expenses', 'inventory_logs', 'suppliers'];
+    for (final sub in subcollections) {
+      final snapshot = await _firestore.collection('merchants').doc(oldUid).collection(sub).get();
+      if (snapshot.docs.isNotEmpty) {
+        final batch = _firestore.batch();
+        for (final doc in snapshot.docs) {
+          final newRef = _firestore.collection('merchants').doc(newUid).collection(sub).doc(doc.id);
+          batch.set(newRef, doc.data());
+          batch.delete(doc.reference);
+        }
+        await batch.commit();
+      }
     }
   }
 }

@@ -28,6 +28,11 @@ class SettingsScreen extends ConsumerWidget {
             title: Text(l10n.subscriptions, style: TextStyle(fontFamily: 'Tajawal')),
             onTap: () => context.push('/paywall'),
           ),
+          ListTile(
+            leading: Icon(Icons.security, color: Colors.blue),
+            title: Text('النسخ الاحتياطي والأمان', style: TextStyle(fontFamily: 'Tajawal')),
+            onTap: () => context.push('/backup_security'),
+          ),
 
           Divider(),
           _LanguageSelector(),

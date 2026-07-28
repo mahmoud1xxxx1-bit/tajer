@@ -12,6 +12,30 @@ import 'firebase_options.dart';
 import 'routing/app_router.dart';
 import 'core/providers/settings_provider.dart';
 import 'core/theme/app_theme.dart';
+import 'package:workmanager/workmanager.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'core/services/backup_service.dart';
+
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    try {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+      final auth = FirebaseAuth.instance;
+      if (auth.currentUser != null && !auth.currentUser!.isAnonymous) {
+        final backupService = BackupService(FirebaseFirestore.instance, FirebaseStorage.instance);
+        await backupService.exportToCloud(auth.currentUser!.uid);
+      }
+      return Future.value(true);
+    } catch (e) {
+      return Future.value(false);
+    }
+  });
+}
 
 void _initFreeRasp() {
   if (kIsWeb) return;
@@ -65,6 +89,23 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // Initialize Workmanager for auto backup (Android/iOS only)
+  if (!kIsWeb) {
+    await Workmanager().initialize(
+      callbackDispatcher,
+      isInDebugMode: false,
+    );
+    // Register auto backup task every 12 hours
+    Workmanager().registerPeriodicTask(
+      "tajer-auto-backup",
+      "backupTask",
+      frequency: const Duration(hours: 12),
+      constraints: Constraints(
+        networkType: NetworkType.connected,
+      ),
+    );
+  }
 
   // Initialize Firebase App Check (Temporarily disabled to fix black screen)
   // FirebaseAppCheck.instance.activate(
