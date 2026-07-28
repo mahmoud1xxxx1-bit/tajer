@@ -1,3 +1,4 @@
+import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../authentication/data/auth_repository.dart';
@@ -40,3 +41,4 @@ final notificationsStreamProvider = StreamProvider<List<AppNotification>>((ref) 
   if (repository == null) return Stream.value([]);
   return repository.watchNotifications();
 });
+

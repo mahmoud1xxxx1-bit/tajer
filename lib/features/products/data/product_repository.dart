@@ -1,3 +1,4 @@
+import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../authentication/data/auth_repository.dart';
@@ -72,3 +73,4 @@ Stream<List<Product>> productsStream(ProductsStreamRef ref) {
         },
       );
 }
+

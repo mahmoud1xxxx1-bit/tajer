@@ -11,7 +11,7 @@ import '../../../core/providers/settings_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../authentication/data/auth_repository.dart';
-
+import '../../authentication/domain/app_user.dart';
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 

@@ -1,3 +1,4 @@
+import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -81,3 +82,4 @@ final employeesStreamProvider = StreamProvider<List<Employee>>((ref) {
   if (repository == null) return Stream.value([]);
   return repository.watchEmployees();
 });
+

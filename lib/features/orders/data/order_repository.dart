@@ -1,3 +1,4 @@
+import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -187,3 +188,4 @@ Stream<List<AppOrder>> ordersStream(OrdersStreamRef ref) {
         },
       );
 }
+
