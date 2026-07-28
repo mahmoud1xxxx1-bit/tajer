@@ -1,4 +1,4 @@
-import 'package:blue_thermal_printer/blue_thermal_printer.dart';
+import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 import 'package:esc_pos_utils_plus/esc_pos_utils_plus.dart';
 import 'package:tajer/features/orders/domain/order.dart';
 import 'package:tajer/core/providers/settings_provider.dart';
@@ -8,56 +8,57 @@ import 'dart:typed_data';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PrinterService {
-  static final BlueThermalPrinter _bluetooth = BlueThermalPrinter.instance;
-
-  static Future<List<BluetoothDevice>> getDevices() async {
-    return await _bluetooth.getBondedDevices();
+  static Future<List<BluetoothInfo>> getDevices() async {
+    return await PrintBluetoothThermal.pairedBluetooths;
   }
 
-  static Future<bool> connect(BluetoothDevice device) async {
-    if (await _bluetooth.isConnected == true) return true;
+  static Future<bool> connect(String macAddress) async {
+    bool connectionStatus = await PrintBluetoothThermal.connectionStatus;
+    if (connectionStatus) {
+      // It might be connected to another, but if it is, let's assume it's good or disconnect first
+    }
     try {
-      await _bluetooth.connect(device);
+      bool result = await PrintBluetoothThermal.connect(macPrinterAddress: macAddress);
       
-      // Save default printer MAC
-      final prefs = await SharedPreferences.getInstance();
-      if (device.address != null) {
-        await prefs.setString('default_printer_mac', device.address!);
+      if (result) {
+        // Save default printer MAC
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('default_printer_mac', macAddress);
       }
-      return true;
+      return result;
     } catch (e) {
       return false;
     }
   }
   
   static Future<bool> disconnect() async {
-    return await _bluetooth.disconnect() ?? false;
+    return await PrintBluetoothThermal.disconnect;
   }
   
   static Future<bool> isConnected() async {
-    return await _bluetooth.isConnected ?? false;
+    return await PrintBluetoothThermal.connectionStatus;
   }
   
-  static Future<BluetoothDevice?> getSavedDevice() async {
+  static Future<BluetoothInfo?> getSavedDevice() async {
     final prefs = await SharedPreferences.getInstance();
     final mac = prefs.getString('default_printer_mac');
     if (mac == null) return null;
     
     final devices = await getDevices();
     try {
-      return devices.firstWhere((d) => d.address == mac);
+      return devices.firstWhere((d) => d.macAdress == mac);
     } catch (e) {
       return null;
     }
   }
 
   static Future<void> printReceipt(Order order, AppCurrency currency, {double? taxPercentage}) async {
-    bool isConnected = await _bluetooth.isConnected ?? false;
+    bool isConnected = await PrintBluetoothThermal.connectionStatus;
     
     if (!isConnected) {
       final savedDevice = await getSavedDevice();
       if (savedDevice != null) {
-        bool connected = await connect(savedDevice);
+        bool connected = await connect(savedDevice.macAdress);
         if (!connected) throw Exception("تعذر الاتصال بالطابعة المحفوظة");
       } else {
         throw Exception("لا توجد طابعة متصلة أو محفوظة. يرجى الاتصال بطابعة من الإعدادات.");
@@ -69,9 +70,6 @@ class PrinterService {
     List<int> bytes = [];
 
     // Header
-    // Note: Printing Arabic text directly on ESC/POS can be tricky. We might need image rendering if it's garbled.
-    // For now we use standard text, but if it fails, image rendering is the fallback for Arabic.
-    
     bytes += generator.text('فاتورة مبيعات', styles: PosStyles(align: PosAlign.center, bold: true, height: PosTextSize.size2, width: PosTextSize.size2));
     bytes += generator.emptyLines(1);
     bytes += generator.text('رقم الطلب: ${order.id.substring(0, 8)}');
@@ -143,6 +141,6 @@ class PrinterService {
     bytes += generator.feed(2);
     bytes += generator.cut();
 
-    await _bluetooth.writeBytes(Uint8List.fromList(bytes));
+    await PrintBluetoothThermal.writeBytes(bytes);
   }
 }
