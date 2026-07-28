@@ -52,7 +52,7 @@ class PrinterService {
     }
   }
 
-  static Future<void> printReceipt(AppOrder order, AppCurrency currency, {double? taxPercentage}) async {
+  static Future<void> printReceipt(AppOrder order, String currency, {double? taxPercentage}) async {
     bool isConnected = await PrintBluetoothThermal.connectionStatus;
     
     if (!isConnected) {
@@ -88,7 +88,7 @@ class PrinterService {
         styles: PosStyles(align: PosAlign.left),
       ),
       PosColumn(
-        text: '${order.total} ${currency.code}',
+        text: '${order.total} $currency',
         width: 4,
         styles: PosStyles(align: PosAlign.right),
       ),
@@ -116,7 +116,7 @@ class PrinterService {
     } else {
       bytes += generator.row([
         PosColumn(text: 'الإجمالي:', width: 8, styles: PosStyles(bold: true)),
-        PosColumn(text: '$subtotal ${currency.code}', width: 4, styles: PosStyles(align: PosAlign.right, bold: true)),
+        PosColumn(text: '$subtotal $currency', width: 4, styles: PosStyles(align: PosAlign.right, bold: true)),
       ]);
     }
 

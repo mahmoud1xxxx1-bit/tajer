@@ -96,7 +96,7 @@ class ExcelService {
     for (var customer in debtors) {
       sheetObject.appendRow([
         TextCellValue(customer.name),
-        TextCellValue(customer.phone ?? ''),
+        TextCellValue(customer.phone),
         TextCellValue('${customer.totalDebt}'),
       ]);
     }

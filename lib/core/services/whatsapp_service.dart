@@ -4,7 +4,7 @@ import 'package:tajer/core/providers/settings_provider.dart';
 import 'package:tajer/core/utils/date_formatter.dart';
 
 class WhatsAppService {
-  static Future<void> sendInvoice(AppOrder order, AppCurrency currency, {double? taxPercentage, String? customerPhone}) async {
+  static Future<void> sendInvoice(AppOrder order, String currency, {double? taxPercentage, String? customerPhone}) async {
     // Determine the phone number to send to. 
     // Usually it would be from the customer object, but if they didn't provide one, they can't use this.
     // If we have customerPhone passed (e.g. from customer record), we use it.
@@ -20,8 +20,8 @@ class WhatsAppService {
     invoice.writeln("-------------------------");
     
     invoice.writeln("🔹 ${order.productName}");
-    invoice.writeln("   الكمية: ${order.quantity} x السعر: ${order.price} ${currency.code}");
-    invoice.writeln("   المجموع: ${order.total} ${currency.code}");
+    invoice.writeln("   الكمية: ${order.quantity} x السعر: ${order.price} $currency");
+    invoice.writeln("   المجموع: ${order.total} $currency");
     
     invoice.writeln("-------------------------");
     double subtotal = order.total;
@@ -29,16 +29,16 @@ class WhatsAppService {
     if (taxPercentage != null && taxPercentage > 0) {
       double taxAmount = subtotal * (taxPercentage / 100);
       double totalWithTax = subtotal + taxAmount;
-      invoice.writeln("الإجمالي قبل الضريبة: $subtotal ${currency.code}");
-      invoice.writeln("الضريبة ($taxPercentage%): $taxAmount ${currency.code}");
-      invoice.writeln("الإجمالي الشامل: *${totalWithTax.toStringAsFixed(2)} ${currency.code}*");
+      invoice.writeln("الإجمالي قبل الضريبة: $subtotal $currency");
+      invoice.writeln("الضريبة ($taxPercentage%): $taxAmount $currency");
+      invoice.writeln("الإجمالي الشامل: *${totalWithTax.toStringAsFixed(2)} $currency*");
     } else {
-      invoice.writeln("الإجمالي: *${subtotal.toStringAsFixed(2)} ${currency.code}*");
+      invoice.writeln("الإجمالي: *${subtotal.toStringAsFixed(2)} $currency*");
     }
     
-    invoice.writeln("المبلغ المدفوع: ${order.paidAmount} ${currency.code}");
+    invoice.writeln("المبلغ المدفوع: ${order.paidAmount} $currency");
     if (order.isCredit) {
-      invoice.writeln("المتبقي (آجل): ${order.total - order.paidAmount} ${currency.code}");
+      invoice.writeln("المتبقي (آجل): ${order.total - order.paidAmount} $currency");
     }
     
     invoice.writeln("-------------------------");
