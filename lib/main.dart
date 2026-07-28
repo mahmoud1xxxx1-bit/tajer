@@ -21,7 +21,6 @@ void _initFreeRasp() {
     androidConfig: AndroidConfig(
       packageName: 'com.example.tajer', // TODO: Change this to your actual package name
       signingCertHashes: ['YOUR_SHA256_BASE64_HASH'], // TODO: Add your Base64 SHA-256 hash here
-      supportedAlternativeStores: ['com.sec.android.app.samsungapps'],
     ),
     iosConfig: IOSConfig(
       bundleIds: ['com.example.tajer'], // TODO: Change this
