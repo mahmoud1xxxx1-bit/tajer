@@ -40,7 +40,7 @@ class AppTheme {
           fontFamily: 'Tajawal',
         ),
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         color: surfaceLight,
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -104,7 +104,7 @@ class AppTheme {
           fontFamily: 'Tajawal',
         ),
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         color: surfaceDark,
         elevation: 0,
         shape: RoundedRectangleBorder(
