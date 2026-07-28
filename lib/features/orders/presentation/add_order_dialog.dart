@@ -70,7 +70,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
   }
 
   Future<void> _submit() async {
-    if (!_formKey.currentState!.validate() || _selectedCustomerId == null || _selectedProductId == null) {
+    if (!_formKey.currentState!.validate() || _selectedProductId == null) {
       return;
     }
 
@@ -86,7 +86,15 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       final customers = ref.read(customersStreamProvider).value ?? [];
 
       final selectedProduct = _products.firstWhere((p) => p.id == _selectedProductId);
-      final selectedCustomer = customers.firstWhere((c) => c.id == _selectedCustomerId);
+      
+      String finalCustomerId = 'walk_in';
+      String finalCustomerName = 'عميل عام';
+      
+      if (_selectedCustomerId != null) {
+        final c = customers.firstWhere((c) => c.id == _selectedCustomerId);
+        finalCustomerId = c.id;
+        finalCustomerName = c.name;
+      }
 
       final quantity = int.parse(_quantityController.text);
       final total = selectedProduct.price * quantity;
@@ -110,8 +118,8 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       final newOrder = AppOrder(
         id: const Uuid().v4(),
         merchantId: user.uid,
-        customerId: selectedCustomer.id,
-        customerName: selectedCustomer.name,
+        customerId: finalCustomerId,
+        customerName: finalCustomerName,
         productId: selectedProduct.id,
         productName: selectedProduct.name,
         quantity: quantity,
@@ -174,9 +182,11 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
               data: (customers) => DropdownButtonFormField<String>(
                 value: _selectedCustomerId,
                 decoration: InputDecoration(labelText: l10n.customers, border: const OutlineInputBorder()),
-                items: customers.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: TextStyle(fontFamily: 'Tajawal')))).toList(),
+                items: [
+                  DropdownMenuItem(value: null, child: Text('عميل عام (بدون تحديد)', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey))),
+                  ...customers.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: TextStyle(fontFamily: 'Tajawal')))).toList(),
+                ],
                 onChanged: (val) => setState(() => _selectedCustomerId = val),
-                validator: (val) => val == null ? l10n.requiredField : null,
               ),
               loading: () => const CircularProgressIndicator(),
               error: (e, st) => Text('${l10n.error}: $e'),

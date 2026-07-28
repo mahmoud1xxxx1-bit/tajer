@@ -8,6 +8,7 @@ import '../../../core/services/guest_limit_service.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../../core/utils/date_formatter.dart';
 
 class ProductsScreen extends ConsumerWidget {
   const ProductsScreen({super.key});
@@ -91,6 +92,10 @@ class ProductsScreen extends ConsumerWidget {
                           SizedBox(width: 4),
                           Icon(Icons.warning_amber_rounded, color: Colors.red, size: 16),
                         ],
+                        SizedBox(width: 12),
+                        Icon(Icons.calendar_today_outlined, size: 12, color: Colors.teal),
+                        SizedBox(width: 4),
+                        Text(AppDateFormatter.format(product.createdAt), style: TextStyle(fontFamily: 'Tajawal', color: Colors.teal, fontSize: 12)),
                       ],
                     ),
                   ),

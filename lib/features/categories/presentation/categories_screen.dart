@@ -7,6 +7,7 @@ import '../../../core/services/guest_limit_service.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/category_repository.dart';
 import '../domain/category.dart';
+import '../../../core/utils/date_formatter.dart';
 
 class CategoriesScreen extends ConsumerWidget {
   const CategoriesScreen({super.key});
@@ -35,6 +36,16 @@ class CategoriesScreen extends ConsumerWidget {
                 child: ListTile(
                   leading: Icon(Icons.category, color: Colors.blue),
                   title: Text(category.name, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
+                  subtitle: Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Row(
+                      children: [
+                        Icon(Icons.calendar_today_outlined, size: 12, color: Colors.teal),
+                        SizedBox(width: 4),
+                        Text(AppDateFormatter.format(category.createdAt), style: TextStyle(fontFamily: 'Tajawal', color: Colors.teal, fontSize: 12)),
+                      ],
+                    ),
+                  ),
                   trailing: IconButton(
                     icon: Icon(Icons.delete, color: Colors.red),
                     onPressed: () {

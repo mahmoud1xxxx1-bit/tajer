@@ -8,6 +8,7 @@ import '../../../core/theme/glass_card.dart';
 import '../../../core/services/pdf_service.dart';
 
 import '../../../core/providers/settings_provider.dart';
+import '../../../core/utils/date_formatter.dart';
 
 class OrdersScreen extends ConsumerWidget {
   const OrdersScreen({super.key});
@@ -109,6 +110,17 @@ class OrdersScreen extends ConsumerWidget {
                             ],
                           ),
                         ],
+                        SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(Icons.calendar_today_outlined, size: 14, color: Colors.teal),
+                            SizedBox(width: 4),
+                            Text(
+                              AppDateFormatter.format(order.createdAt),
+                              style: TextStyle(fontFamily: 'Tajawal', color: Colors.teal, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),

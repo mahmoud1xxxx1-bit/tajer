@@ -7,6 +7,7 @@ import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
 import '../../features/orders/domain/order.dart';
 import '../../features/customers/domain/customer.dart';
+import '../../../core/utils/date_formatter.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 class PdfService {
@@ -24,7 +25,7 @@ class PdfService {
     
     final pdf = pw.Document();
     
-    final dateFormat = DateFormat('yyyy/MM/dd hh:mm a');
+
 
     pdf.addPage(
       pw.Page(
@@ -69,7 +70,7 @@ class PdfService {
                       crossAxisAlignment: pw.CrossAxisAlignment.end,
                       children: [
                         pw.Text(AppLocalizations.of(buildContext)!.text_8, style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
-                        pw.Text(dateFormat.format(order.createdAt), style: const pw.TextStyle(fontSize: 14)),
+                        pw.Text(AppDateFormatter.format(order.createdAt), style: const pw.TextStyle(fontSize: 14)),
                       ],
                     ),
                   ],
@@ -174,7 +175,7 @@ class PdfService {
     final boldFont = await _getBoldFont();
     
     final pdf = pw.Document();
-    final dateFormat = DateFormat('yyyy/MM/dd hh:mm a');
+
 
     // Filter orders to only this customer
     final customerOrders = orders.where((o) => o.customerId == customer.id).toList();
@@ -236,7 +237,7 @@ class PdfService {
                 pw.Table.fromTextArray(
                   headers: [AppLocalizations.of(buildContext)!.text_19, AppLocalizations.of(buildContext)!.text_9, AppLocalizations.of(buildContext)!.text_12, AppLocalizations.of(buildContext)!.text_20, AppLocalizations.of(buildContext)!.text_21, AppLocalizations.of(buildContext)!.text_22],
                   data: customerOrders.map((o) => [
-                    dateFormat.format(o.createdAt),
+                    AppDateFormatter.format(o.createdAt),
                     '${o.productName} (x${o.quantity})',
                     '${o.total}',
                     '${o.paidAmount}',
