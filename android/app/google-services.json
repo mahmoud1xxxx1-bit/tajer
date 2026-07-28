@@ -12,7 +12,20 @@
           "package_name": "com.tajer"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "88663100884-mn9v3jo4mggubpgmem96de9e0dqcmpo0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tajer",
+            "certificate_hash": "581542f3e4502c079808542b2427c957a9bb0eae"
+          }
+        },
+        {
+          "client_id": "88663100884-1g4lvc7f9okgd0vh53fgrd1hemv0go01.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB-h92OvXNt-sAalPSSIcjHKlU72hZX3O4"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "88663100884-1g4lvc7f9okgd0vh53fgrd1hemv0go01.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
