@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(merchantId) {
+      return isAuthenticated() && request.auth.uid == merchantId;
+    }
+    
+    // Users Collection (AppUser profile)
+    match /users/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      // Allow creation during sign up, block modifying the 'plan' to prevent bypass
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAuthenticated() && request.auth.uid == userId 
+                    && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['plan']));
+      allow delete: if false; // Only allow deletion via Cloud Functions or Admin
+    }
+
+    // Device Registry (Anti-abuse)
+    match /device_registry/{deviceId} {
+      // Only the authenticated user can read their own device registry entry if they know the ID
+      allow read: if isAuthenticated();
+      // Allow creation/updates but restrict deleting
+      allow write: if isAuthenticated();
+      allow delete: if false;
+    }
+
+    // Products
+    match /products/{productId} {
+      allow read, write: if isOwner(resource.data.merchantId) || (request.resource != null && isOwner(request.resource.data.merchantId));
+    }
+
+    // Customers
+    match /customers/{customerId} {
+      allow read, write: if isOwner(resource.data.merchantId) || (request.resource != null && isOwner(request.resource.data.merchantId));
+    }
+
+    // Orders
+    match /orders/{orderId} {
+      allow read, write: if isOwner(resource.data.merchantId) || (request.resource != null && isOwner(request.resource.data.merchantId));
+    }
+
+    // Expenses
+    match /expenses/{expenseId} {
+      allow read, write: if isOwner(resource.data.merchantId) || (request.resource != null && isOwner(request.resource.data.merchantId));
+    }
+
+    // Categories
+    match /categories/{categoryId} {
+      allow read, write: if isOwner(resource.data.merchantId) || (request.resource != null && isOwner(request.resource.data.merchantId));
+    }
+
+    // Suppliers
+    match /suppliers/{supplierId} {
+      allow read, write: if isOwner(resource.data.merchantId) || (request.resource != null && isOwner(request.resource.data.merchantId));
+    }
+
+    // Employees
+    match /employees/{employeeId} {
+      // Assuming employee docs have a merchantId field. If not, they are stored under the merchant's subcollection or have merchantId
+      allow read, write: if isOwner(resource.data.merchantId) || (request.resource != null && isOwner(request.resource.data.merchantId));
+    }
+
+    // Inventory Logs
+    match /inventory_logs/{logId} {
+      allow read, write: if isOwner(resource.data.merchantId) || (request.resource != null && isOwner(request.resource.data.merchantId));
+    }
+  }
+}

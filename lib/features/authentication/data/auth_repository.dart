@@ -66,11 +66,26 @@ class AuthRepository {
         String assignedPlan = 'guest';
         
         if (deviceDoc.exists) {
-          // Device has been used before, prevent new free account from getting limits
-          assignedPlan = 'banned_device';
+          final data = deviceDoc.data();
+          int usageCount = 1;
+          if (data != null && data.containsKey('usageCount')) {
+            usageCount = (data['usageCount'] as num).toInt();
+          }
+          
+          if (usageCount >= 3) {
+            assignedPlan = 'banned_device';
+          }
+          
+          // Update device registry with new usage
+          await deviceRegistryRef.update({
+            'usageCount': FieldValue.increment(1),
+            'users': FieldValue.arrayUnion([user.uid])
+          });
         } else {
-          // Register this device
+          // Register this device for the first time
           await deviceRegistryRef.set({
+            'usageCount': 1,
+            'users': [user.uid],
             'firstUsedBy': user.uid,
             'createdAt': FieldValue.serverTimestamp(),
           });
