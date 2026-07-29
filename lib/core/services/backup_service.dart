@@ -113,11 +113,22 @@ class BackupService {
     final jsonString = await exportDataToJson(merchantId);
     final ref = _storage.ref().child('backups/$merchantId/latest_backup.json');
     
-    await ref.putString(
-      jsonString,
-      format: PutStringFormat.raw,
-      metadata: SettableMetadata(contentType: 'application/json'),
-    );
+    try {
+      await ref.putString(
+        jsonString,
+        format: PutStringFormat.raw,
+        metadata: SettableMetadata(contentType: 'application/json'),
+      );
+    } on FirebaseException catch (e) {
+      if (e.code == 'unauthorized') {
+        throw Exception("غير مصرح لك برفع النسخة. يرجى تعديل قواعد أمان التخزين (Storage Rules) في Firebase كما ذكرنا.");
+      } else if (e.code == 'bucket-not-found' || e.code == 'unknown') {
+        throw Exception("خدمة التخزين (Storage) غير مفعلة أو غير متوفرة. يرجى تفعيلها من Firebase Console.");
+      }
+      throw Exception(e.message ?? "حدث خطأ غير معروف في التخزين");
+    } catch (e) {
+      throw Exception("فشل في تجهيز البيانات للنسخ السحابي: $e");
+    }
   }
 
   /// 6. Cloud Import
@@ -130,6 +141,13 @@ class BackupService {
         await importDataFromJson(merchantId, jsonString);
         return true;
       }
+    } on FirebaseException catch (e) {
+      if (e.code == 'object-not-found') {
+        throw Exception("لم يتم العثور على نسخة سحابية سابقة لحسابك.");
+      } else if (e.code == 'unauthorized') {
+        throw Exception("غير مصرح لك باسترجاع النسخة. يرجى تعديل قواعد الأمان (Storage Rules).");
+      }
+      return false;
     } catch (e) {
       return false; // Not found or error
     }

@@ -19,7 +19,8 @@ class UpgradeAccountScreen extends ConsumerStatefulWidget {
 class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
   final _phoneController = TextEditingController();
   bool _isLoading = false;
-  bool _isGoogleLinked = false;
+  bool _isLinked = false;
+  String _linkedEmail = '';
 
   @override
   void initState() {
@@ -30,8 +31,11 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
   Future<void> _checkInitialState() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      if (!user.isAnonymous || user.providerData.any((p) => p.providerId == 'google.com')) {
-        setState(() => _isGoogleLinked = true);
+      if (!user.isAnonymous) {
+        setState(() {
+          _isLinked = true;
+          _linkedEmail = user.email ?? 'حساب مسجل';
+        });
       }
       
       // Fetch phone if exists
@@ -56,7 +60,10 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
       final authRepo = ref.read(authRepositoryProvider);
       await authRepo.linkWithGoogle();
 
-      setState(() => _isGoogleLinked = true);
+      setState(() {
+        _isLinked = true;
+        _linkedEmail = FirebaseAuth.instance.currentUser?.email ?? 'حساب مسجل';
+      });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(AppLocalizations.of(context)!.text_31)),
@@ -116,7 +123,7 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 32),
-            if (!_isGoogleLinked) ...[
+            if (!_isLinked) ...[
               ElevatedButton.icon(
                 onPressed: _isLoading ? null : _linkGoogleAccount,
                 icon: Icon(Icons.g_mobiledata, size: 32),
@@ -137,12 +144,21 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
                 ),
               ),
             ] else
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              Column(
                 children: [
-                  Icon(Icons.check_circle, color: Colors.green),
-                  SizedBox(width: 8),
-                  Text(AppLocalizations.of(context)!.text_36, style: TextStyle(fontFamily: 'Tajawal', color: Colors.green, fontWeight: FontWeight.bold)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.check_circle, color: Colors.green),
+                      SizedBox(width: 8),
+                      Text('تم تسجيل الدخول وتأمين حسابك بنجاح', style: TextStyle(fontFamily: 'Tajawal', color: Colors.green, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'باستخدام: $_linkedEmail',
+                    style: TextStyle(fontFamily: 'Tajawal', color: Colors.blue[900], fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
             SizedBox(height: 24),
@@ -154,11 +170,11 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.phone),
               ),
-              enabled: _isGoogleLinked,
+              enabled: _isLinked,
             ),
             const Spacer(),
             ElevatedButton(
-              onPressed: (_isGoogleLinked && !_isLoading) ? _saveProfile : null,
+              onPressed: (_isLinked && !_isLoading) ? _saveProfile : null,
               style: ElevatedButton.styleFrom(
                 padding: EdgeInsets.symmetric(vertical: 16),
               ),
