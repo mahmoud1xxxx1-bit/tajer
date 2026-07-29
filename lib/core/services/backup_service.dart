@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:file_picker/file_picker.dart';
@@ -12,9 +11,8 @@ part 'backup_service.g.dart';
 
 class BackupService {
   final FirebaseFirestore _firestore;
-  final FirebaseStorage _storage;
 
-  BackupService(this._firestore, this._storage);
+  BackupService(this._firestore);
 
   /// 1. Collect all data into a JSON string
   Future<String> exportDataToJson(String merchantId) async {
@@ -108,65 +106,10 @@ class BackupService {
     return false;
   }
 
-  /// 5. Cloud Export (Firebase Storage)
-  Future<void> exportToCloud(String merchantId) async {
-    final jsonString = await exportDataToJson(merchantId);
-    final ref = _storage.ref().child('backups/$merchantId/latest_backup.json');
-    
-    try {
-      await ref.putString(
-        jsonString,
-        format: PutStringFormat.raw,
-        metadata: SettableMetadata(contentType: 'application/json'),
-      );
-    } on FirebaseException catch (e) {
-      if (e.code == 'unauthorized') {
-        throw Exception("غير مصرح لك برفع النسخة. يرجى تعديل قواعد أمان التخزين (Storage Rules) في Firebase كما ذكرنا.");
-      } else if (e.code == 'bucket-not-found' || e.code == 'unknown') {
-        throw Exception("خدمة التخزين (Storage) غير مفعلة أو غير متوفرة. يرجى تفعيلها من Firebase Console.");
-      }
-      throw Exception(e.message ?? "حدث خطأ غير معروف في التخزين");
-    } catch (e) {
-      throw Exception("فشل في تجهيز البيانات للنسخ السحابي: $e");
-    }
-  }
 
-  /// 6. Cloud Import
-  Future<bool> importFromCloud(String merchantId) async {
-    final ref = _storage.ref().child('backups/$merchantId/latest_backup.json');
-    try {
-      final data = await ref.getData();
-      if (data != null) {
-        final jsonString = utf8.decode(data);
-        await importDataFromJson(merchantId, jsonString);
-        return true;
-      }
-    } on FirebaseException catch (e) {
-      if (e.code == 'object-not-found') {
-        throw Exception("لم يتم العثور على نسخة سحابية سابقة لحسابك.");
-      } else if (e.code == 'unauthorized') {
-        throw Exception("غير مصرح لك باسترجاع النسخة. يرجى تعديل قواعد الأمان (Storage Rules).");
-      }
-      return false;
-    } catch (e) {
-      return false; // Not found or error
-    }
-    return false;
-  }
-
-  /// 7. Get Last Cloud Backup Date
-  Future<DateTime?> getLastCloudBackupDate(String merchantId) async {
-    try {
-      final ref = _storage.ref().child('backups/$merchantId/latest_backup.json');
-      final metadata = await ref.getMetadata();
-      return metadata.updated;
-    } catch (e) {
-      return null;
-    }
-  }
 }
 
 @riverpod
 BackupService backupService(BackupServiceRef ref) {
-  return BackupService(FirebaseFirestore.instance, FirebaseStorage.instance);
+  return BackupService(FirebaseFirestore.instance);
 }
