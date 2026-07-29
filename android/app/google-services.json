@@ -7,17 +7,17 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:88663100884:android:a6b808c88855fb2ea09a41",
+        "mobilesdk_app_id": "1:88663100884:android:e8febcabdfbd112ea09a41",
         "android_client_info": {
-          "package_name": "com.tajer"
+          "package_name": "com.allldown.tajer"
         }
       },
       "oauth_client": [
         {
-          "client_id": "88663100884-mn9v3jo4mggubpgmem96de9e0dqcmpo0.apps.googleusercontent.com",
+          "client_id": "88663100884-7sqjqf84phr3ps0hgj8d13ffc0rauq70.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.tajer",
+            "package_name": "com.allldown.tajer",
             "certificate_hash": "581542f3e4502c079808542b2427c957a9bb0eae"
           }
         },
