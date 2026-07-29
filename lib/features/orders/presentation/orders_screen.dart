@@ -502,6 +502,7 @@ class OrdersScreen extends ConsumerWidget {
                   ),
                 ),
               );
+            },
           );
         },
         loading: () => Center(child: CircularProgressIndicator()),
