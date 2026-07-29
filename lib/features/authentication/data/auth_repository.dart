@@ -135,7 +135,7 @@ class AuthRepository {
               'name': _auth.currentUser?.displayName,
             });
             } on FirebaseAuthException catch (e) {
-              if (e.code == 'credential-already-in-use') {
+              if (e.code == 'credential-already-in-use' || e.code == 'email-already-in-use') {
                 // The Google account is already linked. Sign in with it directly and discard anonymous session.
                 await _auth.signInWithPopup(googleProvider);
               } else {
@@ -167,7 +167,7 @@ class AuthRepository {
               'name': googleUser.displayName,
             });
           } on FirebaseAuthException catch (e) {
-            if (e.code == 'credential-already-in-use') {
+            if (e.code == 'credential-already-in-use' || e.code == 'email-already-in-use') {
               // Sign in with existing Google account and discard anonymous session
               await _auth.signInWithCredential(credential);
             } else {
