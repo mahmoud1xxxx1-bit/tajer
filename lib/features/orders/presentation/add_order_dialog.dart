@@ -10,6 +10,9 @@ import '../domain/order.dart';
 import '../../inventory_log/data/inventory_log_repository.dart';
 import '../../../core/utils/barcode_scanner_screen.dart';
 import '../../products/domain/product.dart';
+import '../../customers/domain/customer.dart';
+import '../../../core/services/limits_service.dart';
+import '../../../core/services/guest_limit_service.dart';
 
 class AddOrderDialog extends ConsumerStatefulWidget {
   const AddOrderDialog({super.key});
@@ -20,7 +23,8 @@ class AddOrderDialog extends ConsumerStatefulWidget {
 
 class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
   final _formKey = GlobalKey<FormState>();
-  String? _selectedCustomerId;
+  final _customerNameController = TextEditingController();
+  final _customerPhoneController = TextEditingController();
   String? _selectedProductId;
   final _quantityController = TextEditingController();
   final _notesController = TextEditingController();
@@ -33,6 +37,8 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
 
   @override
   void dispose() {
+    _customerNameController.dispose();
+    _customerPhoneController.dispose();
     _quantityController.dispose();
     _notesController.dispose();
     _paidAmountController.dispose();
@@ -90,10 +96,42 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       String finalCustomerId = 'walk_in';
       String finalCustomerName = 'عميل عام';
       
-      if (_selectedCustomerId != null) {
-        final c = customers.firstWhere((c) => c.id == _selectedCustomerId);
-        finalCustomerId = c.id;
-        finalCustomerName = c.name;
+      final nameInput = _customerNameController.text.trim();
+      final phoneInput = _customerPhoneController.text.trim();
+
+      if (nameInput.isNotEmpty || phoneInput.isNotEmpty) {
+        Customer? existingCustomer;
+        
+        // Search by phone if provided
+        if (phoneInput.isNotEmpty) {
+          existingCustomer = customers.where((c) => c.phone == phoneInput).firstOrNull;
+        }
+        // If not found by phone, search by name exactly
+        if (existingCustomer == null && nameInput.isNotEmpty) {
+          existingCustomer = customers.where((c) => c.name.toLowerCase() == nameInput.toLowerCase()).firstOrNull;
+        }
+
+        if (existingCustomer != null) {
+          finalCustomerId = existingCustomer.id;
+          finalCustomerName = existingCustomer.name;
+        } else {
+          // Attempt to create new customer
+          final canAdd = await ref.read(limitsServiceProvider).canAddCustomer(user);
+          if (!canAdd) {
+            throw Exception('عفواً، لقد وصلت للحد الأقصى المسموح به للعملاء في باقتك الحالية. لا يمكن إضافة عميل جديد، ولكن يمكنك الاستمرار كـ "عميل عام" بمسح الاسم والرقم.');
+          }
+
+          final newCustomer = Customer(
+            id: const Uuid().v4(),
+            merchantId: user.uid,
+            name: nameInput.isEmpty ? 'عميل غير معروف' : nameInput,
+            phone: phoneInput,
+            createdAt: DateTime.now(),
+          );
+          await ref.read(customerRepositoryProvider).addCustomer(newCustomer);
+          finalCustomerId = newCustomer.id;
+          finalCustomerName = newCustomer.name;
+        }
       }
 
       final quantity = int.parse(_quantityController.text);
@@ -177,19 +215,25 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
             ),
             SizedBox(height: 24),
             
-            // Customer Dropdown
-            customersState.when(
-              data: (customers) => DropdownButtonFormField<String>(
-                value: _selectedCustomerId,
-                decoration: InputDecoration(labelText: l10n.customers, border: const OutlineInputBorder()),
-                items: [
-                  DropdownMenuItem(value: null, child: Text('عميل عام (بدون تحديد)', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey))),
-                  ...customers.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: TextStyle(fontFamily: 'Tajawal')))).toList(),
-                ],
-                onChanged: (val) => setState(() => _selectedCustomerId = val),
+            // Customer Name & Phone Fields
+            TextFormField(
+              controller: _customerNameController,
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.text_60.replaceAll('تعديل', 'اسم'), // Fallback to "اسم العميل" basically
+                hintText: 'عميل عام (بدون تحديد)',
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.person),
               ),
-              loading: () => const CircularProgressIndicator(),
-              error: (e, st) => Text('${l10n.error}: $e'),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _customerPhoneController,
+              keyboardType: TextInputType.phone,
+              decoration: InputDecoration(
+                labelText: 'رقم الجوال (اختياري)',
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.phone),
+              ),
             ),
             SizedBox(height: 16),
 
