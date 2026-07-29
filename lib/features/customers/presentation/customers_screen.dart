@@ -39,29 +39,205 @@ class CustomersScreen extends ConsumerWidget {
             itemBuilder: (context, index) {
               final customer = customers[index];
               return GlassCard(
-                margin: EdgeInsets.only(bottom: 12),
-                padding: EdgeInsets.all(4),
-                onLongPress: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text(AppLocalizations.of(context)!.text_57, style: TextStyle(fontFamily: 'Tajawal')),
-                      content: Text(AppLocalizations.of(context)!.text_58, style: TextStyle(fontFamily: 'Tajawal')),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text(AppLocalizations.of(context)!.text_43, style: TextStyle(fontFamily: 'Tajawal')),
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: EdgeInsets.zero,
+                onTap: () {
+                  // Optional: handle tap
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(context).colorScheme.primary,
+                              Theme.of(context).colorScheme.secondary,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        TextButton(
-                          onPressed: () {
-                            ref.read(customerRepositoryProvider).deleteCustomer(customer.id);
-                            Navigator.pop(context);
-                          },
-                          child: Text(AppLocalizations.of(context)!.text_59, style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                        alignment: Alignment.center,
+                        child: Text(
+                          customer.name.isNotEmpty ? customer.name.substring(0, 1).toUpperCase() : '?',
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24, fontFamily: 'Tajawal'),
                         ),
-                      ],
-                    ),
-                  );
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              customer.name,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 18),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                const Icon(Icons.phone, size: 14, color: Colors.grey),
+                                const SizedBox(width: 4),
+                                Text(
+                                  customer.phone,
+                                  style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey[700], fontSize: 13),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 4,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    '${customer.orderCount} طلبات',
+                                    style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.secondary, fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '${customer.totalPurchases} $currency',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          if (customer.totalDebt > 0) ...[
+                            const SizedBox(height: 4),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.red.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'دين: ${customer.totalDebt} $currency',
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  fontFamily: 'Tajawal',
+                                ),
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 4),
+                          PopupMenuButton<String>(
+                            icon: const Icon(Icons.more_vert, color: Colors.grey),
+                            padding: EdgeInsets.zero,
+                            onSelected: (value) async {
+                              if (value == 'edit') {
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  builder: (context) => Padding(
+                                    padding: EdgeInsets.only(
+                                      bottom: MediaQuery.of(context).viewInsets.bottom,
+                                    ),
+                                    child: AddCustomerDialog(customerToEdit: customer),
+                                  ),
+                                );
+                              } else if (value == 'delete') {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text(AppLocalizations.of(context)!.text_57, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                    content: Text(AppLocalizations.of(context)!.text_58, style: const TextStyle(fontFamily: 'Tajawal')),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: Text(AppLocalizations.of(context)!.text_43, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          ref.read(customerRepositoryProvider).deleteCustomer(customer.id);
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text(AppLocalizations.of(context)!.text_59, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              } else if (value == 'print') {
+                                final orders = ref.read(ordersStreamProvider).value ?? [];
+                                try {
+                                  await PdfService.printCustomerStatement(context, customer, orders, currency);
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('خطأ في الطباعة: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
+                                    );
+                                  }
+                                }
+                              }
+                            },
+                            itemBuilder: (context) => [
+                              PopupMenuItem(
+                                value: 'edit',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.edit, size: 20, color: Colors.blue),
+                                    const SizedBox(width: 8),
+                                    Text(AppLocalizations.of(context)!.text_60, style: const TextStyle(fontFamily: 'Tajawal')),
+                                  ],
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: 'print',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.print_outlined, size: 20, color: Colors.indigo),
+                                    const SizedBox(width: 8),
+                                    Text(AppLocalizations.of(context)!.text_61, style: const TextStyle(fontFamily: 'Tajawal')),
+                                  ],
+                                ),
+                              ),
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.delete, color: Colors.red, size: 20),
+                                    const SizedBox(width: 8),
+                                    Text(AppLocalizations.of(context)!.text_59, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
                 },
                 child: ListTile(
                   leading: Container(

@@ -30,43 +30,109 @@ class InventoryLogsScreen extends ConsumerWidget {
               final isPositive = log.changeQuantity > 0;
               
               return GlassCard(
-                margin: EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: isPositive ? Colors.green.withOpacity(0.2) : Colors.red.withOpacity(0.2),
-                    child: Icon(
-                      isPositive ? Icons.add : Icons.remove,
-                      color: isPositive ? Colors.green : Colors.red,
-                    ),
-                  ),
-                  title: Text(log.productName, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: EdgeInsets.zero,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
                     children: [
-                      Text(log.reason, style: TextStyle(fontFamily: 'Tajawal')),
-                      SizedBox(height: 4),
-                      Text(
-                        'من ${log.previousQuantity} إلى ${log.newQuantity}',
-                        style: TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'Tajawal'),
-                      ),
-                      if (log.userEmail != null)
-                        Text(
-                          'بواسطة: ${log.userEmail}',
-                          style: TextStyle(fontSize: 12, color: Colors.blueGrey, fontFamily: 'Tajawal'),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isPositive ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                          shape: BoxShape.circle,
                         ),
-                      Text(
-                        DateFormat('yyyy/MM/dd HH:mm').format(log.date),
-                        style: TextStyle(fontSize: 10, color: Colors.grey, fontFamily: 'Tajawal'),
+                        child: Icon(
+                          isPositive ? Icons.add : Icons.remove,
+                          color: isPositive ? Colors.green : Colors.red,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              log.productName,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                const Icon(Icons.info_outline, size: 14, color: Colors.grey),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: Text(
+                                    log.reason,
+                                    style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey[700], fontSize: 13),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 4,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    'من ${log.previousQuantity} إلى ${log.newQuantity}',
+                                    style: TextStyle(fontSize: 12, color: Colors.grey[700], fontFamily: 'Tajawal'),
+                                  ),
+                                ),
+                                if (log.userEmail != null)
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.person_pin, size: 14, color: Colors.blueGrey.withOpacity(0.7)),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        log.userEmail!,
+                                        style: TextStyle(fontSize: 12, color: Colors.blueGrey, fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+                                      ),
+                                    ],
+                                  ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.access_time, size: 12, color: Colors.grey),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      DateFormat('yyyy/MM/dd HH:mm').format(log.date),
+                                      style: const TextStyle(fontSize: 11, color: Colors.grey, fontFamily: 'Tajawal'),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            '${isPositive ? '+' : ''}${log.changeQuantity}',
+                            style: TextStyle(
+                              color: isPositive ? Colors.green : Colors.red,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 20,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
-                  ),
-                  trailing: Text(
-                    '${isPositive ? '+' : ''}${log.changeQuantity}',
-                    style: TextStyle(
-                      color: isPositive ? Colors.green : Colors.red,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
                   ),
                 ),
               );

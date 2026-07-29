@@ -40,30 +40,177 @@ class ProductsScreen extends ConsumerWidget {
             itemBuilder: (context, index) {
               final product = products[index];
               return GlassCard(
-                margin: EdgeInsets.only(bottom: 12),
-                padding: EdgeInsets.all(4),
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: EdgeInsets.zero,
                 onLongPress: () {
-                  // Delete confirmation
-                  showDialog(
+                  showModalBottomSheet(
                     context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text(l10n.delete, style: TextStyle(fontFamily: 'Tajawal')),
-                      content: Text(AppLocalizations.of(context)!.text_103, style: TextStyle(fontFamily: 'Tajawal')),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text(l10n.cancel, style: TextStyle(fontFamily: 'Tajawal')),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            ref.read(productRepositoryProvider).deleteProduct(product.id);
-                            Navigator.pop(context);
-                          },
-                          child: Text(l10n.delete, style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
-                        ),
-                      ],
+                    isScrollControlled: true,
+                    builder: (context) => Padding(
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).viewInsets.bottom,
+                      ),
+                      child: AddProductDialog(productToEdit: product),
                     ),
                   );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.inventory_2_rounded, color: Theme.of(context).colorScheme.primary, size: 28),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              product.name,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 4,
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.inventory,
+                                      size: 14,
+                                      color: product.quantity <= 5 ? Colors.red : Colors.grey[600],
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${l10n.quantity}: ${product.quantity}',
+                                      style: TextStyle(
+                                        fontFamily: 'Tajawal',
+                                        color: product.quantity <= 5 ? Colors.red : Colors.grey[700],
+                                        fontWeight: product.quantity <= 5 ? FontWeight.bold : FontWeight.normal,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    if (product.quantity <= 5) ...[
+                                      const SizedBox(width: 4),
+                                      const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 14),
+                                    ],
+                                  ],
+                                ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.calendar_today_outlined, size: 14, color: Colors.teal),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      AppDateFormatter.format(product.createdAt),
+                                      style: const TextStyle(fontFamily: 'Tajawal', color: Colors.teal, fontSize: 12, fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '${product.price} ${currentCurrency.code}',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.secondary,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          PopupMenuButton<String>(
+                            icon: const Icon(Icons.more_vert, color: Colors.grey),
+                            padding: EdgeInsets.zero,
+                            onSelected: (value) {
+                              if (value == 'edit') {
+                                showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  builder: (context) => Padding(
+                                    padding: EdgeInsets.only(
+                                      bottom: MediaQuery.of(context).viewInsets.bottom,
+                                    ),
+                                    child: AddProductDialog(productToEdit: product),
+                                  ),
+                                );
+                              } else if (value == 'delete') {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: Text(l10n.delete, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                    content: Text(AppLocalizations.of(context)!.text_103, style: const TextStyle(fontFamily: 'Tajawal')),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: Text(l10n.cancel, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          ref.read(productRepositoryProvider).deleteProduct(product.id);
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
+                            },
+                            itemBuilder: (context) => [
+                              PopupMenuItem(
+                                value: 'edit',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.edit, size: 20, color: Colors.blue),
+                                    const SizedBox(width: 8),
+                                    Text(l10n.edit, style: const TextStyle(fontFamily: 'Tajawal')),
+                                  ],
+                                ),
+                              ),
+                              if (ref.read(appUserProvider).value?.role != 'cashier')
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.delete, color: Colors.red, size: 20),
+                                      const SizedBox(width: 8),
+                                      Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
                 },
                 child: ListTile(
                   title: Text(

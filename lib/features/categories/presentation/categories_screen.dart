@@ -32,29 +32,78 @@ class CategoriesScreen extends ConsumerWidget {
             itemBuilder: (context, index) {
               final category = categories[index];
               return GlassCard(
-                margin: EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  leading: Icon(Icons.category, color: Colors.blue),
-                  title: Text(category.name, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 4.0),
-                    child: Row(
-                      children: [
-                        Icon(Icons.calendar_today_outlined, size: 12, color: Colors.teal),
-                        SizedBox(width: 4),
-                        Text(AppDateFormatter.format(category.createdAt), style: TextStyle(fontFamily: 'Tajawal', color: Colors.teal, fontSize: 12)),
-                      ],
-                    ),
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: EdgeInsets.zero,
+                onTap: () => _showEditCategoryDialog(context, ref, category),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.category, color: Colors.blue, size: 24),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              category.name,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 4,
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.calendar_today_outlined, size: 14, color: Colors.teal),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      AppDateFormatter.format(category.createdAt),
+                                      style: const TextStyle(fontFamily: 'Tajawal', color: Colors.teal, fontSize: 12, fontWeight: FontWeight.bold),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('حذف التصنيف', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                              content: const Text('هل أنت متأكد من حذف هذا التصنيف؟', style: TextStyle(fontFamily: 'Tajawal')),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    ref.read(categoryRepositoryProvider)?.deleteCategory(category.id);
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                  trailing: IconButton(
-                    icon: Icon(Icons.delete, color: Colors.red),
-                    onPressed: () {
-                      ref.read(categoryRepositoryProvider)?.deleteCategory(category.id);
-                    },
-                  ),
-                  onTap: () {
-                    _showEditCategoryDialog(context, ref, category);
-                  },
                 ),
               );
             },

@@ -33,32 +33,80 @@ class SuppliersScreen extends ConsumerWidget {
             itemBuilder: (context, index) {
               final supplier = suppliers[index];
               return GlassCard(
-                margin: EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                    child: Icon(Icons.business, color: Theme.of(context).colorScheme.primary),
-                  ),
-                  title: Text(supplier.name, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
-                  subtitle: Text(supplier.phone ?? AppLocalizations.of(context)!.text_124, style: TextStyle(fontFamily: 'Tajawal')),
-                  trailing: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: EdgeInsets.zero,
+                onTap: () {
+                  _showEditSupplierDialog(context, ref, supplier);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
                     children: [
-                      Text(AppLocalizations.of(context)!.text_125, style: TextStyle(fontSize: 10, color: Colors.grey, fontFamily: 'Tajawal')),
-                      Text(
-                        '${supplier.totalDebt} ${currentCurrency.code}',
-                        style: TextStyle(
-                          color: supplier.totalDebt > 0 ? Colors.red : Colors.green,
-                          fontWeight: FontWeight.bold,
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                          shape: BoxShape.circle,
                         ),
+                        alignment: Alignment.center,
+                        child: Icon(Icons.business, color: Theme.of(context).colorScheme.primary, size: 26),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              supplier.name,
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 17),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                const Icon(Icons.phone, size: 14, color: Colors.grey),
+                                const SizedBox(width: 4),
+                                Text(
+                                  supplier.phone ?? AppLocalizations.of(context)!.text_124,
+                                  style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey[700], fontSize: 13),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!.text_125,
+                            style: const TextStyle(fontSize: 11, color: Colors.grey, fontFamily: 'Tajawal'),
+                          ),
+                          const SizedBox(height: 2),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: supplier.totalDebt > 0 ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '${supplier.totalDebt} ${currentCurrency.code}',
+                              style: TextStyle(
+                                color: supplier.totalDebt > 0 ? Colors.red : Colors.green,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                fontFamily: 'Tajawal',
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                  onTap: () {
-                    // Show edit/pay dialog
-                    _showEditSupplierDialog(context, ref, supplier);
-                  },
                 ),
               );
             },

@@ -56,46 +56,117 @@ class ExpensesScreen extends ConsumerWidget {
                   itemBuilder: (context, index) {
                     final expense = expenses[index];
                     return GlassCard(
-                      margin: EdgeInsets.only(bottom: 12),
-                      padding: EdgeInsets.all(16),
-                      child: ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(expense.title, style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: EdgeInsets.zero,
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
                           children: [
-                            SizedBox(height: 4),
-                            Text(DateFormat('yyyy/MM/dd').format(expense.date)),
-                            if (expense.category != null && expense.category!.isNotEmpty)
-                              Text('التصنيف: ${expense.category}', style: TextStyle(color: Colors.grey)),
-                            if (expense.creatorName != null) ...[
-                              SizedBox(height: 4),
-                              Row(
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.money_off, color: Colors.orange, size: 24),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(Icons.person_pin, size: 14, color: Colors.purple),
-                                  SizedBox(width: 4),
                                   Text(
-                                    'بواسطة: ${expense.creatorName}',
-                                    style: TextStyle(fontFamily: 'Tajawal', color: Colors.purple, fontSize: 12, fontWeight: FontWeight.bold),
+                                    expense.title,
+                                    style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 12,
+                                    runSpacing: 4,
+                                    children: [
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const Icon(Icons.calendar_today_outlined, size: 14, color: Colors.grey),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            DateFormat('yyyy/MM/dd').format(expense.date),
+                                            style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey[700], fontSize: 12),
+                                          ),
+                                        ],
+                                      ),
+                                      if (expense.category != null && expense.category!.isNotEmpty)
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.category_outlined, size: 14, color: Colors.grey),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              expense.category!,
+                                              style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey[700], fontSize: 12),
+                                            ),
+                                          ],
+                                        ),
+                                      if (expense.creatorName != null)
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.person_pin, size: 14, color: Colors.purple.withOpacity(0.7)),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              expense.creatorName!,
+                                              style: TextStyle(fontFamily: 'Tajawal', color: Colors.purple.withOpacity(0.8), fontSize: 12, fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                        ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ],
-                          ],
-                        ),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              '-${expense.amount}',
-                              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
                             ),
-                            IconButton(
-                              icon: Icon(Icons.delete, color: Colors.grey),
-                              onPressed: () {
-                                ref.read(expenseRepositoryProvider)?.deleteExpense(expense.id);
-                              },
-                            )
+                            const SizedBox(width: 8),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  '-${expense.amount}',
+                                  style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                                const SizedBox(height: 8),
+                                InkWell(
+                                  onTap: () {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text('حذف المصروف', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                        content: const Text('هل أنت متأكد من حذف هذا المصروف؟', style: TextStyle(fontFamily: 'Tajawal')),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context),
+                                            child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              ref.read(expenseRepositoryProvider)?.deleteExpense(expense.id);
+                                              Navigator.pop(context);
+                                            },
+                                            child: const Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  },
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Icon(Icons.delete_outline, color: Colors.red, size: 18),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ],
                         ),
                       ),
