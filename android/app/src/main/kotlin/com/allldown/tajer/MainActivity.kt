@@ -1,4 +1,4 @@
-package com.alldown.tajer
+package com.allldown.tajer
 
 import io.flutter.embedding.android.FlutterActivity
 
