@@ -10,9 +10,9 @@ class LimitsService {
 
   LimitsService(this._firestore);
 
-  static const int maxCustomers = 20;
+  static const int maxCustomers = 10;
   static const int maxOrders = 20;
-  static const int maxProducts = 5;
+  static const int maxProducts = 10;
   static const int maxExpenses = 10;
   static const int maxCategories = 5;
   static const int maxSuppliers = 5;
@@ -47,19 +47,23 @@ class LimitsService {
   }
 
   Future<bool> _canAdd(AppUser user, String collectionName, int maxLimit) async {
-    // Banned devices cannot add anything (0 limit)
-    if (user.plan == 'banned_device') return false;
+    // Banned devices cannot add anything (0 limit) ONLY if they are anonymous
+    if (user.plan == 'banned_device' && user.isAnonymous) return false;
 
     // Pro users have unlimited access
     if (user.plan == 'pro') return true;
 
     // Check count for free/guest users
     final String merchantId = user.merchantId ?? user.id;
-    final snapshot = await _firestore
-        .collection(collectionName)
-        .where('merchantId', isEqualTo: merchantId)
-        .count()
-        .get();
+    final isRootCollection = ['products', 'orders', 'customers'].contains(collectionName);
+    
+    final Query query = isRootCollection
+        ? _firestore.collection(collectionName).where('merchantId', isEqualTo: merchantId)
+        : (collectionName == 'employees') 
+            ? _firestore.collection('users').doc(merchantId).collection(collectionName)
+            : _firestore.collection('merchants').doc(merchantId).collection(collectionName);
+
+    final snapshot = await query.count().get();
 
     final currentCount = snapshot.count ?? 0;
     return currentCount < maxLimit;
