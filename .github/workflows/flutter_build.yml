@@ -34,6 +34,9 @@ jobs:
       - name: Run Build Runner
         run: dart run build_runner build -d
 
+      - name: Generate App Icons
+        run: dart run flutter_launcher_icons
+
       - name: Build APK
         run: flutter build apk --release
 
