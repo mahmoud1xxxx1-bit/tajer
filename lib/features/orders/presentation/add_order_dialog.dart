@@ -116,7 +116,9 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
           finalCustomerName = existingCustomer.name;
         } else {
           // Attempt to create new customer
-          final canAdd = await ref.read(limitsServiceProvider).canAddCustomer(user);
+          final appUser = ref.read(appUserProvider).value;
+          if (appUser == null) throw Exception(AppLocalizations.of(context)!.text_47);
+          final canAdd = await ref.read(limitsServiceProvider).canAddCustomer(appUser);
           if (!canAdd) {
             throw Exception('عفواً، لقد وصلت للحد الأقصى المسموح به للعملاء في باقتك الحالية. لا يمكن إضافة عميل جديد، ولكن يمكنك الاستمرار كـ "عميل عام" بمسح الاسم والرقم.');
           }
