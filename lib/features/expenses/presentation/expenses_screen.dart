@@ -68,6 +68,19 @@ class ExpensesScreen extends ConsumerWidget {
                             Text(DateFormat('yyyy/MM/dd').format(expense.date)),
                             if (expense.category != null && expense.category!.isNotEmpty)
                               Text('التصنيف: ${expense.category}', style: TextStyle(color: Colors.grey)),
+                            if (expense.creatorName != null) ...[
+                              SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  Icon(Icons.person_pin, size: 14, color: Colors.purple),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'بواسطة: ${expense.creatorName}',
+                                    style: TextStyle(fontFamily: 'Tajawal', color: Colors.purple, fontSize: 12, fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
                         trailing: Row(
@@ -163,6 +176,7 @@ class ExpensesScreen extends ConsumerWidget {
                   return;
                 }
 
+                final appUser = ref.read(appUserProvider).value;
                 final expense = Expense(
                   id: const Uuid().v4(),
                   merchantId: user.uid,
@@ -170,6 +184,8 @@ class ExpensesScreen extends ConsumerWidget {
                   amount: amount,
                   category: categoryController.text.trim(),
                   date: DateTime.now(),
+                  creatorId: appUser?.id,
+                  creatorName: appUser?.name ?? 'غير معروف',
                   createdAt: DateTime.now(),
                 );
 

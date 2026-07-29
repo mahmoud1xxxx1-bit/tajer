@@ -11,6 +11,9 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final appUser = ref.watch(appUserProvider).value;
+    final isAnonymous = appUser?.isAnonymous ?? true;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.settings, style: TextStyle(fontFamily: 'Tajawal')),
@@ -18,20 +21,35 @@ class SettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: EdgeInsets.all(16),
         children: [
-          ListTile(
-            leading: Icon(Icons.verified_user),
-            title: Text(l10n.upgradeAccount, style: TextStyle(fontFamily: 'Tajawal')),
-            onTap: () => context.push('/upgrade'),
-          ),
+          if (isAnonymous) ...[
+            ListTile(
+              leading: Icon(Icons.verified_user),
+              title: Text(l10n.upgradeAccount, style: TextStyle(fontFamily: 'Tajawal')),
+              onTap: () => context.push('/upgrade'),
+            ),
+            ListTile(
+              leading: Icon(Icons.email, color: Colors.blue),
+              title: Text('تسجيل الدخول / إنشاء حساب', style: TextStyle(fontFamily: 'Tajawal')),
+              onTap: () => context.push('/email_auth'),
+            ),
+          ] else ...[
+            ListTile(
+              leading: Icon(Icons.person, color: Colors.blue),
+              title: Text('الملف الشخصي للموظف', style: TextStyle(fontFamily: 'Tajawal')),
+              subtitle: Text(appUser?.name ?? 'غير معروف', style: TextStyle(color: Colors.grey)),
+              onTap: () => context.push('/profile'),
+            ),
+            if (appUser?.role == 'merchant')
+              ListTile(
+                leading: Icon(Icons.people, color: Colors.purple),
+                title: Text('إدارة الموظفين والصلاحيات', style: TextStyle(fontFamily: 'Tajawal')),
+                onTap: () => context.push('/employees'),
+              ),
+          ],
           ListTile(
             leading: Icon(Icons.workspace_premium, color: Colors.amber),
             title: Text(l10n.subscriptions, style: TextStyle(fontFamily: 'Tajawal')),
             onTap: () => context.push('/paywall'),
-          ),
-          ListTile(
-            leading: Icon(Icons.email, color: Colors.blue),
-            title: Text('تسجيل الدخول / إنشاء حساب', style: TextStyle(fontFamily: 'Tajawal')),
-            onTap: () => context.push('/email_auth'),
           ),
           ListTile(
             leading: Icon(Icons.security, color: Colors.blue),

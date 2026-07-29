@@ -21,6 +21,8 @@ class AppOrder with _$AppOrder {
     @Default(0.0) double paidAmount,
     @Default(false) bool isCredit,
     String? notes,
+    String? creatorId,
+    String? creatorName,
     @TimestampConverter() required DateTime createdAt,
   }) = _AppOrder;
 

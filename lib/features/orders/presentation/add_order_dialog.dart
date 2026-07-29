@@ -155,6 +155,8 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
         }
       }
 
+      final appUser = ref.read(appUserProvider).value;
+      
       final newOrder = AppOrder(
         id: const Uuid().v4(),
         merchantId: user.uid,
@@ -168,6 +170,8 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
         paidAmount: paidAmount,
         isCredit: _isCredit,
         notes: _notesController.text.trim(),
+        creatorId: appUser?.id,
+        creatorName: appUser?.name ?? 'غير معروف',
         createdAt: DateTime.now(),
       );
 

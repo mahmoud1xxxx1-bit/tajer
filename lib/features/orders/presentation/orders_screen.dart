@@ -124,6 +124,19 @@ class OrdersScreen extends ConsumerWidget {
                             ),
                           ],
                         ),
+                        if (order.creatorName != null) ...[
+                          SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(Icons.person_pin, size: 14, color: Colors.purple),
+                              SizedBox(width: 4),
+                              Text(
+                                'بواسطة: ${order.creatorName}',
+                                style: TextStyle(fontFamily: 'Tajawal', color: Colors.purple, fontSize: 12, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),

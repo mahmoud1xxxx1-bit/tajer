@@ -14,6 +14,8 @@ class Expense with _$Expense {
     required double amount,
     String? category,
     String? notes,
+    String? creatorId,
+    String? creatorName,
     @TimestampConverter() required DateTime date,
     @TimestampConverter() required DateTime createdAt,
   }) = _Expense;
