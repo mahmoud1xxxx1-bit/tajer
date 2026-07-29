@@ -15,25 +15,12 @@ import 'core/theme/app_theme.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'core/services/backup_service.dart';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    try {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-      final auth = FirebaseAuth.instance;
-      if (auth.currentUser != null && !auth.currentUser!.isAnonymous) {
-        final backupService = BackupService(FirebaseFirestore.instance, FirebaseStorage.instance);
-        await backupService.exportToCloud(auth.currentUser!.uid);
-      }
-      return Future.value(true);
-    } catch (e) {
-      return Future.value(false);
-    }
+    return Future.value(true);
   });
 }
 
@@ -90,20 +77,11 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // Initialize Workmanager for auto backup (Android/iOS only)
+  // Initialize Workmanager
   if (!kIsWeb) {
     await Workmanager().initialize(
       callbackDispatcher,
       isInDebugMode: false,
-    );
-    // Register auto backup task every 12 hours
-    Workmanager().registerPeriodicTask(
-      "tajer-auto-backup",
-      "backupTask",
-      frequency: const Duration(hours: 12),
-      constraints: Constraints(
-        networkType: NetworkType.connected,
-      ),
     );
   }
 
