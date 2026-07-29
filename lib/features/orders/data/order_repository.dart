@@ -52,27 +52,29 @@ class OrderRepository {
         throw Exception("الكمية المطلوبة غير متوفرة");
       }
 
-      final customerDoc = await transaction.get(customerRef);
-      if (!customerDoc.exists) throw Exception("العميل غير موجود");
-
-      final currentTotalPurchases = (customerDoc.data()?['totalPurchases'] as num?)?.toDouble() ?? 0.0;
-      final currentOrderCount = customerDoc.data()?['orderCount'] as int? ?? 0;
-      final currentTotalDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
-
       // Update product inventory
       transaction.update(productRef, {
         'quantity': currentQuantity - order.quantity,
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      // Update customer stats
-      final debtIncrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
-      transaction.update(customerRef, {
-        'totalPurchases': currentTotalPurchases + order.total,
-        'orderCount': currentOrderCount + 1,
-        'totalDebt': currentTotalDebt + debtIncrease,
-        'lastPurchaseDate': FieldValue.serverTimestamp(),
-      });
+      if (order.customerId != 'walk_in') {
+        final customerDoc = await transaction.get(customerRef);
+        if (!customerDoc.exists) throw Exception("العميل غير موجود");
+
+        final currentTotalPurchases = (customerDoc.data()?['totalPurchases'] as num?)?.toDouble() ?? 0.0;
+        final currentOrderCount = customerDoc.data()?['orderCount'] as int? ?? 0;
+        final currentTotalDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
+
+        // Update customer stats
+        final debtIncrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
+        transaction.update(customerRef, {
+          'totalPurchases': currentTotalPurchases + order.total,
+          'orderCount': currentOrderCount + 1,
+          'totalDebt': currentTotalDebt + debtIncrease,
+          'lastPurchaseDate': FieldValue.serverTimestamp(),
+        });
+      }
 
       // Save order
       transaction.set(orderRef, order.toJson());
@@ -98,22 +100,24 @@ class OrderRepository {
         });
       }
 
-      final customerDoc = await transaction.get(customerRef);
-      if (customerDoc.exists) {
-        final currentTotalPurchases = (customerDoc.data()?['totalPurchases'] as num?)?.toDouble() ?? 0.0;
-        final currentOrderCount = customerDoc.data()?['orderCount'] as int? ?? 0;
-        final currentTotalDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
-        
-        // Revert customer stats
-        final newOrderCount = currentOrderCount - 1;
-        final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
-        
-        transaction.update(customerRef, {
-          'totalPurchases': (currentTotalPurchases - order.total).clamp(0.0, double.infinity),
-          'orderCount': newOrderCount < 0 ? 0 : newOrderCount,
-          'totalDebt': (currentTotalDebt - debtDecrease).clamp(0.0, double.infinity),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
+      if (order.customerId != 'walk_in') {
+        final customerDoc = await transaction.get(customerRef);
+        if (customerDoc.exists) {
+          final currentTotalPurchases = (customerDoc.data()?['totalPurchases'] as num?)?.toDouble() ?? 0.0;
+          final currentOrderCount = customerDoc.data()?['orderCount'] as int? ?? 0;
+          final currentTotalDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
+          
+          // Revert customer stats
+          final newOrderCount = currentOrderCount - 1;
+          final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
+          
+          transaction.update(customerRef, {
+            'totalPurchases': (currentTotalPurchases - order.total).clamp(0.0, double.infinity),
+            'orderCount': newOrderCount < 0 ? 0 : newOrderCount,
+            'totalDebt': (currentTotalDebt - debtDecrease).clamp(0.0, double.infinity),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
       }
 
       // Delete order
