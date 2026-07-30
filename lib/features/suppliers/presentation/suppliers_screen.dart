@@ -173,7 +173,7 @@ class SuppliersScreen extends ConsumerWidget {
 
                 final supplier = Supplier(
                   id: Uuid().v4(),
-                  merchantId: user.uid,
+                  merchantId: ref.read(appUserProvider).value?.merchantId ?? user.uid,
                   name: nameController.text,
                   phone: phoneController.text,
                   totalDebt: double.tryParse(debtController.text) ?? 0.0,

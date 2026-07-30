@@ -147,7 +147,7 @@ class CategoriesScreen extends ConsumerWidget {
 
                 final category = Category(
                   id: Uuid().v4(),
-                  merchantId: user.uid,
+                  merchantId: ref.read(appUserProvider).value?.merchantId ?? user.uid,
                   name: nameController.text,
                   createdAt: DateTime.now(),
                 );
