@@ -1,104 +1,48 @@
-import re
-
 with open('lib/features/dashboard/presentation/dashboard_screen.dart', 'r', encoding='utf-8') as f:
     content = f.read()
 
-# Replace screens logic
-screens_target = '''  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final List<Widget> screens = [
-      DashboardHome(onNavigateToTab: (index) {
-        setState(() {
-          _currentIndex = index;
-        });
-      }),
-      const OrdersScreen(),
-      const ProductsScreen(),
-      const CustomersScreen(),
-      const ReportsScreen(),
-    ];'''
+import re
 
-screens_replacement = '''  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final appUser = ref.watch(appUserProvider).value;
-    
-    final bool canManageCustomers = appUser?.hasPermission('can_manage_customers') ?? true;
-    final bool canViewReports = appUser?.hasPermission('can_view_reports') ?? true;
+# Fix Customers QuickAction
+customers_qa = '''                      _QuickAction(
+                        icon: Icons.person_outline,
+                        label: l10n.customers,
+                        color: Theme.of(context).colorScheme.secondary,
+                        onTap: () {
+                          onNavigateToTab(3);
+                        },
+                      ),'''
+customers_qa_fixed = '''                      if (canManageCustomers)
+                      _QuickAction(
+                        icon: Icons.person_outline,
+                        label: l10n.customers,
+                        color: Theme.of(context).colorScheme.secondary,
+                        onTap: () {
+                          onNavigateToTab(3);
+                        },
+                      ),'''
+content = content.replace(customers_qa, customers_qa_fixed)
 
-    final List<Widget> screens = [
-      DashboardHome(onNavigateToTab: (index) {
-        setState(() {
-          _currentIndex = index;
-        });
-      }),
-      const OrdersScreen(),
-      const ProductsScreen(),
-      if (canManageCustomers) const CustomersScreen(),
-      if (canViewReports) const ReportsScreen(),
-    ];'''
-
-content = content.replace(screens_target, screens_replacement)
-
-destinations_target = '''        destinations: [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: l10n.dashboard,
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.shopping_cart_outlined),
-            selectedIcon: Icon(Icons.shopping_cart),
-            label: l10n.orders,
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
-            label: l10n.products,
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.people_outline),
-            selectedIcon: Icon(Icons.people),
-            label: l10n.customers,
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
-            selectedIcon: Icon(Icons.bar_chart),
-            label: l10n.reports,
-          ),
-        ],'''
-
-destinations_replacement = '''        destinations: [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: l10n.dashboard,
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.shopping_cart_outlined),
-            selectedIcon: Icon(Icons.shopping_cart),
-            label: l10n.orders,
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
-            label: l10n.products,
-          ),
-          if (canManageCustomers)
-            NavigationDestination(
-              icon: Icon(Icons.people_outline),
-              selectedIcon: Icon(Icons.people),
-              label: l10n.customers,
-            ),
-          if (canViewReports)
-            NavigationDestination(
-              icon: Icon(Icons.bar_chart_outlined),
-              selectedIcon: Icon(Icons.bar_chart),
-              label: l10n.reports,
-            ),
-        ],'''
-
-content = content.replace(destinations_target, destinations_replacement)
+# Fix Reports QuickAction
+reports_qa = '''                      _QuickAction(
+                        icon: Icons.bar_chart_rounded,
+                        label: l10n.reports,
+                        color: Colors.teal,
+                        onTap: () {
+                          onNavigateToTab(4);
+                        },
+                      ),'''
+reports_qa_fixed = '''                      if (canViewReports)
+                      _QuickAction(
+                        icon: Icons.bar_chart_rounded,
+                        label: l10n.reports,
+                        color: Colors.teal,
+                        onTap: () {
+                          onNavigateToTab(canManageCustomers ? 4 : 3);
+                        },
+                      ),'''
+content = content.replace(reports_qa, reports_qa_fixed)
 
 with open('lib/features/dashboard/presentation/dashboard_screen.dart', 'w', encoding='utf-8') as f:
     f.write(content)
-print('Updated Dashboard screen successfully!')
+print('Fixed dashboard_screen.dart')

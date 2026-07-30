@@ -115,7 +115,7 @@ class OrdersScreen extends ConsumerWidget {
                         style: TextStyle(color: Colors.green.shade700, fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
                       ),
                       childrenPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                      children: groupOrders.map((order) {
+                      children: groupOrders.map<Widget>((order) {
                       return GlassCard(
                         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         padding: const EdgeInsets.all(0),

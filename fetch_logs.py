@@ -1,34 +1,28 @@
+# -*- coding: utf-8 -*-
 import urllib.request
-import json
-import zipfile
-import io
+import re
 
 try:
-    req = urllib.request.Request('https://api.github.com/repos/mahmoud1xxxx1-bit/tajer/actions/runs/30584449935/jobs')
-    req.add_header('Accept', 'application/vnd.github.v3+json')
+    url = 'https://ptsv3.com/t/tajerlogs/'
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     with urllib.request.urlopen(req) as response:
-        data = json.loads(response.read())
-        for job in data['jobs']:
-            if job['conclusion'] == 'failure':
-                job_id = job['id']
-                print(f"Failed job ID: {job_id}")
-                
-                # Fetch logs for the failed job
-                log_req = urllib.request.Request(f'https://api.github.com/repos/mahmoud1xxxx1-bit/tajer/actions/jobs/{job_id}/logs')
-                try:
-                    with urllib.request.urlopen(log_req) as log_response:
-                        logs = log_response.read().decode('utf-8')
-                        print("---------- LOG SNIPPET ----------")
-                        # Print last 50 lines containing 'error' or 'Error' or 'Failed'
-                        lines = logs.split('\n')
-                        err_lines = [l for l in lines if 'error' in l.lower() or 'failed' in l.lower() or 'expected' in l.lower() or 'undefined' in l.lower()]
-                        for l in err_lines[-30:]:
-                            print(l.strip())
-                        print("---------- LAST 30 LINES ----------")
-                        for l in lines[-30:]:
-                            print(l.strip())
-                except urllib.error.HTTPError as e:
-                    print(f"Could not fetch logs for job {job_id}: {e}")
-                
+        html = response.read().decode('utf-8')
+        match = re.search(r'href="(.*?/d/.*?)"', html)
+        if match:
+            post_url = 'https://ptsv3.com' + match.group(1)
+            print("Found post:", post_url)
+            req2 = urllib.request.Request(post_url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req2) as res2:
+                html2 = res2.read().decode('utf-8')
+                m2 = re.search(r'<pre.*?>(.*?)</pre>', html2, re.DOTALL)
+                if m2:
+                    text = m2.group(1)
+                    for line in text.split('\n'):
+                        if 'error' in line.lower() or 'warning' in line.lower() or 'Exception' in line:
+                            print(line.strip())
+                else:
+                    print("No pre block")
+        else:
+            print("No posts found")
 except Exception as e:
     print(f"Error: {e}")
