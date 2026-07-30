@@ -7,7 +7,7 @@ import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
 import '../../features/orders/domain/order.dart';
 import '../../features/customers/domain/customer.dart';
-import '../../../core/utils/date_formatter.dart';
+import '../utils/date_formatter.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 class PdfService {
