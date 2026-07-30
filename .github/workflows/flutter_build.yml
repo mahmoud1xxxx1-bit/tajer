@@ -40,9 +40,10 @@ jobs:
           flutter analyze > analyze_log.txt 2>&1 || true
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b error-logs
           git add analyze_log.txt
           git commit -m "chore: upload analyze log" || true
-          git push || true
+          git push origin error-logs --force || true
 
 
       - name: Generate App Icons
