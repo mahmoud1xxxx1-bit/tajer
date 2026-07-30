@@ -264,7 +264,36 @@ class AuthRepository {
   Future<void> signInAsEmployee(String merchantEmail, String pin) async {
     try {
       final hiddenEmail = _generateEmployeeEmail(merchantEmail, pin);
-      await _auth.signInWithEmailAndPassword(email: hiddenEmail, password: pin);
+      final userCred = await _auth.signInWithEmailAndPassword(email: hiddenEmail, password: pin);
+      
+      final uid = userCred.user?.uid;
+      if (uid != null) {
+        final docSnap = await _firestore.collection('users').doc(uid).get();
+        if (!docSnap.exists) {
+          final merchantQuery = await _firestore
+              .collection('users')
+              .where('email', isEqualTo: merchantEmail.trim().toLowerCase())
+              .limit(1)
+              .get();
+              
+          String? merchantUid;
+          if (merchantQuery.docs.isNotEmpty) {
+            merchantUid = merchantQuery.docs.first.id;
+          }
+          
+          await _firestore.collection('users').doc(uid).set({
+            'id': uid,
+            'isAnonymous': false,
+            'plan': 'employee',
+            'role': 'employee',
+            'merchantId': merchantUid ?? '',
+            'createdAt': FieldValue.serverTimestamp(),
+            'name': 'موظف',
+            'email': hiddenEmail,
+            'deviceId': await _getDeviceId(),
+          });
+        }
+      }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
         throw Exception("بيانات غير صحيحة. تأكد من إيميل التاجر ورمز الدخول.");
@@ -300,13 +329,26 @@ class AuthRepository {
         
         final employeeUid = userCred.user?.uid;
         if (employeeUid != null) {
-          // Save employee info in merchant's document
-          await _firestore.collection('users').doc(merchantUid).collection('employees').doc(employeeUid).set({
-            'name': name,
-            'pin': pin,
-            'createdAt': FieldValue.serverTimestamp(),
-            'merchantUid': merchantUid,
-          });
+            // Save employee info in merchant's document
+            await _firestore.collection('users').doc(merchantUid).collection('employees').doc(employeeUid).set({
+              'name': name,
+              'pin': pin,
+              'createdAt': FieldValue.serverTimestamp(),
+              'merchantUid': merchantUid,
+            });
+            
+            // Create root user document for the employee so appUserProvider works
+            await _firestore.collection('users').doc(employeeUid).set({
+              'id': employeeUid,
+              'isAnonymous': false,
+              'plan': 'employee',
+              'role': 'employee',
+              'merchantId': merchantUid,
+              'createdAt': FieldValue.serverTimestamp(),
+              'name': name,
+              'email': hiddenEmail,
+              'deviceId': await _getDeviceId(),
+            });
         }
       } finally {
         await tempApp.delete(); // Always clean up
