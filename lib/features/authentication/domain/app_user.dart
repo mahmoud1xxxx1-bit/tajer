@@ -5,6 +5,8 @@ part 'app_user.g.dart';
 
 @freezed
 class AppUser with _$AppUser {
+  const AppUser._();
+
   const factory AppUser({
     required String id,
     String? name,
@@ -20,4 +22,9 @@ class AppUser with _$AppUser {
   }) = _AppUser;
 
   factory AppUser.fromJson(Map<String, dynamic> json) => _$AppUserFromJson(json);
+
+  bool hasPermission(String permissionName) {
+    if (role == 'merchant') return true; // Merchants have all permissions
+    return permissions[permissionName] == true;
+  }
 }

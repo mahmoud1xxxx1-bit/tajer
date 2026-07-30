@@ -48,84 +48,26 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
       _showError("لقد وصلت للحد الأقصى (3 موظفين). قم بحذف موظف لإضافة بديل له.");
       return;
     }
-
-    final nameController = TextEditingController();
-    final pinController = TextEditingController();
-    bool isSaving = false;
-
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text("إضافة موظف جديد", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(
-                      labelText: "اسم الموظف",
-                      prefixIcon: Icon(Icons.person),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: pinController,
-                    keyboardType: TextInputType.number,
-                    maxLength: 6,
-                    decoration: const InputDecoration(
-                      labelText: "رمز الدخول (6 أرقام)",
-                      prefixIcon: Icon(Icons.pin),
-                      border: OutlineInputBorder(),
-                      helperText: "مثال: 123456 (هذا هو باسورد الموظف)",
-                      helperStyle: TextStyle(fontFamily: 'Tajawal')
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: isSaving ? null : () => Navigator.of(context).pop(),
-                  child: const Text("إلغاء", style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-                ),
-                ElevatedButton(
-                  onPressed: isSaving ? null : () async {
-                    final name = nameController.text.trim();
-                    final pin = pinController.text.trim();
+      builder: (context) => EmployeeDialog(
+        merchantEmail: _merchantEmail,
+        ref: ref,
+      ),
+    );
+  }
 
-                    if (name.isEmpty) {
-                      _showError("يرجى إدخال اسم الموظف");
-                      return;
-                    }
-                    if (pin.length < 6) {
-                      _showError("رمز الدخول يجب أن يكون 6 أرقام على الأقل");
-                      return;
-                    }
-
-                    setDialogState(() => isSaving = true);
-                    try {
-                      await ref.read(authRepositoryProvider).createEmployee(_merchantEmail, name, pin);
-                      Navigator.of(context).pop();
-                      _showSuccess("تم إضافة الموظف بنجاح");
-                    } catch (e) {
-                      _showError(e.toString().replaceAll("Exception: ", ""));
-                    } finally {
-                      if (mounted) setDialogState(() => isSaving = false);
-                    }
-                  },
-                  child: isSaving 
-                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text("إضافة", style: TextStyle(fontFamily: 'Tajawal')),
-                ),
-              ],
-            );
-          }
-        );
-      }
+  void _showEditEmployeeDialog(String id, Map<String, dynamic> data) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => EmployeeDialog(
+        merchantEmail: _merchantEmail,
+        ref: ref,
+        employeeUid: id,
+        initialData: data,
+      ),
     );
   }
 
@@ -283,6 +225,11 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                                       onPressed: () => _shareCredentials(name, pin),
                                     ),
                                     IconButton(
+                                      icon: const Icon(Icons.edit, color: Colors.blue),
+                                      tooltip: "تعديل الصلاحيات",
+                                      onPressed: () => _showEditEmployeeDialog(id, data),
+                                    ),
+                                    IconButton(
                                       icon: const Icon(Icons.delete, color: Colors.red),
                                       tooltip: "حذف الموظف",
                                       onPressed: () => _deleteEmployee(id),
@@ -298,6 +245,178 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
               );
             },
           ),
+    );
+  }
+}
+
+class EmployeeDialog extends StatefulWidget {
+  final String merchantEmail;
+  final WidgetRef ref;
+  final Map<String, dynamic>? initialData;
+  final String? employeeUid;
+
+  const EmployeeDialog({
+    super.key,
+    required this.merchantEmail,
+    required this.ref,
+    this.initialData,
+    this.employeeUid,
+  });
+
+  @override
+  State<EmployeeDialog> createState() => _EmployeeDialogState();
+}
+
+class _EmployeeDialogState extends State<EmployeeDialog> {
+  final nameController = TextEditingController();
+  final pinController = TextEditingController();
+  bool isSaving = false;
+
+  Map<String, bool> permissions = {
+    'can_manage_products': false,
+    'can_view_cost': false,
+    'can_manage_inventory': false,
+    'can_create_orders': true,
+    'can_cancel_orders': false,
+    'can_sell_on_credit': false,
+    'can_manage_customers': true,
+    'can_receive_payments': true,
+    'can_manage_expenses': false,
+  };
+
+  final Map<String, String> permissionLabels = {
+    'can_manage_products': 'إضافة وتعديل المنتجات',
+    'can_view_cost': 'رؤية سعر التكلفة والأرباح',
+    'can_manage_inventory': 'إدارة وجرد المخزون',
+    'can_create_orders': 'إنشاء طلبات وفواتير جديدة',
+    'can_cancel_orders': 'تعديل أو إلغاء الطلبات',
+    'can_sell_on_credit': 'البيع بالآجل / الدين',
+    'can_manage_customers': 'إضافة وتعديل بيانات العملاء',
+    'can_receive_payments': 'تسديد الديون واستلام الدفعات',
+    'can_manage_expenses': 'تسجيل وإدارة المصروفات',
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialData != null) {
+      nameController.text = widget.initialData!['name'] ?? '';
+      pinController.text = widget.initialData!['pin'] ?? '';
+      if (widget.initialData!['permissions'] != null) {
+        final Map<String, dynamic> perms = widget.initialData!['permissions'];
+        permissions.forEach((key, value) {
+          if (perms.containsKey(key)) {
+            permissions[key] = perms[key] == true;
+          }
+        });
+      }
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message, style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.red),
+    );
+  }
+
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message, style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isEdit = widget.employeeUid != null;
+    return AlertDialog(
+      title: Text(isEdit ? "تعديل الموظف والصلاحيات" : "إضافة موظف جديد", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+      content: SizedBox(
+        width: double.maxFinite,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                decoration: const InputDecoration(
+                  labelText: "اسم الموظف",
+                  prefixIcon: Icon(Icons.person),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: pinController,
+                keyboardType: TextInputType.number,
+                maxLength: 6,
+                readOnly: isEdit,
+                decoration: InputDecoration(
+                  labelText: "رمز الدخول (6 أرقام)",
+                  prefixIcon: const Icon(Icons.pin),
+                  border: const OutlineInputBorder(),
+                  helperText: isEdit ? "لا يمكن تعديل رمز الدخول بعد الحفظ" : "مثال: 123456 (باسورد الموظف)",
+                  helperStyle: const TextStyle(fontFamily: 'Tajawal')
+                ),
+              ),
+              const Divider(height: 32),
+              const Text("صلاحيات الموظف:", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 8),
+              ...permissions.keys.map((key) {
+                return SwitchListTile(
+                  title: Text(permissionLabels[key]!, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
+                  value: permissions[key]!,
+                  onChanged: (val) {
+                    setState(() {
+                      permissions[key] = val;
+                    });
+                  },
+                );
+              }),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: isSaving ? null : () => Navigator.of(context).pop(),
+          child: const Text("إلغاء", style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+        ),
+        ElevatedButton(
+          onPressed: isSaving ? null : () async {
+            final name = nameController.text.trim();
+            final pin = pinController.text.trim();
+
+            if (name.isEmpty) {
+              _showError("يرجى إدخال اسم الموظف");
+              return;
+            }
+            if (pin.length < 6) {
+              _showError("رمز الدخول يجب أن يكون 6 أرقام على الأقل");
+              return;
+            }
+
+            setState(() => isSaving = true);
+            try {
+              if (isEdit) {
+                await widget.ref.read(authRepositoryProvider).updateEmployeePermissions(widget.employeeUid!, permissions);
+                if (mounted) Navigator.of(context).pop();
+                _showSuccess("تم تحديث الصلاحيات بنجاح");
+              } else {
+                await widget.ref.read(authRepositoryProvider).createEmployee(widget.merchantEmail, name, pin, permissions: permissions);
+                if (mounted) Navigator.of(context).pop();
+                _showSuccess("تم إضافة الموظف بنجاح");
+              }
+            } catch (e) {
+              _showError(e.toString().replaceAll("Exception: ", ""));
+            } finally {
+              if (mounted) setState(() => isSaving = false);
+            }
+          },
+          child: isSaving 
+            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+            : Text(isEdit ? "حفظ التعديلات" : "إضافة", style: const TextStyle(fontFamily: 'Tajawal')),
+        ),
+      ],
     );
   }
 }

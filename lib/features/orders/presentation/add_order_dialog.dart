@@ -205,6 +205,8 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
     final l10n = AppLocalizations.of(context)!;
     final productsState = ref.watch(productsStreamProvider);
     final customersState = ref.watch(customersStreamProvider);
+    final appUser = ref.watch(appUserProvider).value;
+    final canSellOnCredit = appUser?.hasPermission('can_sell_on_credit') ?? false;
 
     return Padding(
       padding: EdgeInsets.all(24.0),
@@ -304,6 +306,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
             SizedBox(height: 16),
 
             // Credit / Debt Section
+            if (canSellOnCredit)
             SwitchListTile(
               title: Text(AppLocalizations.of(context)!.text_83, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
               subtitle: Text(AppLocalizations.of(context)!.text_84, style: TextStyle(fontFamily: 'Tajawal')),
@@ -318,7 +321,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
               },
             ),
             
-            if (_isCredit) ...[
+            if (_isCredit && canSellOnCredit) ...[
               SizedBox(height: 8),
               TextFormField(
                 controller: _paidAmountController,

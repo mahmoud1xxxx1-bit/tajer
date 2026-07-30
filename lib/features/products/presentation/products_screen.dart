@@ -18,6 +18,8 @@ class ProductsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final productsAsyncValue = ref.watch(productsStreamProvider);
     final currentCurrency = ref.watch(currencyProvider);
+    final appUser = ref.watch(appUserProvider).value;
+    final canManageProducts = appUser?.hasPermission('can_manage_products') ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -42,7 +44,7 @@ class ProductsScreen extends ConsumerWidget {
               return GlassCard(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: EdgeInsets.zero,
-                onLongPress: () {
+                onLongPress: canManageProducts ? () {
                   showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
@@ -53,7 +55,7 @@ class ProductsScreen extends ConsumerWidget {
                       child: AddProductDialog(productToEdit: product),
                     ),
                   );
-                },
+                } : null,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
@@ -143,6 +145,7 @@ class ProductsScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 4),
+                          if (canManageProducts)
                           PopupMenuButton<String>(
                             icon: const Icon(Icons.more_vert, color: Colors.grey),
                             padding: EdgeInsets.zero,
@@ -192,17 +195,16 @@ class ProductsScreen extends ConsumerWidget {
                                   ],
                                 ),
                               ),
-                              if (ref.read(appUserProvider).value?.role != 'cashier')
-                                PopupMenuItem(
-                                  value: 'delete',
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.delete, color: Colors.red, size: 20),
-                                      const SizedBox(width: 8),
-                                      Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
-                                    ],
-                                  ),
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.delete, color: Colors.red, size: 20),
+                                    const SizedBox(width: 8),
+                                    Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                                  ],
                                 ),
+                              ),
                             ],
                           ),
                         ],
@@ -219,7 +221,7 @@ class ProductsScreen extends ConsumerWidget {
           child: Text('${l10n.error}: $e', style: TextStyle(fontFamily: 'Tajawal')),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: canManageProducts ? FloatingActionButton.extended(
         onPressed: () async {
           final canAdd = await GuestLimitService.canAddProduct(context, ref);
           if (!canAdd) return;
@@ -239,7 +241,7 @@ class ProductsScreen extends ConsumerWidget {
         },
         label: Text(l10n.add, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         icon: Icon(Icons.add),
-      ),
+      ) : null,
     );
   }
 }

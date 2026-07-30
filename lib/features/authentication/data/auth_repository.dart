@@ -281,6 +281,14 @@ class AuthRepository {
             merchantUid = merchantQuery.docs.first.id;
           }
           
+          Map<String, dynamic> permissions = {};
+          if (merchantUid != null) {
+            final empDoc = await _firestore.collection('users').doc(merchantUid).collection('employees').doc(uid).get();
+            if (empDoc.exists && empDoc.data()!.containsKey('permissions')) {
+              permissions = Map<String, dynamic>.from(empDoc.data()!['permissions']);
+            }
+          }
+          
           await _firestore.collection('users').doc(uid).set({
             'id': uid,
             'isAnonymous': false,
@@ -291,6 +299,7 @@ class AuthRepository {
             'name': 'موظف',
             'email': hiddenEmail,
             'deviceId': await _getDeviceId(),
+            'permissions': permissions,
           });
         }
       }
@@ -304,7 +313,7 @@ class AuthRepository {
     }
   }
 
-  Future<void> createEmployee(String merchantEmail, String name, String pin) async {
+  Future<void> createEmployee(String merchantEmail, String name, String pin, {Map<String, dynamic> permissions = const {}}) async {
     try {
       final merchantUid = _auth.currentUser?.uid;
       if (merchantUid == null) throw Exception("يجب أن تكون مسجل الدخول كتاجر لإضافة موظف");
@@ -333,6 +342,7 @@ class AuthRepository {
             await _firestore.collection('users').doc(merchantUid).collection('employees').doc(employeeUid).set({
               'name': name,
               'pin': pin,
+              'permissions': permissions,
               'createdAt': FieldValue.serverTimestamp(),
               'merchantUid': merchantUid,
             });
@@ -348,6 +358,7 @@ class AuthRepository {
               'name': name,
               'email': hiddenEmail,
               'deviceId': await _getDeviceId(),
+              'permissions': permissions,
             });
         }
       } finally {
@@ -371,6 +382,24 @@ class AuthRepository {
       await _firestore.collection('users').doc(merchantUid).collection('employees').doc(employeeUid).delete();
     } catch (e) {
       throw Exception("حدث خطأ أثناء حذف الموظف: $e");
+    }
+  }
+
+  Future<void> updateEmployeePermissions(String employeeUid, Map<String, dynamic> permissions) async {
+    try {
+      final merchantUid = _auth.currentUser?.uid;
+      if (merchantUid == null) throw Exception("يجب أن تكون مسجل الدخول");
+      
+      // Update in subcollection
+      await _firestore.collection('users').doc(merchantUid).collection('employees').doc(employeeUid).update({
+        'permissions': permissions,
+      });
+      // Update in root document
+      await _firestore.collection('users').doc(employeeUid).update({
+        'permissions': permissions,
+      });
+    } catch (e) {
+      throw Exception("حدث خطأ أثناء تحديث الصلاحيات: $e");
     }
   }
 }

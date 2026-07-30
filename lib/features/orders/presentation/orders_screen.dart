@@ -12,6 +12,8 @@ import '../../../core/providers/settings_provider.dart';
 import '../../../core/utils/date_formatter.dart';
 
 import '../../../core/theme/glass_card.dart';
+import '../../authentication/data/auth_repository.dart';
+import '../../authentication/domain/app_user.dart';
 
 class OrdersScreen extends ConsumerWidget {
   const OrdersScreen({super.key});
@@ -21,6 +23,9 @@ class OrdersScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final ordersAsyncValue = ref.watch(ordersStreamProvider);
     final currency = ref.watch(currencyProvider).code;
+    final appUser = ref.watch(appUserProvider).value;
+    final canCreateOrders = appUser?.hasPermission('can_create_orders') ?? false;
+    final canCancelOrders = appUser?.hasPermission('can_cancel_orders') ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -213,6 +218,7 @@ class OrdersScreen extends ConsumerWidget {
                                 onSelected: (value) async {
                                   final repo = ref.read(orderRepositoryProvider);
                                   if (value == 'delete') {
+                                    if (!canCancelOrders) return;
                                     showDialog(
                                       context: context,
                                       builder: (context) => AlertDialog(
@@ -234,6 +240,7 @@ class OrdersScreen extends ConsumerWidget {
                                       ),
                                     );
                                   } else if (value.startsWith('status_')) {
+                                    if (!canCancelOrders) return;
                                     final newStatus = value.replaceFirst('status_', '');
                                     try {
                                       await repo.updateOrderStatus(order, newStatus);
@@ -430,27 +437,29 @@ class OrdersScreen extends ConsumerWidget {
                                   }
                                 },
                                 itemBuilder: (context) => [
-                                  const PopupMenuItem(
-                                    value: 'status_pending',
-                                    child: Text('قيد الانتظار', style: TextStyle(fontFamily: 'Tajawal')),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 'status_processing',
-                                    child: Text('جاري التجهيز', style: TextStyle(fontFamily: 'Tajawal')),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 'status_delivered',
-                                    child: Text('مكتمل', style: TextStyle(fontFamily: 'Tajawal')),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 'status_cancelled',
-                                    child: Text('ملغى', style: TextStyle(fontFamily: 'Tajawal')),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 'status_return',
-                                    child: Text('مرتجع', style: TextStyle(fontFamily: 'Tajawal')),
-                                  ),
-                                  const PopupMenuDivider(),
+                                  if (canCancelOrders) ...[
+                                    const PopupMenuItem(
+                                      value: 'status_pending',
+                                      child: Text('قيد الانتظار', style: TextStyle(fontFamily: 'Tajawal')),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'status_processing',
+                                      child: Text('جاري التجهيز', style: TextStyle(fontFamily: 'Tajawal')),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'status_delivered',
+                                      child: Text('مكتمل', style: TextStyle(fontFamily: 'Tajawal')),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'status_cancelled',
+                                      child: Text('ملغى', style: TextStyle(fontFamily: 'Tajawal')),
+                                    ),
+                                    const PopupMenuItem(
+                                      value: 'status_return',
+                                      child: Text('مرتجع', style: TextStyle(fontFamily: 'Tajawal')),
+                                    ),
+                                    const PopupMenuDivider(),
+                                  ],
                                   const PopupMenuItem(
                                     value: 'print',
                                     child: Row(
@@ -482,16 +491,17 @@ class OrdersScreen extends ConsumerWidget {
                                     ),
                                   ),
                                   const PopupMenuDivider(),
-                                  PopupMenuItem(
-                                    value: 'delete',
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.delete, color: Colors.red, size: 20),
-                                        const SizedBox(width: 8),
-                                        Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
-                                      ],
+                                  if (canCancelOrders)
+                                    PopupMenuItem(
+                                      value: 'delete',
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.delete, color: Colors.red, size: 20),
+                                          const SizedBox(width: 8),
+                                          Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                                        ],
+                                      ),
                                     ),
-                                  ),
                                 ],
                               ),
                             ],
@@ -510,7 +520,7 @@ class OrdersScreen extends ConsumerWidget {
           child: Text('${l10n.error}: $e', style: TextStyle(fontFamily: 'Tajawal')),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: canCreateOrders ? FloatingActionButton.extended(
         onPressed: () async {
           final canAdd = await GuestLimitService.canAddOrder(context, ref);
           if (!canAdd) return;
@@ -530,7 +540,7 @@ class OrdersScreen extends ConsumerWidget {
         },
         label: Text(AppLocalizations.of(context)!.text_94, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         icon: Icon(Icons.add_shopping_cart),
-      ),
+      ) : null,
     );
   }
 

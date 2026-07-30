@@ -91,11 +91,13 @@ class DashboardHome extends ConsumerWidget {
     final ordersAsync = ref.watch(ordersStreamProvider);
     final productsAsync = ref.watch(productsStreamProvider);
     final currentCurrency = ref.watch(currencyProvider);
+    final appUser = ref.watch(appUserProvider).value;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.dashboard, style: TextStyle(fontFamily: 'Tajawal')),
         actions: [
+          if (appUser?.role != 'employee')
           IconButton(
             icon: Icon(Icons.settings),
             onPressed: () {
@@ -114,6 +116,7 @@ class DashboardHome extends ConsumerWidget {
               ),
               child: Text(l10n.managementAndInventory, style: TextStyle(color: Colors.white, fontSize: 24, fontFamily: 'Tajawal')),
             ),
+            if (appUser?.hasPermission('can_manage_expenses') ?? false)
             ListTile(
               leading: Icon(Icons.money_off),
               title: Text(l10n.expenses, style: TextStyle(fontFamily: 'Tajawal')),
@@ -122,6 +125,7 @@ class DashboardHome extends ConsumerWidget {
                 context.push('/expenses');
               },
             ),
+            if (appUser?.hasPermission('can_manage_customers') ?? false)
             ListTile(
               leading: Icon(Icons.business),
               title: Text(l10n.suppliers, style: TextStyle(fontFamily: 'Tajawal')),
@@ -130,6 +134,7 @@ class DashboardHome extends ConsumerWidget {
                 context.push('/suppliers');
               },
             ),
+            if (appUser?.hasPermission('can_manage_products') ?? false)
             ListTile(
               leading: Icon(Icons.category),
               title: Text(l10n.categories, style: TextStyle(fontFamily: 'Tajawal')),
@@ -138,15 +143,16 @@ class DashboardHome extends ConsumerWidget {
                 context.push('/categories');
               },
             ),
-            ListTile(
-              leading: Icon(Icons.history),
-              title: Text(l10n.inventoryLog, style: TextStyle(fontFamily: 'Tajawal')),
-              onTap: () {
-                Navigator.pop(context);
-                context.push('/inventory_logs');
-              },
-            ),
-
+              if (appUser?.hasPermission('can_manage_inventory') ?? false)
+              ListTile(
+                leading: Icon(Icons.history),
+                title: Text(l10n.inventoryLog, style: TextStyle(fontFamily: 'Tajawal')),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/inventory_logs');
+                },
+              ),
+              if (appUser?.role != 'employee')
               ListTile(
                 leading: Icon(Icons.manage_accounts),
                 title: Text('الموظفين والصلاحيات (Pro)', style: TextStyle(fontFamily: 'Tajawal', color: Colors.orange)),

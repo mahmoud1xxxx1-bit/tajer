@@ -97,7 +97,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             previousQuantity: previousQuantity,
             newQuantity: newQuantity,
             reason: AppLocalizations.of(context)!.text_100,
-            userEmail: user.email,
+            userEmail: appUser?.name ?? user.email,
           );
         }
       } else {
@@ -109,7 +109,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             previousQuantity: 0,
             newQuantity: newQuantity,
             reason: AppLocalizations.of(context)!.text_101,
-            userEmail: user.email,
+            userEmail: appUser?.name ?? user.email,
           );
         }
       }
