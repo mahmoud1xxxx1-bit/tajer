@@ -45,7 +45,7 @@ class PdfService {
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Text(AppLocalizations.of(buildContext)!.text_6, style: pw.TextStyle(fontSize: 32, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                    pw.Text(AppLocalizations.of(buildContext)!.text6, style: pw.TextStyle(fontSize: 32, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
                     pw.Text('فاتورة رقم: #${order.id.substring(0, 8).toUpperCase()}', style: const pw.TextStyle(fontSize: 14, color: PdfColors.grey700)),
                   ],
                 ),
@@ -61,7 +61,7 @@ class PdfService {
                     pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                        pw.Text(AppLocalizations.of(buildContext)!.text_7, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                        pw.Text(AppLocalizations.of(buildContext)!.text7, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
                         pw.SizedBox(height: 8),
                         pw.Text('الاسم: ${order.customerName}', style: const pw.TextStyle(fontSize: 14)),
                       ],
@@ -69,7 +69,7 @@ class PdfService {
                     pw.Column(
                       crossAxisAlignment: pw.CrossAxisAlignment.end,
                       children: [
-                        pw.Text(AppLocalizations.of(buildContext)!.text_8, style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                        pw.Text(AppLocalizations.of(buildContext)!.text8, style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
                         pw.Text(AppDateFormatter.format(order.createdAt), style: const pw.TextStyle(fontSize: 14)),
                       ],
                     ),
@@ -79,7 +79,7 @@ class PdfService {
                 
                 // Table
                 pw.Table.fromTextArray(
-                  headers: [AppLocalizations.of(buildContext)!.text_9, AppLocalizations.of(buildContext)!.text_10, AppLocalizations.of(buildContext)!.text_11, AppLocalizations.of(buildContext)!.text_12],
+                  headers: [AppLocalizations.of(buildContext)!.text9, AppLocalizations.of(buildContext)!.text10, AppLocalizations.of(buildContext)!.text11, AppLocalizations.of(buildContext)!.text12],
                   data: [
                     [order.productName, '${order.quantity}', '${order.price}', '${order.total}'],
                   ],
@@ -101,7 +101,7 @@ class PdfService {
                         pw.Row(
                           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                           children: [
-                            pw.Text(AppLocalizations.of(buildContext)!.text_13, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                            pw.Text(AppLocalizations.of(buildContext)!.text13, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                             pw.SizedBox(width: 20),
                             pw.Text('${order.total} $currency'),
                           ],
@@ -131,7 +131,7 @@ class PdfService {
                           pw.Row(
                             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                             children: [
-                              pw.Text(AppLocalizations.of(buildContext)!.text_14, style: const pw.TextStyle(color: PdfColors.green700)),
+                              pw.Text(AppLocalizations.of(buildContext)!.text14, style: const pw.TextStyle(color: PdfColors.green700)),
                               pw.SizedBox(width: 20),
                               pw.Text('${order.paidAmount} $currency', style: const pw.TextStyle(color: PdfColors.green700)),
                             ],
@@ -140,7 +140,7 @@ class PdfService {
                           pw.Row(
                             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                             children: [
-                              pw.Text(AppLocalizations.of(buildContext)!.text_15, style: pw.TextStyle(color: PdfColors.red700, fontWeight: pw.FontWeight.bold)),
+                              pw.Text(AppLocalizations.of(buildContext)!.text15, style: pw.TextStyle(color: PdfColors.red700, fontWeight: pw.FontWeight.bold)),
                               pw.SizedBox(width: 20),
                               pw.Text('${order.total - order.paidAmount} $currency', style: pw.TextStyle(color: PdfColors.red700, fontWeight: pw.FontWeight.bold)),
                             ],
@@ -155,7 +155,7 @@ class PdfService {
                 pw.Divider(),
                 pw.SizedBox(height: 10),
                 pw.Center(
-                  child: pw.Text(AppLocalizations.of(buildContext)!.text_16, style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                  child: pw.Text(AppLocalizations.of(buildContext)!.text16, style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
                 ),
               ],
             ),
@@ -195,7 +195,7 @@ class PdfService {
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 pw.Center(
-                  child: pw.Text(AppLocalizations.of(buildContext)!.text_17, style: pw.TextStyle(fontSize: 28, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                  child: pw.Text(AppLocalizations.of(buildContext)!.text17, style: pw.TextStyle(fontSize: 28, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
                 ),
                 pw.SizedBox(height: 20),
                 
@@ -230,19 +230,19 @@ class PdfService {
                 ),
                 
                 pw.SizedBox(height: 20),
-                pw.Text(AppLocalizations.of(buildContext)!.text_18, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                pw.Text(AppLocalizations.of(buildContext)!.text18, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
                 pw.SizedBox(height: 10),
                 
                 // Orders Table
                 pw.Table.fromTextArray(
-                  headers: [AppLocalizations.of(buildContext)!.text_19, AppLocalizations.of(buildContext)!.text_9, AppLocalizations.of(buildContext)!.text_12, AppLocalizations.of(buildContext)!.text_20, AppLocalizations.of(buildContext)!.text_21, AppLocalizations.of(buildContext)!.text_22],
+                  headers: [AppLocalizations.of(buildContext)!.text19, AppLocalizations.of(buildContext)!.text9, AppLocalizations.of(buildContext)!.text12, AppLocalizations.of(buildContext)!.text20, AppLocalizations.of(buildContext)!.text21, AppLocalizations.of(buildContext)!.text22],
                   data: customerOrders.map((o) => [
                     AppDateFormatter.format(o.createdAt),
                     '${o.productName} (x${o.quantity})',
                     '${o.total}',
                     '${o.paidAmount}',
                     '${o.isCredit ? (o.total - o.paidAmount) : 0}',
-                    o.status == 'cancelled' ? AppLocalizations.of(buildContext)!.text_98 : AppLocalizations.of(buildContext)!.text_24,
+                    o.status == 'cancelled' ? AppLocalizations.of(buildContext)!.text98 : AppLocalizations.of(buildContext)!.text24,
                   ]).toList(),
                   headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
                   headerDecoration: const pw.BoxDecoration(color: PdfColors.blue800),

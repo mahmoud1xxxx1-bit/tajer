@@ -208,7 +208,7 @@ class DashboardHome extends ConsumerWidget {
                         ),
                         TextButton(
                           onPressed: () => onNavigateToTab(2), // 2 is Products tab
-                          child: Text(AppLocalizations.of(context)!.text_63, style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                          child: Text(AppLocalizations.of(context)!.text63, style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
                         ),
                       ],
                     ),

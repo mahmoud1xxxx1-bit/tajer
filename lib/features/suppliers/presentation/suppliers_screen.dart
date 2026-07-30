@@ -19,12 +19,12 @@ class SuppliersScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.text_122, style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(AppLocalizations.of(context)!.text122, style: TextStyle(fontFamily: 'Tajawal')),
       ),
       body: suppliersAsync.when(
         data: (suppliers) {
           if (suppliers.isEmpty) {
-            return Center(child: Text(AppLocalizations.of(context)!.text_123, style: TextStyle(fontFamily: 'Tajawal')));
+            return Center(child: Text(AppLocalizations.of(context)!.text123, style: TextStyle(fontFamily: 'Tajawal')));
           }
           
           return ListView.builder(
@@ -69,7 +69,7 @@ class SuppliersScreen extends ConsumerWidget {
                                 const Icon(Icons.phone, size: 14, color: Colors.grey),
                                 const SizedBox(width: 4),
                                 Text(
-                                  supplier.phone ?? AppLocalizations.of(context)!.text_124,
+                                  supplier.phone ?? AppLocalizations.of(context)!.text124,
                                   style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey[700], fontSize: 13),
                                 ),
                               ],
@@ -83,7 +83,7 @@ class SuppliersScreen extends ConsumerWidget {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            AppLocalizations.of(context)!.text_125,
+                            AppLocalizations.of(context)!.text125,
                             style: const TextStyle(fontSize: 11, color: Colors.grey, fontFamily: 'Tajawal'),
                           ),
                           const SizedBox(height: 2),
@@ -135,26 +135,26 @@ class SuppliersScreen extends ConsumerWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(AppLocalizations.of(context)!.text_126, style: TextStyle(fontFamily: 'Tajawal')),
+          title: Text(AppLocalizations.of(context)!.text126, style: TextStyle(fontFamily: 'Tajawal')),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_127),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text127),
                 ),
                 SizedBox(height: 12),
                 TextField(
                   controller: phoneController,
                   keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_128),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text128),
                 ),
                 SizedBox(height: 12),
                 TextField(
                   controller: debtController,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_129),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text129),
                 ),
               ],
             ),
@@ -162,7 +162,7 @@ class SuppliersScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(AppLocalizations.of(context)!.text_43),
+              child: Text(AppLocalizations.of(context)!.text43),
             ),
             ElevatedButton(
               onPressed: () {
@@ -183,7 +183,7 @@ class SuppliersScreen extends ConsumerWidget {
                 ref.read(supplierRepositoryProvider)?.addSupplier(supplier);
                 Navigator.pop(context);
               },
-              child: Text(AppLocalizations.of(context)!.text_44),
+              child: Text(AppLocalizations.of(context)!.text44),
             ),
           ],
         );
@@ -200,26 +200,26 @@ class SuppliersScreen extends ConsumerWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(AppLocalizations.of(context)!.text_130, style: TextStyle(fontFamily: 'Tajawal')),
+          title: Text(AppLocalizations.of(context)!.text130, style: TextStyle(fontFamily: 'Tajawal')),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_127),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text127),
                 ),
                 SizedBox(height: 12),
                 TextField(
                   controller: phoneController,
                   keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_128),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text128),
                 ),
                 SizedBox(height: 12),
                 TextField(
                   controller: debtController,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_131),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text131),
                 ),
               ],
             ),
@@ -230,7 +230,7 @@ class SuppliersScreen extends ConsumerWidget {
                 ref.read(supplierRepositoryProvider)?.deleteSupplier(supplier.id);
                 Navigator.pop(context);
               },
-              child: Text(AppLocalizations.of(context)!.text_59, style: TextStyle(color: Colors.red)),
+              child: Text(AppLocalizations.of(context)!.text59, style: TextStyle(color: Colors.red)),
             ),
             ElevatedButton(
               onPressed: () {
@@ -245,7 +245,7 @@ class SuppliersScreen extends ConsumerWidget {
                 ref.read(supplierRepositoryProvider)?.updateSupplier(updatedSupplier);
                 Navigator.pop(context);
               },
-              child: Text(AppLocalizations.of(context)!.text_46),
+              child: Text(AppLocalizations.of(context)!.text46),
             ),
           ],
         );

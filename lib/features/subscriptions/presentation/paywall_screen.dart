@@ -17,7 +17,7 @@ class PaywallScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.text_112, style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(AppLocalizations.of(context)!.text112, style: TextStyle(fontFamily: 'Tajawal')),
       ),
       body: Center(
         child: Padding(
@@ -28,12 +28,12 @@ class PaywallScreen extends ConsumerWidget {
               Icon(Icons.star, size: 80, color: Colors.amber),
               SizedBox(height: 24),
               Text(
-                AppLocalizations.of(context)!.text_113,
+                AppLocalizations.of(context)!.text113,
                 style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
               ),
               SizedBox(height: 16),
               Text(
-                AppLocalizations.of(context)!.text_114,
+                AppLocalizations.of(context)!.text114,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, fontFamily: 'Tajawal'),
               ),
@@ -41,24 +41,24 @@ class PaywallScreen extends ConsumerWidget {
               
               if (isGuest) ...[
                 Text(
-                  AppLocalizations.of(context)!.text_115,
+                  AppLocalizations.of(context)!.text115,
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.red, fontFamily: 'Tajawal'),
                 ),
                 SizedBox(height: 16),
                 ElevatedButton(
                   onPressed: () => context.push('/upgrade'),
-                  child: Text(AppLocalizations.of(context)!.text_116, style: TextStyle(fontFamily: 'Tajawal')),
+                  child: Text(AppLocalizations.of(context)!.text116, style: TextStyle(fontFamily: 'Tajawal')),
                 ),
               ] else if (kIsWeb) ...[
                 Text(
-                  AppLocalizations.of(context)!.text_117,
+                  AppLocalizations.of(context)!.text117,
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.blue, fontFamily: 'Tajawal', fontSize: 16),
                 ),
                 SizedBox(height: 16),
                 Text(
-                  AppLocalizations.of(context)!.text_118,
+                  AppLocalizations.of(context)!.text118,
                   textAlign: TextAlign.center,
                   style: TextStyle(fontFamily: 'Tajawal'),
                 ),
@@ -67,7 +67,7 @@ class PaywallScreen extends ConsumerWidget {
                   data: (packages) {
                     if (packages.isEmpty) {
                       return Text(
-                        AppLocalizations.of(context)!.text_119,
+                        AppLocalizations.of(context)!.text119,
                         style: TextStyle(fontFamily: 'Tajawal'),
                       );
                     }
@@ -102,7 +102,7 @@ class PaywallScreen extends ConsumerWidget {
                                   foregroundColor: Colors.black,
                                   padding: EdgeInsets.symmetric(horizontal: 48, vertical: 16),
                                 ),
-                                child: Text(AppLocalizations.of(context)!.text_120, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
+                                child: Text(AppLocalizations.of(context)!.text120, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
                               ),
                             ],
                           ),
@@ -120,7 +120,7 @@ class PaywallScreen extends ConsumerWidget {
                                 if (restored) context.pop();
                               }
                             },
-                            child: Text(AppLocalizations.of(context)!.text_121, style: TextStyle(fontFamily: 'Tajawal')),
+                            child: Text(AppLocalizations.of(context)!.text121, style: TextStyle(fontFamily: 'Tajawal')),
                           ),
                         ),
                       ),

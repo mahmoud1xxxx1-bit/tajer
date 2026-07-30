@@ -14,12 +14,12 @@ class InventoryLogsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.text_73, style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(AppLocalizations.of(context)!.text73, style: TextStyle(fontFamily: 'Tajawal')),
       ),
       body: logsAsync.when(
         data: (logs) {
           if (logs.isEmpty) {
-            return Center(child: Text(AppLocalizations.of(context)!.text_74, style: TextStyle(fontFamily: 'Tajawal')));
+            return Center(child: Text(AppLocalizations.of(context)!.text74, style: TextStyle(fontFamily: 'Tajawal')));
           }
           
           return ListView.builder(

@@ -19,12 +19,12 @@ class ExpensesScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.text_64, style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(AppLocalizations.of(context)!.text64, style: TextStyle(fontFamily: 'Tajawal')),
       ),
       body: expensesAsync.when(
         data: (expenses) {
           if (expenses.isEmpty) {
-            return Center(child: Text(AppLocalizations.of(context)!.text_65, style: TextStyle(fontFamily: 'Tajawal')));
+            return Center(child: Text(AppLocalizations.of(context)!.text65, style: TextStyle(fontFamily: 'Tajawal')));
           }
           
           final totalExpenses = expenses.fold<double>(0, (sum, expense) => sum + expense.amount);
@@ -39,7 +39,7 @@ class ExpensesScreen extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        AppLocalizations.of(context)!.text_66,
+                        AppLocalizations.of(context)!.text66,
                         style: TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
                       ),
                       Text(
@@ -201,25 +201,25 @@ class ExpensesScreen extends ConsumerWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(AppLocalizations.of(context)!.text_67, style: TextStyle(fontFamily: 'Tajawal')),
+          title: Text(AppLocalizations.of(context)!.text67, style: TextStyle(fontFamily: 'Tajawal')),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: titleController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_68),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text68),
                 ),
                 SizedBox(height: 12),
                 TextField(
                   controller: amountController,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_69),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text69),
                 ),
                 SizedBox(height: 12),
                 TextField(
                   controller: categoryController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_70),
+                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text70),
                 ),
               ],
             ),
@@ -227,7 +227,7 @@ class ExpensesScreen extends ConsumerWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(AppLocalizations.of(context)!.text_43),
+              child: Text(AppLocalizations.of(context)!.text43),
             ),
             ElevatedButton(
               onPressed: () {
@@ -237,13 +237,13 @@ class ExpensesScreen extends ConsumerWidget {
                 final amount = double.tryParse(amountController.text) ?? 0.0;
                 if (titleController.text.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(AppLocalizations.of(context)!.text_71)),
+                    SnackBar(content: Text(AppLocalizations.of(context)!.text71)),
                   );
                   return;
                 }
                 if (amount <= 0) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(AppLocalizations.of(context)!.text_72)),
+                    SnackBar(content: Text(AppLocalizations.of(context)!.text72)),
                   );
                   return;
                 }
@@ -264,7 +264,7 @@ class ExpensesScreen extends ConsumerWidget {
                 ref.read(expenseRepositoryProvider)?.addExpense(expense);
                 Navigator.pop(context);
               },
-              child: Text(AppLocalizations.of(context)!.text_44),
+              child: Text(AppLocalizations.of(context)!.text44),
             ),
           ],
         );

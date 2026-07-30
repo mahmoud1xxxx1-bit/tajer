@@ -43,7 +43,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
     
     try {
       final user = ref.read(authRepositoryProvider).currentUser;
-      if (user == null) throw Exception(AppLocalizations.of(context)!.text_47);
+      if (user == null) throw Exception(AppLocalizations.of(context)!.text47);
 
       final customerRepo = ref.read(customerRepositoryProvider);
 
@@ -88,7 +88,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              isEditing ? AppLocalizations.of(context)!.text_48 : AppLocalizations.of(context)!.text_49,
+              isEditing ? AppLocalizations.of(context)!.text48 : AppLocalizations.of(context)!.text49,
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
               textAlign: TextAlign.center,
             ),
@@ -96,20 +96,20 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.text_50,
+                labelText: AppLocalizations.of(context)!.text50,
                 border: OutlineInputBorder(),
               ),
-              validator: (value) => value!.isEmpty ? AppLocalizations.of(context)!.text_51 : null,
+              validator: (value) => value!.isEmpty ? AppLocalizations.of(context)!.text51 : null,
             ),
             SizedBox(height: 16),
             TextFormField(
               controller: _phoneController,
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.text_52,
+                labelText: AppLocalizations.of(context)!.text52,
                 border: OutlineInputBorder(),
               ),
-              validator: (value) => value!.isEmpty ? AppLocalizations.of(context)!.text_51 : null,
+              validator: (value) => value!.isEmpty ? AppLocalizations.of(context)!.text51 : null,
             ),
             SizedBox(height: 24),
             ElevatedButton(
@@ -119,7 +119,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
               ),
               child: _isLoading
                   ? const CircularProgressIndicator()
-                  : Text(isEditing ? AppLocalizations.of(context)!.text_53 : AppLocalizations.of(context)!.text_54, style: TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
+                  : Text(isEditing ? AppLocalizations.of(context)!.text53 : AppLocalizations.of(context)!.text54, style: TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
             ),
             SizedBox(height: 16),
           ],

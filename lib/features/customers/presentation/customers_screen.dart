@@ -20,14 +20,14 @@ class CustomersScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.text_55, style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(AppLocalizations.of(context)!.text55, style: TextStyle(fontFamily: 'Tajawal')),
       ),
       body: customersAsyncValue.when(
         data: (customers) {
           if (customers.isEmpty) {
             return Center(
               child: Text(
-                AppLocalizations.of(context)!.text_56,
+                AppLocalizations.of(context)!.text56,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontFamily: 'Tajawal', fontSize: 16),
               ),
@@ -169,19 +169,19 @@ class CustomersScreen extends ConsumerWidget {
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
-                                    title: Text(AppLocalizations.of(context)!.text_57, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                                    content: Text(AppLocalizations.of(context)!.text_58, style: const TextStyle(fontFamily: 'Tajawal')),
+                                    title: Text(AppLocalizations.of(context)!.text57, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                    content: Text(AppLocalizations.of(context)!.text58, style: const TextStyle(fontFamily: 'Tajawal')),
                                     actions: [
                                       TextButton(
                                         onPressed: () => Navigator.pop(context),
-                                        child: Text(AppLocalizations.of(context)!.text_43, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                                        child: Text(AppLocalizations.of(context)!.text43, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
                                       ),
                                       TextButton(
                                         onPressed: () {
                                           ref.read(customerRepositoryProvider).deleteCustomer(customer.id);
                                           Navigator.pop(context);
                                         },
-                                        child: Text(AppLocalizations.of(context)!.text_59, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                        child: Text(AppLocalizations.of(context)!.text59, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                                       ),
                                     ],
                                   ),
@@ -206,7 +206,7 @@ class CustomersScreen extends ConsumerWidget {
                                   children: [
                                     const Icon(Icons.edit, size: 20, color: Colors.blue),
                                     const SizedBox(width: 8),
-                                    Text(AppLocalizations.of(context)!.text_60, style: const TextStyle(fontFamily: 'Tajawal')),
+                                    Text(AppLocalizations.of(context)!.text60, style: const TextStyle(fontFamily: 'Tajawal')),
                                   ],
                                 ),
                               ),
@@ -216,7 +216,7 @@ class CustomersScreen extends ConsumerWidget {
                                   children: [
                                     const Icon(Icons.print_outlined, size: 20, color: Colors.indigo),
                                     const SizedBox(width: 8),
-                                    Text(AppLocalizations.of(context)!.text_61, style: const TextStyle(fontFamily: 'Tajawal')),
+                                    Text(AppLocalizations.of(context)!.text61, style: const TextStyle(fontFamily: 'Tajawal')),
                                   ],
                                 ),
                               ),
@@ -226,7 +226,7 @@ class CustomersScreen extends ConsumerWidget {
                                   children: [
                                     const Icon(Icons.delete, color: Colors.red, size: 20),
                                     const SizedBox(width: 8),
-                                    Text(AppLocalizations.of(context)!.text_59, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                                    Text(AppLocalizations.of(context)!.text59, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
                                   ],
                                 ),
                               ),
@@ -264,7 +264,7 @@ class CustomersScreen extends ConsumerWidget {
             );
           }
         },
-        label: Text(AppLocalizations.of(context)!.text_62, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        label: Text(AppLocalizations.of(context)!.text62, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         icon: Icon(Icons.person_add),
       ),
     );

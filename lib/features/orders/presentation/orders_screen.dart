@@ -36,7 +36,7 @@ class OrdersScreen extends ConsumerWidget {
           if (orders.isEmpty) {
             return Center(
               child: Text(
-                AppLocalizations.of(context)!.text_86,
+                AppLocalizations.of(context)!.text86,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontFamily: 'Tajawal', fontSize: 16),
               ),
@@ -55,7 +55,7 @@ class OrdersScreen extends ConsumerWidget {
                     context: context,
                     builder: (context) => AlertDialog(
                       title: Text(l10n.delete, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                      content: Text(AppLocalizations.of(context)!.text_87, style: const TextStyle(fontFamily: 'Tajawal')),
+                      content: Text(AppLocalizations.of(context)!.text87, style: const TextStyle(fontFamily: 'Tajawal')),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
@@ -223,7 +223,7 @@ class OrdersScreen extends ConsumerWidget {
                                       context: context,
                                       builder: (context) => AlertDialog(
                                         title: Text(l10n.delete, style: const TextStyle(fontFamily: 'Tajawal')),
-                                        content: Text(AppLocalizations.of(context)!.text_87, style: const TextStyle(fontFamily: 'Tajawal')),
+                                        content: Text(AppLocalizations.of(context)!.text87, style: const TextStyle(fontFamily: 'Tajawal')),
                                         actions: [
                                           TextButton(
                                             onPressed: () => Navigator.pop(context),
@@ -538,7 +538,7 @@ class OrdersScreen extends ConsumerWidget {
             );
           }
         },
-        label: Text(AppLocalizations.of(context)!.text_94, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        label: Text(AppLocalizations.of(context)!.text94, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         icon: Icon(Icons.add_shopping_cart),
       ) : null,
     );
@@ -558,13 +558,13 @@ class OrdersScreen extends ConsumerWidget {
 
   String _getStatusLabel(BuildContext context, String status) {
     switch (status) {
-      case 'processing': return AppLocalizations.of(context)!.text_95;
-      case 'shipped': return AppLocalizations.of(context)!.text_96;
-      case 'delivered': return AppLocalizations.of(context)!.text_97;
-      case 'cancelled': return AppLocalizations.of(context)!.text_98;
+      case 'processing': return AppLocalizations.of(context)!.text95;
+      case 'shipped': return AppLocalizations.of(context)!.text96;
+      case 'delivered': return AppLocalizations.of(context)!.text97;
+      case 'cancelled': return AppLocalizations.of(context)!.text98;
       case 'pending':
       default:
-        return AppLocalizations.of(context)!.text_99;
+        return AppLocalizations.of(context)!.text99;
     }
   }
 }

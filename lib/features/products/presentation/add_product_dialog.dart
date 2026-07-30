@@ -68,7 +68,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     
     try {
       final user = ref.read(authRepositoryProvider).currentUser;
-      if (user == null) throw Exception(AppLocalizations.of(context)!.text_47);
+      if (user == null) throw Exception(AppLocalizations.of(context)!.text47);
       final appUser = ref.read(appUserProvider).value;
 
       final productRepo = ref.read(productRepositoryProvider);
@@ -98,7 +98,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             productName: newProduct.name,
             previousQuantity: previousQuantity,
             newQuantity: newQuantity,
-            reason: AppLocalizations.of(context)!.text_100,
+            reason: AppLocalizations.of(context)!.text100,
             userEmail: appUser?.name ?? user.email,
           );
         }
@@ -110,7 +110,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             productName: newProduct.name,
             previousQuantity: 0,
             newQuantity: newQuantity,
-            reason: AppLocalizations.of(context)!.text_101,
+            reason: AppLocalizations.of(context)!.text101,
             userEmail: appUser?.name ?? user.email,
           );
         }

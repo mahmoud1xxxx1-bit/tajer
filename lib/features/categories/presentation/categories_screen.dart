@@ -18,12 +18,12 @@ class CategoriesScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.text_39, style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(AppLocalizations.of(context)!.text39, style: TextStyle(fontFamily: 'Tajawal')),
       ),
       body: categoriesAsync.when(
         data: (categories) {
           if (categories.isEmpty) {
-            return Center(child: Text(AppLocalizations.of(context)!.text_40, style: TextStyle(fontFamily: 'Tajawal')));
+            return Center(child: Text(AppLocalizations.of(context)!.text40, style: TextStyle(fontFamily: 'Tajawal')));
           }
           
           return ListView.builder(
@@ -130,15 +130,15 @@ class CategoriesScreen extends ConsumerWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(AppLocalizations.of(context)!.text_41, style: TextStyle(fontFamily: 'Tajawal')),
+          title: Text(AppLocalizations.of(context)!.text41, style: TextStyle(fontFamily: 'Tajawal')),
           content: TextField(
             controller: nameController,
-            decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_42),
+            decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text42),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(AppLocalizations.of(context)!.text_43),
+              child: Text(AppLocalizations.of(context)!.text43),
             ),
             ElevatedButton(
               onPressed: () {
@@ -155,7 +155,7 @@ class CategoriesScreen extends ConsumerWidget {
                 ref.read(categoryRepositoryProvider)?.addCategory(category);
                 Navigator.pop(context);
               },
-              child: Text(AppLocalizations.of(context)!.text_44),
+              child: Text(AppLocalizations.of(context)!.text44),
             ),
           ],
         );
@@ -170,15 +170,15 @@ class CategoriesScreen extends ConsumerWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(AppLocalizations.of(context)!.text_45, style: TextStyle(fontFamily: 'Tajawal')),
+          title: Text(AppLocalizations.of(context)!.text45, style: TextStyle(fontFamily: 'Tajawal')),
           content: TextField(
             controller: nameController,
-            decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text_42),
+            decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text42),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(AppLocalizations.of(context)!.text_43),
+              child: Text(AppLocalizations.of(context)!.text43),
             ),
             ElevatedButton(
               onPressed: () {
@@ -188,7 +188,7 @@ class CategoriesScreen extends ConsumerWidget {
                 ref.read(categoryRepositoryProvider)?.updateCategory(updatedCategory);
                 Navigator.pop(context);
               },
-              child: Text(AppLocalizations.of(context)!.text_46),
+              child: Text(AppLocalizations.of(context)!.text46),
             ),
           ],
         );

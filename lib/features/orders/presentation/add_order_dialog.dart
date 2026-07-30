@@ -71,7 +71,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.text_79, style: TextStyle(fontFamily: 'Tajawal'))),
+        SnackBar(content: Text(AppLocalizations.of(context)!.text79, style: TextStyle(fontFamily: 'Tajawal'))),
       );
     }
   }
@@ -85,7 +85,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
 
     try {
       final user = ref.read(authRepositoryProvider).currentUser;
-      if (user == null) throw Exception(AppLocalizations.of(context)!.text_47);
+      if (user == null) throw Exception(AppLocalizations.of(context)!.text47);
 
       final orderRepo = ref.read(orderRepositoryProvider);
       final logRepo = ref.read(inventoryLogRepositoryProvider);
@@ -118,7 +118,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
         } else {
           // Attempt to create new customer
           final appUser = ref.read(appUserProvider).value;
-          if (appUser == null) throw Exception(AppLocalizations.of(context)!.text_47);
+          if (appUser == null) throw Exception(AppLocalizations.of(context)!.text47);
           final canAdd = await ref.read(limitsServiceProvider).canAddCustomer(appUser);
           if (!canAdd) {
             throw Exception('عفواً، لقد وصلت للحد الأقصى المسموح به للعملاء في باقتك الحالية. لا يمكن إضافة عميل جديد، ولكن يمكنك الاستمرار كـ "عميل عام" بمسح الاسم والرقم.');
@@ -141,7 +141,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       final total = selectedProduct.price * quantity;
 
       if (selectedProduct.quantity < quantity) {
-        throw Exception(AppLocalizations.of(context)!.text_80);
+        throw Exception(AppLocalizations.of(context)!.text80);
       }
 
       double paidAmount = total;
@@ -152,7 +152,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
           paidAmount = 0.0;
         }
         if (paidAmount > total) {
-          throw Exception(AppLocalizations.of(context)!.text_81);
+          throw Exception(AppLocalizations.of(context)!.text81);
         }
       }
 
@@ -184,7 +184,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
         productName: selectedProduct.name,
         previousQuantity: selectedProduct.quantity,
         newQuantity: selectedProduct.quantity - quantity,
-        reason: AppLocalizations.of(context)!.text_82,
+        reason: AppLocalizations.of(context)!.text82,
         userEmail: user.email,
       );
 
@@ -228,7 +228,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
             TextFormField(
               controller: _customerNameController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.text_60.replaceAll('تعديل', 'اسم'), // Fallback to "اسم العميل" basically
+                labelText: AppLocalizations.of(context)!.text60.replaceAll('تعديل', 'اسم'), // Fallback to "اسم العميل" basically
                 hintText: 'عميل عام (بدون تحديد)',
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.person),
@@ -309,8 +309,8 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
             // Credit / Debt Section
             if (canSellOnCredit)
             SwitchListTile(
-              title: Text(AppLocalizations.of(context)!.text_83, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-              subtitle: Text(AppLocalizations.of(context)!.text_84, style: TextStyle(fontFamily: 'Tajawal')),
+              title: Text(AppLocalizations.of(context)!.text83, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              subtitle: Text(AppLocalizations.of(context)!.text84, style: TextStyle(fontFamily: 'Tajawal')),
               value: _isCredit,
               onChanged: (val) {
                 setState(() {
@@ -328,7 +328,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
                 controller: _paidAmountController,
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.text_85,
+                  labelText: AppLocalizations.of(context)!.text85,
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.payments_outlined),
                 ),

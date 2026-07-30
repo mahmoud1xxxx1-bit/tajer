@@ -70,7 +70,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.text_104, style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(AppLocalizations.of(context)!.text104, style: TextStyle(fontFamily: 'Tajawal')),
         actions: [
           IconButton(
             icon: Icon(Icons.table_view, color: Colors.green),
@@ -141,7 +141,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               children: [
                 Expanded(
                   child: _SummaryCard(
-                    title: AppLocalizations.of(context)!.text_105,
+                    title: AppLocalizations.of(context)!.text105,
                     value: '${reportsService.totalRevenue} ${currentCurrency.code}',
                     icon: Icons.account_balance_wallet,
                     color: Colors.green,
@@ -151,7 +151,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   SizedBox(width: 12),
                   Expanded(
                     child: _SummaryCard(
-                      title: AppLocalizations.of(context)!.text_106,
+                      title: AppLocalizations.of(context)!.text106,
                       value: '${reportsService.netProfit} ${currentCurrency.code}',
                       icon: Icons.savings,
                       color: Colors.blue,
@@ -165,7 +165,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               children: [
                 Expanded(
                   child: _SummaryCard(
-                    title: AppLocalizations.of(context)!.text_66,
+                    title: AppLocalizations.of(context)!.text66,
                     value: '${reportsService.totalExpenses} ${currentCurrency.code}',
                     icon: Icons.money_off,
                     color: Colors.orange,
@@ -174,7 +174,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 SizedBox(width: 12),
                 Expanded(
                   child: _SummaryCard(
-                    title: AppLocalizations.of(context)!.text_107,
+                    title: AppLocalizations.of(context)!.text107,
                     value: '${reportsService.totalDebt} ${currentCurrency.code}',
                     icon: Icons.warning_amber_rounded,
                     color: Colors.red,
@@ -186,7 +186,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             
             // Sales Chart
             Text(
-              AppLocalizations.of(context)!.text_108,
+              AppLocalizations.of(context)!.text108,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
             ),
             SizedBox(height: 16),
@@ -195,7 +195,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               child: SizedBox(
                 height: 250,
                 child: dailySales.isEmpty 
-                  ? Center(child: Text(AppLocalizations.of(context)!.text_109, style: TextStyle(fontFamily: 'Tajawal')))
+                  ? Center(child: Text(AppLocalizations.of(context)!.text109, style: TextStyle(fontFamily: 'Tajawal')))
                   : LineChart(
                       LineChartData(
                         gridData: const FlGridData(show: false),
@@ -257,12 +257,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
             // Best Sellers
             Text(
-              AppLocalizations.of(context)!.text_110,
+              AppLocalizations.of(context)!.text110,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
             ),
             SizedBox(height: 16),
             if (bestSellers.isEmpty)
-              Center(child: Text(AppLocalizations.of(context)!.text_109, style: TextStyle(fontFamily: 'Tajawal')))
+              Center(child: Text(AppLocalizations.of(context)!.text109, style: TextStyle(fontFamily: 'Tajawal')))
             else
               ListView.builder(
                 shrinkWrap: true,

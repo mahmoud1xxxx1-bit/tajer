@@ -82,9 +82,9 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
     setState(() => _isLoading = true);
     try {
       final appUser = ref.read(appUserProvider).value;
-      if (appUser == null) throw Exception(AppLocalizations.of(context)!.text_29);
+      if (appUser == null) throw Exception(AppLocalizations.of(context)!.text29);
       final user = FirebaseAuth.instance.currentUser;
-      if (user == null) throw Exception(AppLocalizations.of(context)!.text_29);
+      if (user == null) throw Exception(AppLocalizations.of(context)!.text29);
 
       final authRepo = ref.read(authRepositoryProvider);
       await authRepo.signInOrLinkWithGoogle();
@@ -95,7 +95,7 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
       });
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.text_31)),
+          SnackBar(content: Text(AppLocalizations.of(context)!.text31)),
         );
       }
     } catch (e) {
@@ -114,7 +114,7 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
              });
              if (mounted) {
                ScaffoldMessenger.of(context).showSnackBar(
-                 SnackBar(content: Text(AppLocalizations.of(context)!.text_31)),
+                 SnackBar(content: Text(AppLocalizations.of(context)!.text31)),
                );
              }
            } catch (mergeError) {
@@ -143,7 +143,7 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
     final phone = _phoneController.text.trim();
     if (phone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.text_32)),
+        SnackBar(content: Text(AppLocalizations.of(context)!.text32)),
       );
       return;
     }
@@ -167,7 +167,7 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.text_33, style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(AppLocalizations.of(context)!.text33, style: TextStyle(fontFamily: 'Tajawal')),
       ),
       body: Padding(
         padding: EdgeInsets.all(24.0),
@@ -175,7 +175,7 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              AppLocalizations.of(context)!.text_34,
+              AppLocalizations.of(context)!.text34,
               style: TextStyle(fontSize: 16, fontFamily: 'Tajawal'),
               textAlign: TextAlign.center,
             ),
@@ -184,7 +184,7 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
               ElevatedButton.icon(
                 onPressed: _isLoading ? null : _linkGoogleAccount,
                 icon: Icon(Icons.g_mobiledata, size: 32),
-                label: Text(AppLocalizations.of(context)!.text_35, style: TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
+                label: Text(AppLocalizations.of(context)!.text35, style: TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
                 style: ElevatedButton.styleFrom(
                   padding: EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -212,7 +212,7 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
               controller: _phoneController,
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.text_37,
+                labelText: AppLocalizations.of(context)!.text37,
                 border: OutlineInputBorder(),
                 prefixIcon: Icon(Icons.phone),
               ),
@@ -226,7 +226,7 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
               ),
               child: _isLoading 
                 ? const CircularProgressIndicator()
-                : Text(AppLocalizations.of(context)!.text_38, style: TextStyle(fontSize: 18, fontFamily: 'Tajawal')),
+                : Text(AppLocalizations.of(context)!.text38, style: TextStyle(fontSize: 18, fontFamily: 'Tajawal')),
             ),
           ],
         ),

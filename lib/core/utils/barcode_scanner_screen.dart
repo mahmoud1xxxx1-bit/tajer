@@ -22,7 +22,7 @@ class _BarcodeScannerScreenState extends State<BarcodeScannerScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.text_25, style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(AppLocalizations.of(context)!.text25, style: TextStyle(fontFamily: 'Tajawal')),
       ),
       body: MobileScanner(
         controller: cameraController,

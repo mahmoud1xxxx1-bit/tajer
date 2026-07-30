@@ -30,7 +30,7 @@ class ProductsScreen extends ConsumerWidget {
           if (products.isEmpty) {
             return Center(
               child: Text(
-                AppLocalizations.of(context)!.text_102,
+                AppLocalizations.of(context)!.text102,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontFamily: 'Tajawal', fontSize: 16),
               ),
@@ -166,7 +166,7 @@ class ProductsScreen extends ConsumerWidget {
                                   context: context,
                                   builder: (context) => AlertDialog(
                                     title: Text(l10n.delete, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                                    content: Text(AppLocalizations.of(context)!.text_103, style: const TextStyle(fontFamily: 'Tajawal')),
+                                    content: Text(AppLocalizations.of(context)!.text103, style: const TextStyle(fontFamily: 'Tajawal')),
                                     actions: [
                                       TextButton(
                                         onPressed: () => Navigator.pop(context),
