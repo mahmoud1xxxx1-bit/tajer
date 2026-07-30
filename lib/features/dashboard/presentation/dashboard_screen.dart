@@ -120,33 +120,7 @@ class DashboardHome extends ConsumerWidget {
     final currentCurrency = ref.watch(currencyProvider);
     final appUser = ref.watch(appUserProvider).value;
 
-    return PopScope(
-      canPop: false,
-      onPopInvoked: (didPop) async {
-        if (didPop) return;
-        final shouldPop = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('????? ??????', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.indigo.shade900)),
-            content: Text('?? ??? ????? ??? ???? ?????? ?? ????????', style: TextStyle(fontFamily: 'Tajawal')),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
-                child: Text('?????', style: TextStyle(fontFamily: 'Tajawal')),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(true),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade600, foregroundColor: Colors.white),
-                child: Text('????', style: TextStyle(fontFamily: 'Tajawal')),
-              ),
-            ],
-          ),
-        );
-        if (shouldPop ?? false) {
-          SystemNavigator.pop();
-        }
-      },
-      child: Scaffold(
+    return Scaffold(
       appBar: AppBar(
         title: Text(l10n.dashboard, style: TextStyle(fontFamily: 'Tajawal')),
         actions: [
