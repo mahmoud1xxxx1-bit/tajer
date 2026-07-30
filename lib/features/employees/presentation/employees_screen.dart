@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../authentication/data/auth_repository.dart';
 
 class EmployeesScreen extends ConsumerStatefulWidget {
@@ -284,17 +285,20 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
     'can_manage_expenses': false,
   };
 
-  final Map<String, String> permissionLabels = {
-    'can_manage_products': 'إضافة وتعديل المنتجات',
-    'can_view_cost': 'رؤية سعر التكلفة والأرباح',
-    'can_manage_inventory': 'إدارة وجرد المخزون',
-    'can_create_orders': 'إنشاء طلبات وفواتير جديدة',
-    'can_cancel_orders': 'تعديل أو إلغاء الطلبات',
-    'can_sell_on_credit': 'البيع بالآجل / الدين',
-    'can_manage_customers': 'إضافة وتعديل بيانات العملاء',
-    'can_receive_payments': 'تسديد الديون واستلام الدفعات',
-    'can_manage_expenses': 'تسجيل وإدارة المصروفات',
-  };
+  Map<String, String> _getPermissionLabels(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return {
+      'can_manage_products': l10n.perm_can_manage_products,
+      'can_view_cost': l10n.perm_can_view_cost,
+      'can_manage_inventory': l10n.perm_can_manage_inventory,
+      'can_create_orders': l10n.perm_can_create_orders,
+      'can_cancel_orders': l10n.perm_can_cancel_orders,
+      'can_sell_on_credit': l10n.perm_can_sell_on_credit,
+      'can_manage_customers': l10n.perm_can_manage_customers,
+      'can_receive_payments': l10n.perm_can_receive_payments,
+      'can_manage_expenses': l10n.perm_can_manage_expenses,
+    };
+  }
 
   @override
   void initState() {
@@ -362,8 +366,9 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
               const Text("صلاحيات الموظف:", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),
               const SizedBox(height: 8),
               ...permissions.keys.map((key) {
+                final labels = _getPermissionLabels(context);
                 return SwitchListTile(
-                  title: Text(permissionLabels[key]!, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
+                  title: Text(labels[key] ?? key, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
                   value: permissions[key]!,
                   onChanged: (val) {
                     setState(() {

@@ -198,5 +198,16 @@
   "text_128": "رقم الجوال",
   "text_129": "الرصيد الافتتاحي (الديون)",
   "text_130": "تعديل المورد",
-  "text_131": "تحديث الديون"
+  "text_131": "تحديث الديون",
+  "perm_can_manage_products": "إضافة وتعديل المنتجات",
+  "perm_can_view_cost": "رؤية سعر التكلفة والأرباح",
+  "perm_can_manage_inventory": "إدارة وجرد المخزون",
+  "perm_can_create_orders": "إنشاء فواتير وطلبات جديدة",
+  "perm_can_cancel_orders": "تعديل أو إلغاء الطلبات",
+  "perm_can_sell_on_credit": "البيع بالآجل / الدين",
+  "perm_can_manage_customers": "إضافة وتعديل بيانات العملاء",
+  "perm_can_receive_payments": "تسديد الديون واستلام المبالغ",
+  "perm_can_manage_expenses": "تسجيل ومتابعة المصروفات",
+  "employeePermissions": "الموظفين والصلاحيات (Pro)",
+  "permissionSettings": "إعدادات الصلاحيات"
 }

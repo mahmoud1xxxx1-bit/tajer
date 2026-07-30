@@ -198,5 +198,16 @@
   "text_128": "Phone Number",
   "text_129": "Opening Balance (Debts)",
   "text_130": "Edit Supplier",
-  "text_131": "Update Debts"
+  "text_131": "Update Debts",
+  "perm_can_manage_products": "Add and edit products",
+  "perm_can_view_cost": "View cost and profits",
+  "perm_can_manage_inventory": "Manage and track inventory",
+  "perm_can_create_orders": "Create new invoices and orders",
+  "perm_can_cancel_orders": "Edit or cancel orders",
+  "perm_can_sell_on_credit": "Sell on credit",
+  "perm_can_manage_customers": "Add and edit customer data",
+  "perm_can_receive_payments": "Settle debts and receive payments",
+  "perm_can_manage_expenses": "Record and track expenses",
+  "employeePermissions": "Employees & Permissions (Pro)",
+  "permissionSettings": "Permission Settings"
 }
