@@ -48,6 +48,17 @@ jobs:
       - name: Build APK
         run: flutter build apk --release > build_apk.log 2>&1
 
+
+      - name: Push Logs
+        if: always()
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b debug-logs-123
+          git add build_apk.log analyze_log.txt || true
+          git commit -m "chore: push logs" || true
+          git push origin debug-logs-123 --force || true
+
       - name: Build App Bundle
         run: flutter build appbundle --release
 
