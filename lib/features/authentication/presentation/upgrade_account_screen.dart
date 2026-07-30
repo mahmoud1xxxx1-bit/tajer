@@ -58,7 +58,7 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
       if (user == null) throw Exception(AppLocalizations.of(context)!.text_29);
 
       final authRepo = ref.read(authRepositoryProvider);
-      await authRepo.linkWithGoogle();
+      await authRepo.signInOrLinkWithGoogle();
 
       setState(() {
         _isLinked = true;

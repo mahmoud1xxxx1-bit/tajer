@@ -20,9 +20,12 @@ class AuthController extends _$AuthController {
 
   Future<void> linkWithGoogle() async {
     state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    try {
       final repo = ref.read(authRepositoryProvider);
-      await repo.linkWithGoogle();
-    });
+      await repo.signInOrLinkWithGoogle();
+      state = AsyncValue.data(repo.currentUser);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
+    }
   }
 }
