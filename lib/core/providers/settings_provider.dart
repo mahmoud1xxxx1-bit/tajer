@@ -57,7 +57,7 @@ final currencyProvider = NotifierProvider<CurrencyNotifier, AppCurrency>(() {
 class ThemeModeNotifier extends Notifier<ThemeMode> {
   @override
   ThemeMode build() {
-    return ThemeMode.light;
+    return ThemeMode.system;
   }
 
   void setThemeMode(ThemeMode mode) {
