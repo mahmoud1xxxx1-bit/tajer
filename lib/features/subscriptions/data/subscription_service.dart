@@ -76,7 +76,8 @@ class SubscriptionService {
     if (kIsWeb) return false;
     
     try {
-      CustomerInfo customerInfo = await Purchases.purchasePackage(package);
+      final purchaseResult = await Purchases.purchasePackage(package);
+      final customerInfo = purchaseResult.customerInfo;
       final isPremium = customerInfo.entitlements.all['premium']?.isActive ?? false;
       if (isPremium) {
         await _checkPremiumEntitlement(customerInfo);
