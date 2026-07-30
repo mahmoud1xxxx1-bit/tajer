@@ -51,7 +51,7 @@ class LimitsService {
     if (user.plan == 'banned_device' && user.isAnonymous) return false;
 
     // Pro users have unlimited access
-    if (user.plan == 'pro') return true;
+    if (user.plan == 'pro' || user.plan == 'premium') return true;
 
     // Check count for free/guest users
     final String merchantId = user.merchantId ?? user.id;

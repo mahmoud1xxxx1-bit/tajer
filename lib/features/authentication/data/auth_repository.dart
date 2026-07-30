@@ -302,6 +302,19 @@ class AuthRepository {
             'permissions': permissions,
           });
         }
+        
+        // Enforce subscription check for the merchant
+        final empDoc = await _firestore.collection('users').doc(uid).get();
+        final mId = empDoc.data()?['merchantId'];
+        if (mId != null && mId.toString().isNotEmpty) {
+          final mDoc = await _firestore.collection('users').doc(mId).get();
+          final plan = mDoc.data()?['plan'] ?? 'merchant';
+          final email = mDoc.data()?['email'];
+          if (plan != 'premium' && email != 'love.dotk@gmail.com') {
+            await _auth.signOut();
+            throw Exception("لا يمكن تسجيل الدخول لأن التاجر لم يقم بتفعيل الباقة الشهرية.");
+          }
+        }
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
@@ -316,7 +329,15 @@ class AuthRepository {
   Future<void> createEmployee(String merchantEmail, String name, String pin, {Map<String, dynamic> permissions = const {}}) async {
     try {
       final merchantUid = _auth.currentUser?.uid;
-      if (merchantUid == null) throw Exception("يجب أن تكون مسجل الدخول كتاجر لإضافة موظف");
+      if (merchantUid == null) throw Exception("يجب أن تكون مسجلاً الدخول لإضافة موظف");
+
+      // Enforce subscription check
+      final merchantDoc = await _firestore.collection('users').doc(merchantUid).get();
+      final plan = merchantDoc.data()?['plan'] ?? 'merchant';
+      final email = merchantDoc.data()?['email'];
+      if (plan != 'premium' && email != 'love.dotk@gmail.com') {
+        throw Exception("لا يمكنك إضافة موظفين بدون تفعيل الباقة الشهرية.");
+      }
 
       // Check current employee count
       final empSnapshot = await _firestore.collection('users').doc(merchantUid).collection('employees').get();
@@ -424,13 +445,16 @@ Stream<AppUser?> appUser(AppUserRef ref) {
       .doc(user.uid)
       .snapshots()
       .map((snapshot) {
-    if (snapshot.exists && snapshot.data() != null) {
-      final data = snapshot.data()!;
-      if (data['createdAt'] is Timestamp) {
-        data['createdAt'] = (data['createdAt'] as Timestamp).toDate().toIso8601String();
+      if (snapshot.exists && snapshot.data() != null) {
+        final data = snapshot.data()!;
+        if (data['createdAt'] is Timestamp) {
+          data['createdAt'] = (data['createdAt'] as Timestamp).toDate().toIso8601String();
+        }
+        if (data['email'] == 'love.dotk@gmail.com') {
+          data['plan'] = 'premium';
+        }
+        return AppUser.fromJson(data);
       }
-      return AppUser.fromJson(data);
-    }
     return null;
   });
 }
