@@ -354,11 +354,11 @@ class AuthRepository {
               'plan': 'employee',
               'role': 'employee',
               'merchantId': merchantUid,
-              'createdAt': FieldValue.serverTimestamp(),
-              'name': name,
-              'email': hiddenEmail,
-              'deviceId': await _getDeviceId(),
-              'permissions': permissions,
+                'createdAt': FieldValue.serverTimestamp(),
+                'name': name,
+                'email': hiddenEmail,
+                'deviceId': await _getDeviceId(),
+                'permissions': permissions,
             });
         }
       } finally {
