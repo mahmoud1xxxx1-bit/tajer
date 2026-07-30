@@ -172,7 +172,7 @@ class SuppliersScreen extends ConsumerWidget {
                 if (nameController.text.isEmpty) return;
 
                 final supplier = Supplier(
-                  id: const Uuid().v4(),
+                  id: Uuid().v4(),
                   merchantId: user.uid,
                   name: nameController.text,
                   phone: phoneController.text,

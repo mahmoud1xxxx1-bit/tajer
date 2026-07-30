@@ -29,7 +29,7 @@ class AuthRepository {
       final prefs = await SharedPreferences.getInstance();
       String? webId = prefs.getString('web_device_id');
       if (webId == null) {
-        webId = const Uuid().v4();
+        webId = Uuid().v4();
         await prefs.setString('web_device_id', webId);
       }
       return webId;
@@ -41,9 +41,9 @@ class AuthRepository {
       return androidInfo.id; // Unique ID for Android device
     } else if (Platform.isIOS) {
       final iosInfo = await deviceInfo.iosInfo;
-      return iosInfo.identifierForVendor ?? const Uuid().v4(); // Unique ID for iOS device
+      return iosInfo.identifierForVendor ?? Uuid().v4(); // Unique ID for iOS device
     }
-    return const Uuid().v4();
+    return Uuid().v4();
   }
 
   Future<AppUser> signInAnonymously() async {

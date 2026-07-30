@@ -32,7 +32,7 @@ class InventoryLogRepository {
     if (change == 0) return; // No real change
 
     final log = InventoryLog(
-      id: const Uuid().v4(),
+      id: Uuid().v4(),
       merchantId: _merchantId,
       productId: productId,
       productName: productName,

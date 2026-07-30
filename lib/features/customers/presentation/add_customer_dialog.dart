@@ -49,7 +49,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
 
       final isEditing = widget.customerToEdit != null;
       final newCustomer = Customer(
-        id: isEditing ? widget.customerToEdit!.id : const Uuid().v4(),
+        id: isEditing ? widget.customerToEdit!.id : Uuid().v4(),
         merchantId: isEditing ? widget.customerToEdit!.merchantId : user.uid,
         name: _nameController.text.trim(),
         phone: _phoneController.text.trim(),

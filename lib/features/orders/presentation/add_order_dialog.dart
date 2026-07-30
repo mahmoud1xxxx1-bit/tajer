@@ -125,7 +125,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
           }
 
           final newCustomer = Customer(
-            id: const Uuid().v4(),
+            id: Uuid().v4(),
             merchantId: user.uid,
             name: nameInput.isEmpty ? 'عميل غير معروف' : nameInput,
             phone: phoneInput,
@@ -159,7 +159,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       final appUser = ref.read(appUserProvider).value;
       
       final newOrder = AppOrder(
-        id: const Uuid().v4(),
+        id: Uuid().v4(),
         merchantId: user.uid,
         customerId: finalCustomerId,
         customerName: finalCustomerName,

@@ -250,7 +250,7 @@ class ExpensesScreen extends ConsumerWidget {
 
                 final appUser = ref.read(appUserProvider).value;
                 final expense = Expense(
-                  id: const Uuid().v4(),
+                  id: Uuid().v4(),
                   merchantId: user.uid,
                   title: titleController.text.trim(),
                   amount: amount,

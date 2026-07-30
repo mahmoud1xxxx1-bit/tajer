@@ -146,7 +146,7 @@ class CategoriesScreen extends ConsumerWidget {
                 if (user == null || nameController.text.isEmpty) return;
 
                 final category = Category(
-                  id: const Uuid().v4(),
+                  id: Uuid().v4(),
                   merchantId: user.uid,
                   name: nameController.text,
                   createdAt: DateTime.now(),
