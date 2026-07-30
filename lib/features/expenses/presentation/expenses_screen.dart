@@ -8,6 +8,7 @@ import '../../authentication/data/auth_repository.dart';
 import '../data/expense_repository.dart';
 import '../domain/expense.dart';
 import 'package:intl/intl.dart';
+import '../../authentication/domain/app_user.dart';
 
 class ExpensesScreen extends ConsumerWidget {
   const ExpensesScreen({super.key});

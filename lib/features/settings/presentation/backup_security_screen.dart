@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tajer/features/authentication/data/auth_repository.dart';
 import 'package:tajer/core/services/backup_service.dart';
+import '../../authentication/domain/app_user.dart';
 
 class BackupSecurityScreen extends ConsumerStatefulWidget {
   const BackupSecurityScreen({super.key});

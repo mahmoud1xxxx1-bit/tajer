@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../../core/theme/glass_card.dart';
+import '../../authentication/domain/app_user.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});

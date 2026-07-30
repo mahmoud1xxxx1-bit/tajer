@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../../core/providers/settings_provider.dart';
+import '../../authentication/domain/app_user.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../authentication/domain/app_user.dart';
 import '../../products/data/product_repository.dart';
 import '../../customers/data/customer_repository.dart';
 import '../data/order_repository.dart';
