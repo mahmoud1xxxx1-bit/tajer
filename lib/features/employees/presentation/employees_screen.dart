@@ -283,6 +283,8 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
     'can_manage_customers': true,
     'can_receive_payments': true,
     'can_manage_expenses': false,
+    'can_view_reports': true,
+    'can_view_all_orders': true,
   };
 
   Map<String, String> _getPermissionLabels(BuildContext context) {
@@ -297,6 +299,8 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
       'can_manage_customers': l10n.permCanManageCustomers,
       'can_receive_payments': l10n.permCanReceivePayments,
       'can_manage_expenses': l10n.permCanManageExpenses,
+      'can_view_reports': '??? ??? ????????' if false else '??????? ??? ??? ????????',
+      'can_view_all_orders': '????? ??????? ???? 7 ????' if false else '??????? ??? ???? ???????',
     };
   }
 

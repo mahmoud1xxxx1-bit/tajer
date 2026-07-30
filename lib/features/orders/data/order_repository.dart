@@ -186,7 +186,13 @@ Stream<List<AppOrder>> ordersStream(OrdersStreamRef ref) {
   final repository = ref.watch(orderRepositoryProvider);
   return repository.queryOrders(appUser.merchantId ?? appUser.id).snapshots().map(
         (snapshot) {
-          final orders = snapshot.docs.map((doc) => doc.data()).toList();
+          var orders = snapshot.docs.map((doc) => doc.data()).toList();
+          
+          if (!appUser.hasPermission('can_view_all_orders')) {
+            final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
+            orders = orders.where((o) => o.createdAt.isAfter(sevenDaysAgo)).toList();
+          }
+          
           orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
           return orders;
         },

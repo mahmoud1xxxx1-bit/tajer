@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tajer/l10n/app_localizations.dart';
@@ -33,489 +34,222 @@ class OrdersScreen extends ConsumerWidget {
       ),
       body: ordersAsyncValue.when(
         data: (orders) {
-          if (orders.isEmpty) {
-            return Center(
-              child: Text(
-                AppLocalizations.of(context)!.text86,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontFamily: 'Tajawal', fontSize: 16),
-              ),
-            );
-          }
-          return ListView.builder(
-            itemCount: orders.length,
-            padding: EdgeInsets.all(16),
-            itemBuilder: (context, index) {
-              final order = orders[index];
-              return GlassCard(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(0),
-                onLongPress: () {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: Text(l10n.delete, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                      content: Text(AppLocalizations.of(context)!.text87, style: const TextStyle(fontFamily: 'Tajawal')),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: Text(l10n.cancel, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            ref.read(orderRepositoryProvider).deleteOrder(order);
-                            Navigator.pop(context);
-                          },
-                          child: Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(Icons.shopping_bag_outlined, color: Theme.of(context).colorScheme.primary, size: 24),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                      'طلب #${order.id.substring(0, 5).toUpperCase()}',
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16),
-                                    ),
-                                    Text(
-                                      '${order.total} $currency',
-                                      style: TextStyle(
-                                        color: Theme.of(context).colorScheme.secondary,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    Icon(Icons.person_outline, size: 16, color: Colors.grey[600]),
-                                    const SizedBox(width: 6),
-                                    Expanded(child: Text(order.customerName, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14))),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                Row(
-                                  children: [
-                                    Icon(Icons.inventory_2_outlined, size: 16, color: Colors.grey[600]),
-                                    const SizedBox(width: 6),
-                                    Expanded(child: Text('${order.productName} (x${order.quantity})', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14))),
-                                  ],
-                                ),
-                                if (order.isCredit) ...[
-                                  const SizedBox(height: 8),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red.withOpacity(0.05),
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(color: Colors.red.withOpacity(0.2)),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        const Icon(Icons.money_off, size: 16, color: Colors.red),
-                                        const SizedBox(width: 6),
-                                        Expanded(
-                                          child: Text(
-                                            'بيع آجل (دُفع: ${order.paidAmount} | الباقي: ${order.total - order.paidAmount})',
-                                            style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontSize: 12, fontWeight: FontWeight.bold),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      const Divider(height: 1, thickness: 1),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Wrap(
-                              spacing: 12,
-                              runSpacing: 8,
-                              children: [
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.calendar_today_outlined, size: 14, color: Colors.teal),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      AppDateFormatter.format(order.createdAt),
-                                      style: const TextStyle(fontFamily: 'Tajawal', color: Colors.teal, fontWeight: FontWeight.bold, fontSize: 12),
-                                    ),
-                                  ],
-                                ),
-                                if (order.creatorName != null)
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.person_pin, size: 14, color: Colors.purple.withOpacity(0.7)),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        order.creatorName!,
-                                        style: TextStyle(fontFamily: 'Tajawal', color: Colors.purple.withOpacity(0.8), fontSize: 12, fontWeight: FontWeight.bold),
-                                      ),
-                                    ],
-                                  ),
-                              ],
-                            ),
-                          ),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: _getStatusColor(order.status).withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: _getStatusColor(order.status).withOpacity(0.5)),
-                                ),
-                                child: Text(
-                                  _getStatusLabel(context, order.status),
-                                  style: TextStyle(
-                                    color: _getStatusColor(order.status),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    fontFamily: 'Tajawal',
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 4),
-                              PopupMenuButton<String>(
-                                icon: const Icon(Icons.more_vert, color: Colors.grey),
-                                padding: EdgeInsets.zero,
-                                onSelected: (value) async {
-                                  final repo = ref.read(orderRepositoryProvider);
-                                  if (value == 'delete') {
-                                    if (!canCancelOrders) return;
-                                    showDialog(
-                                      context: context,
-                                      builder: (context) => AlertDialog(
-                                        title: Text(l10n.delete, style: const TextStyle(fontFamily: 'Tajawal')),
-                                        content: Text(AppLocalizations.of(context)!.text87, style: const TextStyle(fontFamily: 'Tajawal')),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Navigator.pop(context),
-                                            child: Text(l10n.cancel, style: const TextStyle(fontFamily: 'Tajawal')),
-                                          ),
-                                          TextButton(
-                                            onPressed: () {
-                                              repo.deleteOrder(order);
-                                              Navigator.pop(context);
-                                            },
-                                            child: Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  } else if (value.startsWith('status_')) {
-                                    if (!canCancelOrders) return;
-                                    final newStatus = value.replaceFirst('status_', '');
-                                    try {
-                                      await repo.updateOrderStatus(order, newStatus);
-                                    } catch (e) {
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
-                                        );
-                                      }
-                                    }
-                                  } else if (value == 'print') {
-                                    showDialog(
-                                      context: context,
-                                      builder: (dialogContext) {
-                                        final taxController = TextEditingController();
-                                        bool applyTax = false;
-                                        return StatefulBuilder(
-                                          builder: (context, setState) {
-                                            return AlertDialog(
-                                              title: const Text('خيارات الطباعة', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                                              content: Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  SwitchListTile(
-                                                    title: const Text('إضافة ضريبة للفاتورة', style: TextStyle(fontFamily: 'Tajawal')),
-                                                    value: applyTax,
-                                                    onChanged: (val) => setState(() => applyTax = val),
-                                                  ),
-                                                  if (applyTax)
-                                                    TextField(
-                                                      controller: taxController,
-                                                      keyboardType: TextInputType.number,
-                                                      decoration: const InputDecoration(
-                                                        labelText: 'نسبة الضريبة (%)',
-                                                        border: OutlineInputBorder(),
-                                                        suffixText: '%',
-                                                      ),
-                                                    ),
-                                                ],
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () => Navigator.pop(dialogContext),
-                                                  child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-                                                ),
-                                                ElevatedButton(
-                                                  onPressed: () async {
-                                                    Navigator.pop(dialogContext);
-                                                    double? tax;
-                                                    if (applyTax && taxController.text.isNotEmpty) {
-                                                      tax = double.tryParse(taxController.text);
-                                                    }
-                                                    try {
-                                                      await PdfService.printInvoice(context, order, currency, taxPercentage: tax);
-                                                    } catch (e) {
-                                                      if (context.mounted) {
-                                                        ScaffoldMessenger.of(context).showSnackBar(
-                                                          SnackBar(content: Text('خطأ في الطباعة: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
-                                                        );
-                                                      }
-                                                    }
-                                                  },
-                                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
-                                                  child: const Text('طباعة PDF', style: TextStyle(fontFamily: 'Tajawal')),
-                                                ),
-                                              ],
-                                            );
-                                          }
-                                        );
-                                      }
-                                    );
-                                  } else if (value == 'whatsapp') {
-                                    showDialog(
-                                      context: context,
-                                      builder: (dialogContext) {
-                                        final taxController = TextEditingController();
-                                        bool applyTax = false;
-                                        return StatefulBuilder(
-                                          builder: (context, setState) {
-                                            return AlertDialog(
-                                              title: const Text('إرسال الفاتورة عبر واتساب', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                                              content: Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  SwitchListTile(
-                                                    title: const Text('إضافة ضريبة للفاتورة', style: TextStyle(fontFamily: 'Tajawal')),
-                                                    value: applyTax,
-                                                    onChanged: (val) => setState(() => applyTax = val),
-                                                  ),
-                                                  if (applyTax)
-                                                    TextField(
-                                                      controller: taxController,
-                                                      keyboardType: TextInputType.number,
-                                                      decoration: const InputDecoration(
-                                                        labelText: 'نسبة الضريبة (%)',
-                                                        border: OutlineInputBorder(),
-                                                        suffixText: '%',
-                                                      ),
-                                                    ),
-                                                ],
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () => Navigator.pop(dialogContext),
-                                                  child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-                                                ),
-                                                ElevatedButton(
-                                                  onPressed: () async {
-                                                    Navigator.pop(dialogContext);
-                                                    double? tax;
-                                                    if (applyTax && taxController.text.isNotEmpty) {
-                                                      tax = double.tryParse(taxController.text);
-                                                    }
-                                                    try {
-                                                      await WhatsAppService.sendInvoice(order, currency, taxPercentage: tax);
-                                                    } catch (e) {
-                                                      if (context.mounted) {
-                                                        ScaffoldMessenger.of(context).showSnackBar(
-                                                          SnackBar(content: Text('خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
-                                                        );
-                                                      }
-                                                    }
-                                                  },
-                                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
-                                                  child: const Text('إرسال الآن', style: TextStyle(fontFamily: 'Tajawal')),
-                                                ),
-                                              ],
-                                            );
-                                          }
-                                        );
-                                      }
-                                    );
-                                  } else if (value == 'thermal_print') {
-                                    showDialog(
-                                      context: context,
-                                      builder: (dialogContext) {
-                                        final taxController = TextEditingController();
-                                        bool applyTax = false;
-                                        return StatefulBuilder(
-                                          builder: (context, setState) {
-                                            return AlertDialog(
-                                              title: const Text('الطباعة الحرارية', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                                              content: Column(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  SwitchListTile(
-                                                    title: const Text('إضافة ضريبة للفاتورة', style: TextStyle(fontFamily: 'Tajawal')),
-                                                    value: applyTax,
-                                                    onChanged: (val) => setState(() => applyTax = val),
-                                                  ),
-                                                  if (applyTax)
-                                                    TextField(
-                                                      controller: taxController,
-                                                      keyboardType: TextInputType.number,
-                                                      decoration: const InputDecoration(
-                                                        labelText: 'نسبة الضريبة (%)',
-                                                        border: OutlineInputBorder(),
-                                                        suffixText: '%',
-                                                      ),
-                                                    ),
-                                                ],
-                                              ),
-                                              actions: [
-                                                TextButton(
-                                                  onPressed: () => Navigator.pop(dialogContext),
-                                                  child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-                                                ),
-                                                ElevatedButton(
-                                                  onPressed: () async {
-                                                    Navigator.pop(dialogContext);
-                                                    double? tax;
-                                                    if (applyTax && taxController.text.isNotEmpty) {
-                                                      tax = double.tryParse(taxController.text);
-                                                    }
-                                                    try {
-                                                      await PrinterService.printReceipt(order, currency, taxPercentage: tax);
-                                                    } catch (e) {
-                                                      if (context.mounted) {
-                                                        ScaffoldMessenger.of(context).showSnackBar(
-                                                          SnackBar(content: Text('خطأ في الطباعة الحرارية: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
-                                                        );
-                                                      }
-                                                    }
-                                                  },
-                                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.indigo, foregroundColor: Colors.white),
-                                                  child: const Text('طباعة', style: TextStyle(fontFamily: 'Tajawal')),
-                                                ),
-                                              ],
-                                            );
-                                          }
-                                        );
-                                      }
-                                    );
-                                  }
-                                },
-                                itemBuilder: (context) => [
-                                  if (canCancelOrders) ...[
-                                    const PopupMenuItem(
-                                      value: 'status_pending',
-                                      child: Text('قيد الانتظار', style: TextStyle(fontFamily: 'Tajawal')),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'status_processing',
-                                      child: Text('جاري التجهيز', style: TextStyle(fontFamily: 'Tajawal')),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'status_delivered',
-                                      child: Text('مكتمل', style: TextStyle(fontFamily: 'Tajawal')),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'status_cancelled',
-                                      child: Text('ملغى', style: TextStyle(fontFamily: 'Tajawal')),
-                                    ),
-                                    const PopupMenuItem(
-                                      value: 'status_return',
-                                      child: Text('مرتجع', style: TextStyle(fontFamily: 'Tajawal')),
-                                    ),
-                                    const PopupMenuDivider(),
-                                  ],
-                                  const PopupMenuItem(
-                                    value: 'print',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.picture_as_pdf, color: Colors.red),
-                                        SizedBox(width: 8),
-                                        Text('طباعة PDF', style: TextStyle(fontFamily: 'Tajawal')),
-                                      ],
-                                    ),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 'thermal_print',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.print, color: Colors.indigo),
-                                        SizedBox(width: 8),
-                                        Text('طباعة حرارية', style: TextStyle(fontFamily: 'Tajawal')),
-                                      ],
-                                    ),
-                                  ),
-                                  const PopupMenuItem(
-                                    value: 'whatsapp',
-                                    child: Row(
-                                      children: [
-                                        Icon(Icons.share, color: Colors.green),
-                                        SizedBox(width: 8),
-                                        Text('إرسال واتساب', style: TextStyle(fontFamily: 'Tajawal')),
-                                      ],
-                                    ),
-                                  ),
-                                  const PopupMenuDivider(),
-                                  if (canCancelOrders)
-                                    PopupMenuItem(
-                                      value: 'delete',
-                                      child: Row(
-                                        children: [
-                                          const Icon(Icons.delete, color: Colors.red, size: 20),
-                                          const SizedBox(width: 8),
-                                          Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
-                                        ],
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
+            if (orders.isEmpty) {
+              return Center(
+                child: Text(
+                  AppLocalizations.of(context)!.text86,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontFamily: 'Tajawal', fontSize: 16),
+                ),
+              );
+            }
+
+            final Map<String, List<AppOrder>> groupedOrders = {};
+            final now = DateTime.now();
+            final today = DateTime(now.year, now.month, now.day);
+            final yesterday = today.subtract(const Duration(days: 1));
+            final startOfWeek = today.subtract(Duration(days: today.weekday % 7));
+
+            for (var order in orders) {
+              final d = order.createdAt;
+              final orderDate = DateTime(d.year, d.month, d.day);
+              
+              String groupKey;
+              if (orderDate == today) {
+                groupKey = '0_اليوم - ' + DateFormat('yyyy/MM/dd').format(orderDate);
+              } else if (orderDate == yesterday) {
+                groupKey = '1_أمس - ' + DateFormat('yyyy/MM/dd').format(orderDate);
+              } else if (orderDate.isAfter(startOfWeek.subtract(const Duration(days: 1)))) {
+                final endOfWeek = startOfWeek.add(const Duration(days: 6));
+                groupKey = '2_هذا الأسبوع (من ' + DateFormat('MM/dd').format(startOfWeek) + ' إلى ' + DateFormat('MM/dd').format(endOfWeek) + ')';
+              } else if (orderDate.isAfter(today.subtract(const Duration(days: 30)))) {
+                final diffDays = startOfWeek.difference(orderDate).inDays;
+                final weeksAgo = (diffDays / 7).floor() + 1;
+                final wStart = startOfWeek.subtract(Duration(days: weeksAgo * 7));
+                final wEnd = wStart.add(const Duration(days: 6));
+                groupKey = '3_قبل ' + weeksAgo.toString() + ' أسبوع (من ' + DateFormat('MM/dd').format(wStart) + ' إلى ' + DateFormat('MM/dd').format(wEnd) + ')';
+              } else if (orderDate.year == today.year) {
+                groupKey = '4_شهر ' + DateFormat('MMMM').format(orderDate);
+              } else {
+                groupKey = '5_سنة ' + DateFormat('yyyy').format(orderDate);
+              }
+              
+              groupedOrders.putIfAbsent(groupKey, () => []).add(order);
+            }
+            
+            final sortedKeys = groupedOrders.keys.toList()..sort();
+
+            return ListView.builder(
+              itemCount: sortedKeys.length,
+              padding: const EdgeInsets.all(16),
+              itemBuilder: (context, index) {
+                final key = sortedKeys[index];
+                final groupOrders = groupedOrders[key]!;
+                final totalRevenue = groupOrders.fold(0.0, (sum, o) => sum + o.total);
+                final displayName = key.substring(2);
+                
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                ),
-              );
-            },
-          );
-        },
+                  child: Theme(
+                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                    child: ExpansionTile(
+                      initiallyExpanded: index == 0,
+                      title: Text(
+                        displayName,
+                        style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      subtitle: Text(
+                        'إجمالي الدخل: ' + totalRevenue.toStringAsFixed(2) + ' ' + currency,
+                        style: TextStyle(color: Colors.green.shade700, fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+                      ),
+                      childrenPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      children: groupOrders.map((order) {
+                      return GlassCard(
+                        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.all(0),
+                        onLongPress: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text(l10n.delete, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                              content: Text(AppLocalizations.of(context)!.text87, style: const TextStyle(fontFamily: 'Tajawal')),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text(l10n.cancel, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    ref.read(orderRepositoryProvider).deleteOrder(order);
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(Icons.shopping_bag_outlined, color: Theme.of(context).colorScheme.primary, size: 24),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              'طلب #' + order.id.substring(0, 5).toUpperCase(),
+                                              style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16),
+                                            ),
+                                            Text(
+                                              order.total.toString() + ' ' + currency,
+                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          l10n.customer + ': ' + (order.customerName == 'walk_in' ? l10n.walkInCustomer : order.customerName),
+                                          style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              l10n.quantity + ': ' + order.quantity.toString(),
+                                              style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey),
+                                            ),
+                                            Text(
+                                              DateFormat('yyyy/MM/dd HH:mm').format(order.createdAt),
+                                              style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey, fontSize: 12),
+                                            ),
+                                          ],
+                                        ),
+                                        if (order.status == 'cancelled') ...[
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            l10n.cancelled,
+                                            style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                                          ),
+                                        ],
+                                        if (order.isCredit) ...[
+                                          const SizedBox(height: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.orange.withOpacity(0.2),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              l10n.credit + ' (الدفع: ' + order.paidAmount.toString() + ' ' + currency + ')',
+                                              style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 12),
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              if (canCancelOrders && order.status != 'cancelled') ...[
+                                const SizedBox(height: 16),
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: TextButton.icon(
+                                    onPressed: () {
+                                      ref.read(orderRepositoryProvider).cancelOrder(order);
+                                    },
+                                    icon: const Icon(Icons.cancel_outlined, color: Colors.red, size: 18),
+                                    label: Text(l10n.cancel, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                      minimumSize: Size.zero,
+                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      );
+                      }).toList(),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
         loading: () => Center(child: CircularProgressIndicator()),
+
         error: (e, st) => Center(
           child: Text('${l10n.error}: $e', style: TextStyle(fontFamily: 'Tajawal')),
         ),

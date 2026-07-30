@@ -26,16 +26,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final appUser = ref.watch(appUserProvider).value;
+    
+    final bool canManageCustomers = appUser?.hasPermission('can_manage_customers') ?? true;
+    final bool canViewReports = appUser?.hasPermission('can_view_reports') ?? true;
+
     final List<Widget> screens = [
-      DashboardHome(onNavigateToTab: (index) {
+      DashboardHome(
+        canManageCustomers: canManageCustomers,
+        canViewReports: canViewReports,
+        onNavigateToTab: (index) {
         setState(() {
           _currentIndex = index;
         });
       }),
       const OrdersScreen(),
       const ProductsScreen(),
-      const CustomersScreen(),
-      const ReportsScreen(),
+      if (canManageCustomers) const CustomersScreen(),
+      if (canViewReports) const ReportsScreen(),
     ];
 
     return PopScope(
@@ -92,16 +100,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
             selectedIcon: Icon(Icons.inventory_2),
             label: l10n.products,
           ),
-          NavigationDestination(
-            icon: Icon(Icons.people_outline),
-            selectedIcon: Icon(Icons.people),
-            label: l10n.customers,
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.bar_chart_outlined),
-            selectedIcon: Icon(Icons.bar_chart),
-            label: l10n.reports,
-          ),
+          if (canManageCustomers)
+            NavigationDestination(
+              icon: Icon(Icons.people_outline),
+              selectedIcon: Icon(Icons.people),
+              label: l10n.customers,
+            ),
+          if (canViewReports)
+            NavigationDestination(
+              icon: Icon(Icons.bar_chart_outlined),
+              selectedIcon: Icon(Icons.bar_chart),
+              label: l10n.reports,
+            ),
         ],
       ),
       ),
@@ -112,7 +122,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
 class DashboardHome extends ConsumerWidget {
   final void Function(int) onNavigateToTab;
-  const DashboardHome({super.key, required this.onNavigateToTab});
+  final bool canManageCustomers;
+  final bool canViewReports;
+  const DashboardHome({super.key, required this.onNavigateToTab, required this.canManageCustomers, required this.canViewReports});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
