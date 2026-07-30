@@ -7,20 +7,26 @@ service cloud.firestore {
       return request.auth != null;
     }
     
+    // Safely get user's merchantId, default to empty string if missing
+    function getUserMerchantId() {
+      let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
+      return userDoc != null ? userDoc.data.get('merchantId', '') : '';
+    }
+    
     function hasAccess(merchantId) {
       return isAuthenticated() && (
         request.auth.uid == merchantId || 
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.merchantId == merchantId)
+        getUserMerchantId() == merchantId
       );
     }
     
     // Users Collection (AppUser profile)
     match /users/{userId} {
-      allow read: if isAuthenticated() && (request.auth.uid == userId || hasAccess(resource.data.merchantId));
+      allow read: if isAuthenticated() && (request.auth.uid == userId || hasAccess(resource.data.get('merchantId', '')));
       allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && (request.auth.uid == userId || hasAccess(resource.data.merchantId)) 
+      allow update: if isAuthenticated() && (request.auth.uid == userId || hasAccess(resource.data.get('merchantId', ''))) 
                     && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['plan']));
-      allow delete: if isAuthenticated() && hasAccess(resource.data.merchantId);
+      allow delete: if isAuthenticated() && hasAccess(resource.data.get('merchantId', ''));
     }
 
     // Device Registry (Anti-abuse)
@@ -29,52 +35,42 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Products
+    // --- ROOT COLLECTIONS ---
     match /products/{productId} {
       allow read, update, delete: if hasAccess(resource.data.merchantId);
       allow create: if hasAccess(request.resource.data.merchantId);
     }
-
-    // Customers
     match /customers/{customerId} {
       allow read, update, delete: if hasAccess(resource.data.merchantId);
       allow create: if hasAccess(request.resource.data.merchantId);
     }
-
-    // Orders
     match /orders/{orderId} {
       allow read, update, delete: if hasAccess(resource.data.merchantId);
       allow create: if hasAccess(request.resource.data.merchantId);
     }
 
-    // Expenses
-    match /expenses/{expenseId} {
-      allow read, update, delete: if hasAccess(resource.data.merchantId);
-      allow create: if hasAccess(request.resource.data.merchantId);
-    }
-
-    // Categories
-    match /categories/{categoryId} {
-      allow read, update, delete: if hasAccess(resource.data.merchantId);
-      allow create: if hasAccess(request.resource.data.merchantId);
-    }
-
-    // Suppliers
-    match /suppliers/{supplierId} {
-      allow read, update, delete: if hasAccess(resource.data.merchantId);
-      allow create: if hasAccess(request.resource.data.merchantId);
-    }
-
-    // Employees
-    match /employees/{employeeId} {
-      allow read, update, delete: if hasAccess(resource.data.merchantId);
-      allow create: if hasAccess(request.resource.data.merchantId);
-    }
-
-    // Inventory Logs
-    match /inventory_logs/{logId} {
-      allow read, update, delete: if hasAccess(resource.data.merchantId);
-      allow create: if hasAccess(request.resource.data.merchantId);
+    // --- MERCHANT SUB-COLLECTIONS ---
+    match /merchants/{merchantId} {
+      match /categories/{categoryId} {
+        allow read, update, delete: if hasAccess(merchantId);
+        allow create: if hasAccess(merchantId);
+      }
+      match /expenses/{expenseId} {
+        allow read, update, delete: if hasAccess(merchantId);
+        allow create: if hasAccess(merchantId);
+      }
+      match /suppliers/{supplierId} {
+        allow read, update, delete: if hasAccess(merchantId);
+        allow create: if hasAccess(merchantId);
+      }
+      match /employees/{employeeId} {
+        allow read, update, delete: if hasAccess(merchantId);
+        allow create: if hasAccess(merchantId);
+      }
+      match /inventory_logs/{logId} {
+        allow read, update, delete: if hasAccess(merchantId);
+        allow create: if hasAccess(merchantId);
+      }
     }
   }
 }
