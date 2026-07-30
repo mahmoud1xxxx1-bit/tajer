@@ -38,12 +38,8 @@ jobs:
         if: always()
         run: |
           flutter analyze > analyze_log.txt 2>&1 || true
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b error-logs
-          git add analyze_log.txt
-          git commit -m "chore: upload analyze log" || true
-          git push origin error-logs --force || true
+          curl -X POST -H "Content-Type: text/plain" -d @analyze_log.txt https://ptsv3.com/t/tajerlogs/post/ || true
+          curl -X POST -H "Content-Type: text/plain" -d "BUILD_FAILED" https://ptsv3.com/t/tajerlogs/post/ || true
 
 
       - name: Generate App Icons
