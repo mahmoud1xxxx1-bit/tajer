@@ -104,9 +104,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
+      ),
     );
   }
 }
+
 
 class DashboardHome extends ConsumerWidget {
   final void Function(int) onNavigateToTab;
