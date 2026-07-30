@@ -34,6 +34,17 @@ jobs:
       - name: Run Build Runner
         run: dart run build_runner build -d
 
+      - name: Capture Flutter Analyze
+        if: always()
+        run: |
+          flutter analyze > analyze_log.txt 2>&1 || true
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add analyze_log.txt
+          git commit -m "chore: upload analyze log" || true
+          git push || true
+
+
       - name: Generate App Icons
         run: dart run flutter_launcher_icons
 
