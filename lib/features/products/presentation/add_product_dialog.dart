@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../authentication/domain/app_user.dart';
 import '../data/product_repository.dart';
 import '../domain/product.dart';
 import '../../categories/data/category_repository.dart';
@@ -68,6 +69,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     try {
       final user = ref.read(authRepositoryProvider).currentUser;
       if (user == null) throw Exception(AppLocalizations.of(context)!.text_47);
+      final appUser = ref.read(appUserProvider).value;
 
       final productRepo = ref.read(productRepositoryProvider);
       final logRepo = ref.read(inventoryLogRepositoryProvider);
