@@ -98,11 +98,11 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
           await authRepo.signInAnonymously();
         }
         await authRepo.signUpWithEmail(email, password, name);
-        _showSuccess("تم إنشاء الحساب! يرجى مراجعة بريدك الإلكتروني لتفعيله");
+        _showSuccess("تم إنشاء الحساب! يرجى مراجعة بريدك الإلكتروني لتفعيله (تأكد من مجلد Spam/الرسائل غير المرغوب فيها).");
       }
     } catch (e) {
       if (e.toString().contains("email-not-verified")) {
-        _showError("يرجى تفعيل بريدك الإلكتروني أولاً عبر الرابط المرسل إليك.");
+        _showError("يرجى تفعيل بريدك الإلكتروني أولاً عبر الرابط المرسل إليك (تأكد من مجلد Spam/الرسائل غير المرغوب فيها).");
       } else if (e.toString().contains('requires-merge-decision')) {
         await _handleDataMerge((merge) async {
            // We will handle merge logic below for google, but for email login it's different.
@@ -121,11 +121,7 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
     try {
       final authRepo = ref.read(authRepositoryProvider);
 
-      if (authRepo.currentUser == null) {
-        await authRepo.signInAnonymously();
-      }
-
-      await authRepo.linkWithGoogle();
+      await authRepo.signInOrLinkWithGoogle();
       _showSuccess("تم تسجيل الدخول بنجاح");
     } catch (e) {
       if (e.toString().contains('requires-merge-decision-web')) {
@@ -169,7 +165,7 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
     setState(() => _isLoading = true);
     try {
       await ref.read(authRepositoryProvider).resetPassword(email);
-      _showSuccess("تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني");
+      _showSuccess("تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني (يرجى تفقد مجلد Spam إذا لم تجده)");
     } catch (e) {
       _showError(e.toString().replaceAll("Exception: ", ""));
     } finally {

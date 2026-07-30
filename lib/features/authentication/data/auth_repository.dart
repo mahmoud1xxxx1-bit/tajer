@@ -118,18 +118,17 @@ class AuthRepository {
     await _auth.signOut();
   }
 
-  Future<void> linkWithGoogle() async {
+  Future<void> signInOrLinkWithGoogle() async {
     try {
       final currentUser = _auth.currentUser;
-      if (currentUser == null) return;
 
       if (kIsWeb) {
         // Use Firebase Auth's built-in Web popup for Google Sign-In
         final googleProvider = GoogleAuthProvider();
         
-        if (currentUser.isAnonymous) {
+        if (currentUser?.isAnonymous == true) {
           try {
-            await currentUser.linkWithPopup(googleProvider);
+            await currentUser!.linkWithPopup(googleProvider);
             // Successfully linked! Update Firestore user document
             await _firestore.collection('users').doc(currentUser.uid).update({
               'isAnonymous': false,
@@ -161,9 +160,9 @@ class AuthRepository {
           idToken: googleAuth.idToken,
         );
 
-        if (currentUser.isAnonymous) {
+        if (currentUser?.isAnonymous == true) {
           try {
-            await currentUser.linkWithCredential(credential);
+            await currentUser!.linkWithCredential(credential);
             // Successfully linked! Update Firestore user document
             await _firestore.collection('users').doc(currentUser.uid).update({
               'isAnonymous': false,
@@ -179,13 +178,13 @@ class AuthRepository {
             }
           }
         } else {
-          // If not anonymous, just sign in
+          // If not anonymous, just sign in directly
           await _auth.signInWithCredential(credential);
         }
       }
     } catch (e) {
       if (e.toString().contains('requires-merge-decision')) rethrow;
-      throw Exception("حدث خطأ أثناء الربط بحساب جوجل: $e");
+      throw Exception("حدث خطأ أثناء المصادقة بحساب جوجل: $e");
     }
   }
 
@@ -218,13 +217,14 @@ class AuthRepository {
 
   Future<void> signUpWithEmail(String email, String password, String name) async {
     try {
+      final processedEmail = email.trim().toLowerCase();
       final currentUser = _auth.currentUser;
       if (currentUser == null) throw Exception("No user logged in");
       
       if (currentUser.isAnonymous) {
         final anonUid = currentUser.uid;
         
-        final credential = EmailAuthProvider.credential(email: email, password: password);
+        final credential = EmailAuthProvider.credential(email: processedEmail, password: password);
         final userCredential = await currentUser.linkWithCredential(credential);
         final newUser = userCredential.user;
         
@@ -234,9 +234,12 @@ class AuthRepository {
           
           await _firestore.collection('users').doc(anonUid).set({
             'isAnonymous': false,
-            'email': email,
+            'email': processedEmail,
             'name': name,
           }, SetOptions(merge: true));
+
+          // Force logout so user cannot bypass email verification
+          await _auth.signOut();
         }
       } else {
         throw Exception("أنت مسجل الدخول بالفعل");
@@ -253,8 +256,9 @@ class AuthRepository {
 
   Future<void> signInWithEmail(String email, String password, {bool mergeData = false, DataMigrationService? migrationService}) async {
     try {
+      final processedEmail = email.trim().toLowerCase();
       final anonUid = _auth.currentUser?.isAnonymous == true ? _auth.currentUser!.uid : null;
-      final userCred = await _auth.signInWithEmailAndPassword(email: email, password: password);
+      final userCred = await _auth.signInWithEmailAndPassword(email: processedEmail, password: password);
       
       // Check if email is verified
       if (userCred.user != null && !userCred.user!.emailVerified) {
@@ -278,11 +282,12 @@ class AuthRepository {
 
   Future<void> resetPassword(String email) async {
     try {
-      final userDoc = await _firestore.collection('users').where('email', isEqualTo: email).get();
+      final processedEmail = email.trim().toLowerCase();
+      final userDoc = await _firestore.collection('users').where('email', isEqualTo: processedEmail).get();
       if (userDoc.docs.isEmpty) {
         throw Exception("هذا البريد الإلكتروني غير مسجل لدينا.");
       }
-      await _auth.sendPasswordResetEmail(email: email);
+      await _auth.sendPasswordResetEmail(email: processedEmail);
     } catch (e) {
       if (e.toString().contains("غير مسجل")) rethrow;
       throw Exception("حدث خطأ أثناء إرسال رابط استعادة كلمة المرور: $e");
