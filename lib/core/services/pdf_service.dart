@@ -12,11 +12,11 @@ import 'package:flutter/services.dart' show rootBundle;
 
 class PdfService {
   static Future<pw.Font> _getFont() async {
-    return await PdfGoogleFonts.tajawalRegular();
+    return await PdfGoogleFonts.cairoRegular();
   }
 
   static Future<pw.Font> _getBoldFont() async {
-    return await PdfGoogleFonts.tajawalBold();
+    return await PdfGoogleFonts.cairoBold();
   }
 
   static Future<void> printInvoice(BuildContext buildContext, AppOrder order, String currency, {double? taxPercentage}) async {
