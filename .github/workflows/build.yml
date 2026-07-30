@@ -38,6 +38,14 @@ jobs:
       run: flutter build appbundle --release > build_appbundle.log 2>&1
 
 
+
+    - name: Print Error Log to Console
+      if: always()
+      run: |
+        echo "============== ERROR LOG START =============="
+        cat build_appbundle.log | tail -n 150
+        echo "============== ERROR LOG END =============="
+
     - name: Upload Error Logs
       if: always()
       uses: actions/upload-artifact@v4
