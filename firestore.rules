@@ -63,13 +63,21 @@ service cloud.firestore {
         allow read, update, delete: if hasAccess(merchantId);
         allow create: if hasAccess(merchantId);
       }
-      match /employees/{employeeId} {
-        allow read, update, delete: if hasAccess(merchantId);
-        allow create: if hasAccess(merchantId);
-      }
       match /inventory_logs/{logId} {
         allow read, update, delete: if hasAccess(merchantId);
         allow create: if hasAccess(merchantId);
+      }
+    }
+
+    // --- USERS SUB-COLLECTIONS ---
+    match /users/{userId} {
+      match /employees/{employeeId} {
+        allow read, update, delete: if hasAccess(userId);
+        allow create: if hasAccess(userId);
+      }
+      match /notifications/{notificationId} {
+        allow read, update, delete: if hasAccess(userId);
+        allow create: if hasAccess(userId);
       }
     }
   }
