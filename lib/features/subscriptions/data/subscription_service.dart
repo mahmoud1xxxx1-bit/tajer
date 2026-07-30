@@ -1,101 +1,109 @@
-import 'dart:async';
 import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:flutter/foundation.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../authentication/data/auth_repository.dart';
 
 class SubscriptionService {
-  InAppPurchase? _iap;
   final AuthRepository _authRepo;
   final FirebaseFirestore _firestore;
 
-  StreamSubscription<List<PurchaseDetails>>? _subscription;
-  
-  // Update with your actual subscription ID from Google Play Console
-  static const String _kPremiumSubscriptionId = 'premium_monthly_10';
+  // IMPORTANT: The user must replace these with their actual RevenueCat Public API Keys
+  static const String _revenueCatAppleApiKey = 'appl_api_key_here';
+  static const String _revenueCatGoogleApiKey = 'goog_api_key_here';
 
   SubscriptionService(this._authRepo, this._firestore) {
     if (!kIsWeb) {
-      _iap = InAppPurchase.instance;
-      _initIAP();
+      _initRevenueCat();
     }
   }
 
-  void _initIAP() {
-    final purchaseUpdated = _iap!.purchaseStream;
-    _subscription = purchaseUpdated.listen((purchaseDetailsList) {
-      _listenToPurchaseUpdated(purchaseDetailsList);
-    }, onDone: () {
-      _subscription?.cancel();
-    }, onError: (error) {
-      // handle error
+  Future<void> _initRevenueCat() async {
+    await Purchases.setLogLevel(LogLevel.debug);
+
+    PurchasesConfiguration configuration;
+    if (Platform.isAndroid) {
+      configuration = PurchasesConfiguration(_revenueCatGoogleApiKey);
+    } else if (Platform.isIOS) {
+      configuration = PurchasesConfiguration(_revenueCatAppleApiKey);
+    } else {
+      return;
+    }
+    
+    // Use the merchant's UID as the App User ID in RevenueCat
+    final user = _authRepo.currentUser;
+    if (user != null) {
+      configuration.appUserID = user.uid;
+    }
+    
+    await Purchases.configure(configuration);
+    
+    // Listen to changes in customer info
+    Purchases.addCustomerInfoUpdateListener((customerInfo) {
+      _checkPremiumEntitlement(customerInfo);
     });
   }
 
-  Future<void> _listenToPurchaseUpdated(List<PurchaseDetails> purchaseDetailsList) async {
-    for (final purchaseDetails in purchaseDetailsList) {
-      if (purchaseDetails.status == PurchaseStatus.pending) {
-        // Show pending UI
-      } else {
-        if (purchaseDetails.status == PurchaseStatus.error) {
-          // Handle error
-        } else if (purchaseDetails.status == PurchaseStatus.purchased ||
-                   purchaseDetails.status == PurchaseStatus.restored) {
-          // Grant entitlement to the user
-          await _deliverProduct(purchaseDetails);
-        }
-        
-        if (purchaseDetails.pendingCompletePurchase) {
-          await _iap!.completePurchase(purchaseDetails);
-        }
-      }
-    }
-  }
-
-  Future<void> _deliverProduct(PurchaseDetails purchaseDetails) async {
+  Future<void> _checkPremiumEntitlement(CustomerInfo customerInfo) async {
     final user = _authRepo.currentUser;
-    if (user != null) {
-      // Grant Premium in Firestore
-      await _firestore.collection('users').doc(user.uid).update({
-        'plan': 'premium',
-      });
-    }
+    if (user == null) return;
+
+    // Check if the user has active 'premium' entitlement in RevenueCat
+    final isPremium = customerInfo.entitlements.all['premium']?.isActive ?? false;
+
+    // Sync status with Firestore
+    await _firestore.collection('users').doc(user.uid).update({
+      'plan': isPremium ? 'premium' : 'merchant',
+    });
   }
 
-  Future<List<ProductDetails>> fetchProducts() async {
+  Future<List<Package>> fetchPackages() async {
     if (kIsWeb) return [];
     
-    final bool available = await _iap!.isAvailable();
-    if (!available) {
-      return [];
+    try {
+      Offerings offerings = await Purchases.getOfferings();
+      if (offerings.current != null && offerings.current!.availablePackages.isNotEmpty) {
+        return offerings.current!.availablePackages;
+      }
+    } catch (e) {
+      debugPrint("Error fetching RevenueCat offerings: $e");
     }
-    
-    // Only fetch for android since user mentioned Google Play specifically, 
-    // but the library supports iOS as well if set up.
-    Set<String> kIds = <String>{_kPremiumSubscriptionId};
-    final ProductDetailsResponse response = await _iap!.queryProductDetails(kIds);
-    if (response.notFoundIDs.isNotEmpty) {
-      // Product IDs not found on the store
-    }
-    return response.productDetails;
+    return [];
   }
 
-  Future<void> buyPremium(ProductDetails productDetails) async {
-    final PurchaseParam purchaseParam = PurchaseParam(productDetails: productDetails);
-    // Since it's a subscription, we use buyNonConsumable
-    if (kIsWeb) return;
-    await _iap!.buyNonConsumable(purchaseParam: purchaseParam);
+  Future<bool> buyPackage(Package package) async {
+    if (kIsWeb) return false;
+    
+    try {
+      CustomerInfo customerInfo = await Purchases.purchasePackage(package);
+      final isPremium = customerInfo.entitlements.all['premium']?.isActive ?? false;
+      if (isPremium) {
+        await _checkPremiumEntitlement(customerInfo);
+        return true;
+      }
+    } catch (e) {
+      debugPrint("Error purchasing package: $e");
+    }
+    return false;
   }
   
-  Future<void> restorePurchases() async {
-    if (kIsWeb) return;
-    await _iap!.restorePurchases();
+  Future<bool> restorePurchases() async {
+    if (kIsWeb) return false;
+    
+    try {
+      CustomerInfo customerInfo = await Purchases.restorePurchases();
+      final isPremium = customerInfo.entitlements.all['premium']?.isActive ?? false;
+      await _checkPremiumEntitlement(customerInfo);
+      return isPremium;
+    } catch (e) {
+      debugPrint("Error restoring purchases: $e");
+    }
+    return false;
   }
 
   void dispose() {
-    _subscription?.cancel();
+    Purchases.removeCustomerInfoUpdateListener((_) {});
   }
 }
 
@@ -106,12 +114,7 @@ final subscriptionServiceProvider = Provider<SubscriptionService>((ref) {
   return service;
 });
 
-final premiumProductDetailsProvider = FutureProvider<ProductDetails?>((ref) async {
+final premiumPackagesProvider = FutureProvider<List<Package>>((ref) async {
   final service = ref.watch(subscriptionServiceProvider);
-  final products = await service.fetchProducts();
-  if (products.isNotEmpty) {
-    return products.first;
-  }
-  return null;
+  return await service.fetchPackages();
 });
-
