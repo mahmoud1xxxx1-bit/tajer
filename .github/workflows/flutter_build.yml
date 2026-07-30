@@ -46,7 +46,7 @@ jobs:
         run: dart run flutter_launcher_icons
 
       - name: Build APK
-        run: flutter build apk --release > build_apk.log 2>&1
+        run: flutter build apk --release 
 
       - name: Build App Bundle
         run: flutter build appbundle --release
