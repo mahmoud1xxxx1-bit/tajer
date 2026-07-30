@@ -68,10 +68,38 @@ class SettingsScreen extends ConsumerWidget {
           _ThemeSelector(),
           Divider(),
           ListTile(
-            leading: Icon(Icons.logout, color: Colors.red),
-            title: Text(l10n.logout, style: TextStyle(fontFamily: 'Tajawal', color: Colors.red)),
-            onTap: () {
-              ref.read(authRepositoryProvider).signOut();
+            leading: Icon(isAnonymous ? Icons.delete_forever : Icons.logout, color: Colors.red),
+            title: Text(
+              isAnonymous ? 'إنهاء الجلسة التجريبية (وحذف البيانات)' : l10n.logout, 
+              style: TextStyle(fontFamily: 'Tajawal', color: Colors.red)
+            ),
+            onTap: () async {
+              if (isAnonymous) {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: Text("تحذير", style: TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontWeight: FontWeight.bold)),
+                    content: Text("أنت تستخدم التطبيق كزائر. تسجيل الخروج الآن سيؤدي إلى فقدان جميع بياناتك التجريبية بشكل نهائي ولن تتمكن من استعادتها. هل أنت متأكد؟", style: TextStyle(fontFamily: 'Tajawal')),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        child: Text("تراجع", style: TextStyle(fontFamily: 'Tajawal')),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                        onPressed: () => Navigator.pop(context, true),
+                        child: Text("نعم، احذف البيانات واخرج", style: TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                );
+                
+                if (confirm == true) {
+                  await ref.read(authRepositoryProvider).signOut();
+                }
+              } else {
+                ref.read(authRepositoryProvider).signOut();
+              }
             },
           ),
         ],

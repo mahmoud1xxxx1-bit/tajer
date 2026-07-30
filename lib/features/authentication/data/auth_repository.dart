@@ -9,12 +9,14 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../domain/app_user.dart';
+import '../../../core/services/data_migration_service.dart';
 
 part 'auth_repository.g.dart';
 
 class AuthRepository {
   final FirebaseAuth _auth;
   final FirebaseFirestore _firestore;
+  AuthCredential? _pendingCredential;
 
   AuthRepository(this._auth, this._firestore);
 
@@ -136,8 +138,10 @@ class AuthRepository {
             });
             } on FirebaseAuthException catch (e) {
               if (e.code == 'credential-already-in-use' || e.code == 'email-already-in-use') {
-                // The Google account is already linked. Sign in with it directly and discard anonymous session.
-                await _auth.signInWithPopup(googleProvider);
+                // We need to fetch the credential from the popup, but it's tricky on web if it throws.
+                // However, on web linkWithPopup throws but might attach credential in error.
+                // For simplicity, we just throw requires-merge-decision. We will handle web merge differently or prompt them.
+                throw Exception('requires-merge-decision-web');
               } else {
                 rethrow;
               }
@@ -168,8 +172,8 @@ class AuthRepository {
             });
           } on FirebaseAuthException catch (e) {
             if (e.code == 'credential-already-in-use' || e.code == 'email-already-in-use') {
-              // Sign in with existing Google account and discard anonymous session
-              await _auth.signInWithCredential(credential);
+              _pendingCredential = credential;
+              throw Exception('requires-merge-decision');
             } else {
               throw Exception(e.message ?? "حدث خطأ غير معروف");
             }
@@ -180,7 +184,34 @@ class AuthRepository {
         }
       }
     } catch (e) {
+      if (e.toString().contains('requires-merge-decision')) rethrow;
       throw Exception("حدث خطأ أثناء الربط بحساب جوجل: $e");
+    }
+  }
+
+  Future<void> resolveMerge(bool merge, DataMigrationService migrationService) async {
+    if (_pendingCredential == null) throw Exception("لا توجد بيانات اعتماد معلقة");
+    
+    final anonUid = _auth.currentUser?.uid;
+    
+    // Sign in with the pending credential
+    final userCred = await _auth.signInWithCredential(_pendingCredential!);
+    _pendingCredential = null;
+    
+    if (merge && anonUid != null && userCred.user != null) {
+      final newUid = userCred.user!.uid;
+      await migrationService.migrateData(anonUid, newUid);
+    }
+  }
+
+  Future<void> resolveMergeWeb(bool merge, DataMigrationService migrationService) async {
+    final anonUid = _auth.currentUser?.uid;
+    final googleProvider = GoogleAuthProvider();
+    final userCred = await _auth.signInWithPopup(googleProvider);
+    
+    if (merge && anonUid != null && userCred.user != null) {
+      final newUid = userCred.user!.uid;
+      await migrationService.migrateData(anonUid, newUid);
     }
   }
 
@@ -220,23 +251,40 @@ class AuthRepository {
     }
   }
 
-  Future<void> signInWithEmail(String email, String password) async {
+  Future<void> signInWithEmail(String email, String password, {bool mergeData = false, DataMigrationService? migrationService}) async {
     try {
-      await _auth.signInWithEmailAndPassword(email: email, password: password);
+      final anonUid = _auth.currentUser?.isAnonymous == true ? _auth.currentUser!.uid : null;
+      final userCred = await _auth.signInWithEmailAndPassword(email: email, password: password);
+      
+      // Check if email is verified
+      if (userCred.user != null && !userCred.user!.emailVerified) {
+        await _auth.signOut();
+        throw Exception("email-not-verified");
+      }
+
+      if (mergeData && anonUid != null && migrationService != null && userCred.user != null) {
+        await migrationService.migrateData(anonUid, userCred.user!.uid);
+      }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
         throw Exception("البريد الإلكتروني أو كلمة المرور غير صحيحة");
       }
       throw Exception(e.message ?? "حدث خطأ أثناء تسجيل الدخول");
     } catch (e) {
+      if (e.toString().contains("email-not-verified")) rethrow;
       throw Exception("حدث خطأ أثناء تسجيل الدخول: $e");
     }
   }
 
   Future<void> resetPassword(String email) async {
     try {
+      final userDoc = await _firestore.collection('users').where('email', isEqualTo: email).get();
+      if (userDoc.docs.isEmpty) {
+        throw Exception("هذا البريد الإلكتروني غير مسجل لدينا.");
+      }
       await _auth.sendPasswordResetEmail(email: email);
     } catch (e) {
+      if (e.toString().contains("غير مسجل")) rethrow;
       throw Exception("حدث خطأ أثناء إرسال رابط استعادة كلمة المرور: $e");
     }
   }
