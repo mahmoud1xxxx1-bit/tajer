@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:tajer/l10n/app_localizations.dart';
 import '../../authentication/data/auth_repository.dart';
-import 'auth_controller.dart';
 import '../../../core/services/data_migration_service.dart';
-import 'package:flutter/foundation.dart';
 
 class StartupScreen extends ConsumerStatefulWidget {
   const StartupScreen({super.key});
@@ -15,21 +12,7 @@ class StartupScreen extends ConsumerStatefulWidget {
 }
 
 class _StartupScreenState extends ConsumerState<StartupScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _nameController = TextEditingController();
-  
-  bool _isLogin = true;
   bool _isLoading = false;
-  bool _obscurePassword = true;
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _nameController.dispose();
-    super.dispose();
-  }
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -69,78 +52,22 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
     }
   }
 
-  Future<void> _submitEmailAuth() async {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
-    final name = _nameController.text.trim();
-
-    if (email.isEmpty || password.isEmpty) {
-      _showError("يرجى إدخال البريد الإلكتروني وكلمة المرور");
-      return;
-    }
-
-    if (!_isLogin && name.isEmpty) {
-      _showError("يرجى إدخال اسمك");
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      final authRepo = ref.read(authRepositoryProvider);
-      final migrationService = ref.read(dataMigrationServiceProvider);
-
-      if (_isLogin) {
-        await authRepo.signInWithEmail(email, password, mergeData: false, migrationService: migrationService);
-        _showSuccess("تم تسجيل الدخول بنجاح");
-      } else {
-        if (authRepo.currentUser == null) {
-          await authRepo.signInAnonymously();
-        }
-        await authRepo.signUpWithEmail(email, password, name);
-        _showSuccess("تم إنشاء الحساب! يرجى مراجعة بريدك الإلكتروني لتفعيله (تأكد من مجلد Spam/الرسائل غير المرغوب فيها).");
-      }
-    } catch (e) {
-      if (e.toString().contains("email-not-verified")) {
-        _showError("يرجى تفعيل بريدك الإلكتروني أولاً عبر الرابط المرسل إليك (تأكد من مجلد Spam/الرسائل غير المرغوب فيها).");
-      } else if (e.toString().contains('requires-merge-decision')) {
-        await _handleDataMerge((merge) async {
-           // We will handle merge logic below for google, but for email login it's different.
-           // Actually email login doesn't throw requires-merge-decision right now. 
-        });
-      } else {
-        _showError(e.toString().replaceAll("Exception: ", ""));
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
   Future<void> _loginWithGoogle() async {
     setState(() => _isLoading = true);
     try {
       final authRepo = ref.read(authRepositoryProvider);
-
       await authRepo.signInOrLinkWithGoogle();
-      _showSuccess("تم تسجيل الدخول بنجاح");
+      _showSuccess("تم تسجيل الدخول بنجاح كتاجر");
     } catch (e) {
-      if (e.toString().contains('requires-merge-decision-web')) {
+      if (e.toString().contains('requires-merge-decision')) {
         await _handleDataMerge((merge) async {
           setState(() => _isLoading = true);
           try {
-            await ref.read(authRepositoryProvider).resolveMergeWeb(merge, ref.read(dataMigrationServiceProvider));
-            _showSuccess("تم تسجيل الدخول بنجاح");
-          } catch(ex) {
-            _showError(ex.toString().replaceAll("Exception: ", ""));
-          } finally {
-            if (mounted) setState(() => _isLoading = false);
-          }
-        });
-      } else if (e.toString().contains('requires-merge-decision')) {
-        await _handleDataMerge((merge) async {
-          setState(() => _isLoading = true);
-          try {
-            await ref.read(authRepositoryProvider).resolveMerge(merge, ref.read(dataMigrationServiceProvider));
+            if (e.toString().contains('web')) {
+               await ref.read(authRepositoryProvider).resolveMergeWeb(merge, ref.read(dataMigrationServiceProvider));
+            } else {
+               await ref.read(authRepositoryProvider).resolveMerge(merge, ref.read(dataMigrationServiceProvider));
+            }
             _showSuccess("تم تسجيل الدخول بنجاح");
           } catch(ex) {
             _showError(ex.toString().replaceAll("Exception: ", ""));
@@ -151,23 +78,6 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
       } else {
         _showError(e.toString().replaceAll("Exception: ", ""));
       }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _forgotPassword() async {
-    final email = _emailController.text.trim();
-    if (email.isEmpty) {
-      _showError("يرجى إدخال بريدك الإلكتروني أولاً");
-      return;
-    }
-    setState(() => _isLoading = true);
-    try {
-      await ref.read(authRepositoryProvider).resetPassword(email);
-      _showSuccess("تم إرسال رابط استعادة كلمة المرور إلى بريدك الإلكتروني (يرجى تفقد مجلد Spam إذا لم تجده)");
-    } catch (e) {
-      _showError(e.toString().replaceAll("Exception: ", ""));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -184,6 +94,88 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
     }
   }
 
+  void _showEmployeeLoginDialog() {
+    final emailController = TextEditingController();
+    final pinController = TextEditingController();
+    bool isLoggingIn = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text("دخول الموظف", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text("أدخل إيميل التاجر ورمز الدخول الخاص بك (PIN).", style: TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: "إيميل التاجر (الأساسي)",
+                      prefixIcon: Icon(Icons.email),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: pinController,
+                    keyboardType: TextInputType.number,
+                    obscureText: true,
+                    maxLength: 6,
+                    decoration: const InputDecoration(
+                      labelText: "رمز الدخول (PIN)",
+                      prefixIcon: Icon(Icons.password),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isLoggingIn ? null : () => Navigator.of(context).pop(),
+                  child: const Text("إلغاء", style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  onPressed: isLoggingIn ? null : () async {
+                    final email = emailController.text.trim();
+                    final pin = pinController.text.trim();
+
+                    if (email.isEmpty || pin.isEmpty) {
+                      _showError("يرجى إدخال الإيميل ورمز الدخول");
+                      return;
+                    }
+
+                    setDialogState(() => isLoggingIn = true);
+
+                    try {
+                      await ref.read(authRepositoryProvider).signInAsEmployee(email, pin);
+                      Navigator.of(context).pop();
+                      _showSuccess("تم تسجيل دخول الموظف بنجاح");
+                    } catch (e) {
+                      _showError(e.toString().replaceAll("Exception: ", ""));
+                    } finally {
+                      if (mounted) {
+                        setDialogState(() => isLoggingIn = false);
+                      }
+                    }
+                  },
+                  child: isLoggingIn 
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Text("تسجيل الدخول", style: TextStyle(fontFamily: 'Tajawal')),
+                ),
+              ],
+            );
+          }
+        );
+      }
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -195,114 +187,60 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Icon(Icons.storefront, size: 80, color: theme.colorScheme.primary),
+              Icon(Icons.storefront, size: 100, color: theme.colorScheme.primary),
               const SizedBox(height: 16),
               Text(
-                "تطبيق تاجر",
+                "نظام تاجر",
                 textAlign: TextAlign.center,
-                style: theme.textTheme.headlineMedium?.copyWith(
+                style: theme.textTheme.headlineLarge?.copyWith(
                   fontFamily: 'Tajawal',
                   fontWeight: FontWeight.bold,
                   color: theme.colorScheme.primary,
                 ),
               ),
-              const SizedBox(height: 32),
-              
-              if (!_isLogin) ...[
-                TextField(
-                  controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: "الاسم",
-                    prefixIcon: Icon(Icons.person),
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 16),
-              ],
-
-              TextField(
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: "البريد الإلكتروني",
-                  prefixIcon: Icon(Icons.email),
-                  border: OutlineInputBorder(),
+              const SizedBox(height: 8),
+              Text(
+                "أهلاً بك في منصة المبيعات المتكاملة",
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontFamily: 'Tajawal',
+                  color: Colors.grey[600],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 48),
 
-              TextField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                decoration: InputDecoration(
-                  labelText: "كلمة المرور",
-                  prefixIcon: const Icon(Icons.lock),
-                  suffixIcon: IconButton(
-                    icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
-                    onPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
-                    },
-                  ),
-                  border: const OutlineInputBorder(),
-                ),
-              ),
-              
-              if (_isLogin)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextButton(
-                    onPressed: _isLoading ? null : _forgotPassword,
-                    child: const Text("نسيت كلمة المرور؟", style: TextStyle(fontFamily: 'Tajawal')),
-                  ),
-                )
-              else
-                const SizedBox(height: 24),
-
-              ElevatedButton(
-                onPressed: _isLoading ? null : _submitEmailAuth,
+              // Merchant Login
+              ElevatedButton.icon(
+                onPressed: _isLoading ? null : _loginWithGoogle,
+                icon: _isLoading ? const SizedBox() : const Icon(Icons.g_mobiledata, size: 32),
+                label: _isLoading 
+                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Text("دخول التاجر (Google)", style: TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: theme.colorScheme.primary,
+                  foregroundColor: Colors.white,
                 ),
-                child: _isLoading 
-                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : Text(
-                      _isLogin ? "تسجيل الدخول" : "إنشاء حساب",
-                      style: const TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
-                    ),
               ),
               
               const SizedBox(height: 16),
               
+              // Employee Login
               OutlinedButton.icon(
-                onPressed: _isLoading ? null : _loginWithGoogle,
-                icon: const Icon(Icons.g_mobiledata, size: 28),
-                label: const Text("المتابعة باستخدام حساب Google", style: TextStyle(fontFamily: 'Tajawal')),
+                onPressed: _isLoading ? null : _showEmployeeLoginDialog,
+                icon: const Icon(Icons.badge, size: 24),
+                label: const Text("دخول موظف (بالرمز)", style: TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
               ),
 
-              const SizedBox(height: 16),
+              const SizedBox(height: 32),
               
+              // Guest Login
               TextButton(
                 onPressed: _isLoading ? null : _enterAsGuest,
-                child: const Text("الدخول لاحقاً كزائر وتجربة التطبيق", style: TextStyle(fontFamily: 'Tajawal', decoration: TextDecoration.underline)),
-              ),
-
-              const SizedBox(height: 24),
-              
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _isLogin = !_isLogin;
-                  });
-                },
-                child: Text(
-                  _isLogin ? "ليس لديك حساب؟ إنشاء حساب جديد" : "لديك حساب بالفعل؟ تسجيل الدخول",
-                  style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16),
-                ),
+                child: const Text("الدخول كزائر وتجربة النظام", style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, decoration: TextDecoration.underline)),
               ),
             ],
           ),

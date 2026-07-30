@@ -2,6 +2,7 @@ import 'package:tajer/l10n/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'dart:io' show Platform;
@@ -215,100 +216,81 @@ class AuthRepository {
   }
 
 
-  Future<void> signUpWithEmail(String email, String password, String name, {bool forceLogout = true}) async {
-    try {
-      final processedEmail = email.trim().toLowerCase();
-      final currentUser = _auth.currentUser;
-      if (currentUser == null) throw Exception("No user logged in");
-      
-      if (currentUser.isAnonymous) {
-        final anonUid = currentUser.uid;
-        
-        final credential = EmailAuthProvider.credential(email: processedEmail, password: password);
-        final userCredential = await currentUser.linkWithCredential(credential);
-        final newUser = userCredential.user;
-        
-        if (newUser != null) {
-          await newUser.updateDisplayName(name);
-          await newUser.sendEmailVerification();
-          
-          await _firestore.collection('users').doc(anonUid).set({
-            'isAnonymous': false,
-            'email': processedEmail,
-            'name': name,
-          }, SetOptions(merge: true));
-
-          // Force logout only if it's a fresh signup (not an in-app upgrade)
-          if (forceLogout) {
-            await _auth.signOut();
-          }
-        }
-      } else {
-        throw Exception("أنت مسجل الدخول بالفعل");
-      }
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'credential-already-in-use' || e.code == 'email-already-in-use') {
-        throw Exception("هذا البريد الإلكتروني مستخدم بالفعل، يرجى تسجيل الدخول بدلاً من إنشاء حساب جديد");
-      }
-      throw Exception(e.message ?? "حدث خطأ غير معروف");
-    } catch (e) {
-      throw Exception("حدث خطأ أثناء إنشاء الحساب: $e");
-    }
+  String _generateEmployeeEmail(String merchantEmail, String pin) {
+    // Generate a unique hidden email for Firebase Auth
+    // E.g. 123456_dotk@gmail.com@tajer.employee.local
+    final cleanEmail = merchantEmail.trim().toLowerCase();
+    return "${pin}_${cleanEmail}@tajer.employee.local";
   }
 
-  Future<void> signInWithEmail(String email, String password, {bool mergeData = false, DataMigrationService? migrationService}) async {
+  Future<void> signInAsEmployee(String merchantEmail, String pin) async {
     try {
-      final processedEmail = email.trim().toLowerCase();
-      final anonUid = _auth.currentUser?.isAnonymous == true ? _auth.currentUser!.uid : null;
-      final userCred = await _auth.signInWithEmailAndPassword(email: processedEmail, password: password);
-      
-      // Check if email is verified
-      if (userCred.user != null && !userCred.user!.emailVerified) {
-        await _auth.signOut();
-        throw Exception("email-not-verified");
-      }
-
-      if (mergeData && anonUid != null && migrationService != null && userCred.user != null) {
-        await migrationService.migrateData(anonUid, userCred.user!.uid);
-      }
+      final hiddenEmail = _generateEmployeeEmail(merchantEmail, pin);
+      await _auth.signInWithEmailAndPassword(email: hiddenEmail, password: pin);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
-        try {
-          final methods = await _auth.fetchSignInMethodsForEmail(processedEmail);
-          if (methods.contains('google.com')) {
-            throw Exception("لقد قمت بإنشاء حسابك مسبقاً باستخدام جوجل، يرجى الدخول عبر زر Google.");
-          }
-        } catch (_) {
-          // Ignore error and fall through to default invalid credentials message
+        throw Exception("بيانات غير صحيحة. تأكد من إيميل التاجر ورمز الدخول.");
+      }
+      throw Exception(e.message ?? "حدث خطأ أثناء تسجيل دخول الموظف");
+    } catch (e) {
+      throw Exception("حدث خطأ غير معروف: $e");
+    }
+  }
+
+  Future<void> createEmployee(String merchantEmail, String name, String pin) async {
+    try {
+      final merchantUid = _auth.currentUser?.uid;
+      if (merchantUid == null) throw Exception("يجب أن تكون مسجل الدخول كتاجر لإضافة موظف");
+
+      // Check current employee count
+      final empSnapshot = await _firestore.collection('users').doc(merchantUid).collection('employees').get();
+      if (empSnapshot.docs.length >= 3) {
+        throw Exception("لقد وصلت للحد الأقصى (3 موظفين)");
+      }
+
+      final hiddenEmail = _generateEmployeeEmail(merchantEmail, pin);
+
+      // We must create the user without logging out the current merchant.
+      final tempApp = await Firebase.initializeApp(
+        name: 'EmployeeCreatorApp_${DateTime.now().millisecondsSinceEpoch}',
+        options: Firebase.app().options,
+      );
+      
+      try {
+        final tempAuth = FirebaseAuth.instanceFor(app: tempApp);
+        final userCred = await tempAuth.createUserWithEmailAndPassword(email: hiddenEmail, password: pin);
+        
+        final employeeUid = userCred.user?.uid;
+        if (employeeUid != null) {
+          // Save employee info in merchant's document
+          await _firestore.collection('users').doc(merchantUid).collection('employees').doc(employeeUid).set({
+            'name': name,
+            'pin': pin,
+            'createdAt': FieldValue.serverTimestamp(),
+            'merchantUid': merchantUid,
+          });
         }
-        throw Exception("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+      } finally {
+        await tempApp.delete(); // Always clean up
       }
-      throw Exception(e.message ?? "حدث خطأ أثناء تسجيل الدخول");
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'email-already-in-use') {
+        throw Exception("رمز الدخول (PIN) هذا مستخدم بالفعل لموظف آخر، يرجى اختيار رمز مختلف.");
+      }
+      throw Exception(e.message ?? "حدث خطأ أثناء إنشاء الموظف");
     } catch (e) {
-      if (e.toString().contains("email-not-verified")) rethrow;
-      throw Exception("حدث خطأ أثناء تسجيل الدخول: $e");
+      throw Exception("حدث خطأ غير معروف: $e");
     }
   }
 
-  Future<void> resetPassword(String email) async {
+  Future<void> deleteEmployee(String employeeUid) async {
     try {
-      final processedEmail = email.trim().toLowerCase();
-      final userDoc = await _firestore.collection('users').where('email', isEqualTo: processedEmail).get();
-      if (userDoc.docs.isEmpty) {
-        throw Exception("هذا البريد الإلكتروني غير مسجل لدينا.");
-      }
-      await _auth.sendPasswordResetEmail(email: processedEmail);
+      final merchantUid = _auth.currentUser?.uid;
+      if (merchantUid == null) throw Exception("يجب أن تكون مسجل الدخول");
+      
+      await _firestore.collection('users').doc(merchantUid).collection('employees').doc(employeeUid).delete();
     } catch (e) {
-      if (e.toString().contains("غير مسجل")) rethrow;
-      throw Exception("حدث خطأ أثناء إرسال رابط استعادة كلمة المرور: $e");
-    }
-  }
-
-  Future<void> sendEmailVerification() async {
-    try {
-      await _auth.currentUser?.sendEmailVerification();
-    } catch (e) {
-      throw Exception("حدث خطأ أثناء إرسال رابط التفعيل: $e");
+      throw Exception("حدث خطأ أثناء حذف الموظف: $e");
     }
   }
 }

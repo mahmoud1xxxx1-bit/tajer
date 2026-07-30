@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../features/authentication/data/auth_repository.dart';
 import '../features/authentication/presentation/startup_screen.dart';
 import '../features/authentication/presentation/upgrade_account_screen.dart';
-import '../features/authentication/presentation/email_auth_screen.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/subscriptions/presentation/paywall_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
@@ -53,10 +52,6 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/upgrade',
         builder: (context, state) => const UpgradeAccountScreen(),
-      ),
-      GoRoute(
-        path: '/email_auth',
-        builder: (context, state) => const EmailAuthScreen(),
       ),
       GoRoute(
         path: '/paywall',

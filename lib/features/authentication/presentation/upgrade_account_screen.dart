@@ -189,17 +189,6 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
                   padding: EdgeInsets.symmetric(vertical: 12),
                 ),
               ),
-              SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: _isLoading ? null : () => context.push('/email_auth'),
-                icon: Icon(Icons.email, size: 24),
-                label: Text('ربط باستخدام البريد الإلكتروني', style: TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  backgroundColor: Colors.grey[200],
-                  foregroundColor: Colors.blue[900],
-                ),
-              ),
             ] else
               Column(
                 children: [

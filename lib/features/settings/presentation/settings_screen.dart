@@ -27,11 +27,6 @@ class SettingsScreen extends ConsumerWidget {
               title: Text(l10n.upgradeAccount, style: TextStyle(fontFamily: 'Tajawal')),
               onTap: () => context.push('/upgrade'),
             ),
-            ListTile(
-              leading: Icon(Icons.email, color: Colors.blue),
-              title: Text('تسجيل الدخول / إنشاء حساب', style: TextStyle(fontFamily: 'Tajawal')),
-              onTap: () => context.push('/email_auth'),
-            ),
           ] else ...[
             ListTile(
               leading: Icon(Icons.person, color: Colors.blue),

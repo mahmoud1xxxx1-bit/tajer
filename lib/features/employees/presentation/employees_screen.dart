@@ -1,188 +1,303 @@
-import 'package:tajer/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
-import '../data/employee_repository.dart';
-import '../domain/employee.dart';
-import '../../../core/theme/glass_card.dart';
-import '../../../core/services/guest_limit_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../authentication/data/auth_repository.dart';
 
-class EmployeesScreen extends ConsumerWidget {
+class EmployeesScreen extends ConsumerStatefulWidget {
   const EmployeesScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final employeesAsync = ref.watch(employeesStreamProvider);
+  ConsumerState<EmployeesScreen> createState() => _EmployeesScreenState();
+}
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('الموظفين', style: TextStyle(fontFamily: 'Tajawal')),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          final canAdd = await GuestLimitService.canAddEmployee(context, ref);
-          if (!canAdd) return;
-          if (context.mounted) _showEmployeeDialog(context, ref, null);
-        },
-        icon: Icon(Icons.add),
-        label: Text('إضافة موظف', style: TextStyle(fontFamily: 'Tajawal')),
-      ),
-      body: employeesAsync.when(
-        data: (employees) {
-          if (employees.isEmpty) {
-            return Center(child: Text('لا يوجد موظفين', style: TextStyle(fontFamily: 'Tajawal')));
-          }
-          return ListView.builder(
-            padding: EdgeInsets.all(16),
-            itemCount: employees.length,
-            itemBuilder: (context, index) {
-              final emp = employees[index];
-              return GlassCard(
-                margin: EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  leading: CircleAvatar(
-                    child: Icon(Icons.person),
-                  ),
-                  title: Text(emp.name, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                  subtitle: Text(emp.role == 'cashier' ? 'كاشير' : 'مدير', style: TextStyle(fontFamily: 'Tajawal')),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: Icon(Icons.edit, color: Colors.blue),
-                        onPressed: () => _showEmployeeDialog(context, ref, emp),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.delete, color: Colors.red),
-                        onPressed: () => _deleteEmployee(context, ref, emp.id),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          );
-        },
-        loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('خطأ: $e')),
-      ),
+class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
+  final _merchantUid = FirebaseAuth.instance.currentUser?.uid;
+  final _merchantEmail = FirebaseAuth.instance.currentUser?.email ?? "البريد غير متوفر";
+  bool _isLoading = false;
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message, style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.red),
     );
   }
 
-  void _deleteEmployee(BuildContext context, WidgetRef ref, String id) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('حذف', style: TextStyle(fontFamily: 'Tajawal')),
-        content: Text('هل أنت متأكد؟', style: TextStyle(fontFamily: 'Tajawal')),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              ref.read(employeeRepositoryProvider)?.deleteEmployee(id);
-              Navigator.pop(context);
-            },
-            child: Text('تأكيد', style: TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
-          ),
-        ],
-      ),
+  void _showSuccess(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message, style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green),
     );
   }
 
-  void _showEmployeeDialog(BuildContext context, WidgetRef ref, Employee? employee) {
-    final nameController = TextEditingController(text: employee?.name);
-    final emailController = TextEditingController(text: employee?.email);
-    final passwordController = TextEditingController();
-    String selectedRole = employee?.role ?? 'cashier';
+  void _shareCredentials(String empName, String pin) {
+    final text = '''
+مرحباً $empName،
+تم إنشاء حساب موظف لك في تطبيق تاجر.
+يرجى تحميل التطبيق، ثم اختيار "دخول موظف (بالرمز)".
+
+الإيميل الخاص بالمتجر: $_merchantEmail
+رمز الدخول الخاص بك (PIN): $pin
+
+لا تشارك هذا الرمز مع أحد!
+''';
+    Share.share(text);
+  }
+
+  void _showAddEmployeeDialog(int currentCount) {
+    if (currentCount >= 3) {
+      _showError("لقد وصلت للحد الأقصى (3 موظفين). قم بحذف موظف لإضافة بديل له.");
+      return;
+    }
+
+    final nameController = TextEditingController();
+    final pinController = TextEditingController();
+    bool isSaving = false;
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          return AlertDialog(
-            title: Text(employee == null ? 'إضافة موظف' : 'تعديل موظف', style: TextStyle(fontFamily: 'Tajawal')),
-            content: SingleChildScrollView(
-              child: Column(
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text("إضافة موظف جديد", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: nameController,
-                    decoration: InputDecoration(labelText: 'الاسم', border: OutlineInputBorder()),
-                    style: TextStyle(fontFamily: 'Tajawal'),
-                  ),
-                  SizedBox(height: 16),
-                  TextField(
-                    controller: emailController,
-                    decoration: InputDecoration(labelText: 'البريد الإلكتروني', border: OutlineInputBorder()),
-                    keyboardType: TextInputType.emailAddress,
-                    style: TextStyle(fontFamily: 'Tajawal'),
-                    enabled: employee == null, // Cannot change email after creation
-                  ),
-                  if (employee == null) ...[
-                    SizedBox(height: 16),
-                    TextField(
-                      controller: passwordController,
-                      decoration: InputDecoration(labelText: 'كلمة المرور', border: OutlineInputBorder()),
-                      obscureText: true,
-                      style: TextStyle(fontFamily: 'Tajawal'),
+                    decoration: const InputDecoration(
+                      labelText: "اسم الموظف",
+                      prefixIcon: Icon(Icons.person),
+                      border: OutlineInputBorder(),
                     ),
-                  ],
-                  SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: selectedRole,
-                    decoration: InputDecoration(labelText: 'الصلاحية', border: OutlineInputBorder()),
-                    items: [
-                      DropdownMenuItem(value: 'admin', child: Text('مدير', style: TextStyle(fontFamily: 'Tajawal'))),
-                      DropdownMenuItem(value: 'cashier', child: Text('كاشير', style: TextStyle(fontFamily: 'Tajawal'))),
-                    ],
-                    onChanged: (val) {
-                      if (val != null) setState(() => selectedRole = val);
-                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: pinController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    decoration: const InputDecoration(
+                      labelText: "رمز الدخول (6 أرقام)",
+                      prefixIcon: Icon(Icons.pin),
+                      border: OutlineInputBorder(),
+                      helperText: "مثال: 123456 (هذا هو باسورد الموظف)",
+                      helperStyle: TextStyle(fontFamily: 'Tajawal')
+                    ),
                   ),
                 ],
               ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  final name = nameController.text.trim();
-                  final email = emailController.text.trim();
-                  final password = passwordController.text;
-                  if (name.isEmpty || email.isEmpty) return;
-                  if (employee == null && password.length < 6) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('كلمة المرور يجب أن تكون 6 أحرف على الأقل')));
-                    return;
-                  }
+              actions: [
+                TextButton(
+                  onPressed: isSaving ? null : () => Navigator.of(context).pop(),
+                  child: const Text("إلغاء", style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  onPressed: isSaving ? null : () async {
+                    final name = nameController.text.trim();
+                    final pin = pinController.text.trim();
 
-                  final newEmployee = Employee(
-                    id: employee?.id ?? const Uuid().v4(),
-                    name: name,
-                    email: email,
-                    role: selectedRole,
-                    createdAt: employee?.createdAt ?? DateTime.now(),
-                  );
+                    if (name.isEmpty) {
+                      _showError("يرجى إدخال اسم الموظف");
+                      return;
+                    }
+                    if (pin.length < 6) {
+                      _showError("رمز الدخول يجب أن يكون 6 أرقام على الأقل");
+                      return;
+                    }
 
-                  if (employee == null) {
-                    ref.read(employeeRepositoryProvider)?.addEmployee(newEmployee, password);
-                  } else {
-                    ref.read(employeeRepositoryProvider)?.updateEmployee(newEmployee);
-                  }
-                  Navigator.pop(context);
-                },
-                child: Text('حفظ', style: TextStyle(fontFamily: 'Tajawal')),
-              ),
-            ],
-          );
-        }
+                    setDialogState(() => isSaving = true);
+                    try {
+                      await ref.read(authRepositoryProvider).createEmployee(_merchantEmail, name, pin);
+                      Navigator.of(context).pop();
+                      _showSuccess("تم إضافة الموظف بنجاح");
+                    } catch (e) {
+                      _showError(e.toString().replaceAll("Exception: ", ""));
+                    } finally {
+                      if (mounted) setDialogState(() => isSaving = false);
+                    }
+                  },
+                  child: isSaving 
+                    ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                    : const Text("إضافة", style: TextStyle(fontFamily: 'Tajawal')),
+                ),
+              ],
+            );
+          }
+        );
+      }
+    );
+  }
+
+  void _deleteEmployee(String id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("حذف موظف", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
+        content: const Text("هل أنت متأكد من حذف هذا الموظف؟ لن يتمكن من تسجيل الدخول بعد الآن.", style: TextStyle(fontFamily: 'Tajawal')),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text("إلغاء", style: TextStyle(fontFamily: 'Tajawal'))),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text("حذف نهائياً", style: TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
+          ),
+        ],
+      )
+    );
+
+    if (confirm == true) {
+      setState(() => _isLoading = true);
+      try {
+        await ref.read(authRepositoryProvider).deleteEmployee(id);
+        _showSuccess("تم حذف الموظف");
+      } catch (e) {
+        _showError(e.toString().replaceAll("Exception: ", ""));
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_merchantUid == null) {
+      return const Scaffold(body: Center(child: Text("يجب تسجيل الدخول كتاجر")));
+    }
+
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("إدارة الموظفين", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        backgroundColor: theme.colorScheme.primaryContainer,
       ),
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator())
+        : StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance.collection('users').doc(_merchantUid).collection('employees').orderBy('createdAt', descending: true).snapshots(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              final docs = snapshot.data?.docs ?? [];
+              final currentCount = docs.length;
+
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Instructions Card
+                    Card(
+                      elevation: 0,
+                      color: theme.colorScheme.surfaceVariant,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(Icons.info_outline, color: theme.colorScheme.primary),
+                                const SizedBox(width: 8),
+                                Text("تعليمات هامة للتاجر", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: theme.colorScheme.primary, fontSize: 16)),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              "1. يمكنك إضافة حد أقصى 3 موظفين.\n"
+                              "2. عندما يحمل الموظف التطبيق، يجب أن يختار (دخول موظف بالرمز).\n"
+                              "3. سيطلب منه التطبيق إدخال إيميلك الأساسي ورمز الدخول الذي أنشأته له.",
+                              style: TextStyle(fontFamily: 'Tajawal', height: 1.5),
+                            ),
+                            const Divider(height: 24),
+                            const Text("إيميلك الأساسي (الذي يجب أن يكتبه الموظف):", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.grey.shade300)
+                              ),
+                              child: Text(_merchantEmail, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text("قائمة الموظفين ($currentCount/3)", style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold)),
+                        ElevatedButton.icon(
+                          onPressed: () => _showAddEmployeeDialog(currentCount),
+                          icon: const Icon(Icons.person_add, size: 20),
+                          label: const Text("إضافة", style: TextStyle(fontFamily: 'Tajawal')),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // List
+                    Expanded(
+                      child: docs.isEmpty
+                        ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
+                                const SizedBox(height: 16),
+                                Text("لا يوجد موظفين حالياً", style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey[600], fontSize: 16)),
+                              ],
+                            )
+                          )
+                        : ListView.separated(
+                            itemCount: currentCount,
+                            separatorBuilder: (_, __) => const Divider(),
+                            itemBuilder: (context, index) {
+                              final data = docs[index].data() as Map<String, dynamic>;
+                              final id = docs[index].id;
+                              final name = data['name'] ?? 'بدون اسم';
+                              final pin = data['pin'] ?? '****';
+
+                              return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: theme.colorScheme.primaryContainer,
+                                  child: Icon(Icons.badge, color: theme.colorScheme.primary),
+                                ),
+                                title: Text(name, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                subtitle: Text("رمز الدخول: $pin", style: const TextStyle(fontFamily: 'Tajawal')),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.share, color: Colors.green),
+                                      tooltip: "مشاركة بيانات الدخول (واتساب)",
+                                      onPressed: () => _shareCredentials(name, pin),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete, color: Colors.red),
+                                      tooltip: "حذف الموظف",
+                                      onPressed: () => _deleteEmployee(id),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
     );
   }
 }
