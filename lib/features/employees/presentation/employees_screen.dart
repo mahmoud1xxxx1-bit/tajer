@@ -288,15 +288,15 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
   Map<String, String> _getPermissionLabels(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return {
-      'can_manage_products': l10n.perm_can_manage_products,
-      'can_view_cost': l10n.perm_can_view_cost,
-      'can_manage_inventory': l10n.perm_can_manage_inventory,
-      'can_create_orders': l10n.perm_can_create_orders,
-      'can_cancel_orders': l10n.perm_can_cancel_orders,
-      'can_sell_on_credit': l10n.perm_can_sell_on_credit,
-      'can_manage_customers': l10n.perm_can_manage_customers,
-      'can_receive_payments': l10n.perm_can_receive_payments,
-      'can_manage_expenses': l10n.perm_can_manage_expenses,
+      'can_manage_products': l10n.permCanManageProducts,
+      'can_view_cost': l10n.permCanViewCost,
+      'can_manage_inventory': l10n.permCanManageInventory,
+      'can_create_orders': l10n.permCanCreateOrders,
+      'can_cancel_orders': l10n.permCanCancelOrders,
+      'can_sell_on_credit': l10n.permCanSellOnCredit,
+      'can_manage_customers': l10n.permCanManageCustomers,
+      'can_receive_payments': l10n.permCanReceivePayments,
+      'can_manage_expenses': l10n.permCanManageExpenses,
     };
   }
 
