@@ -1,3 +1,4 @@
+import '../domain/order.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -44,7 +45,7 @@ class OrdersScreen extends ConsumerWidget {
               );
             }
 
-            final Map<String, List<dynamic>> groupedOrders = {};
+            final Map<String, List<AppOrder>> groupedOrders = {};
             final now = DateTime.now();
             final today = DateTime(now.year, now.month, now.day);
             final yesterday = today.subtract(const Duration(days: 1));
@@ -165,7 +166,7 @@ class OrdersScreen extends ConsumerWidget {
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
                                             Text(
-                                              'طلب #' + order.id.substring(0, 5).toUpperCase(),
+                                              'طلب #${order.id.length >= 5 ? order.id.substring(0, 5).toUpperCase() : order.id.toUpperCase()}',
                                               style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16),
                                             ),
                                             Text(
