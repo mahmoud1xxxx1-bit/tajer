@@ -161,6 +161,17 @@ class DashboardHome extends ConsumerWidget {
                   context.push('/employees');
                 },
               ),
+              Divider(),
+              ListTile(
+                leading: Icon(Icons.logout, color: Colors.red),
+                title: Text(l10n.logout, style: TextStyle(fontFamily: 'Tajawal', color: Colors.red)),
+                onTap: () async {
+                  await ref.read(authRepositoryProvider).signOut();
+                  if (context.mounted) {
+                    context.go('/auth');
+                  }
+                },
+              ),
           ],
         ),
       ),
