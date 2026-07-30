@@ -119,6 +119,32 @@ class AuthRepository {
     await _auth.signOut();
   }
 
+  Future<void> _ensureUserDocument(User user, {String? email, String? name}) async {
+    final docRef = _firestore.collection('users').doc(user.uid);
+    final docSnap = await docRef.get();
+    
+    if (!docSnap.exists) {
+      final deviceId = await _getDeviceId();
+      final appUser = AppUser(
+        id: user.uid,
+        createdAt: DateTime.now(),
+        isAnonymous: false,
+        plan: 'merchant',
+        deviceId: deviceId,
+        email: email,
+        name: name,
+      );
+      await docRef.set(appUser.toJson());
+    } else {
+      // Just update email and name if needed
+      await docRef.update({
+        'isAnonymous': false,
+        'email': email ?? docSnap.data()?['email'],
+        'name': name ?? docSnap.data()?['name'],
+      });
+    }
+  }
+
   Future<void> signInOrLinkWithGoogle() async {
     try {
       final currentUser = _auth.currentUser;
@@ -147,7 +173,10 @@ class AuthRepository {
               }
             }
           } else {
-            await _auth.signInWithPopup(googleProvider);
+            final userCred = await _auth.signInWithPopup(googleProvider);
+            if (userCred.user != null) {
+              await _ensureUserDocument(userCred.user!, email: userCred.user!.email, name: userCred.user!.displayName);
+            }
           }
       } else {
         // Native platforms (Android/iOS)
@@ -180,7 +209,10 @@ class AuthRepository {
           }
         } else {
           // If not anonymous, just sign in directly
-          await _auth.signInWithCredential(credential);
+          final userCred = await _auth.signInWithCredential(credential);
+          if (userCred.user != null) {
+            await _ensureUserDocument(userCred.user!, email: googleUser.email, name: googleUser.displayName);
+          }
         }
       }
     } catch (e) {
@@ -196,6 +228,9 @@ class AuthRepository {
     
     // Sign in with the pending credential
     final userCred = await _auth.signInWithCredential(_pendingCredential!);
+    if (userCred.user != null) {
+      await _ensureUserDocument(userCred.user!, email: userCred.user!.email, name: userCred.user!.displayName);
+    }
     _pendingCredential = null;
     
     if (merge && anonUid != null && userCred.user != null) {
@@ -208,6 +243,9 @@ class AuthRepository {
     final anonUid = _auth.currentUser?.uid;
     final googleProvider = GoogleAuthProvider();
     final userCred = await _auth.signInWithPopup(googleProvider);
+    if (userCred.user != null) {
+      await _ensureUserDocument(userCred.user!, email: userCred.user!.email, name: userCred.user!.displayName);
+    }
     
     if (merge && anonUid != null && userCred.user != null) {
       final newUid = userCred.user!.uid;
