@@ -256,8 +256,8 @@ class AuthRepository {
 
   String _generateEmployeeEmail(String merchantEmail, String pin) {
     // Generate a unique hidden email for Firebase Auth
-    // E.g. 123456_dotk@gmail.com@tajer.employee.local
-    final cleanEmail = merchantEmail.trim().toLowerCase();
+    // E.g. 123456_dotk_at_gmail.com@tajer.employee.local
+    final cleanEmail = merchantEmail.trim().toLowerCase().replaceAll('@', '_at_');
     return "${pin}_${cleanEmail}@tajer.employee.local";
   }
 

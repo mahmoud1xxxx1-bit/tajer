@@ -223,7 +223,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(color: Colors.grey.shade300)
                               ),
-                              child: Text(_merchantEmail, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                              child: Text(_merchantEmail, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black)),
                             ),
                           ],
                         ),
