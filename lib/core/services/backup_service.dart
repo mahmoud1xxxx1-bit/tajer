@@ -35,7 +35,12 @@ class BackupService {
       backupData[sub] = snapshot.docs.map((doc) => doc.data()..['id'] = doc.id).toList();
     }
 
-    return jsonEncode(backupData);
+    return jsonEncode(backupData, toEncodable: (dynamic item) {
+      if (item is Timestamp) {
+        return item.toDate().toIso8601String();
+      }
+      return item;
+    });
   }
 
   /// 2. Import data from JSON string
