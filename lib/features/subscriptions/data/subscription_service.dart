@@ -1,4 +1,4 @@
-import 'dart:io';
+// Removed dart:io to support web build
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -23,9 +23,9 @@ class SubscriptionService {
     await Purchases.setLogLevel(LogLevel.debug);
 
     PurchasesConfiguration configuration;
-    if (Platform.isAndroid) {
+    if (defaultTargetPlatform == TargetPlatform.android) {
       configuration = PurchasesConfiguration(_revenueCatGoogleApiKey);
-    } else if (Platform.isIOS) {
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       configuration = PurchasesConfiguration(_revenueCatAppleApiKey);
     } else {
       return;
