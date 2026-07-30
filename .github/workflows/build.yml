@@ -38,9 +38,13 @@ jobs:
       run: flutter build appbundle --release > build_appbundle.log 2>&1
 
 
-    - name: Send Build Log
+    - name: Upload Error Logs
       if: always()
-      run: curl -X POST -H "Content-Type: text/plain" -d @build_appbundle.log https://ptsv3.com/t/tajerlogs2/post/ || true
+      uses: actions/upload-artifact@v4
+      with:
+        name: error-logs
+        path: |
+          build_appbundle.log
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
