@@ -15,8 +15,18 @@ class InventoryLogRepository {
       _firestore.collection('merchants').doc(_merchantId).collection('inventory_logs');
 
   Stream<List<InventoryLog>> watchLogs() {
-    return _logsRef.orderBy('date', descending: true).snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => InventoryLog.fromJson(doc.data())).toList();
+    return _logsRef.withConverter(
+      fromFirestore: (snapshot, _) {
+        final data = snapshot.data()!;
+        data['id'] = snapshot.id;
+        data['changeQuantity'] = (data['changeQuantity'] ?? 0).toInt();
+        data['previousQuantity'] = (data['previousQuantity'] ?? 0).toInt();
+        data['newQuantity'] = (data['newQuantity'] ?? 0).toInt();
+        return InventoryLog.fromJson(data);
+      },
+      toFirestore: (log, _) => log.toJson(),
+    ).orderBy('date', descending: true).snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) => doc.data()).toList();
     });
   }
 

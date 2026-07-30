@@ -14,8 +14,16 @@ class ExpenseRepository {
       _firestore.collection('merchants').doc(_merchantId).collection('expenses');
 
   Stream<List<Expense>> watchExpenses() {
-    return _expensesRef.orderBy('date', descending: true).snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => Expense.fromJson(doc.data())).toList();
+    return _expensesRef.withConverter(
+      fromFirestore: (snapshot, _) {
+        final data = snapshot.data()!;
+        data['id'] = snapshot.id;
+        data['amount'] = (data['amount'] ?? 0.0).toDouble();
+        return Expense.fromJson(data);
+      },
+      toFirestore: (expense, _) => expense.toJson(),
+    ).orderBy('date', descending: true).snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) => doc.data()).toList();
     });
   }
 

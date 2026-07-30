@@ -14,8 +14,22 @@ class SupplierRepository {
       _firestore.collection('merchants').doc(_merchantId).collection('suppliers');
 
   Stream<List<Supplier>> watchSuppliers() {
-    return _suppliersRef.orderBy('createdAt', descending: true).snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => Supplier.fromJson(doc.data())).toList();
+    return _suppliersRef.withConverter(
+      fromFirestore: (snapshot, _) {
+        final data = snapshot.data()!;
+        data['id'] = snapshot.id;
+        data['merchantId'] = data['merchantId']?.toString() ?? '';
+        data['name'] = data['name']?.toString() ?? '';
+        data['phone'] = data['phone']?.toString() ?? '';
+        data['totalDebt'] = (data['totalDebt'] ?? 0.0).toDouble();
+        if (data['createdAt'] == null) {
+          data['createdAt'] = Timestamp.now();
+        }
+        return Supplier.fromJson(data);
+      },
+      toFirestore: (supplier, _) => supplier.toJson(),
+    ).orderBy('createdAt', descending: true).snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) => doc.data()).toList();
     });
   }
 

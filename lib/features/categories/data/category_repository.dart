@@ -14,8 +14,20 @@ class CategoryRepository {
       _firestore.collection('merchants').doc(_merchantId).collection('categories');
 
   Stream<List<Category>> watchCategories() {
-    return _categoriesRef.orderBy('createdAt', descending: true).snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => Category.fromJson(doc.data())).toList();
+    return _categoriesRef.withConverter(
+      fromFirestore: (snapshot, _) {
+        final data = snapshot.data()!;
+        data['id'] = snapshot.id;
+        data['merchantId'] = data['merchantId']?.toString() ?? '';
+        data['name'] = data['name']?.toString() ?? '';
+        if (data['createdAt'] == null) {
+          data['createdAt'] = Timestamp.now();
+        }
+        return Category.fromJson(data);
+      },
+      toFirestore: (category, _) => category.toJson(),
+    ).orderBy('createdAt', descending: true).snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) => doc.data()).toList();
     });
   }
 
