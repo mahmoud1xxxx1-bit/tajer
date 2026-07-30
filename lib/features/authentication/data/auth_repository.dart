@@ -215,7 +215,7 @@ class AuthRepository {
   }
 
 
-  Future<void> signUpWithEmail(String email, String password, String name) async {
+  Future<void> signUpWithEmail(String email, String password, String name, {bool forceLogout = true}) async {
     try {
       final processedEmail = email.trim().toLowerCase();
       final currentUser = _auth.currentUser;
@@ -238,8 +238,10 @@ class AuthRepository {
             'name': name,
           }, SetOptions(merge: true));
 
-          // Force logout so user cannot bypass email verification
-          await _auth.signOut();
+          // Force logout only if it's a fresh signup (not an in-app upgrade)
+          if (forceLogout) {
+            await _auth.signOut();
+          }
         }
       } else {
         throw Exception("أنت مسجل الدخول بالفعل");
@@ -271,6 +273,14 @@ class AuthRepository {
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
+        try {
+          final methods = await _auth.fetchSignInMethodsForEmail(processedEmail);
+          if (methods.contains('google.com')) {
+            throw Exception("لقد قمت بإنشاء حسابك مسبقاً باستخدام جوجل، يرجى الدخول عبر زر Google.");
+          }
+        } catch (_) {
+          // Ignore error and fall through to default invalid credentials message
+        }
         throw Exception("البريد الإلكتروني أو كلمة المرور غير صحيحة");
       }
       throw Exception(e.message ?? "حدث خطأ أثناء تسجيل الدخول");

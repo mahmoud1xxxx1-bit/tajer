@@ -66,9 +66,16 @@ class _EmailAuthScreenState extends ConsumerState<EmailAuthScreen> {
         _showSuccess("تم تسجيل الدخول بنجاح");
         if (mounted) context.go('/');
       } else {
-        await authRepo.signUpWithEmail(email, password, name);
-        _showSuccess("تم إنشاء الحساب! يرجى مراجعة بريدك الإلكتروني لتفعيله");
-        if (mounted) context.go('/');
+        final isAnonymous = authRepo.currentUser?.isAnonymous ?? false;
+        await authRepo.signUpWithEmail(email, password, name, forceLogout: !isAnonymous);
+        
+        if (isAnonymous) {
+          _showSuccess("تم ربط الحساب بنجاح! يرجى مراجعة بريدك الإلكتروني لتفعيله لاحقاً.");
+          if (mounted) Navigator.pop(context); // Go back to settings
+        } else {
+          _showSuccess("تم إنشاء الحساب! يرجى مراجعة بريدك الإلكتروني لتفعيله");
+          if (mounted) context.go('/'); // Fresh signup, go to root to login
+        }
       }
     } catch (e) {
       _showError(e.toString().replaceAll("Exception: ", ""));

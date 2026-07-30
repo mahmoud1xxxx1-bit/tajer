@@ -8,6 +8,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../../core/services/data_migration_service.dart';
 
 class UpgradeAccountScreen extends ConsumerStatefulWidget {
   const UpgradeAccountScreen({super.key});
@@ -49,6 +50,34 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
     }
   }
 
+  Future<void> _handleDataMerge(Future<void> Function(bool merge) onDecide) async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text('دمج البيانات', style: TextStyle(fontFamily: 'Tajawal')),
+        content: Text(
+          'لقد قمت مسبقاً بإنشاء حساب بهذا البريد.\nهل تريد دمج أي بيانات تجريبية قمت بإضافتها (كالمنتجات أو الطلبات) مع حسابك القديم؟',
+          style: TextStyle(fontFamily: 'Tajawal'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text('لا، أريد حسابي القديم فقط', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text('نعم، قم بالدمج', style: TextStyle(fontFamily: 'Tajawal')),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null) {
+      await onDecide(result);
+    }
+  }
+
   Future<void> _linkGoogleAccount() async {
     setState(() => _isLoading = true);
     try {
@@ -70,10 +99,38 @@ class _UpgradeAccountScreenState extends ConsumerState<UpgradeAccountScreen> {
         );
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ø®Ø·Ø£ Ù ÙŠ Ø§Ù„Ø±Ø¨Ø·: $e')),
-        );
+      if (e.toString().contains('requires-merge-decision')) {
+        await _handleDataMerge((merge) async {
+           final authRepo = ref.read(authRepositoryProvider);
+           final migrationService = ref.read(dataMigrationServiceProvider);
+           
+           try {
+             setState(() => _isLoading = true);
+             await authRepo.resolveMerge(merge, migrationService);
+             
+             setState(() {
+               _isLinked = true;
+               _linkedEmail = FirebaseAuth.instance.currentUser?.email ?? 'حساب مسجل';
+             });
+             if (mounted) {
+               ScaffoldMessenger.of(context).showSnackBar(
+                 SnackBar(content: Text(AppLocalizations.of(context)!.text_31)),
+               );
+             }
+           } catch (mergeError) {
+             if (mounted) {
+               ScaffoldMessenger.of(context).showSnackBar(
+                 SnackBar(content: Text('خطأ في الدمج: $mergeError')),
+               );
+             }
+           }
+        });
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('خطأ في الربط: ${e.toString().replaceAll("Exception: ", "")}')),
+          );
+        }
       }
     } finally {
       if (mounted) {
