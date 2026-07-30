@@ -48,16 +48,6 @@ jobs:
       - name: Build APK
         run: flutter build apk --release > build_apk.log 2>&1
 
-
-      - name: Upload Error Logs
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: error-logs
-          path: |
-            build_apk.log
-            analyze_log.txt
-
       - name: Build App Bundle
         run: flutter build appbundle --release
 
