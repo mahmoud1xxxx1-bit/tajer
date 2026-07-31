@@ -25,6 +25,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
   final _priceController = TextEditingController();
   final _quantityController = TextEditingController();
   final _barcodeController = TextEditingController();
+  final _modifiersController = TextEditingController();
   String? _selectedCategoryId;
   bool _isLoading = false;
 
@@ -36,6 +37,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       _priceController.text = widget.productToEdit!.price.toString();
       _quantityController.text = widget.productToEdit!.quantity.toString();
       _barcodeController.text = widget.productToEdit!.barcode ?? '';
+      _modifiersController.text = widget.productToEdit!.modifiers.join('، ');
       _selectedCategoryId = widget.productToEdit!.categoryId;
     }
   }
@@ -46,6 +48,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     _priceController.dispose();
     _quantityController.dispose();
     _barcodeController.dispose();
+    _modifiersController.dispose();
     super.dispose();
   }
 
@@ -86,6 +89,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
         quantity: newQuantity,
         categoryId: _selectedCategoryId,
         barcode: _barcodeController.text.trim().isEmpty ? null : _barcodeController.text.trim(),
+        modifiers: _modifiersController.text.trim().isEmpty ? [] : _modifiersController.text.split('،').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
         createdAt: isEditing ? widget.productToEdit!.createdAt : DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -221,6 +225,16 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                   ),
                 ),
               ],
+            ),
+            SizedBox(height: 16),
+            TextFormField(
+              controller: _modifiersController,
+              decoration: InputDecoration(
+                labelText: 'أزرار سريعة (اختياري)',
+                hintText: 'مثال: بدون بصل، سفري، حار',
+                border: const OutlineInputBorder(),
+              ),
+              onFieldSubmitted: (_) => _submit(),
             ),
             SizedBox(height: 24),
             ElevatedButton(

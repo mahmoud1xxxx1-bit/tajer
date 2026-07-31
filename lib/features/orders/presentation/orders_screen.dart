@@ -57,23 +57,25 @@ class OrdersScreen extends ConsumerWidget {
               final orderDate = DateTime(d.year, d.month, d.day);
               
               String groupKey;
-              if (orderDate == today) {
-                groupKey = '0_اليوم - ' + DateFormat('yyyy/MM/dd').format(orderDate);
+              if (order.scheduledDate != null) {
+                groupKey = '00_طلبات مجدولة 🗓';
+              } else if (orderDate == today) {
+                groupKey = '01_اليوم - ' + DateFormat('yyyy/MM/dd').format(orderDate);
               } else if (orderDate == yesterday) {
-                groupKey = '1_أمس - ' + DateFormat('yyyy/MM/dd').format(orderDate);
+                groupKey = '02_أمس - ' + DateFormat('yyyy/MM/dd').format(orderDate);
               } else if (orderDate.isAfter(startOfWeek.subtract(const Duration(days: 1)))) {
                 final endOfWeek = startOfWeek.add(const Duration(days: 6));
-                groupKey = '2_هذا الأسبوع (من ' + DateFormat('MM/dd').format(startOfWeek) + ' إلى ' + DateFormat('MM/dd').format(endOfWeek) + ')';
+                groupKey = '03_هذا الأسبوع (من ' + DateFormat('MM/dd').format(startOfWeek) + ' إلى ' + DateFormat('MM/dd').format(endOfWeek) + ')';
               } else if (orderDate.isAfter(today.subtract(const Duration(days: 30)))) {
                 final diffDays = startOfWeek.difference(orderDate).inDays;
                 final weeksAgo = (diffDays / 7).floor() + 1;
                 final wStart = startOfWeek.subtract(Duration(days: weeksAgo * 7));
                 final wEnd = wStart.add(const Duration(days: 6));
-                groupKey = '3_قبل ' + weeksAgo.toString() + ' أسبوع (من ' + DateFormat('MM/dd').format(wStart) + ' إلى ' + DateFormat('MM/dd').format(wEnd) + ')';
+                groupKey = '04_قبل ' + weeksAgo.toString() + ' أسبوع (من ' + DateFormat('MM/dd').format(wStart) + ' إلى ' + DateFormat('MM/dd').format(wEnd) + ')';
               } else if (orderDate.year == today.year) {
-                groupKey = '4_شهر ' + DateFormat('MMMM').format(orderDate);
+                groupKey = '05_شهر ' + DateFormat('MMMM').format(orderDate);
               } else {
-                groupKey = '5_سنة ' + DateFormat('yyyy').format(orderDate);
+                groupKey = '06_سنة ' + DateFormat('yyyy').format(orderDate);
               }
               
               groupedOrders.putIfAbsent(groupKey, () => []).add(order);
@@ -88,7 +90,7 @@ class OrdersScreen extends ConsumerWidget {
                 final key = sortedKeys[index];
                 final groupOrders = groupedOrders[key]!;
                 final totalRevenue = groupOrders.fold(0.0, (sum, o) => sum + o.total);
-                final displayName = key.substring(2);
+                final displayName = key.substring(3);
                 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
@@ -216,6 +218,32 @@ class OrdersScreen extends ConsumerWidget {
                                             ),
                                           ),
                                         ],
+                                        if (order.scheduledDate != null) ...[
+                                          const SizedBox(height: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.purple.withOpacity(0.2),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: Text(
+                                              'موعد التسليم: ' + DateFormat('yyyy/MM/dd HH:mm').format(order.scheduledDate!),
+                                              style: const TextStyle(color: Colors.purple, fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 12),
+                                            ),
+                                          ),
+                                        ],
+                                        const SizedBox(height: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Text(
+                                            _getPaymentMethodName(order.paymentMethod),
+                                            style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 12),
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -295,6 +323,16 @@ class OrdersScreen extends ConsumerWidget {
       case 'pending':
       default:
         return AppLocalizations.of(context)!.text99;
+    }
+  }
+
+  String _getPaymentMethodName(String? method) {
+    switch (method) {
+      case 'cash': return 'دفع كاش 💵';
+      case 'mada': return 'دفع مدى 💳';
+      case 'transfer': return 'تحويل بنكي 🏦';
+      case 'apple_pay': return 'Apple Pay 🍏';
+      default: return 'دفع كاش 💵';
     }
   }
 }

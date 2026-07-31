@@ -15,6 +15,8 @@ class AppOrder {
   final String? notes;
   final String? creatorId;
   final String? creatorName;
+  final String? paymentMethod;
+  final DateTime? scheduledDate;
   final DateTime createdAt;
 
   const AppOrder({
@@ -30,6 +32,8 @@ class AppOrder {
     this.notes,
     this.creatorId,
     this.creatorName,
+    this.paymentMethod,
+    this.scheduledDate,
     required this.createdAt,
   });
 
@@ -50,7 +54,9 @@ class AppOrder {
       notes: json['notes'] as String?,
       creatorId: json['creatorId'] as String?,
       creatorName: json['creatorName'] as String?,
-      createdAt: const TimestampConverter().fromJson(json['createdAt']),
+      paymentMethod: json['paymentMethod'] as String? ?? 'cash',
+      scheduledDate: json['scheduledDate'] != null ? (json['scheduledDate'] as Timestamp).toDate() : null,
+      createdAt: (json['createdAt'] as Timestamp).toDate(),
     );
   }
 
@@ -68,7 +74,9 @@ class AppOrder {
       'notes': notes,
       'creatorId': creatorId,
       'creatorName': creatorName,
-      'createdAt': const TimestampConverter().toJson(createdAt),
+      'paymentMethod': paymentMethod ?? 'cash',
+      'scheduledDate': scheduledDate != null ? Timestamp.fromDate(scheduledDate!) : null,
+      'createdAt': Timestamp.fromDate(createdAt),
     };
   }
 
@@ -85,6 +93,8 @@ class AppOrder {
     String? notes,
     String? creatorId,
     String? creatorName,
+    String? paymentMethod,
+    DateTime? scheduledDate,
     DateTime? createdAt,
   }) {
     return AppOrder(
@@ -100,6 +110,8 @@ class AppOrder {
       notes: notes ?? this.notes,
       creatorId: creatorId ?? this.creatorId,
       creatorName: creatorName ?? this.creatorName,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      scheduledDate: scheduledDate ?? this.scheduledDate,
       createdAt: createdAt ?? this.createdAt,
     );
   }

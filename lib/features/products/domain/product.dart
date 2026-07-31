@@ -14,6 +14,7 @@ class Product with _$Product {
     String? barcode,
     required double price,
     required int quantity,
+    @Default([]) List<String> modifiers,
     @TimestampConverter() required DateTime createdAt,
     @TimestampConverter() required DateTime updatedAt,
   }) = _Product;

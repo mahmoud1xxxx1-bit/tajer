@@ -10,6 +10,7 @@ import '../data/order_repository.dart';
 import '../domain/order.dart';
 import '../domain/cart_item.dart';
 import '../../../core/theme/glass_card.dart';
+import 'package:flutter/foundation.dart';
 
 class PosScreen extends ConsumerStatefulWidget {
   const PosScreen({super.key});
@@ -20,12 +21,13 @@ class PosScreen extends ConsumerStatefulWidget {
 
 class _PosScreenState extends ConsumerState<PosScreen> {
   final List<CartItem> _cart = [];
+  final List<List<CartItem>> _heldOrders = [];
   bool _isLoading = false;
   String _searchQuery = '';
 
-  void _addToCart(Product product) {
+  void _addToCart(Product product, {List<String> selectedModifiers = const []}) {
     setState(() {
-      final existingIndex = _cart.indexWhere((item) => item.productId == product.id);
+      final existingIndex = _cart.indexWhere((item) => item.productId == product.id && listEquals(item.selectedModifiers, selectedModifiers));
       if (existingIndex >= 0) {
         if (product.quantity > _cart[existingIndex].quantity) {
            _cart[existingIndex] = _cart[existingIndex].copyWith(
@@ -43,12 +45,101 @@ class _PosScreenState extends ConsumerState<PosScreen> {
             quantity: 1,
             price: product.price,
             total: product.price,
+            selectedModifiers: List.from(selectedModifiers),
           ));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('المنتج نفذ من المخزون', style: TextStyle(fontFamily: 'Tajawal'))));
         }
       }
     });
+  }
+
+  void _showModifiersSheet(Product product) {
+    if (product.modifiers.isEmpty) {
+      _addToCart(product);
+      return;
+    }
+    List<String> selected = [];
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('اختر الإضافات السريعة لـ ${product.name}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
+                  SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: product.modifiers.map((mod) {
+                      final isSelected = selected.contains(mod);
+                      return FilterChip(
+                        label: Text(mod, style: TextStyle(fontFamily: 'Tajawal')),
+                        selected: isSelected,
+                        onSelected: (val) {
+                          setSheetState(() {
+                            if (val) {
+                              selected.add(mod);
+                            } else {
+                              selected.remove(mod);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _addToCart(product, selectedModifiers: selected);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                    ),
+                    child: Text('إضافة للسلة', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      }
+    );
+  }
+
+  void _showHeldOrders() {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => ListView.builder(
+        itemCount: _heldOrders.length,
+        itemBuilder: (context, index) {
+          final held = _heldOrders[index];
+          final total = held.fold(0.0, (sum, item) => sum + item.total);
+          return ListTile(
+            title: Text('طلب معلق #${index + 1}', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+            subtitle: Text('عدد المنتجات: ${held.length} - الإجمالي: $total', style: TextStyle(fontFamily: 'Tajawal')),
+            trailing: IconButton(
+              icon: Icon(Icons.restore, color: Colors.green),
+              onPressed: () {
+                Navigator.pop(ctx);
+                setState(() {
+                  _cart.clear();
+                  _cart.addAll(held);
+                  _heldOrders.removeAt(index);
+                });
+              },
+            ),
+          );
+        },
+      ),
+    );
   }
 
   void _updateQuantity(int index, int newQuantity, Product product) {
@@ -107,6 +198,8 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         paidAmount: details.paidAmount,
         isCredit: details.isCredit,
         notes: details.notes,
+        paymentMethod: details.paymentMethod,
+        scheduledDate: details.scheduledDate,
         creatorId: appUser.id,
         creatorName: appUser.name ?? 'غير معروف',
         createdAt: DateTime.now(),
@@ -133,6 +226,29 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('نقطة البيع (POS)', style: TextStyle(fontFamily: 'Tajawal')),
+        actions: [
+          if (_heldOrders.isNotEmpty)
+            IconButton(
+              icon: Badge(
+                label: Text('${_heldOrders.length}'),
+                backgroundColor: Colors.red,
+                child: const Icon(Icons.pause_circle_filled, color: Colors.amber),
+              ),
+              onPressed: _showHeldOrders,
+              tooltip: 'عرض الطلبات المعلقة',
+            ),
+          if (_cart.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.pause, color: Colors.amber),
+              tooltip: 'تعليق الطلب',
+              onPressed: () {
+                setState(() {
+                  _heldOrders.add(List.from(_cart));
+                  _cart.clear();
+                });
+              },
+            ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(60),
           child: Padding(
@@ -172,7 +288,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     itemBuilder: (context, index) {
                       final product = filtered[index];
                       return InkWell(
-                        onTap: () => _addToCart(product),
+                        onTap: () => _showModifiersSheet(product),
                         borderRadius: BorderRadius.circular(16),
                         child: GlassCard(
                           child: Padding(
@@ -215,7 +331,14 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                           final item = _cart[index];
                           final product = productsAsync.value?.firstWhere((p) => p.id == item.productId);
                           return ListTile(
-                            title: Text(item.productName, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                            title: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(item.productName, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                if (item.selectedModifiers.isNotEmpty)
+                                  Text(item.selectedModifiers.join('، '), style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.blue)),
+                              ],
+                            ),
                             subtitle: Text('${item.price} x ${item.quantity} = ${item.total}', style: const TextStyle(color: Colors.green)),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -257,8 +380,10 @@ class OrderDetails {
   final double paidAmount;
   final bool isCredit;
   final String? notes;
+  final String paymentMethod;
+  final DateTime? scheduledDate;
 
-  OrderDetails({required this.customerId, required this.customerName, required this.paidAmount, required this.isCredit, this.notes});
+  OrderDetails({required this.customerId, required this.customerName, required this.paidAmount, required this.isCredit, this.notes, this.paymentMethod = 'cash', this.scheduledDate});
 }
 
 class _CheckoutSheet extends StatefulWidget {
@@ -275,11 +400,40 @@ class _CheckoutSheet extends StatefulWidget {
 class _CheckoutSheetState extends State<_CheckoutSheet> {
   bool _isCredit = false;
   final _paidController = TextEditingController();
+  String _paymentMethod = 'cash';
+  bool _isScheduled = false;
+  DateTime? _scheduledDate;
+  TimeOfDay? _scheduledTime;
 
   @override
   void initState() {
     super.initState();
     _paidController.text = widget.total.toString();
+  }
+
+  Future<void> _selectDateTime() async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (pickedDate != null) {
+      final pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+      );
+      if (pickedTime != null) {
+        setState(() {
+          _scheduledDate = pickedDate;
+          _scheduledTime = pickedTime;
+        });
+      } else {
+        setState(() => _isScheduled = false);
+      }
+    } else {
+      setState(() => _isScheduled = false);
+    }
   }
 
   @override
@@ -290,46 +444,96 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
         color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text('إنهاء الطلب', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'), textAlign: TextAlign.center),
-          const SizedBox(height: 24),
-          const Text('العميل: عميل عام (مشي نقدي)', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-          const SizedBox(height: 16),
-          SwitchListTile(
-            title: const Text('دفع آجل؟', style: TextStyle(fontFamily: 'Tajawal')),
-            value: _isCredit,
-            onChanged: (val) => setState(() => _isCredit = val),
-          ),
-          if (_isCredit) ...[
-            TextField(
-              controller: _paidController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'المبلغ المدفوع الان', border: OutlineInputBorder()),
-            )
-          ],
-          const SizedBox(height: 24),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50),
-              backgroundColor: Colors.green,
-              foregroundColor: Colors.white,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text('إنهاء الطلب', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'), textAlign: TextAlign.center),
+            const SizedBox(height: 24),
+            SwitchListTile(
+              title: const Text('طلب مجدول 🗓', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              subtitle: _isScheduled && _scheduledDate != null && _scheduledTime != null
+                  ? Text('${_scheduledDate!.toString().split(' ')[0]} - ${_scheduledTime!.format(context)}', style: TextStyle(color: Colors.blue))
+                  : null,
+              value: _isScheduled,
+              onChanged: (val) {
+                setState(() {
+                  _isScheduled = val;
+                  if (val) _selectDateTime();
+                });
+              },
             ),
-            onPressed: () {
-              final paid = _isCredit ? (double.tryParse(_paidController.text) ?? 0.0) : widget.total;
-              widget.onCheckoutComplete(OrderDetails(
-                customerId: 'walk_in',
-                customerName: 'عميل عام',
-                paidAmount: paid,
-                isCredit: _isCredit,
-                notes: '',
-              ));
-            },
-            child: const Text('تأكيد وإصدار الفاتورة', style: TextStyle(fontSize: 18, fontFamily: 'Tajawal')),
-          ),
-        ],
+            const SizedBox(height: 16),
+            const Text('طريقة الدفع', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: [
+                ChoiceChip(
+                  label: const Text('كاش 💵'),
+                  selected: _paymentMethod == 'cash',
+                  onSelected: (val) => setState(() => _paymentMethod = 'cash'),
+                ),
+                ChoiceChip(
+                  label: const Text('مدى 💳'),
+                  selected: _paymentMethod == 'mada',
+                  onSelected: (val) => setState(() => _paymentMethod = 'mada'),
+                ),
+                ChoiceChip(
+                  label: const Text('تحويل بنكي 🏦'),
+                  selected: _paymentMethod == 'transfer',
+                  onSelected: (val) => setState(() => _paymentMethod = 'transfer'),
+                ),
+                ChoiceChip(
+                  label: const Text('Apple Pay 🍏'),
+                  selected: _paymentMethod == 'apple_pay',
+                  onSelected: (val) => setState(() => _paymentMethod = 'apple_pay'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SwitchListTile(
+              title: const Text('دفع آجل؟ (دين)', style: TextStyle(fontFamily: 'Tajawal')),
+              value: _isCredit,
+              onChanged: (val) => setState(() => _isCredit = val),
+            ),
+            if (_isCredit) ...[
+              TextField(
+                controller: _paidController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'المبلغ المدفوع الان', border: OutlineInputBorder()),
+              )
+            ],
+            const SizedBox(height: 24),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
+                backgroundColor: Colors.green,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                final paid = _isCredit ? (double.tryParse(_paidController.text) ?? 0.0) : widget.total;
+                DateTime? finalSchedule;
+                if (_isScheduled && _scheduledDate != null && _scheduledTime != null) {
+                  finalSchedule = DateTime(_scheduledDate!.year, _scheduledDate!.month, _scheduledDate!.day, _scheduledTime!.hour, _scheduledTime!.minute);
+                }
+                widget.onCheckoutComplete(OrderDetails(
+                  customerId: 'walk_in',
+                  customerName: 'عميل عام',
+                  paidAmount: paid,
+                  isCredit: _isCredit,
+                  notes: '',
+                  paymentMethod: _paymentMethod,
+                  scheduledDate: finalSchedule,
+                ));
+              },
+              child: const Text('تأكيد وإصدار الفاتورة', style: TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
       ),
     );
   }

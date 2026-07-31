@@ -4,6 +4,7 @@ class CartItem {
   final int quantity;
   final double price;
   final double total;
+  final List<String> selectedModifiers;
 
   const CartItem({
     required this.productId,
@@ -11,6 +12,7 @@ class CartItem {
     required this.quantity,
     required this.price,
     required this.total,
+    this.selectedModifiers = const [],
   });
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,7 @@ class CartItem {
       quantity: (json['quantity'] ?? 0).toInt(),
       price: (json['price'] ?? 0.0).toDouble(),
       total: (json['total'] ?? 0.0).toDouble(),
+      selectedModifiers: (json['selectedModifiers'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
     );
   }
 
@@ -30,6 +33,7 @@ class CartItem {
       'quantity': quantity,
       'price': price,
       'total': total,
+      'selectedModifiers': selectedModifiers,
     };
   }
 
