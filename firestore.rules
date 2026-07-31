@@ -48,6 +48,14 @@ service cloud.firestore {
       allow read, update, delete: if hasAccess(resource.data.merchantId);
       allow create: if hasAccess(request.resource.data.merchantId);
     }
+    match /shifts/{shiftId} {
+      allow read, update, delete: if hasAccess(resource.data.merchantId);
+      allow create: if hasAccess(request.resource.data.merchantId);
+    }
+    match /raw_materials/{materialId} {
+      allow read, update, delete: if hasAccess(resource.data.merchantId);
+      allow create: if hasAccess(request.resource.data.merchantId);
+    }
 
     // --- MERCHANT SUB-COLLECTIONS ---
     match /merchants/{merchantId} {
