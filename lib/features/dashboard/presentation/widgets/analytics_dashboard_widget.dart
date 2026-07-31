@@ -55,7 +55,8 @@ class AnalyticsDashboardWidget extends ConsumerWidget {
     Map<String, double> expensesByCategory = {};
     for (var expense in expenses) {
       if (expense.date.isAfter(sevenDaysAgo)) {
-        expensesByCategory[expense.category] = (expensesByCategory[expense.category] ?? 0) + expense.amount;
+        final categoryName = expense.category ?? 'أخرى';
+        expensesByCategory[categoryName] = (expensesByCategory[categoryName] ?? 0) + expense.amount;
       }
     }
 
