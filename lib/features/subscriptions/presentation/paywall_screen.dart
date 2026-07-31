@@ -144,11 +144,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                       child: GlassCard(
                         child: ListView(
                           children: const [
-                            _FeatureRow(icon: Icons.group_add, text: 'إضافة وإدارة موظفين للمتجر'),
-                            _FeatureRow(icon: Icons.bar_chart, text: 'رسوم بيانية وتحليلات متقدمة للأرباح والمصروفات'),
-                            _FeatureRow(icon: Icons.inventory_2, text: 'تنبيهات انخفاض المخزون الذكية'),
-                            _FeatureRow(icon: Icons.receipt_long, text: 'إصدار عدد لا محدود من الفواتير'),
-                            _FeatureRow(icon: Icons.money_off, text: 'إدارة متقدمة لديون الموردين والعملاء'),
+                            _FeatureRow(icon: Icons.all_inclusive, text: 'عدد لا محدود من الطلبات والمنتجات (مقارنة بـ 20 طلب للنسخة المجانية)'),
+                            _FeatureRow(icon: Icons.group_add, text: 'إضافة موظفين للمتجر وتحديد صلاحياتهم بدقة'),
+                            _FeatureRow(icon: Icons.inventory_2, text: 'إدارة متقدمة للمواد الخام والمخزون والتنبيهات'),
+                            _FeatureRow(icon: Icons.wifi_off, text: 'العمل بكفاءة تامة بدون إنترنت (Offline Mode)'),
+                            _FeatureRow(icon: Icons.bar_chart, text: 'إغلاق الورديات (Z-Report) وتقارير أرباح متقدمة'),
+                            _FeatureRow(icon: Icons.support_agent, text: 'أولوية في الدعم الفني والحصول على التحديثات'),
                           ],
                         ),
                       ),
