@@ -73,8 +73,10 @@ class ReportsService {
     for (var order in orders) {
       if (order.status == 'cancelled') continue;
       
-      qtyMap[order.productId] = (qtyMap[order.productId] ?? 0) + order.quantity;
-      revenueMap[order.productId] = (revenueMap[order.productId] ?? 0.0) + order.total;
+      for (var item in order.items) {
+        qtyMap[item.productId] = (qtyMap[item.productId] ?? 0) + item.quantity;
+        revenueMap[item.productId] = (revenueMap[item.productId] ?? 0.0) + (item.quantity * item.price);
+      }
     }
 
     final List<ProductSales> bestSellers = [];
