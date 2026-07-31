@@ -410,6 +410,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       );
     },
   );
+  }
 }
 
 class OrderDetails {

@@ -94,3 +94,33 @@ class Product {
     return DateTime.now();
   }
 }
+
+class TimestampConverter {
+  const TimestampConverter();
+
+  DateTime fromJson(dynamic json) {
+    if (json is Timestamp) return json.toDate();
+    if (json is String) return DateTime.parse(json);
+    return DateTime.now();
+  }
+
+  dynamic toJson(DateTime object) {
+    return Timestamp.fromDate(object);
+  }
+}
+
+class NullableTimestampConverter {
+  const NullableTimestampConverter();
+
+  DateTime? fromJson(dynamic json) {
+    if (json == null) return null;
+    if (json is Timestamp) return json.toDate();
+    if (json is String) return DateTime.parse(json);
+    return DateTime.now();
+  }
+
+  dynamic toJson(DateTime? object) {
+    if (object == null) return null;
+    return Timestamp.fromDate(object);
+  }
+}
