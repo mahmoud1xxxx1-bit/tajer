@@ -226,7 +226,7 @@ class OrdersScreen extends ConsumerWidget {
                                   alignment: Alignment.centerLeft,
                                   child: TextButton.icon(
                                     onPressed: () {
-                                      ref.read(orderRepositoryProvider).cancelOrder(order);
+                                      ref.read(orderRepositoryProvider).updateOrderStatus(order, 'cancelled');
                                     },
                                     icon: const Icon(Icons.cancel_outlined, color: Colors.red, size: 18),
                                     label: Text(l10n.cancel, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
