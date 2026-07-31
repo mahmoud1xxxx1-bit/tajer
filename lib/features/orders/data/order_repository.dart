@@ -23,13 +23,29 @@ class OrderRepository {
             data['merchantId'] = data['merchantId']?.toString() ?? '';
             data['quantity'] = (data['quantity'] ?? 0).toInt();
             data['total'] = (data['total'] ?? 0.0).toDouble();
-            data['productId'] = data['productId']?.toString() ?? '';
-            data['productName'] = data['productName']?.toString() ?? '';
             data['customerId'] = data['customerId']?.toString() ?? '';
             data['customerName'] = data['customerName']?.toString() ?? '';
             data['status'] = data['status']?.toString() ?? 'pending';
             data['paidAmount'] = (data['paidAmount'] ?? 0.0).toDouble();
             data['isCredit'] = data['isCredit'] ?? false;
+            
+            // Backward compatibility: Convert old single product order to items list
+            if (data['items'] == null && data['productId'] != null) {
+              data['items'] = [
+                {
+                  'productId': data['productId']?.toString() ?? '',
+                  'productName': data['productName']?.toString() ?? '',
+                  'quantity': (data['quantity'] ?? 0).toInt(),
+                  'price': (data['price'] ?? 0.0).toDouble(),
+                  'total': data['total'],
+                }
+              ];
+            } else if (data['items'] != null) {
+              data['items'] = List<Map<String, dynamic>>.from(data['items'].map((x) => Map<String, dynamic>.from(x)));
+            } else {
+              data['items'] = [];
+            }
+            
             return AppOrder.fromJson(data);
           },
           toFirestore: (order, _) => order.toJson(),
@@ -37,26 +53,26 @@ class OrderRepository {
   }
 
   Future<void> createOrder(AppOrder order) async {
-    // We use a transaction to ensure inventory is reduced safely
-    // and customer stats are updated concurrently.
     await _firestore.runTransaction((transaction) async {
-      final productRef = _firestore.collection('products').doc(order.productId);
       final customerRef = _firestore.collection('customers').doc(order.customerId);
       final orderRef = _firestore.collection('orders').doc(order.id);
 
-      final productDoc = await transaction.get(productRef);
-      if (!productDoc.exists) throw Exception("المنتج غير موجود");
+      // Verify all products and update inventory
+      for (final item in order.items) {
+        final productRef = _firestore.collection('products').doc(item.productId);
+        final productDoc = await transaction.get(productRef);
+        if (!productDoc.exists) throw Exception("المنتج غير موجود: ${item.productName}");
 
-      final currentQuantity = productDoc.data()?['quantity'] as int? ?? 0;
-      if (currentQuantity < order.quantity) {
-        throw Exception("الكمية المطلوبة غير متوفرة");
+        final currentQuantity = productDoc.data()?['quantity'] as int? ?? 0;
+        if (currentQuantity < item.quantity) {
+          throw Exception("الكمية المطلوبة غير متوفرة للمنتج: ${item.productName}");
+        }
+
+        transaction.update(productRef, {
+          'quantity': currentQuantity - item.quantity,
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
       }
-
-      // Update product inventory
-      transaction.update(productRef, {
-        'quantity': currentQuantity - order.quantity,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
 
       if (order.customerId != 'walk_in') {
         final customerDoc = await transaction.get(customerRef);
@@ -66,7 +82,6 @@ class OrderRepository {
         final currentOrderCount = customerDoc.data()?['orderCount'] as int? ?? 0;
         final currentTotalDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
 
-        // Update customer stats
         final debtIncrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
         transaction.update(customerRef, {
           'totalPurchases': currentTotalPurchases + order.total,
@@ -76,28 +91,28 @@ class OrderRepository {
         });
       }
 
-      // Save order
       transaction.set(orderRef, order.toJson());
     });
   }
 
   Future<void> deleteOrder(AppOrder order) async {
     await _firestore.runTransaction((transaction) async {
-      final productRef = _firestore.collection('products').doc(order.productId);
       final customerRef = _firestore.collection('customers').doc(order.customerId);
       final orderRef = _firestore.collection('orders').doc(order.id);
 
       final orderDoc = await transaction.get(orderRef);
       if (!orderDoc.exists) return; // Already deleted
 
-      final productDoc = await transaction.get(productRef);
-      if (productDoc.exists) {
-        final currentQuantity = productDoc.data()?['quantity'] as int? ?? 0;
-        // Restore inventory
-        transaction.update(productRef, {
-          'quantity': currentQuantity + order.quantity,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
+      for (final item in order.items) {
+        final productRef = _firestore.collection('products').doc(item.productId);
+        final productDoc = await transaction.get(productRef);
+        if (productDoc.exists) {
+          final currentQuantity = productDoc.data()?['quantity'] as int? ?? 0;
+          transaction.update(productRef, {
+            'quantity': currentQuantity + item.quantity,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
       }
 
       if (order.customerId != 'walk_in') {
@@ -107,7 +122,6 @@ class OrderRepository {
           final currentOrderCount = customerDoc.data()?['orderCount'] as int? ?? 0;
           final currentTotalDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
           
-          // Revert customer stats
           final newOrderCount = currentOrderCount - 1;
           final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
           
@@ -120,7 +134,6 @@ class OrderRepository {
         }
       }
 
-      // Delete order
       transaction.delete(orderRef);
     });
   }
@@ -130,32 +143,32 @@ class OrderRepository {
 
     await _firestore.runTransaction((transaction) async {
       final orderRef = _firestore.collection('orders').doc(order.id);
-      final productRef = _firestore.collection('products').doc(order.productId);
 
-      if (newStatus == 'cancelled' && order.status != 'cancelled') {
-        // Restoring inventory
+      for (final item in order.items) {
+        final productRef = _firestore.collection('products').doc(item.productId);
         final productDoc = await transaction.get(productRef);
-        if (productDoc.exists) {
-          final currentQty = productDoc.data()?['quantity'] as int? ?? 0;
-          transaction.update(productRef, {
-            'quantity': currentQty + order.quantity,
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
-        }
-      } else if (order.status == 'cancelled' && newStatus != 'cancelled') {
-        // Reducing inventory again
-        final productDoc = await transaction.get(productRef);
-        if (productDoc.exists) {
-          final currentQty = productDoc.data()?['quantity'] as int? ?? 0;
-          if (currentQty < order.quantity) {
-            throw Exception("لا يوجد كمية كافية للإرجاع");
+
+        if (newStatus == 'cancelled' && order.status != 'cancelled') {
+          if (productDoc.exists) {
+            final currentQty = productDoc.data()?['quantity'] as int? ?? 0;
+            transaction.update(productRef, {
+              'quantity': currentQty + item.quantity,
+              'updatedAt': FieldValue.serverTimestamp(),
+            });
           }
-          transaction.update(productRef, {
-            'quantity': currentQty - order.quantity,
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
-        } else {
-          throw Exception("المنتج غير موجود");
+        } else if (order.status == 'cancelled' && newStatus != 'cancelled') {
+          if (productDoc.exists) {
+            final currentQty = productDoc.data()?['quantity'] as int? ?? 0;
+            if (currentQty < item.quantity) {
+              throw Exception("لا يوجد كمية كافية للإرجاع للمنتج: ${item.productName}");
+            }
+            transaction.update(productRef, {
+              'quantity': currentQty - item.quantity,
+              'updatedAt': FieldValue.serverTimestamp(),
+            });
+          } else {
+            throw Exception("المنتج غير موجود: ${item.productName}");
+          }
         }
       }
 

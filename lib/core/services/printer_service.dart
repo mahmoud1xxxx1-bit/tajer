@@ -79,20 +79,22 @@ class PrinterService {
     
     bytes += generator.hr();
 
-    // Item
-    bytes += generator.text(order.productName, styles: PosStyles(bold: true));
-    bytes += generator.row([
-      PosColumn(
-        text: '${order.quantity} x ${order.price}',
-        width: 8,
-        styles: PosStyles(align: PosAlign.left),
-      ),
-      PosColumn(
-        text: '${order.total} $currency',
-        width: 4,
-        styles: PosStyles(align: PosAlign.right),
-      ),
-    ]);
+    // Items
+    for (final item in order.items) {
+      bytes += generator.text(item.productName, styles: PosStyles(bold: true));
+      bytes += generator.row([
+        PosColumn(
+          text: '${item.quantity} x ${item.price}',
+          width: 8,
+          styles: PosStyles(align: PosAlign.left),
+        ),
+        PosColumn(
+          text: '${item.total} $currency',
+          width: 4,
+          styles: PosStyles(align: PosAlign.right),
+        ),
+      ]);
+    }
 
     bytes += generator.hr();
 

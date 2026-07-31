@@ -8,6 +8,7 @@ import '../../products/data/product_repository.dart';
 import '../../customers/data/customer_repository.dart';
 import '../data/order_repository.dart';
 import '../domain/order.dart';
+import '../domain/cart_item.dart';
 import '../../inventory_log/data/inventory_log_repository.dart';
 import '../../../core/utils/barcode_scanner_screen.dart';
 import '../../products/domain/product.dart';
@@ -163,10 +164,15 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
         merchantId: ref.read(appUserProvider).value?.merchantId ?? user.uid,
         customerId: finalCustomerId,
         customerName: finalCustomerName,
-        productId: selectedProduct.id,
-        productName: selectedProduct.name,
-        quantity: quantity,
-        price: selectedProduct.price,
+        items: [
+          CartItem(
+            productId: selectedProduct.id,
+            productName: selectedProduct.name,
+            quantity: quantity,
+            price: selectedProduct.price,
+            total: total,
+          )
+        ],
         total: total,
         paidAmount: paidAmount,
         isCredit: _isCredit,

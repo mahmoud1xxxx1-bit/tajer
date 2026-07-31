@@ -42,6 +42,20 @@ class CategoryRepository {
   Future<void> deleteCategory(String categoryId) async {
     await _categoriesRef.doc(categoryId).delete();
   }
+
+  Future<void> seedDefaultCategories() async {
+    final defaults = ['إلكترونيات', 'ملابس', 'بقالة', 'عطور ومستحضرات تجميل', 'أدوات منزلية', 'أخرى'];
+    for (final name in defaults) {
+      final docRef = _categoriesRef.doc();
+      final category = Category(
+        id: docRef.id,
+        merchantId: _merchantId,
+        name: name,
+        createdAt: DateTime.now(),
+      );
+      await docRef.set(category.toJson());
+    }
+  }
 }
 
 final categoryRepositoryProvider = Provider<CategoryRepository?>((ref) {

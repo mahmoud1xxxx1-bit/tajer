@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../data/order_repository.dart';
 import 'add_order_dialog.dart';
+import 'pos_screen.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../../core/services/pdf_service.dart';
 import '../../../core/services/whatsapp_service.dart';
@@ -185,7 +186,7 @@ class OrdersScreen extends ConsumerWidget {
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
                                             Text(
-                                              l10n.quantity + ': ' + order.quantity.toString(),
+                                              l10n.quantity + ': ' + order.items.fold<int>(0, (sum, item) => sum + item.quantity).toString(),
                                               style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey),
                                             ),
                                             Text(
@@ -261,20 +262,14 @@ class OrdersScreen extends ConsumerWidget {
           if (!canAdd) return;
 
           if (context.mounted) {
-            showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              builder: (context) => Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                ),
-                child: const AddOrderDialog(),
-              ),
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const PosScreen()),
             );
           }
         },
-        label: Text(AppLocalizations.of(context)!.text94, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-        icon: Icon(Icons.add_shopping_cart),
+        label: Text('نقطة البيع (POS)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        icon: Icon(Icons.point_of_sale),
       ) : null,
     );
   }

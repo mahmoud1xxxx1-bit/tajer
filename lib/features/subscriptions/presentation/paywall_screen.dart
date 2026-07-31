@@ -1,138 +1,226 @@
-import 'package:tajer/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import '../data/subscription_service.dart';
-import 'package:flutter/foundation.dart';
-import '../../authentication/data/auth_repository.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
+import 'package:tajer/l10n/app_localizations.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/services/subscription_service.dart';
+import '../../../core/theme/glass_card.dart';
 
-class PaywallScreen extends ConsumerWidget {
+class PaywallScreen extends ConsumerStatefulWidget {
   const PaywallScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final packagesAsync = ref.watch(premiumPackagesProvider);
-    final isGuest = ref.watch(authRepositoryProvider).currentUser?.isAnonymous ?? true;
+  ConsumerState<PaywallScreen> createState() => _PaywallScreenState();
+}
 
+class _PaywallScreenState extends ConsumerState<PaywallScreen> {
+  bool _isLoading = true;
+  List<Package> _packages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchOfferings();
+  }
+
+  Future<void> _fetchOfferings() async {
+    final subService = ref.read(subscriptionServiceProvider);
+    final offerings = await subService.getOfferings();
+    if (offerings.isNotEmpty && offerings.first.availablePackages.isNotEmpty) {
+      setState(() {
+        _packages = offerings.first.availablePackages;
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _purchasePackage(Package package) async {
+    setState(() => _isLoading = true);
+    final subService = ref.read(subscriptionServiceProvider);
+    final success = await subService.purchasePackage(package);
+    setState(() => _isLoading = false);
+    
+    if (success) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم الاشتراك بنجاح! شكراً لك.', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green),
+        );
+        context.go('/dashboard');
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('فشلت عملية الاشتراك أو تم إلغاؤها.', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  Future<void> _restorePurchases() async {
+    setState(() => _isLoading = true);
+    final subService = ref.read(subscriptionServiceProvider);
+    final success = await subService.restorePurchases();
+    setState(() => _isLoading = false);
+    
+    if (success) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم استعادة مشترياتك بنجاح!', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green),
+        );
+        context.go('/dashboard');
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('لم يتم العثور على اشتراكات سابقة.', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.orange),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.text112, style: TextStyle(fontFamily: 'Tajawal')),
+        title: const Text('ترقية الحساب (Premium)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          TextButton(
+            onPressed: _restorePurchases,
+            child: const Text('استعادة المشتريات', style: TextStyle(fontFamily: 'Tajawal', color: Colors.blue)),
+          ),
+        ],
       ),
-      body: Center(
-        child: Padding(
-          padding: EdgeInsets.all(24.0),
-          child: Column(
-             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.star, size: 80, color: Colors.amber),
-              SizedBox(height: 24),
-              Text(
-                AppLocalizations.of(context)!.text113,
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
-              ),
-              SizedBox(height: 16),
-              Text(
-                AppLocalizations.of(context)!.text114,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, fontFamily: 'Tajawal'),
-              ),
-              SizedBox(height: 32),
-              
-              if (isGuest) ...[
-                Text(
-                  AppLocalizations.of(context)!.text115,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.red, fontFamily: 'Tajawal'),
-                ),
-                SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => context.push('/upgrade'),
-                  child: Text(AppLocalizations.of(context)!.text116, style: TextStyle(fontFamily: 'Tajawal')),
-                ),
-              ] else if (kIsWeb) ...[
-                Text(
-                  AppLocalizations.of(context)!.text117,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.blue, fontFamily: 'Tajawal', fontSize: 16),
-                ),
-                SizedBox(height: 16),
-                Text(
-                  AppLocalizations.of(context)!.text118,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontFamily: 'Tajawal'),
-                ),
-              ] else ...[
-                packagesAsync.when(
-                  data: (packages) {
-                    if (packages.isEmpty) {
-                      return Text(
-                        AppLocalizations.of(context)!.text119,
-                        style: TextStyle(fontFamily: 'Tajawal'),
-                      );
-                    }
-                    
-                    return Column(
-                      children: packages.map((package) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16.0),
-                          child: Column(
-                            children: [
-                              Text(
-                                '${package.storeProduct.priceString} / ${package.storeProduct.title}',
-                                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.green),
-                              ),
-                              SizedBox(height: 24),
-                              ElevatedButton(
-                                onPressed: () async {
-                                  final success = await ref.read(subscriptionServiceProvider).buyPackage(package);
-                                  if (success && context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('تم تفعيل الاشتراك بنجاح!', style: TextStyle(fontFamily: 'Tajawal'))),
-                                    );
-                                    context.pop(); // Go back
-                                  } else if (context.mounted) {
-                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('فشلت عملية الدفع أو تم إلغاؤها', style: TextStyle(fontFamily: 'Tajawal'))),
-                                    );
-                                  }
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.amber,
-                                  foregroundColor: Colors.black,
-                                  padding: EdgeInsets.symmetric(horizontal: 48, vertical: 16),
-                                ),
-                                child: Text(AppLocalizations.of(context)!.text120, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList()..add(
-                        Padding(
-                          padding: const EdgeInsets.only(top: 16.0),
-                          child: TextButton(
-                            onPressed: () async {
-                              final restored = await ref.read(subscriptionServiceProvider).restorePurchases();
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text(restored ? 'تم استعادة المشتريات وتفعيل الاشتراك' : 'لا يوجد اشتراك نشط لاستعادته', style: TextStyle(fontFamily: 'Tajawal'))),
-                                );
-                                if (restored) context.pop();
-                              }
-                            },
-                            child: Text(AppLocalizations.of(context)!.text121, style: TextStyle(fontFamily: 'Tajawal')),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                  loading: () => const CircularProgressIndicator(),
-                  error: (err, stack) => Text('حدث خطأ: $err', style: TextStyle(fontFamily: 'Tajawal')),
-                ),
-              ],
+      extendBodyBehindAppBar: true,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Colors.indigo.shade900,
+              Colors.purple.shade900,
             ],
           ),
         ),
+        child: SafeArea(
+          child: _isLoading 
+            ? const Center(child: CircularProgressIndicator(color: Colors.white))
+            : Column(
+                children: [
+                  const SizedBox(height: 20),
+                  const Icon(Icons.workspace_premium, size: 80, color: Colors.amber),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'ارتقِ بتجارتك للقمة',
+                    style: TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 32),
+                    child: Text(
+                      'احصل على جميع الميزات المتقدمة وأدر متجرك باحترافية كاملة بدون قيود.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, color: Colors.white70),
+                    ),
+                  ),
+                  const SizedBox(height: 40),
+                  
+                  // Features List
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: GlassCard(
+                        child: ListView(
+                          children: const [
+                            _FeatureRow(icon: Icons.group_add, text: 'إضافة وإدارة موظفين للمتجر'),
+                            _FeatureRow(icon: Icons.bar_chart, text: 'رسوم بيانية وتحليلات متقدمة للأرباح والمصروفات'),
+                            _FeatureRow(icon: Icons.inventory_2, text: 'تنبيهات انخفاض المخزون الذكية'),
+                            _FeatureRow(icon: Icons.receipt_long, text: 'إصدار عدد لا محدود من الفواتير'),
+                            _FeatureRow(icon: Icons.money_off, text: 'إدارة متقدمة لديون الموردين والعملاء'),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 20),
+                  
+                  // Packages
+                  if (_packages.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(24.0),
+                      child: Text('لا توجد باقات متاحة حالياً. يرجى التأكد من إعداد RevenueCat.', style: TextStyle(color: Colors.white, fontFamily: 'Tajawal'), textAlign: TextAlign.center),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                      child: Column(
+                        children: _packages.map((pkg) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: SizedBox(
+                            width: double.infinity,
+                            height: 60,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.amber,
+                                foregroundColor: Colors.black,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              ),
+                              onPressed: () => _purchasePackage(pkg),
+                              child: Text(
+                                'الاشتراك بـ ${pkg.storeProduct.priceString} / ${pkg.packageType == PackageType.annual ? "سنوياً" : "شهرياً"}',
+                                style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ),
+                        )).toList(),
+                      ),
+                    ),
+                ],
+              ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FeatureRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _FeatureRow({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.amber, size: 28),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              text,
+              style: const TextStyle(
+                fontFamily: 'Tajawal',
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

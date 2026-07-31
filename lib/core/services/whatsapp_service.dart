@@ -19,9 +19,11 @@ class WhatsAppService {
     }
     invoice.writeln("-------------------------");
     
-    invoice.writeln("🔹 ${order.productName}");
-    invoice.writeln("   الكمية: ${order.quantity} x السعر: ${order.price} $currency");
-    invoice.writeln("   المجموع: ${order.total} $currency");
+    for (final item in order.items) {
+      invoice.writeln("🔹 ${item.productName}");
+      invoice.writeln("   الكمية: ${item.quantity} x السعر: ${item.price} $currency");
+      invoice.writeln("   المجموع: ${item.total} $currency");
+    }
     
     invoice.writeln("-------------------------");
     double subtotal = order.total;

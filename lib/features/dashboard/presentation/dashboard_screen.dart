@@ -4,9 +4,12 @@ import 'package:tajer/l10n/app_localizations.dart';
 import '../../products/presentation/products_screen.dart';
 import '../../customers/presentation/customers_screen.dart';
 import '../../orders/presentation/orders_screen.dart';
+import '../../orders/presentation/pos_screen.dart';
+import '../../inventory_log/presentation/inventory_logs_screen.dart';
 import '../../reports/presentation/reports_screen.dart';
 import '../../orders/data/order_repository.dart';
 import '../../products/data/product_repository.dart';
+import 'widgets/analytics_dashboard_widget.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -282,6 +285,11 @@ class DashboardHome extends ConsumerWidget {
                   ],
                 ),
                 SizedBox(height: 24),
+                
+                // Advanced Analytics Widget (Plan 1)
+                const AnalyticsDashboardWidget(),
+                SizedBox(height: 24),
+
                 Text(
                   l10n.quickActions,
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
@@ -290,6 +298,17 @@ class DashboardHome extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
+                    _QuickAction(
+                      icon: Icons.point_of_sale,
+                      label: 'كاشير (POS)',
+                      color: Colors.green,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const PosScreen()),
+                        );
+                      },
+                    ),
                     _QuickAction(
                       icon: Icons.add_shopping_cart,
                       label: l10n.orders,
@@ -312,14 +331,6 @@ class DashboardHome extends ConsumerWidget {
                       color: Theme.of(context).colorScheme.secondary,
                       onTap: () {
                         onNavigateToTab(3);
-                      },
-                    ),
-                    _QuickAction(
-                      icon: Icons.bar_chart_rounded,
-                      label: l10n.reports,
-                      color: Colors.teal,
-                      onTap: () {
-                        onNavigateToTab(4);
                       },
                     ),
                   ],

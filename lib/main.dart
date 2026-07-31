@@ -17,6 +17,7 @@ import 'package:workmanager/workmanager.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'core/services/backup_service.dart';
+import 'core/services/subscription_service.dart';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -103,9 +104,18 @@ void main() async {
   // Keep screen awake
   WakelockPlus.enable();
 
+  // Initialize RevenueCat Subscription Service
+  final container = ProviderContainer();
+  try {
+    await container.read(subscriptionServiceProvider).initPlatformState();
+  } catch (e) {
+    debugPrint('Failed to initialize RevenueCat: $e');
+  }
+
   runApp(
-    const ProviderScope(
-      child: TajerApp(),
+    UncontrolledProviderScope(
+      container: container,
+      child: const TajerApp(),
     ),
   );
 }

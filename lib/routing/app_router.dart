@@ -9,6 +9,7 @@ import '../features/subscriptions/presentation/paywall_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/settings/presentation/backup_security_screen.dart';
 import '../features/settings/presentation/printer_settings_screen.dart';
+import '../features/settings/presentation/store_branding_screen.dart';
 import '../features/expenses/presentation/expenses_screen.dart';
 import '../features/suppliers/presentation/suppliers_screen.dart';
 import '../features/categories/presentation/categories_screen.dart';
@@ -92,6 +93,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/printer_settings',
         builder: (context, state) => const PrinterSettingsScreen(),
+      ),
+      GoRoute(
+        path: '/store_branding',
+        builder: (context, state) => const StoreBrandingScreen(),
       ),
     ],
   );

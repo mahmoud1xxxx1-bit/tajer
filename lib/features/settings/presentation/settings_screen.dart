@@ -57,6 +57,11 @@ class SettingsScreen extends ConsumerWidget {
             title: Text('إعدادات الطابعة الحرارية', style: TextStyle(fontFamily: 'Tajawal')),
             onTap: () => context.push('/printer_settings'),
           ),
+          ListTile(
+            leading: Icon(Icons.storefront, color: Colors.deepOrange),
+            title: Text('هوية المتجر (الشعار والفاتورة)', style: TextStyle(fontFamily: 'Tajawal')),
+            onTap: () => context.push('/store_branding'),
+          ),
 
           Divider(),
           _LanguageSelector(),

@@ -23,7 +23,22 @@ class CategoriesScreen extends ConsumerWidget {
       body: categoriesAsync.when(
         data: (categories) {
           if (categories.isEmpty) {
-            return Center(child: Text(AppLocalizations.of(context)!.text40, style: TextStyle(fontFamily: 'Tajawal')));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(AppLocalizations.of(context)!.text40, style: TextStyle(fontFamily: 'Tajawal')),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      ref.read(categoryRepositoryProvider)?.seedDefaultCategories();
+                    },
+                    icon: const Icon(Icons.auto_awesome),
+                    label: const Text('إضافة تصنيفات افتراضية', style: TextStyle(fontFamily: 'Tajawal')),
+                  ),
+                ],
+              ),
+            );
           }
           
           return ListView.builder(

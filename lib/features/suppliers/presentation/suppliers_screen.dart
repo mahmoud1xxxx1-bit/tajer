@@ -27,11 +27,58 @@ class SuppliersScreen extends ConsumerWidget {
             return Center(child: Text(AppLocalizations.of(context)!.text123, style: TextStyle(fontFamily: 'Tajawal')));
           }
           
-          return ListView.builder(
-            padding: EdgeInsets.all(16),
-            itemCount: suppliers.length,
-            itemBuilder: (context, index) {
-              final supplier = suppliers[index];
+          final totalSupplierDebts = suppliers.fold<double>(0, (sum, s) => sum + s.totalDebt);
+
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: GlassCard(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.money_off, color: Colors.red, size: 32),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'إجمالي ديون الموردين',
+                                style: TextStyle(fontSize: 14, color: Colors.grey[700], fontFamily: 'Tajawal'),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '$totalSupplierDebts ${currentCurrency.code}',
+                                style: const TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.red,
+                                  fontFamily: 'Tajawal',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  itemCount: suppliers.length,
+                  itemBuilder: (context, index) {
+                    final supplier = suppliers[index];
               return GlassCard(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: EdgeInsets.zero,
@@ -110,8 +157,10 @@ class SuppliersScreen extends ConsumerWidget {
                 ),
               );
             },
-          );
-        },
+          ),
+        ),
+      ]);
+    },
         loading: () => Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('خطأ: $e')),
       ),

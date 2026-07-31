@@ -5,6 +5,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../orders/data/order_repository.dart';
+import '../../../core/providers/settings_provider.dart';
 
 class EmployeesScreen extends ConsumerStatefulWidget {
   const EmployeesScreen({super.key});
@@ -109,10 +111,13 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
     }
 
     final theme = Theme.of(context);
+    final ordersAsync = ref.watch(ordersStreamProvider);
+    final currentCurrency = ref.watch(currencyProvider);
+    final allOrders = ordersAsync.value ?? [];
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("إدارة الموظفين", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        title: const Text("إدارة الموظفين والأداء", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         backgroundColor: theme.colorScheme.primaryContainer,
       ),
       body: _isLoading 
@@ -210,13 +215,26 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                               final name = data['name'] ?? 'بدون اسم';
                               final pin = data['pin'] ?? '****';
 
+                              final employeeOrders = allOrders.where((o) => o.creatorId == id).toList();
+                              final totalSales = employeeOrders.fold<double>(0, (sum, o) => sum + o.total);
+
                               return ListTile(
                                 leading: CircleAvatar(
                                   backgroundColor: theme.colorScheme.primaryContainer,
                                   child: Icon(Icons.badge, color: theme.colorScheme.primary),
                                 ),
                                 title: Text(name, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                                subtitle: Text("رمز الدخول: $pin", style: const TextStyle(fontFamily: 'Tajawal')),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text("رمز الدخول: $pin", style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12)),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      "المبيعات: $totalSales ${currentCurrency.code}",
+                                      style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.green[700]),
+                                    ),
+                                  ],
+                                ),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
