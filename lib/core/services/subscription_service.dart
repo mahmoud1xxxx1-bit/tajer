@@ -7,7 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 // IMPORTANT: Replace these with your actual RevenueCat API keys from the RevenueCat dashboard.
 const String _appleApiKey = 'appl_YOUR_APPLE_API_KEY';
-const String _googleApiKey = 'goog_YOUR_GOOGLE_API_KEY';
+const String _googleApiKey = 'goog_aHEwHuppHHWdppTTPZJizeCDEGr';
 
 class SubscriptionService {
   Future<void> initPlatformState() async {
