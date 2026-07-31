@@ -168,6 +168,15 @@ class DashboardHome extends ConsumerWidget {
                 context.push('/expenses');
               },
             ),
+            if (appUser?.hasPermission('can_manage_products') ?? false)
+            ListTile(
+              leading: Icon(Icons.inventory_2),
+              title: Text('المواد الخام', style: TextStyle(fontFamily: 'Tajawal')),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/raw_materials');
+              },
+            ),
             if (appUser?.hasPermission('can_manage_customers') ?? false)
             ListTile(
               leading: Icon(Icons.business),
@@ -202,6 +211,15 @@ class DashboardHome extends ConsumerWidget {
                 onTap: () {
                   Navigator.pop(context);
                   context.push('/employees');
+                },
+              ),
+              Divider(),
+              ListTile(
+                leading: Icon(Icons.lock_clock),
+                title: Text('إغلاق الوردية (Z-Report)', style: TextStyle(fontFamily: 'Tajawal')),
+                onTap: () {
+                  Navigator.pop(context);
+                  context.push('/end_shift');
                 },
               ),
               Divider(),

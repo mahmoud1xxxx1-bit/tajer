@@ -90,6 +90,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
         categoryId: _selectedCategoryId,
         barcode: _barcodeController.text.trim().isEmpty ? null : _barcodeController.text.trim(),
         modifiers: _modifiersController.text.trim().isEmpty ? [] : _modifiersController.text.split('،').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+        recipe: isEditing ? widget.productToEdit!.recipe : [],
         createdAt: isEditing ? widget.productToEdit!.createdAt : DateTime.now(),
         updatedAt: DateTime.now(),
       );

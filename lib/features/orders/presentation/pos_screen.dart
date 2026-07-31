@@ -10,7 +10,11 @@ import '../data/order_repository.dart';
 import '../domain/order.dart';
 import '../domain/cart_item.dart';
 import '../../../core/theme/glass_card.dart';
+import '../../../core/services/printer_service.dart';
+import '../../../core/providers/settings_provider.dart';
 import 'package:flutter/foundation.dart';
+import '../../shifts/data/shift_repository.dart';
+import '../../shifts/presentation/start_shift_dialog.dart';
 
 class PosScreen extends ConsumerStatefulWidget {
   const PosScreen({super.key});
@@ -205,9 +209,26 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         createdAt: DateTime.now(),
       );
 
-      await ref.read(orderRepositoryProvider).createOrder(newOrder);
+      final merchantId = appUser.merchantId ?? appUser.id;
+      final shift = await ref.read(currentShiftProvider(merchantId).future);
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم إتمام الطلب بنجاح', style: TextStyle(fontFamily: 'Tajawal'))));
+      final savedOrder = await ref.read(orderRepositoryProvider).createOrder(newOrder, shiftId: shift?.id);
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم إتمام الطلب بنجاح (رقم: ${savedOrder.queueNumber ?? savedOrder.id.substring(0,4)})', style: TextStyle(fontFamily: 'Tajawal'))));
+      
+      // Attempt to print receipt
+      try {
+        final storeProfile = ref.read(storeProfileProvider).value;
+        await PrinterService.printReceipt(
+          savedOrder, 
+          ref.read(currencyProvider).code,
+          storeProfile: storeProfile,
+          isKitchen: false, // Could add a setting for this later if needed
+        );
+      } catch (e) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم حفظ الطلب، لكن تعذرت الطباعة: $e', style: TextStyle(fontFamily: 'Tajawal'))));
+      }
+
       setState(() {
         _cart.clear();
       });
@@ -220,12 +241,28 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = ref.watch(authRepositoryProvider).value;
+    final merchantId = user?.merchantId ?? user?.id;
+    final shiftAsync = ref.watch(currentShiftProvider(merchantId ?? ''));
+    
     final productsAsync = ref.watch(productsStreamProvider);
     final isTablet = MediaQuery.of(context).size.width > 600;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('نقطة البيع (POS)', style: TextStyle(fontFamily: 'Tajawal')),
+    return shiftAsync.when(
+      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (err, stack) => Scaffold(body: Center(child: Text('Error: $err'))),
+      data: (shift) {
+        if (shift == null) {
+          return const Scaffold(
+            body: Center(
+              child: StartShiftDialog(),
+            ),
+          );
+        }
+
+        return Scaffold(
+          appBar: AppBar(
+            title: Text('نقطة البيع (POS)', style: TextStyle(fontFamily: 'Tajawal')),
         actions: [
           if (_heldOrders.isNotEmpty)
             IconButton(
@@ -370,8 +407,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
               ),
           ],
         ),
-    );
-  }
+      );
+    },
+  );
 }
 
 class OrderDetails {

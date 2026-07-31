@@ -1,0 +1,100 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'product.dart';
+
+class RawMaterial {
+  final String id;
+  final String merchantId;
+  final String name;
+  final double quantity; // in smallest unit (e.g., grams, ml)
+  final String unit; // 'g', 'ml', 'piece'
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const RawMaterial({
+    required this.id,
+    required this.merchantId,
+    required this.name,
+    required this.quantity,
+    required this.unit,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory RawMaterial.fromJson(Map<String, dynamic> json) {
+    return RawMaterial(
+      id: json['id'] as String,
+      merchantId: json['merchantId'] as String,
+      name: json['name'] as String,
+      quantity: (json['quantity'] as num).toDouble(),
+      unit: json['unit'] as String,
+      createdAt: (json['createdAt'] as Timestamp).toDate(),
+      updatedAt: (json['updatedAt'] as Timestamp).toDate(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'merchantId': merchantId,
+      'name': name,
+      'quantity': quantity,
+      'unit': unit,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': Timestamp.fromDate(updatedAt),
+    };
+  }
+
+  RawMaterial copyWith({
+    String? id,
+    String? merchantId,
+    String? name,
+    double? quantity,
+    String? unit,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return RawMaterial(
+      id: id ?? this.id,
+      merchantId: merchantId ?? this.merchantId,
+      name: name ?? this.name,
+      quantity: quantity ?? this.quantity,
+      unit: unit ?? this.unit,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+}
+
+class RecipeItem {
+  final String rawMaterialId;
+  final double amountRequired;
+
+  const RecipeItem({
+    required this.rawMaterialId,
+    required this.amountRequired,
+  });
+
+  factory RecipeItem.fromJson(Map<String, dynamic> json) {
+    return RecipeItem(
+      rawMaterialId: json['rawMaterialId'] as String,
+      amountRequired: (json['amountRequired'] as num).toDouble(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'rawMaterialId': rawMaterialId,
+      'amountRequired': amountRequired,
+    };
+  }
+
+  RecipeItem copyWith({
+    String? rawMaterialId,
+    double? amountRequired,
+  }) {
+    return RecipeItem(
+      rawMaterialId: rawMaterialId ?? this.rawMaterialId,
+      amountRequired: amountRequired ?? this.amountRequired,
+    );
+  }
+}

@@ -2,6 +2,7 @@ import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../domain/order.dart';
 
@@ -52,128 +53,182 @@ class OrderRepository {
         );
   }
 
-  Future<void> createOrder(AppOrder order) async {
-    await _firestore.runTransaction((transaction) async {
-      final customerRef = _firestore.collection('customers').doc(order.customerId);
-      final orderRef = _firestore.collection('orders').doc(order.id);
+  Future<AppOrder> createOrder(AppOrder order, {String? shiftId}) async {
+    final batch = _firestore.batch();
+    
+    final customerRef = _firestore.collection('customers').doc(order.customerId);
+    final orderRef = _firestore.collection('orders').doc(order.id);
+    
+    // Manage QueueNumber locally
+    final prefs = await SharedPreferences.getInstance();
+    final now = DateTime.now();
+    final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final lastDate = prefs.getString('queue_date_${order.merchantId}');
+    int nextQueueNumber = 1;
+    if (lastDate == todayStr) {
+      nextQueueNumber = (prefs.getInt('queue_num_${order.merchantId}') ?? 0) + 1;
+    }
+    await prefs.setString('queue_date_${order.merchantId}', todayStr);
+    await prefs.setInt('queue_num_${order.merchantId}', nextQueueNumber);
+    
+    final orderWithQueue = order.copyWith(queueNumber: nextQueueNumber);
 
-      // Verify all products and update inventory
-      for (final item in order.items) {
-        final productRef = _firestore.collection('products').doc(item.productId);
-        final productDoc = await transaction.get(productRef);
-        if (!productDoc.exists) throw Exception("المنتج غير موجود: ${item.productName}");
-
-        final currentQuantity = productDoc.data()?['quantity'] as int? ?? 0;
-        if (currentQuantity < item.quantity) {
-          throw Exception("الكمية المطلوبة غير متوفرة للمنتج: ${item.productName}");
+    for (final item in order.items) {
+      final productRef = _firestore.collection('products').doc(item.productId);
+      
+      // Fetch product to get its recipe
+      final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
+      if (productDoc.exists) {
+        final data = productDoc.data()!;
+        final recipeList = data['recipe'] as List<dynamic>? ?? [];
+        
+        if (recipeList.isNotEmpty) {
+          // Has recipe -> deduct raw materials
+          for (final recipeItem in recipeList) {
+            final rawMaterialId = recipeItem['rawMaterialId'] as String;
+            final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
+            
+            final rawMaterialRef = _firestore.collection('raw_materials').doc(rawMaterialId);
+            batch.update(rawMaterialRef, {
+              'quantity': FieldValue.increment(-(amountRequired * item.quantity)),
+              'updatedAt': FieldValue.serverTimestamp(),
+            });
+          }
+        } else {
+          // No recipe -> deduct product quantity
+          batch.update(productRef, {
+            'quantity': FieldValue.increment(-item.quantity),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
         }
-
-        transaction.update(productRef, {
-          'quantity': currentQuantity - item.quantity,
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
       }
+    }
 
-      if (order.customerId != 'walk_in') {
-        final customerDoc = await transaction.get(customerRef);
-        if (!customerDoc.exists) throw Exception("العميل غير موجود");
+    if (order.customerId != 'walk_in') {
+      final debtIncrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
+      batch.update(customerRef, {
+        'totalPurchases': FieldValue.increment(order.total),
+        'orderCount': FieldValue.increment(1),
+        'totalDebt': FieldValue.increment(debtIncrease),
+        'lastPurchaseDate': FieldValue.serverTimestamp(),
+      });
+    }
 
-        final currentTotalPurchases = (customerDoc.data()?['totalPurchases'] as num?)?.toDouble() ?? 0.0;
-        final currentOrderCount = customerDoc.data()?['orderCount'] as int? ?? 0;
-        final currentTotalDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
-
-        final debtIncrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
-        transaction.update(customerRef, {
-          'totalPurchases': currentTotalPurchases + order.total,
-          'orderCount': currentOrderCount + 1,
-          'totalDebt': currentTotalDebt + debtIncrease,
-          'lastPurchaseDate': FieldValue.serverTimestamp(),
-        });
+    if (shiftId != null) {
+      final shiftRef = _firestore.collection('shifts').doc(shiftId);
+      if (order.paymentMethod == 'cash') {
+        batch.update(shiftRef, {'cashSales': FieldValue.increment(order.paidAmount)});
+      } else if (order.paymentMethod == 'card') {
+        batch.update(shiftRef, {'cardTotal': FieldValue.increment(order.paidAmount)});
+      } else if (order.paymentMethod == 'transfer') {
+        batch.update(shiftRef, {'transferTotal': FieldValue.increment(order.paidAmount)});
       }
+    }
 
-      transaction.set(orderRef, order.toJson());
-    });
+    batch.set(orderRef, orderWithQueue.toJson());
+    await batch.commit();
+    return orderWithQueue;
   }
 
   Future<void> deleteOrder(AppOrder order) async {
-    await _firestore.runTransaction((transaction) async {
-      final customerRef = _firestore.collection('customers').doc(order.customerId);
-      final orderRef = _firestore.collection('orders').doc(order.id);
+    final batch = _firestore.batch();
+    final customerRef = _firestore.collection('customers').doc(order.customerId);
+    final orderRef = _firestore.collection('orders').doc(order.id);
 
-      final orderDoc = await transaction.get(orderRef);
-      if (!orderDoc.exists) return; // Already deleted
+    for (final item in order.items) {
+      final productRef = _firestore.collection('products').doc(item.productId);
+      final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
+      if (productDoc.exists) {
+        final data = productDoc.data()!;
+        final recipeList = data['recipe'] as List<dynamic>? ?? [];
 
-      for (final item in order.items) {
-        final productRef = _firestore.collection('products').doc(item.productId);
-        final productDoc = await transaction.get(productRef);
-        if (productDoc.exists) {
-          final currentQuantity = productDoc.data()?['quantity'] as int? ?? 0;
-          transaction.update(productRef, {
-            'quantity': currentQuantity + item.quantity,
+        if (recipeList.isNotEmpty) {
+          for (final recipeItem in recipeList) {
+            final rawMaterialId = recipeItem['rawMaterialId'] as String;
+            final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
+            final rawMaterialRef = _firestore.collection('raw_materials').doc(rawMaterialId);
+            batch.update(rawMaterialRef, {
+              'quantity': FieldValue.increment(amountRequired * item.quantity),
+              'updatedAt': FieldValue.serverTimestamp(),
+            });
+          }
+        } else {
+          batch.update(productRef, {
+            'quantity': FieldValue.increment(item.quantity),
             'updatedAt': FieldValue.serverTimestamp(),
           });
         }
       }
+    }
 
-      if (order.customerId != 'walk_in') {
-        final customerDoc = await transaction.get(customerRef);
-        if (customerDoc.exists) {
-          final currentTotalPurchases = (customerDoc.data()?['totalPurchases'] as num?)?.toDouble() ?? 0.0;
-          final currentOrderCount = customerDoc.data()?['orderCount'] as int? ?? 0;
-          final currentTotalDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
-          
-          final newOrderCount = currentOrderCount - 1;
-          final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
-          
-          transaction.update(customerRef, {
-            'totalPurchases': (currentTotalPurchases - order.total).clamp(0.0, double.infinity),
-            'orderCount': newOrderCount < 0 ? 0 : newOrderCount,
-            'totalDebt': (currentTotalDebt - debtDecrease).clamp(0.0, double.infinity),
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
-        }
-      }
+    if (order.customerId != 'walk_in') {
+      final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
+      batch.update(customerRef, {
+        'totalPurchases': FieldValue.increment(-order.total),
+        'orderCount': FieldValue.increment(-1),
+        'totalDebt': FieldValue.increment(-debtDecrease),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
 
-      transaction.delete(orderRef);
-    });
+    batch.delete(orderRef);
+    await batch.commit();
   }
 
   Future<void> updateOrderStatus(AppOrder order, String newStatus) async {
     if (order.status == newStatus) return;
 
-    await _firestore.runTransaction((transaction) async {
-      final orderRef = _firestore.collection('orders').doc(order.id);
+    final batch = _firestore.batch();
+    final orderRef = _firestore.collection('orders').doc(order.id);
 
-      for (final item in order.items) {
-        final productRef = _firestore.collection('products').doc(item.productId);
-        final productDoc = await transaction.get(productRef);
+    for (final item in order.items) {
+      final productRef = _firestore.collection('products').doc(item.productId);
+      final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
+
+      if (productDoc.exists) {
+        final data = productDoc.data()!;
+        final recipeList = data['recipe'] as List<dynamic>? ?? [];
 
         if (newStatus == 'cancelled' && order.status != 'cancelled') {
-          if (productDoc.exists) {
-            final currentQty = productDoc.data()?['quantity'] as int? ?? 0;
-            transaction.update(productRef, {
-              'quantity': currentQty + item.quantity,
+          if (recipeList.isNotEmpty) {
+            for (final recipeItem in recipeList) {
+              final rawMaterialId = recipeItem['rawMaterialId'] as String;
+              final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
+              final rawMaterialRef = _firestore.collection('raw_materials').doc(rawMaterialId);
+              batch.update(rawMaterialRef, {
+                'quantity': FieldValue.increment(amountRequired * item.quantity),
+                'updatedAt': FieldValue.serverTimestamp(),
+              });
+            }
+          } else {
+            batch.update(productRef, {
+              'quantity': FieldValue.increment(item.quantity),
               'updatedAt': FieldValue.serverTimestamp(),
             });
           }
         } else if (order.status == 'cancelled' && newStatus != 'cancelled') {
-          if (productDoc.exists) {
-            final currentQty = productDoc.data()?['quantity'] as int? ?? 0;
-            if (currentQty < item.quantity) {
-              throw Exception("لا يوجد كمية كافية للإرجاع للمنتج: ${item.productName}");
+          if (recipeList.isNotEmpty) {
+            for (final recipeItem in recipeList) {
+              final rawMaterialId = recipeItem['rawMaterialId'] as String;
+              final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
+              final rawMaterialRef = _firestore.collection('raw_materials').doc(rawMaterialId);
+              batch.update(rawMaterialRef, {
+                'quantity': FieldValue.increment(-(amountRequired * item.quantity)),
+                'updatedAt': FieldValue.serverTimestamp(),
+              });
             }
-            transaction.update(productRef, {
-              'quantity': currentQty - item.quantity,
+          } else {
+            batch.update(productRef, {
+              'quantity': FieldValue.increment(-item.quantity),
               'updatedAt': FieldValue.serverTimestamp(),
             });
-          } else {
-            throw Exception("المنتج غير موجود: ${item.productName}");
           }
         }
       }
+    }
 
-      transaction.update(orderRef, {'status': newStatus});
-    });
+    batch.update(orderRef, {'status': newStatus});
+    await batch.commit();
   }
 
   Future<int> getOrderCount(String merchantId) async {

@@ -17,6 +17,7 @@ class AppOrder {
   final String? creatorName;
   final String? paymentMethod;
   final DateTime? scheduledDate;
+  final int? queueNumber;
   final DateTime createdAt;
 
   const AppOrder({
@@ -34,6 +35,7 @@ class AppOrder {
     this.creatorName,
     this.paymentMethod,
     this.scheduledDate,
+    this.queueNumber,
     required this.createdAt,
   });
 
@@ -56,6 +58,7 @@ class AppOrder {
       creatorName: json['creatorName'] as String?,
       paymentMethod: json['paymentMethod'] as String? ?? 'cash',
       scheduledDate: json['scheduledDate'] != null ? (json['scheduledDate'] as Timestamp).toDate() : null,
+      queueNumber: json['queueNumber'] as int?,
       createdAt: (json['createdAt'] as Timestamp).toDate(),
     );
   }
@@ -76,6 +79,7 @@ class AppOrder {
       'creatorName': creatorName,
       'paymentMethod': paymentMethod ?? 'cash',
       'scheduledDate': scheduledDate != null ? Timestamp.fromDate(scheduledDate!) : null,
+      'queueNumber': queueNumber,
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }
@@ -95,6 +99,7 @@ class AppOrder {
     String? creatorName,
     String? paymentMethod,
     DateTime? scheduledDate,
+    int? queueNumber,
     DateTime? createdAt,
   }) {
     return AppOrder(
@@ -112,6 +117,7 @@ class AppOrder {
       creatorName: creatorName ?? this.creatorName,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       scheduledDate: scheduledDate ?? this.scheduledDate,
+      queueNumber: queueNumber ?? this.queueNumber,
       createdAt: createdAt ?? this.createdAt,
     );
   }

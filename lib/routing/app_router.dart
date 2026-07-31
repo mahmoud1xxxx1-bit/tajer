@@ -5,6 +5,7 @@ import '../features/authentication/data/auth_repository.dart';
 import '../features/authentication/presentation/startup_screen.dart';
 import '../features/authentication/presentation/upgrade_account_screen.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
+import '../features/products/presentation/raw_materials_screen.dart';
 import '../features/subscriptions/presentation/paywall_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
 import '../features/settings/presentation/backup_security_screen.dart';
@@ -17,6 +18,7 @@ import '../features/inventory_log/presentation/inventory_logs_screen.dart';
 import '../features/employees/presentation/employees_screen.dart';
 import '../features/subscription/presentation/subscription_screen.dart';
 import '../features/settings/presentation/profile_screen.dart';
+import '../features/shifts/presentation/end_shift_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateChangesProvider);
@@ -97,6 +99,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/store_branding',
         builder: (context, state) => const StoreBrandingScreen(),
+      ),
+      GoRoute(
+        path: '/end_shift',
+        builder: (context, state) => const EndShiftScreen(),
+      ),
+      GoRoute(
+        path: '/raw_materials',
+        builder: (context, state) => const RawMaterialsScreen(),
       ),
     ],
   );

@@ -309,8 +309,8 @@ class AuthRepository {
         if (mId != null && mId.toString().isNotEmpty) {
           final mDoc = await _firestore.collection('users').doc(mId).get();
           final plan = mDoc.data()?['plan'] ?? 'merchant';
-          final email = mDoc.data()?['email'];
-          if (plan != 'premium' && email != 'love.dotk@gmail.com') {
+          final email = mDoc.data()?['email'] as String?;
+          if (plan != 'premium' && email?.trim().toLowerCase() != 'love.dotk@gmail.com') {
             await _auth.signOut();
             throw Exception("لا يمكن تسجيل الدخول لأن التاجر لم يقم بتفعيل الباقة الشهرية.");
           }
@@ -334,8 +334,8 @@ class AuthRepository {
       // Enforce subscription check
       final merchantDoc = await _firestore.collection('users').doc(merchantUid).get();
       final plan = merchantDoc.data()?['plan'] ?? 'merchant';
-      final email = merchantDoc.data()?['email'];
-      if (plan != 'premium' && email != 'love.dotk@gmail.com') {
+      final email = merchantDoc.data()?['email'] as String?;
+      if (plan != 'premium' && email?.trim().toLowerCase() != 'love.dotk@gmail.com') {
         throw Exception("لا يمكنك إضافة موظفين بدون تفعيل الباقة الشهرية.");
       }
 

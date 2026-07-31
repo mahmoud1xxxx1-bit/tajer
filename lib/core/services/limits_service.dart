@@ -51,14 +51,15 @@ class LimitsService {
     if (user.plan == 'banned_device' && user.isAnonymous) return false;
 
     final String merchantId = user.merchantId ?? user.id;
-    bool isPremium = user.plan == 'pro' || user.plan == 'premium' || user.email == 'love.dotk@gmail.com';
+    bool isPremium = user.plan == 'pro' || user.plan == 'premium' || user.email.trim().toLowerCase() == 'love.dotk@gmail.com';
     
     // If the user is an employee, check their merchant's plan
     if (!isPremium && user.merchantId != null && user.merchantId!.isNotEmpty) {
       final merchantDoc = await _firestore.collection('users').doc(merchantId).get();
       final merchantPlan = merchantDoc.data()?['plan'];
-      final merchantEmail = merchantDoc.data()?['email'];
-      if (merchantPlan == 'pro' || merchantPlan == 'premium' || merchantEmail == 'love.dotk@gmail.com') {
+      final merchantEmail = merchantDoc.data()?['email'] as String?;
+      
+      if (merchantPlan == 'pro' || merchantPlan == 'premium' || merchantEmail?.trim().toLowerCase() == 'love.dotk@gmail.com') {
         isPremium = true;
       }
     }

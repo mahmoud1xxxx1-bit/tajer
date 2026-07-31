@@ -1,61 +1,96 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'raw_material.dart';
 
-part 'product.freezed.dart';
-part 'product.g.dart';
+class Product {
+  final String id;
+  final String merchantId;
+  final String name;
+  final String? categoryId;
+  final String? barcode;
+  final double price;
+  final int quantity;
+  final List<String> modifiers;
+  final List<RecipeItem> recipe;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
-@freezed
-class Product with _$Product {
-  const factory Product({
-    required String id,
-    required String merchantId,
-    required String name,
+  const Product({
+    required this.id,
+    required this.merchantId,
+    required this.name,
+    this.categoryId,
+    this.barcode,
+    required this.price,
+    required this.quantity,
+    this.modifiers = const [],
+    this.recipe = const [],
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory Product.fromJson(Map<String, dynamic> json) {
+    return Product(
+      id: json['id'] as String,
+      merchantId: json['merchantId'] as String,
+      name: json['name'] as String,
+      categoryId: json['categoryId'] as String?,
+      barcode: json['barcode'] as String?,
+      price: (json['price'] as num).toDouble(),
+      quantity: (json['quantity'] as num).toInt(),
+      modifiers: (json['modifiers'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [],
+      recipe: (json['recipe'] as List<dynamic>?)?.map((e) => RecipeItem.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
+      createdAt: _parseDate(json['createdAt']),
+      updatedAt: _parseDate(json['updatedAt']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'merchantId': merchantId,
+      'name': name,
+      'categoryId': categoryId,
+      'barcode': barcode,
+      'price': price,
+      'quantity': quantity,
+      'modifiers': modifiers,
+      'recipe': recipe.map((e) => e.toJson()).toList(),
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': Timestamp.fromDate(updatedAt),
+    };
+  }
+
+  Product copyWith({
+    String? id,
+    String? merchantId,
+    String? name,
     String? categoryId,
     String? barcode,
-    required double price,
-    required int quantity,
-    @Default([]) List<String> modifiers,
-    @TimestampConverter() required DateTime createdAt,
-    @TimestampConverter() required DateTime updatedAt,
-  }) = _Product;
+    double? price,
+    int? quantity,
+    List<String>? modifiers,
+    List<RecipeItem>? recipe,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return Product(
+      id: id ?? this.id,
+      merchantId: merchantId ?? this.merchantId,
+      name: name ?? this.name,
+      categoryId: categoryId ?? this.categoryId,
+      barcode: barcode ?? this.barcode,
+      price: price ?? this.price,
+      quantity: quantity ?? this.quantity,
+      modifiers: modifiers ?? this.modifiers,
+      recipe: recipe ?? this.recipe,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 
-  factory Product.fromJson(Map<String, dynamic> json) => _$ProductFromJson(json);
-}
-
-class TimestampConverter implements JsonConverter<DateTime, Object> {
-  const TimestampConverter();
-
-  @override
-  DateTime fromJson(Object json) {
-    if (json is Timestamp) {
-      return json.toDate();
-    }
-    if (json is String) {
-      return DateTime.parse(json);
-    }
+  static DateTime _parseDate(dynamic value) {
+    if (value is Timestamp) return value.toDate();
+    if (value is String) return DateTime.parse(value);
     return DateTime.now();
-  }
-
-  @override
-  Object toJson(DateTime object) {
-    return Timestamp.fromDate(object);
-  }
-}
-
-class NullableTimestampConverter implements JsonConverter<DateTime?, Object?> {
-  const NullableTimestampConverter();
-
-  @override
-  DateTime? fromJson(Object? json) {
-    if (json == null) return null;
-    if (json is Timestamp) return json.toDate();
-    if (json is String) return DateTime.parse(json);
-    return DateTime.now();
-  }
-
-  @override
-  Object? toJson(DateTime? object) {
-    if (object == null) return null;
-    return Timestamp.fromDate(object);
   }
 }
