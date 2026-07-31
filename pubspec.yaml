@@ -94,6 +94,7 @@ flutter:
   generate: true
   assets:
     - assets/app_icon.jpg
+    - assets/fonts/
 
 dependency_overrides:
   package_info_plus: ^8.0.0
