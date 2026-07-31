@@ -209,5 +209,6 @@
   "permCanReceivePayments": "Settle debts and receive payments",
   "permCanManageExpenses": "Record and track expenses",
   "employeePermissions": "Employees & Permissions (Pro)",
-  "permissionSettings": "Permission Settings"
+  "permissionSettings": "Permission Settings",
+  "credit": "Credit"
 }

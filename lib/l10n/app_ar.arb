@@ -209,5 +209,6 @@
   "permCanReceivePayments": "تسديد الديون واستلام المبالغ",
   "permCanManageExpenses": "تسجيل ومتابعة المصروفات",
   "employeePermissions": "الموظفين والصلاحيات (Pro)",
-  "permissionSettings": "إعدادات الصلاحيات"
+  "permissionSettings": "إعدادات الصلاحيات",
+  "credit": "آجل"
 }
