@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../domain/raw_material.dart';
 import '../data/raw_material_repository.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../authentication/domain/app_user.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 
 class RawMaterialsScreen extends ConsumerStatefulWidget {
@@ -54,7 +55,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
 
               if (name.isEmpty || unit.isEmpty) return;
 
-              final user = ref.read(authRepositoryProvider).value;
+              final user = ref.read(appUserProvider).value;
               final merchantId = user?.merchantId ?? user?.id;
 
               if (merchantId == null) return;
@@ -92,7 +93,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(authRepositoryProvider).value;
+    final user = ref.watch(appUserProvider).value;
     final merchantId = user?.merchantId ?? user?.id;
 
     if (merchantId == null) return const Scaffold();

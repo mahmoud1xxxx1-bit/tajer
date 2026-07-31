@@ -4,6 +4,7 @@ import 'package:uuid/uuid.dart';
 import '../domain/shift.dart';
 import '../data/shift_repository.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../authentication/domain/app_user.dart';
 
 class StartShiftDialog extends ConsumerStatefulWidget {
   const StartShiftDialog({super.key});
@@ -24,7 +25,7 @@ class _StartShiftDialogState extends ConsumerState<StartShiftDialog> {
 
   Future<void> _startShift() async {
     final cash = double.tryParse(_cashController.text) ?? 0.0;
-    final user = ref.read(authRepositoryProvider).value;
+    final user = ref.read(appUserProvider).value;
     if (user == null) return;
 
     setState(() => _isLoading = true);

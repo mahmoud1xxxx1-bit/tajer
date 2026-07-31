@@ -15,6 +15,7 @@ import '../../../core/providers/settings_provider.dart';
 import 'package:flutter/foundation.dart';
 import '../../shifts/data/shift_repository.dart';
 import '../../shifts/presentation/start_shift_dialog.dart';
+import '../../../core/providers/store_profile_provider.dart';
 
 class PosScreen extends ConsumerStatefulWidget {
   const PosScreen({super.key});
@@ -241,7 +242,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(authRepositoryProvider).value;
+    final user = ref.watch(appUserProvider).value;
     final merchantId = user?.merchantId ?? user?.id;
     final shiftAsync = ref.watch(currentShiftProvider(merchantId ?? ''));
     

@@ -51,7 +51,7 @@ class LimitsService {
     if (user.plan == 'banned_device' && user.isAnonymous) return false;
 
     final String merchantId = user.merchantId ?? user.id;
-    bool isPremium = user.plan == 'pro' || user.plan == 'premium' || user.email.trim().toLowerCase() == 'love.dotk@gmail.com';
+    bool isPremium = user.plan == 'pro' || user.plan == 'premium' || user.email?.trim().toLowerCase() == 'love.dotk@gmail.com';
     
     // If the user is an employee, check their merchant's plan
     if (!isPremium && user.merchantId != null && user.merchantId!.isNotEmpty) {
