@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 import '../../orders/data/order_repository.dart';
 import '../../expenses/data/expense_repository.dart';
 import '../../authentication/data/auth_repository.dart';
-import '../../../core/theme/glass_card.dart';
+import '../../../../core/theme/glass_card.dart';
 
 class AnalyticsDashboardWidget extends ConsumerWidget {
   const AnalyticsDashboardWidget({super.key});
