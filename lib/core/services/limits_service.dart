@@ -50,19 +50,13 @@ class LimitsService {
     // Banned devices cannot add anything (0 limit) ONLY if they are anonymous
     if (user.plan == 'banned_device' && user.isAnonymous) return false;
 
+    // Employees are part of a merchant's team and should never be restricted by limit checking queries
+    if (user.role == 'employee' || user.role == 'cashier' || user.plan == 'employee' || (user.merchantId != null && user.merchantId!.isNotEmpty && !user.isAnonymous)) {
+      return true;
+    }
+
     final String merchantId = user.merchantId ?? user.id;
     bool isPremium = user.plan == 'pro' || user.plan == 'premium' || user.email?.trim().toLowerCase() == 'love.dotk@gmail.com';
-    
-    // If the user is an employee, check their merchant's plan
-    if (!isPremium && user.merchantId != null && user.merchantId!.isNotEmpty) {
-      final merchantDoc = await _firestore.collection('users').doc(merchantId).get();
-      final merchantPlan = merchantDoc.data()?['plan'];
-      final merchantEmail = merchantDoc.data()?['email'] as String?;
-      
-      if (merchantPlan == 'pro' || merchantPlan == 'premium' || merchantEmail?.trim().toLowerCase() == 'love.dotk@gmail.com') {
-        isPremium = true;
-      }
-    }
 
     // Pro/Premium users have unlimited access
     if (isPremium) return true;
