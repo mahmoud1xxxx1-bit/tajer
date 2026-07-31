@@ -27,6 +27,16 @@ service cloud.firestore {
       allow update: if isAuthenticated() && (request.auth.uid == userId || hasAccess(resource.data.get('merchantId', ''))) 
                     && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['plan']));
       allow delete: if isAuthenticated() && hasAccess(resource.data.get('merchantId', ''));
+
+      // Users Subcollections (Employees, Notifications)
+      match /employees/{employeeId} {
+        allow read, update, delete: if hasAccess(userId);
+        allow create: if hasAccess(userId);
+      }
+      match /notifications/{notificationId} {
+        allow read, update, delete: if hasAccess(userId);
+        allow create: if hasAccess(userId);
+      }
     }
 
     // Device Registry (Anti-abuse)
@@ -37,24 +47,24 @@ service cloud.firestore {
 
     // --- ROOT COLLECTIONS ---
     match /products/{productId} {
-      allow read, update, delete: if hasAccess(resource.data.merchantId);
-      allow create: if hasAccess(request.resource.data.merchantId);
+      allow read, update, delete: if hasAccess(resource.data.get('merchantId', ''));
+      allow create: if hasAccess(request.resource.data.get('merchantId', ''));
     }
     match /customers/{customerId} {
-      allow read, update, delete: if hasAccess(resource.data.merchantId);
-      allow create: if hasAccess(request.resource.data.merchantId);
+      allow read, update, delete: if hasAccess(resource.data.get('merchantId', ''));
+      allow create: if hasAccess(request.resource.data.get('merchantId', ''));
     }
     match /orders/{orderId} {
-      allow read, update, delete: if hasAccess(resource.data.merchantId);
-      allow create: if hasAccess(request.resource.data.merchantId);
+      allow read, update, delete: if hasAccess(resource.data.get('merchantId', ''));
+      allow create: if hasAccess(request.resource.data.get('merchantId', ''));
     }
     match /shifts/{shiftId} {
-      allow read, update, delete: if hasAccess(resource.data.merchantId);
-      allow create: if hasAccess(request.resource.data.merchantId);
+      allow read, update, delete: if hasAccess(resource.data.get('merchantId', ''));
+      allow create: if hasAccess(request.resource.data.get('merchantId', ''));
     }
     match /raw_materials/{materialId} {
-      allow read, update, delete: if hasAccess(resource.data.merchantId);
-      allow create: if hasAccess(request.resource.data.merchantId);
+      allow read, update, delete: if hasAccess(resource.data.get('merchantId', ''));
+      allow create: if hasAccess(request.resource.data.get('merchantId', ''));
     }
 
     // --- MERCHANT SUB-COLLECTIONS ---
@@ -74,18 +84,6 @@ service cloud.firestore {
       match /inventory_logs/{logId} {
         allow read, update, delete: if hasAccess(merchantId);
         allow create: if hasAccess(merchantId);
-      }
-    }
-
-    // --- USERS SUB-COLLECTIONS ---
-    match /users/{userId} {
-      match /employees/{employeeId} {
-        allow read, update, delete: if hasAccess(userId);
-        allow create: if hasAccess(userId);
-      }
-      match /notifications/{notificationId} {
-        allow read, update, delete: if hasAccess(userId);
-        allow create: if hasAccess(userId);
       }
     }
   }
