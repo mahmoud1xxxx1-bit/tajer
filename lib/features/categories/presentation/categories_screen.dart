@@ -15,6 +15,8 @@ class CategoriesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final categoriesAsync = ref.watch(categoriesStreamProvider);
+    final appUser = ref.watch(appUserProvider).value;
+    final canManageProducts = appUser?.hasPermission('can_manage_products') ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -29,13 +31,14 @@ class CategoriesScreen extends ConsumerWidget {
                 children: [
                   Text(AppLocalizations.of(context)!.text40, style: TextStyle(fontFamily: 'Tajawal')),
                   const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      ref.read(categoryRepositoryProvider)?.seedDefaultCategories();
-                    },
-                    icon: const Icon(Icons.auto_awesome),
-                    label: const Text('إضافة تصنيفات افتراضية', style: TextStyle(fontFamily: 'Tajawal')),
-                  ),
+                  if (canManageProducts)
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        ref.read(categoryRepositoryProvider)?.seedDefaultCategories();
+                      },
+                      icon: const Icon(Icons.auto_awesome),
+                      label: const Text('إضافة تصنيفات افتراضية', style: TextStyle(fontFamily: 'Tajawal')),
+                    ),
                 ],
               ),
             );
@@ -49,7 +52,7 @@ class CategoriesScreen extends ConsumerWidget {
               return GlassCard(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: EdgeInsets.zero,
-                onTap: () => _showEditCategoryDialog(context, ref, category),
+                onTap: canManageProducts ? () => _showEditCategoryDialog(context, ref, category) : null,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
@@ -92,31 +95,32 @@ class CategoriesScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.delete, color: Colors.red),
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('حذف التصنيف', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                              content: const Text('هل أنت متأكد من حذف هذا التصنيف؟', style: TextStyle(fontFamily: 'Tajawal')),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    ref.read(categoryRepositoryProvider)?.deleteCategory(category.id);
-                                    Navigator.pop(context);
-                                  },
-                                  child: const Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
+                      if (canManageProducts)
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: const Text('حذف التصنيف', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                content: const Text('هل أنت متأكد من حذف هذا التصنيف؟', style: TextStyle(fontFamily: 'Tajawal')),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      ref.read(categoryRepositoryProvider)?.deleteCategory(category.id);
+                                      Navigator.pop(context);
+                                    },
+                                    child: const Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
                     ],
                   ),
                 ),
@@ -127,14 +131,14 @@ class CategoriesScreen extends ConsumerWidget {
         loading: () => Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('خطأ: $e')),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: canManageProducts ? FloatingActionButton(
         onPressed: () async {
           final canAdd = await GuestLimitService.canAddCategory(context, ref);
           if (!canAdd) return;
           if (context.mounted) _showAddCategoryDialog(context, ref);
         },
         child: Icon(Icons.add),
-      ),
+      ) : null,
     );
   }
 

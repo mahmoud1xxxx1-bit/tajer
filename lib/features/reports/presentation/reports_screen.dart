@@ -57,6 +57,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   Widget build(BuildContext context) {
     final baseReportsService = ref.watch(reportsServiceProvider);
     final currentCurrency = ref.watch(currencyProvider);
+    final appUser = ref.watch(appUserProvider).value;
+    final canViewCost = appUser?.hasPermission('can_view_cost') ?? false;
 
     if (baseReportsService == null) {
       return const Scaffold(
@@ -147,7 +149,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     color: Colors.green,
                   ),
                 ),
-                if (ref.read(appUserProvider).value?.role != 'cashier') ...[
+                if (canViewCost) ...[
                   SizedBox(width: 12),
                   Expanded(
                     child: _SummaryCard(

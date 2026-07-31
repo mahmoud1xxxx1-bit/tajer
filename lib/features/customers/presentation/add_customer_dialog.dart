@@ -56,6 +56,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
         createdAt: isEditing ? widget.customerToEdit!.createdAt : DateTime.now(),
         totalPurchases: isEditing ? widget.customerToEdit!.totalPurchases : 0.0,
         orderCount: isEditing ? widget.customerToEdit!.orderCount : 0,
+        totalDebt: isEditing ? widget.customerToEdit!.totalDebt : 0.0,
       );
 
       if (isEditing) {

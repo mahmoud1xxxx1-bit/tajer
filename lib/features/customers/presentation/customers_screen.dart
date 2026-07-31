@@ -2,6 +2,8 @@ import 'package:tajer/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/customer_repository.dart';
+import '../domain/customer.dart';
+import '../../authentication/data/auth_repository.dart';
 import 'add_customer_dialog.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../../core/theme/glass_card.dart';
@@ -18,6 +20,9 @@ class CustomersScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final customersAsyncValue = ref.watch(customersStreamProvider);
     final currency = ref.watch(currencyProvider).code;
+    final appUser = ref.watch(appUserProvider).value;
+    final canManageCustomers = appUser?.hasPermission('can_manage_customers') ?? false;
+    final canReceivePayments = appUser?.hasPermission('can_receive_payments') ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -198,6 +203,8 @@ class CustomersScreen extends ConsumerWidget {
                                     child: AddCustomerDialog(customerToEdit: customer),
                                   ),
                                 );
+                              } else if (value == 'pay_debt') {
+                                _showPayDebtDialog(context, ref, customer);
                               } else if (value == 'delete') {
                                 showDialog(
                                   context: context,
@@ -233,16 +240,28 @@ class CustomersScreen extends ConsumerWidget {
                               }
                             },
                             itemBuilder: (context) => [
-                              PopupMenuItem(
-                                value: 'edit',
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.edit, size: 20, color: Colors.blue),
-                                    const SizedBox(width: 8),
-                                    Text(AppLocalizations.of(context)!.text60, style: const TextStyle(fontFamily: 'Tajawal')),
-                                  ],
+                              if (canManageCustomers)
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.edit, size: 20, color: Colors.blue),
+                                      const SizedBox(width: 8),
+                                      Text(AppLocalizations.of(context)!.text60, style: const TextStyle(fontFamily: 'Tajawal')),
+                                    ],
+                                  ),
                                 ),
-                              ),
+                              if (customer.totalDebt > 0 && canReceivePayments)
+                                const PopupMenuItem(
+                                  value: 'pay_debt',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.payments, size: 20, color: Colors.green),
+                                      SizedBox(width: 8),
+                                      Text('تسديد الديون / استلام دفعة', style: TextStyle(fontFamily: 'Tajawal', color: Colors.green, fontWeight: FontWeight.bold)),
+                                    ],
+                                  ),
+                                ),
                               PopupMenuItem(
                                 value: 'print',
                                 child: Row(
@@ -253,16 +272,17 @@ class CustomersScreen extends ConsumerWidget {
                                   ],
                                 ),
                               ),
-                              PopupMenuItem(
-                                value: 'delete',
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.delete, color: Colors.red, size: 20),
-                                    const SizedBox(width: 8),
-                                    Text(AppLocalizations.of(context)!.text59, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
-                                  ],
+                              if (canManageCustomers)
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.delete, color: Colors.red, size: 20),
+                                      const SizedBox(width: 8),
+                                      Text(AppLocalizations.of(context)!.text59, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                                    ],
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
                         ],
@@ -279,7 +299,7 @@ class CustomersScreen extends ConsumerWidget {
           child: Text('حدث خطأ: $e', style: TextStyle(fontFamily: 'Tajawal')),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: canManageCustomers ? FloatingActionButton.extended(
         onPressed: () async {
           final canAdd = await GuestLimitService.canAddCustomer(context, ref);
           if (!canAdd) return;
@@ -299,6 +319,50 @@ class CustomersScreen extends ConsumerWidget {
         },
         label: Text(AppLocalizations.of(context)!.text62, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         icon: Icon(Icons.person_add),
+      ) : null,
+    );
+  }
+
+  void _showPayDebtDialog(BuildContext context, WidgetRef ref, Customer customer) {
+    final amountController = TextEditingController(text: customer.totalDebt.toString());
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('تسديد الديون / استلام دفعة', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('إجمالي دين العميل: ${customer.totalDebt}', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: amountController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'المبلغ المستلم من العميل',
+                labelStyle: TextStyle(fontFamily: 'Tajawal'),
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context)!.text43, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final paid = double.tryParse(amountController.text.trim()) ?? 0.0;
+              if (paid <= 0) return;
+              final newDebt = (customer.totalDebt - paid) < 0 ? 0.0 : (customer.totalDebt - paid);
+              final updatedCustomer = customer.copyWith(totalDebt: newDebt);
+              await ref.read(customerRepositoryProvider).updateCustomer(updatedCustomer);
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('تأكيد السداد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+          ),
+        ],
       ),
     );
   }

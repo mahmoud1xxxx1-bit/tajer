@@ -16,6 +16,8 @@ class SuppliersScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final suppliersAsync = ref.watch(suppliersStreamProvider);
     final currentCurrency = ref.watch(currencyProvider);
+    final appUser = ref.watch(appUserProvider).value;
+    final canManageInventory = appUser?.hasPermission('can_manage_inventory') ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -82,9 +84,9 @@ class SuppliersScreen extends ConsumerWidget {
               return GlassCard(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: EdgeInsets.zero,
-                onTap: () {
+                onTap: canManageInventory ? () {
                   _showEditSupplierDialog(context, ref, supplier);
-                },
+                } : null,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
@@ -164,14 +166,14 @@ class SuppliersScreen extends ConsumerWidget {
         loading: () => Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('خطأ: $e')),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: canManageInventory ? FloatingActionButton(
         onPressed: () async {
           final canAdd = await GuestLimitService.canAddSupplier(context, ref);
           if (!canAdd) return;
           if (context.mounted) _showAddSupplierDialog(context, ref);
         },
         child: Icon(Icons.add),
-      ),
+      ) : null,
     );
   }
 

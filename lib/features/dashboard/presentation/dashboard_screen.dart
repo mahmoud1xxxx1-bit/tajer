@@ -168,7 +168,7 @@ class DashboardHome extends ConsumerWidget {
                 context.push('/expenses');
               },
             ),
-            if (appUser?.hasPermission('can_manage_products') ?? false)
+            if (appUser?.hasPermission('can_manage_inventory') ?? false)
             ListTile(
               leading: Icon(Icons.inventory_2),
               title: Text('المواد الخام', style: TextStyle(fontFamily: 'Tajawal')),
@@ -177,7 +177,7 @@ class DashboardHome extends ConsumerWidget {
                 context.push('/raw_materials');
               },
             ),
-            if (appUser?.hasPermission('can_manage_customers') ?? false)
+            if (appUser?.hasPermission('can_manage_inventory') ?? false)
             ListTile(
               leading: Icon(Icons.business),
               title: Text(l10n.suppliers, style: TextStyle(fontFamily: 'Tajawal')),

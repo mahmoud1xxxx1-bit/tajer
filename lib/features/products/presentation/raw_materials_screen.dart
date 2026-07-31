@@ -151,6 +151,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(appUserProvider).value;
     final merchantId = user?.merchantId ?? user?.id;
+    final canManageInventory = user?.hasPermission('can_manage_inventory') ?? false;
 
     if (merchantId == null) return const Scaffold();
 
@@ -160,13 +161,13 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
       appBar: AppBar(
         title: const Text('المواد الخام (مستودع المكونات)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: canManageInventory ? FloatingActionButton.extended(
         onPressed: () => _showAddEditDialog(),
         icon: const Icon(Icons.add),
         label: const Text('إضافة مادة خام', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         backgroundColor: Colors.amber,
         foregroundColor: Colors.black,
-      ),
+      ) : null,
       body: Column(
         children: [
           Container(
@@ -223,7 +224,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                         ),
                         title: Text(item.name, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),
                         subtitle: Text('الرصيد المتوفر: ${item.quantity}  ($unitLabel)', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.amber)),
-                        trailing: Row(
+                        trailing: canManageInventory ? Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
@@ -252,7 +253,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                               },
                             ),
                           ],
-                        ),
+                        ) : null,
                       ),
                     );
                   },

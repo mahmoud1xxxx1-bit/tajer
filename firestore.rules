@@ -22,7 +22,7 @@ service cloud.firestore {
     
     // Users Collection (AppUser profile)
     match /users/{userId} {
-      allow read: if isAuthenticated() && (request.auth.uid == userId || hasAccess(resource.data.get('merchantId', '')));
+      allow read: if isAuthenticated() && (request.auth.uid == userId || hasAccess(userId) || hasAccess(resource.data.get('merchantId', '')));
       allow create: if isAuthenticated();
       allow update: if isAuthenticated() && (request.auth.uid == userId || hasAccess(resource.data.get('merchantId', ''))) 
                     && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['plan']));
@@ -30,8 +30,8 @@ service cloud.firestore {
 
       // Users Subcollections (Employees, Notifications)
       match /employees/{employeeId} {
-        allow read, update, delete: if hasAccess(userId);
-        allow create: if hasAccess(userId);
+        allow read: if hasAccess(userId);
+        allow create, update, delete: if isAuthenticated() && request.auth.uid == userId;
       }
       match /notifications/{notificationId} {
         allow read, update, delete: if hasAccess(userId);

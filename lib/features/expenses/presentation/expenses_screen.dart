@@ -16,6 +16,8 @@ class ExpensesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final expensesAsync = ref.watch(expensesStreamProvider);
+    final appUser = ref.watch(appUserProvider).value;
+    final canManageExpenses = appUser?.hasPermission('can_manage_expenses') ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -122,14 +124,14 @@ class ExpensesScreen extends ConsumerWidget {
         loading: () => Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('خطأ: $e')),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: canManageExpenses ? FloatingActionButton(
         onPressed: () async {
           final canAdd = await GuestLimitService.canAddExpense(context, ref);
           if (!canAdd) return;
           if (context.mounted) _showAddExpenseDialog(context, ref);
         },
         child: Icon(Icons.add),
-      ),
+      ) : null,
     );
   }
 
@@ -216,6 +218,8 @@ class ExpensesScreen extends ConsumerWidget {
 
 Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, List<Expense> groupExpenses, {bool initiallyExpanded = false, String? subtitle}) {
   final totalAmount = groupExpenses.fold<double>(0, (sum, e) => sum + e.amount);
+  final appUser = ref.watch(appUserProvider).value;
+  final canManageExpenses = appUser?.hasPermission('can_manage_expenses') ?? false;
   
   return GlassCard(
     margin: EdgeInsets.only(bottom: 16),
@@ -334,39 +338,41 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                       '-${expense.amount}',
                       style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 14),
                     ),
-                    const SizedBox(height: 8),
-                    InkWell(
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('حذف المصروف', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                            content: const Text('هل أنت متأكد من حذف هذا المصروف؟', style: TextStyle(fontFamily: 'Tajawal')),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  ref.read(expenseRepositoryProvider)?.deleteExpense(expense.id);
-                                  Navigator.pop(context);
-                                },
-                                child: const Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                              ),
-                            ],
+                    if (canManageExpenses) ...[
+                      const SizedBox(height: 8),
+                      InkWell(
+                        onTap: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('حذف المصروف', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                              content: const Text('هل أنت متأكد من حذف هذا المصروف؟', style: TextStyle(fontFamily: 'Tajawal')),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    ref.read(expenseRepositoryProvider)?.deleteExpense(expense.id);
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
                           ),
-                        );
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(6),
+                          child: const Icon(Icons.delete_outline, color: Colors.red, size: 16),
                         ),
-                        child: const Icon(Icons.delete_outline, color: Colors.red, size: 16),
                       ),
-                    ),
+                    ],
                   ],
                 ),
               ],
