@@ -207,28 +207,43 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                               showTitles: true,
                               getTitlesWidget: (value, meta) {
                                 if (value.toInt() >= 0 && value.toInt() < dailySales.length) {
+                                  int skip = (dailySales.length / 6).ceil();
+                                  if (skip == 0) skip = 1;
+                                  if (value.toInt() % skip != 0 && value.toInt() != dailySales.length - 1) return const Text('');
+                                  
                                   final date = dailySales[value.toInt()].date;
                                   return Padding(
-                                    padding: EdgeInsets.only(top: 8.0),
-                                    child: Text(
-                                      '${date.day}/${date.month}',
-                                      style: TextStyle(fontSize: 10, fontFamily: 'Tajawal'),
+                                    padding: EdgeInsets.only(top: 8.0, right: 12.0),
+                                    child: Transform.rotate(
+                                      angle: -0.5,
+                                      child: Text(
+                                        '${date.day}/${date.month}',
+                                        style: TextStyle(fontSize: 10, fontFamily: 'Tajawal'),
+                                      ),
                                     ),
                                   );
                                 }
-                                return Text('');
+                                return const Text('');
                               },
-                              reservedSize: 30,
+                              reservedSize: 40,
                             ),
                           ),
                           leftTitles: AxisTitles(
                             sideTitles: SideTitles(
                               showTitles: true,
-                              reservedSize: 40,
-                              getTitlesWidget: (value, meta) => Text(
-                                '${value.toInt()}',
-                                style: TextStyle(fontSize: 10, fontFamily: 'Tajawal'),
-                              ),
+                              reservedSize: 50,
+                              getTitlesWidget: (value, meta) {
+                                String text;
+                                if (value >= 1000) {
+                                  text = '${(value / 1000).toStringAsFixed(1)}k';
+                                } else {
+                                  text = value.toInt().toString();
+                                }
+                                return Text(
+                                  text,
+                                  style: TextStyle(fontSize: 10, fontFamily: 'Tajawal'),
+                                );
+                              },
                             ),
                           ),
                         ),
@@ -252,6 +267,80 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       ),
                     ),
               ),
+            ),
+            SizedBox(height: 24),
+
+            // Expenses Pie Chart
+            Text(
+              'توزيع المصروفات',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+            ),
+            SizedBox(height: 16),
+            Builder(
+              builder: (context) {
+                final expensesByCategory = reportsService.getExpensesByCategory();
+                if (expensesByCategory.isEmpty) {
+                  return GlassCard(
+                    padding: EdgeInsets.all(16),
+                    child: SizedBox(
+                      height: 200,
+                      child: Center(child: Text('لا توجد مصروفات في هذه الفترة', style: TextStyle(fontFamily: 'Tajawal'))),
+                    ),
+                  );
+                }
+
+                final colors = [Colors.blue, Colors.red, Colors.green, Colors.orange, Colors.purple, Colors.teal];
+                int colorIndex = 0;
+                List<PieChartSectionData> expenseSections = [];
+                expensesByCategory.forEach((category, amount) {
+                  expenseSections.add(
+                    PieChartSectionData(
+                      color: colors[colorIndex % colors.length],
+                      value: amount,
+                      title: '${amount.toStringAsFixed(0)}',
+                      radius: 60,
+                      titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white, fontFamily: 'Tajawal'),
+                    ),
+                  );
+                  colorIndex++;
+                });
+
+                return GlassCard(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 200,
+                        child: PieChart(
+                          PieChartData(
+                            sectionsSpace: 2,
+                            centerSpaceRadius: 40,
+                            sections: expenseSections,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      Wrap(
+                        spacing: 16,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.center,
+                        children: expensesByCategory.keys.toList().asMap().entries.map((entry) {
+                          final color = colors[entry.key % colors.length];
+                          final category = entry.value;
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(width: 12, height: 12, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+                              SizedBox(width: 4),
+                              Text(category, style: TextStyle(fontSize: 12, fontFamily: 'Tajawal')),
+                            ],
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                );
+              }
             ),
             SizedBox(height: 24),
 

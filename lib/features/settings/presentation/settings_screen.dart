@@ -42,11 +42,12 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () => context.push('/employees'),
               ),
           ],
-          ListTile(
-            leading: Icon(Icons.workspace_premium, color: Colors.amber),
-            title: Text(l10n.subscriptions, style: TextStyle(fontFamily: 'Tajawal')),
-            onTap: () => context.push('/paywall'),
-          ),
+          if (appUser?.role == 'merchant')
+            ListTile(
+              leading: Icon(Icons.workspace_premium, color: Colors.amber),
+              title: Text(l10n.subscriptions, style: TextStyle(fontFamily: 'Tajawal')),
+              onTap: () => context.push('/paywall'),
+            ),
           ListTile(
             leading: Icon(Icons.security, color: Colors.blue),
             title: Text('النسخ الاحتياطي والأمان', style: TextStyle(fontFamily: 'Tajawal')),

@@ -50,11 +50,23 @@ class LimitsService {
     // Banned devices cannot add anything (0 limit) ONLY if they are anonymous
     if (user.plan == 'banned_device' && user.isAnonymous) return false;
 
-    // Pro users have unlimited access
-    if (user.plan == 'pro' || user.plan == 'premium') return true;
+    final String merchantId = user.merchantId ?? user.id;
+    bool isPremium = user.plan == 'pro' || user.plan == 'premium' || user.email == 'love.dotk@gmail.com';
+    
+    // If the user is an employee, check their merchant's plan
+    if (!isPremium && user.merchantId != null && user.merchantId!.isNotEmpty) {
+      final merchantDoc = await _firestore.collection('users').doc(merchantId).get();
+      final merchantPlan = merchantDoc.data()?['plan'];
+      final merchantEmail = merchantDoc.data()?['email'];
+      if (merchantPlan == 'pro' || merchantPlan == 'premium' || merchantEmail == 'love.dotk@gmail.com') {
+        isPremium = true;
+      }
+    }
+
+    // Pro/Premium users have unlimited access
+    if (isPremium) return true;
 
     // Check count for free/guest users
-    final String merchantId = user.merchantId ?? user.id;
     final isRootCollection = ['products', 'orders', 'customers'].contains(collectionName);
     
     final Query query = isRootCollection

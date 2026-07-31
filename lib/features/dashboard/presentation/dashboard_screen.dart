@@ -9,7 +9,6 @@ import '../../inventory_log/presentation/inventory_logs_screen.dart';
 import '../../reports/presentation/reports_screen.dart';
 import '../../orders/data/order_repository.dart';
 import '../../products/data/product_repository.dart';
-import 'widgets/analytics_dashboard_widget.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -285,10 +284,7 @@ class DashboardHome extends ConsumerWidget {
                   ],
                 ),
                 SizedBox(height: 24),
-                
-                // Advanced Analytics Widget (Plan 1)
-                const AnalyticsDashboardWidget(),
-                SizedBox(height: 24),
+
 
                 Text(
                   l10n.quickActions,

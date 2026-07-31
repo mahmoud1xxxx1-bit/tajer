@@ -92,6 +92,15 @@ class ReportsService {
     bestSellers.sort((a, b) => b.quantitySold.compareTo(a.quantitySold));
     return bestSellers;
   }
+
+  Map<String, double> getExpensesByCategory() {
+    final Map<String, double> expensesByCategory = {};
+    for (var expense in expenses) {
+      final categoryName = expense.category ?? 'أخرى';
+      expensesByCategory[categoryName] = (expensesByCategory[categoryName] ?? 0.0) + expense.amount;
+    }
+    return expensesByCategory;
+  }
 }
 
 final reportsServiceProvider = Provider<ReportsService?>((ref) {
