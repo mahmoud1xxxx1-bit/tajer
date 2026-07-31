@@ -107,6 +107,8 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.text52,
+                helperText: 'مفتاح الدولة الافتراضي هو السعودية (+966). للعملاء من دول أخرى الرجاء كتابة مفتاح الدولة.',
+                helperMaxLines: 2,
                 border: OutlineInputBorder(),
               ),
               validator: (value) => value!.isEmpty ? AppLocalizations.of(context)!.text51 : null,
