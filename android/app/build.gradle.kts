@@ -24,8 +24,8 @@ android {
     val flutterTargetSdk = localProperties.getProperty("flutter.targetSdkVersion")?.toIntOrNull() ?: 34
     val flutterNdkVersion = localProperties.getProperty("flutter.ndkVersion") ?: "25.1.8937393"
 
-    compileSdk = flutterCompileSdk
-    ndkVersion = flutterNdkVersion
+    compileSdk = 35
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

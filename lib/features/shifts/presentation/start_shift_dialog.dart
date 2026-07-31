@@ -34,7 +34,7 @@ class _StartShiftDialogState extends ConsumerState<StartShiftDialog> {
         id: const Uuid().v4(),
         merchantId: user.merchantId ?? user.id,
         employeeId: user.id,
-        employeeName: user.name,
+        employeeName: user.name ?? 'Unknown',
         startTime: DateTime.now(),
         startCash: cash,
         status: 'open',
