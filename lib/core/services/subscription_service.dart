@@ -86,7 +86,8 @@ class SubscriptionService {
 
   Future<bool> purchasePackage(Package package) async {
     try {
-      final customerInfo = await Purchases.purchasePackage(package);
+      final result = await Purchases.purchasePackage(package);
+      final customerInfo = await Purchases.getCustomerInfo();
       await updatePlanFromCustomerInfo(customerInfo);
       return customerInfo.entitlements.all['premium']?.isActive == true;
     } on PlatformException catch (e) {
