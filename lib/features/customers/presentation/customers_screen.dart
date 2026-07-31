@@ -9,6 +9,7 @@ import '../../../core/services/pdf_service.dart';
 import '../../orders/data/order_repository.dart';
 
 import '../../../core/providers/settings_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CustomersScreen extends ConsumerWidget {
   const CustomersScreen({super.key});
@@ -95,6 +96,38 @@ class CustomersScreen extends ConsumerWidget {
                                   customer.phone,
                                   style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey[700], fontSize: 13),
                                 ),
+                                const SizedBox(width: 12),
+                                if (customer.phone.isNotEmpty)
+                                  InkWell(
+                                    onTap: () async {
+                                      String cleanedPhone = customer.phone.replaceAll(RegExp(r'[^\d+]'), '');
+                                      if (cleanedPhone.isNotEmpty) {
+                                        if (cleanedPhone.startsWith('0')) {
+                                          cleanedPhone = cleanedPhone.substring(1);
+                                          cleanedPhone = '+966$cleanedPhone'; // Default country code if missing
+                                        }
+                                        final url = Uri.parse('https://wa.me/$cleanedPhone');
+                                        if (await canLaunchUrl(url)) {
+                                          await launchUrl(url, mode: LaunchMode.externalApplication);
+                                        }
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: Colors.green.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.chat_bubble_outline, size: 14, color: Colors.green),
+                                          const SizedBox(width: 4),
+                                          const Text('واتساب', style: TextStyle(color: Colors.green, fontSize: 10, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                               ],
                             ),
                             const SizedBox(height: 6),
