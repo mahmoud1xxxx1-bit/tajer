@@ -25,23 +25,47 @@ class ProductsScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.products, style: TextStyle(fontFamily: 'Tajawal')),
       ),
-      body: productsAsyncValue.when(
-        data: (products) {
-          if (products.isEmpty) {
-            return Center(
-              child: Text(
-                AppLocalizations.of(context)!.text102,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontFamily: 'Tajawal', fontSize: 16),
-              ),
-            );
-          }
-          return ListView.builder(
-            itemCount: products.length,
-            padding: EdgeInsets.all(16),
-            itemBuilder: (context, index) {
-              final product = products[index];
-              return GlassCard(
+      body: Column(
+        children: [
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.indigo.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.indigo.withOpacity(0.3)),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.lightbulb_outline, color: Colors.amber, size: 26),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '💡 دليل المنتجات: أضف أصناف وجباتك أو بضائعك هنا. يمكنك ربط المنتج بالمواد الخام (المكونات) ليتم الخصم التلقائي من المستودع عند البيع في شاشة الـ POS.',
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.4, color: Colors.white70),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: productsAsyncValue.when(
+              data: (products) {
+                if (products.isEmpty) {
+                  return Center(
+                    child: Text(
+                      AppLocalizations.of(context)!.text102,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontFamily: 'Tajawal', fontSize: 16),
+                    ),
+                  );
+                }
+                return ListView.builder(
+                  itemCount: products.length,
+                  padding: EdgeInsets.all(16),
+                  itemBuilder: (context, index) {
+                    final product = products[index];
+                    return GlassCard(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: EdgeInsets.zero,
                 onLongPress: canManageProducts ? () {
@@ -221,7 +245,10 @@ class ProductsScreen extends ConsumerWidget {
           child: Text('${l10n.error}: $e', style: TextStyle(fontFamily: 'Tajawal')),
         ),
       ),
-      floatingActionButton: canManageProducts ? FloatingActionButton.extended(
+    ),
+  ],
+),
+floatingActionButton: canManageProducts ? FloatingActionButton.extended(
         onPressed: () async {
           final canAdd = await GuestLimitService.canAddProduct(context, ref);
           if (!canAdd) return;

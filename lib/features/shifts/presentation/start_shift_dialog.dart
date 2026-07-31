@@ -52,31 +52,64 @@ class _StartShiftDialogState extends ConsumerState<StartShiftDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('بداية وردية جديدة', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: const Row(
         children: [
-          const Text('الرجاء إدخال مبلغ العهدة الافتتاحية (الكاش الموجود في الدرج الآن):', style: TextStyle(fontFamily: 'Tajawal')),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _cashController,
-            keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
-              labelText: 'مبلغ العهدة',
-              border: OutlineInputBorder(),
-              suffixText: 'ر.س',
-            ),
-          ),
+          Icon(Icons.point_of_sale, color: Colors.amber, size: 28),
+          SizedBox(width: 10),
+          Text('بداية وردية جديدة', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.indigo.withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.indigo.withOpacity(0.3)),
+              ),
+              child: const Text(
+                '💡 لماذا نفتح وردية؟\nنظام الورديات يحمي أموالك! أدخل المبلغ الموجود في الدرج قبل بدء البيع، وسيقوم النظام بحساب مبيعات اليوم ومقارنتها تلقائياً بالدرج لكشف أي عجز أو تلاعب نهاية الوردية.',
+                style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.5, color: Colors.white70),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text('أدخل مبلغ العهدة الافتتاحية (الكاش الموجود حالياً في الدرج):', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _cashController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: InputDecoration(
+                labelText: 'مبلغ العهدة (مثال: 100)',
+                labelStyle: const TextStyle(fontFamily: 'Tajawal'),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
+                suffixText: 'ر.س',
+              ),
+            ),
+          ],
+        ),
       ),
       actions: [
         _isLoading 
-          ? const CircularProgressIndicator()
-          : ElevatedButton(
+          ? const Center(child: CircularProgressIndicator())
+          : ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
               onPressed: _startShift,
-              child: const Text('فتح الوردية', style: TextStyle(fontFamily: 'Tajawal')),
+              icon: const Icon(Icons.play_arrow),
+              label: const Text('بدء الوردية والبيع الآن', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 15)),
             ),
       ],
     );
   }
 }
+

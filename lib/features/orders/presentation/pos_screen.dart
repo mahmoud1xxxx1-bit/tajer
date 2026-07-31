@@ -215,28 +215,36 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
       final savedOrder = await ref.read(orderRepositoryProvider).createOrder(newOrder, shiftId: shift?.id);
 
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم إتمام الطلب بنجاح (رقم: ${savedOrder.queueNumber ?? savedOrder.id.substring(0,4)})', style: TextStyle(fontFamily: 'Tajawal'))));
+      // Stop loading and clear cart immediately so UI never hangs!
+      setState(() {
+        _cart.clear();
+        _isLoading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text('تم إتمام الطلب بنجاح (رقم الانتظار: ${savedOrder.queueNumber ?? savedOrder.id.substring(0,4)}) 🎉', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+          backgroundColor: Colors.green,
+        ));
+      }
       
-      // Attempt to print receipt
+      // Attempt to print receipt asynchronously in background with a 5-second timeout
       try {
         final storeProfile = ref.read(storeProfileProvider).value;
         await PrinterService.printReceipt(
           savedOrder, 
           ref.read(currencyProvider).code,
           storeProfile: storeProfile,
-          isKitchen: false, // Could add a setting for this later if needed
-        );
+          isKitchen: false,
+        ).timeout(const Duration(seconds: 5));
       } catch (e) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم حفظ الطلب، لكن تعذرت الطباعة: $e', style: TextStyle(fontFamily: 'Tajawal'))));
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم حفظ الفاتورة بنجاح. (تنبيه الطباعة: $e)', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12))));
       }
-
-      setState(() {
-        _cart.clear();
-      });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e', style: TextStyle(fontFamily: 'Tajawal'))));
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal'))));
+      }
     }
   }
 
@@ -263,56 +271,81 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('نقطة البيع (POS)', style: TextStyle(fontFamily: 'Tajawal')),
-        actions: [
-          if (_heldOrders.isNotEmpty)
-            IconButton(
-              icon: Badge(
-                label: Text('${_heldOrders.length}'),
-                backgroundColor: Colors.red,
-                child: const Icon(Icons.pause_circle_filled, color: Colors.amber),
+            title: const Text('نقطة البيع (POS)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+            actions: [
+              if (_heldOrders.isNotEmpty)
+                TextButton.icon(
+                  icon: Badge(
+                    label: Text('${_heldOrders.length}'),
+                    backgroundColor: Colors.red,
+                    child: const Icon(Icons.history, color: Colors.amber),
+                  ),
+                  label: const Text('المعلقة', style: TextStyle(color: Colors.amber, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                  onPressed: _showHeldOrders,
+                ),
+              if (_cart.isNotEmpty)
+                TextButton.icon(
+                  icon: const Icon(Icons.pause_circle_outline, color: Colors.amber),
+                  label: const Text('تعليق', style: TextStyle(color: Colors.amber, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                  onPressed: () {
+                    setState(() {
+                      _heldOrders.add(List.from(_cart));
+                      _cart.clear();
+                    });
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('تم تعليق الطلب وحفظه مؤقتاً في الأعلى 📌', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.orange),
+                    );
+                  },
+                ),
+              const SizedBox(width: 8),
+            ],
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(60),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'ابحث عن منتج...',
+                    prefixIcon: const Icon(Icons.search),
+                    filled: true,
+                    fillColor: Theme.of(context).cardColor,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  ),
+                  onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
+                ),
               ),
-              onPressed: _showHeldOrders,
-              tooltip: 'عرض الطلبات المعلقة',
-            ),
-          if (_cart.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.pause, color: Colors.amber),
-              tooltip: 'تعليق الطلب',
-              onPressed: () {
-                setState(() {
-                  _heldOrders.add(List.from(_cart));
-                  _cart.clear();
-                });
-              },
-            ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'ابحث عن منتج...',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Theme.of(context).cardColor,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-              ),
-              onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
             ),
           ),
-        ),
-      ),
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator())
-        : Column(
-          children: [
-            Expanded(
-              child: productsAsync.when(
-                data: (products) {
-                  final filtered = products.where((p) => p.name.toLowerCase().contains(_searchQuery)).toList();
-                  if (filtered.isEmpty) return const Center(child: Text('لا توجد منتجات', style: TextStyle(fontFamily: 'Tajawal')));
+          body: _isLoading 
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  Container(
+                    margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.indigo.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.indigo.withOpacity(0.3)),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.lightbulb_outline, color: Colors.amber, size: 24),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            '💡 دليل الكاشير: اضغط على المنتج لإضافته للسلة. لحفظ الفاتورة مؤقتاً أثناء انتظام العميل اضغط على زر "تعليق" بالأعلى. لإصدار الفاتورة اضغط "دفع الإجمالي" بالأسفل.',
+                            style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, height: 1.4, color: Colors.white70),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: productsAsync.when(
+                      data: (products) {
+                        final filtered = products.where((p) => p.name.toLowerCase().contains(_searchQuery)).toList();
+                        if (filtered.isEmpty) return const Center(child: Text('لا توجد منتجات', style: TextStyle(fontFamily: 'Tajawal')));
                   
                   return GridView.builder(
                     padding: const EdgeInsets.all(12),
