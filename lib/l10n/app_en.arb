@@ -210,5 +210,8 @@
   "permCanManageExpenses": "Record and track expenses",
   "employeePermissions": "Employees & Permissions (Pro)",
   "permissionSettings": "Permission Settings",
-  "credit": "Credit"
+  "credit": "Credit",
+  "customer": "Customer",
+  "walkInCustomer": "Walk-in Customer",
+  "cancelled": "Cancelled"
 }

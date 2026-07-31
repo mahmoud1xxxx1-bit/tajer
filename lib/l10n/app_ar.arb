@@ -210,5 +210,8 @@
   "permCanManageExpenses": "تسجيل ومتابعة المصروفات",
   "employeePermissions": "الموظفين والصلاحيات (Pro)",
   "permissionSettings": "إعدادات الصلاحيات",
-  "credit": "آجل"
+  "credit": "آجل",
+  "customer": "العميل",
+  "walkInCustomer": "عميل نقدي (بدون حساب)",
+  "cancelled": "ملغي"
 }
