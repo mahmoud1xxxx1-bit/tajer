@@ -18,10 +18,13 @@ const Notifications = () => {
   }, []);
 
   const fetchMerchants = async () => {
-    const snapshot = await getDocs(collection(db, 'merchants'));
+    const snapshot = await getDocs(collection(db, 'users'));
     const list = [];
     snapshot.forEach(doc => {
-      list.push({ id: doc.id, ...doc.data() });
+      const data = doc.data();
+      if (data.role !== 'employee') {
+        list.push({ id: doc.id, ...data });
+      }
     });
     setMerchants(list);
   };
@@ -37,9 +40,11 @@ const Notifications = () => {
       // Determine which merchants get the notification
       let targetMerchants = merchants;
       if (targetAudience === 'active') {
-        targetMerchants = merchants.filter(m => m.status === 'active');
+        targetMerchants = merchants.filter(m => m.status !== 'suspended');
       } else if (targetAudience === 'pro') {
-        targetMerchants = merchants.filter(m => m.subscriptionPlan === 'pro');
+        targetMerchants = merchants.filter(m => m.plan === 'pro' || m.plan === 'premium');
+      } else if (targetAudience === 'free') {
+        targetMerchants = merchants.filter(m => m.plan !== 'pro' && m.plan !== 'premium');
       }
 
       // Send to each target merchant
@@ -101,7 +106,8 @@ const Notifications = () => {
               >
                 <option value="all" style={{ color: 'black' }}>الجميع (كل التجار)</option>
                 <option value="active" style={{ color: 'black' }}>التجار النشطين فقط</option>
-                <option value="pro" style={{ color: 'black' }}>مشتركي الخطة الاحترافية فقط</option>
+                <option value="pro" style={{ color: 'black' }}>مشتركي الخطة الاحترافية فقط (PRO)</option>
+                <option value="free" style={{ color: 'black' }}>مشتركي الخطة المجانية فقط (Free) - لحملات العروض</option>
               </select>
             </div>
 

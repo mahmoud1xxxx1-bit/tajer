@@ -20,8 +20,8 @@ android {
 
     val flutterVersionCode = localProperties.getProperty("flutter.versionCode")?.toIntOrNull() ?: 1
     val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0"
-    val flutterCompileSdk = localProperties.getProperty("flutter.compileSdkVersion")?.toIntOrNull() ?: 34
-    val flutterTargetSdk = localProperties.getProperty("flutter.targetSdkVersion")?.toIntOrNull() ?: 34
+    val flutterCompileSdk = localProperties.getProperty("flutter.compileSdkVersion")?.toIntOrNull() ?: 35
+    val flutterTargetSdk = localProperties.getProperty("flutter.targetSdkVersion")?.toIntOrNull() ?: 35
     val flutterNdkVersion = localProperties.getProperty("flutter.ndkVersion") ?: "25.1.8937393"
 
     compileSdk = 35
@@ -38,7 +38,7 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 24
-        targetSdk = flutterTargetSdk
+        targetSdk = 35
         versionCode = flutterVersionCode
         versionName = flutterVersionName
     }
