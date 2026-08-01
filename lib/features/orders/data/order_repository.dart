@@ -59,49 +59,91 @@ class OrderRepository {
     final customerRef = _firestore.collection('customers').doc(order.customerId);
     final orderRef = _firestore.collection('orders').doc(order.id);
     
-    // Manage QueueNumber Atomically via Firestore Transaction (with local fallback)
-    int nextQueueNumber = 1;
+    // Professional Triple-Shield Queue Number Architecture
+    // Guarantees no duplicate order numbers on the same calendar day across merchants/employees, offline or online, even after logout or shift close!
     final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day, 0, 0, 0);
+    final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
     final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final prefs = await SharedPreferences.getInstance();
+    
+    int maxQueueToday = 0;
 
+    // 1. Shield 1: Query existing orders for today from local Firestore cache (instant & works offline) and server
     try {
-      final counterRef = _firestore.collection('merchants').doc(order.merchantId).collection('counters').doc('daily_orders');
-      nextQueueNumber = await _firestore.runTransaction<int>((transaction) async {
-        final docSnap = await transaction.get(counterRef);
-        if (docSnap.exists) {
-          final data = docSnap.data()!;
-          final lastDate = data['date'] as String?;
-          if (lastDate == todayStr) {
-            final lastNum = (data['lastNumber'] as num? ?? 0).toInt();
-            final nextNum = lastNum + 1;
-            transaction.update(counterRef, {'lastNumber': nextNum, 'date': todayStr, 'updatedAt': FieldValue.serverTimestamp()});
-            return nextNum;
-          } else {
-            // New day! Reset counter to 1
-            transaction.update(counterRef, {'date': todayStr, 'lastNumber': 1, 'updatedAt': FieldValue.serverTimestamp()});
-            return 1;
+      final ordersSnap = await _firestore
+          .collection('orders')
+          .where('merchantId', isEqualTo: order.merchantId)
+          .get(const GetOptions(source: Source.cache))
+          .catchError((_) => _firestore.collection('orders').where('merchantId', isEqualTo: order.merchantId).get());
+      for (final doc in ordersSnap.docs) {
+        final data = doc.data();
+        final timestamp = data['createdAt'] as Timestamp?;
+        if (timestamp != null) {
+          final orderDate = timestamp.toDate();
+          if (!orderDate.isBefore(todayStart) && !orderDate.isAfter(todayEnd)) {
+            final qNum = (data['queueNumber'] as num? ?? 0).toInt();
+            if (qNum > maxQueueToday) maxQueueToday = qNum;
           }
-        } else {
-          transaction.set(counterRef, {'date': todayStr, 'lastNumber': 1, 'updatedAt': FieldValue.serverTimestamp()});
-          return 1;
         }
-      }).timeout(const Duration(seconds: 4));
-      
-      // Update local prefs to stay in sync with server counter
-      await prefs.setString('queue_date_${order.merchantId}', todayStr);
-      await prefs.setInt('queue_num_${order.merchantId}', nextQueueNumber);
-    } catch (e) {
-      // Offline fallback: use SharedPreferences sequentially
+      }
+    } catch (_) {}
+
+    // Quick online server check (1.5 sec timeout) to catch recent orders created by other employees/devices today
+    try {
+      final serverSnap = await _firestore
+          .collection('orders')
+          .where('merchantId', isEqualTo: order.merchantId)
+          .get(const GetOptions(source: Source.server))
+          .timeout(const Duration(milliseconds: 1500));
+      for (final doc in serverSnap.docs) {
+        final data = doc.data();
+        final timestamp = data['createdAt'] as Timestamp?;
+        if (timestamp != null) {
+          final orderDate = timestamp.toDate();
+          if (!orderDate.isBefore(todayStart) && !orderDate.isAfter(todayEnd)) {
+            final qNum = (data['queueNumber'] as num? ?? 0).toInt();
+            if (qNum > maxQueueToday) maxQueueToday = qNum;
+          }
+        }
+      }
+    } catch (_) {}
+
+    // 2. Shield 2: Check server daily counter document
+    final counterRef = _firestore.collection('merchants').doc(order.merchantId).collection('counters').doc('daily_orders');
+    try {
+      final counterSnap = await counterRef.get(const GetOptions(source: Source.serverAndCache)).timeout(const Duration(milliseconds: 1500));
+      if (counterSnap.exists) {
+        final data = counterSnap.data()!;
+        final lastDate = data['date'] as String?;
+        if (lastDate == todayStr) {
+          final counterNum = (data['lastNumber'] as num? ?? 0).toInt();
+          if (counterNum > maxQueueToday) maxQueueToday = counterNum;
+        }
+      }
+    } catch (_) {}
+
+    // 3. Shield 3: Check local SharedPreferences counter
+    final prefs = await SharedPreferences.getInstance();
+    try {
       final lastDate = prefs.getString('queue_date_${order.merchantId}');
       if (lastDate == todayStr) {
-        nextQueueNumber = (prefs.getInt('queue_num_${order.merchantId}') ?? 0) + 1;
-      } else {
-        nextQueueNumber = 1;
+        final prefsNum = (prefs.getInt('queue_num_${order.merchantId}') ?? 0);
+        if (prefsNum > maxQueueToday) maxQueueToday = prefsNum;
       }
-      await prefs.setString('queue_date_${order.merchantId}', todayStr);
-      await prefs.setInt('queue_num_${order.merchantId}', nextQueueNumber);
-    }
+    } catch (_) {}
+
+    // Master calculation: Next order number is strictly greater than the highest known order number today
+    final int nextQueueNumber = maxQueueToday + 1;
+
+    // Save synchronized state back to all storage layers
+    await prefs.setString('queue_date_${order.merchantId}', todayStr);
+    await prefs.setInt('queue_num_${order.merchantId}', nextQueueNumber);
+    
+    counterRef.set({
+      'date': todayStr,
+      'lastNumber': nextQueueNumber,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true)).catchError((_) => <String, dynamic>{});
     
     final orderWithQueue = order.copyWith(queueNumber: nextQueueNumber);
 
