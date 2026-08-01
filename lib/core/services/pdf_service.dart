@@ -1,10 +1,8 @@
-import 'package:tajer/l10n/app_localizations.dart';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'package:intl/intl.dart';
 import '../../features/orders/domain/order.dart';
 import '../../features/customers/domain/customer.dart';
 import '../utils/date_formatter.dart';
@@ -26,7 +24,13 @@ class PdfService {
   static Future<Uint8List> generateInvoicePdf(BuildContext buildContext, AppOrder order, String currency, {double? taxPercentage}) async {
     final font = await _getFont();
     final boldFont = await _getBoldFont();
-    final isAr = Localizations.localeOf(buildContext).languageCode == 'ar';
+    
+    bool isAr = true;
+    try {
+      isAr = Localizations.localeOf(buildContext).languageCode == 'ar';
+    } catch (_) {
+      isAr = true;
+    }
     
     final prefs = await SharedPreferences.getInstance();
     final profileStr = prefs.getString('store_profile');
@@ -37,7 +41,8 @@ class PdfService {
       } catch (_) {}
     }
     
-    final storeName = profile?['storeName'] as String? ?? AppLocalizations.of(buildContext)!.text6;
+    final storeNameFallback = isAr ? 'المتجر التجاري' : 'Retail Store';
+    final storeName = profile?['storeName'] as String? ?? storeNameFallback;
     final storePhone = profile?['phone'] as String? ?? '';
     final storeAddress = profile?['address'] as String? ?? '';
     final logoBase64 = profile?['logoBase64'] as String? ?? '';
@@ -48,6 +53,21 @@ class PdfService {
         logoImage = pw.MemoryImage(base64Decode(logoBase64));
       } catch (_) {}
     }
+
+    final lblCustomer = isAr ? 'بيانات العميل' : 'Customer Details';
+    final lblColProduct = isAr ? 'الصنف / المنتج' : 'Product / Item';
+    final lblColQty = isAr ? 'الكمية' : 'Qty';
+    final lblColPrice = isAr ? 'السعر' : 'Price';
+    final lblColTotal = isAr ? 'الإجمالي' : 'Total';
+    final lblGrandTotal = isAr ? 'المجموع الكلي' : 'Grand Total';
+    final lblPaid = isAr ? 'المبلغ المدفوع' : 'Paid Amount';
+    final lblRemaining = isAr ? 'المتبقي (دين على العميل)' : 'Remaining (Debt)';
+    final lblFooter = isAr ? 'شكراً لتعاملكم معنا - نسعد بزيارتكم دائماً' : 'Thank you for your business!';
+
+    final creator = order.creatorName ?? '';
+    final orderRef = order.queueNumber != null 
+        ? "#${order.queueNumber}" 
+        : (order.id.length >= 8 ? order.id.substring(0, 8).toUpperCase() : order.id.toUpperCase());
 
     final pdf = pw.Document();
     
@@ -90,12 +110,12 @@ class PdfService {
                       pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.end,
                         children: [
-                          pw.Text('${isAr ? "فاتورة رقم" : "Invoice #"} ${order.queueNumber != null ? "#${order.queueNumber}" : order.id.substring(0, 8).toUpperCase()}', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.grey800)),
+                          pw.Text('${isAr ? "فاتورة رقم" : "Invoice #"} $orderRef', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.grey800)),
                           pw.SizedBox(height: 4),
                           pw.Text(AppDateFormatter.format(order.createdAt), style: const pw.TextStyle(fontSize: 14)),
-                          if (order.creatorName != null && order.creatorName!.isNotEmpty) ...[
+                          if (creator.isNotEmpty) ...[
                             pw.SizedBox(height: 4),
-                            pw.Text('${isAr ? "المنفذ:" : "By:"} ${order.creatorName}', style: pw.TextStyle(fontSize: 12, color: PdfColors.blue700, fontWeight: pw.FontWeight.bold)),
+                            pw.Text('${isAr ? "المنفذ:" : "By:"} $creator', style: pw.TextStyle(fontSize: 12, color: PdfColors.blue700, fontWeight: pw.FontWeight.bold)),
                           ],
                         ],
                       ),
@@ -113,7 +133,7 @@ class PdfService {
                       pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
-                          pw.Text(AppLocalizations.of(buildContext)!.text7, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                          pw.Text(lblCustomer, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
                           pw.SizedBox(height: 8),
                           pw.Text('${isAr ? "الاسم:" : "Name:"} ${order.customerName}', style: const pw.TextStyle(fontSize: 14)),
                         ],
@@ -124,7 +144,7 @@ class PdfService {
                   
                   // Table
                   pw.Table.fromTextArray(
-                    headers: [AppLocalizations.of(buildContext)!.text9, AppLocalizations.of(buildContext)!.text10, AppLocalizations.of(buildContext)!.text11, AppLocalizations.of(buildContext)!.text12],
+                    headers: [lblColProduct, lblColQty, lblColPrice, lblColTotal],
                     data: order.items.map((item) => [
                       item.productName,
                       '${item.quantity}',
@@ -149,7 +169,7 @@ class PdfService {
                           pw.Row(
                             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                             children: [
-                              pw.Text(AppLocalizations.of(buildContext)!.text13, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                              pw.Text(lblGrandTotal, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                               pw.SizedBox(width: 20),
                               pw.Text('${order.total} $currency'),
                             ],
@@ -179,7 +199,7 @@ class PdfService {
                             pw.Row(
                               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                               children: [
-                                pw.Text(AppLocalizations.of(buildContext)!.text14, style: const pw.TextStyle(color: PdfColors.green700)),
+                                pw.Text(lblPaid, style: const pw.TextStyle(color: PdfColors.green700)),
                                 pw.SizedBox(width: 20),
                                 pw.Text('${order.paidAmount} $currency', style: const pw.TextStyle(color: PdfColors.green700)),
                               ],
@@ -188,7 +208,7 @@ class PdfService {
                             pw.Row(
                               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                               children: [
-                                pw.Text(AppLocalizations.of(buildContext)!.text15, style: pw.TextStyle(color: PdfColors.red700, fontWeight: pw.FontWeight.bold)),
+                                pw.Text(lblRemaining, style: pw.TextStyle(color: PdfColors.red700, fontWeight: pw.FontWeight.bold)),
                                 pw.SizedBox(width: 20),
                                 pw.Text('${order.total - order.paidAmount} $currency', style: pw.TextStyle(color: PdfColors.red700, fontWeight: pw.FontWeight.bold)),
                               ],
@@ -203,7 +223,7 @@ class PdfService {
                   pw.Divider(),
                   pw.SizedBox(height: 10),
                   pw.Center(
-                    child: pw.Text(AppLocalizations.of(buildContext)!.text16, style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                    child: pw.Text(lblFooter, style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
                   ),
                 ],
               ),
@@ -218,9 +238,12 @@ class PdfService {
 
   static Future<void> printInvoice(BuildContext buildContext, AppOrder order, String currency, {double? taxPercentage}) async {
     final bytes = await generateInvoicePdf(buildContext, order, currency, taxPercentage: taxPercentage);
+    final orderRef = order.queueNumber != null 
+        ? "#${order.queueNumber}" 
+        : (order.id.length >= 8 ? order.id.substring(0, 8).toUpperCase() : order.id.toUpperCase());
     await Printing.layoutPdf(
       onLayout: (PdfPageFormat format) async => bytes,
-      name: 'Invoice_${order.queueNumber != null ? "#${order.queueNumber}" : order.id}.pdf',
+      name: 'Invoice_$orderRef.pdf',
     );
   }
 
@@ -228,8 +251,25 @@ class PdfService {
     final font = await _getFont();
     final boldFont = await _getBoldFont();
     
-    final pdf = pw.Document();
+    bool isAr = true;
+    try {
+      isAr = Localizations.localeOf(buildContext).languageCode == 'ar';
+    } catch (_) {
+      isAr = true;
+    }
 
+    final lblTitle = isAr ? 'كشف حساب عميل' : 'Customer Statement';
+    final lblOrdersHistory = isAr ? 'سجل الفواتير والطلبات' : 'Orders & Invoices History';
+    final lblDate = isAr ? 'التاريخ' : 'Date';
+    final lblItems = isAr ? 'الأصناف' : 'Items';
+    final lblTotal = isAr ? 'الإجمالي' : 'Total';
+    final lblPaid = isAr ? 'المدفوع' : 'Paid';
+    final lblDebt = isAr ? 'الدين' : 'Debt';
+    final lblStatus = isAr ? 'الحالة' : 'Status';
+    final lblCancelled = isAr ? 'ملغى' : 'Cancelled';
+    final lblCompleted = isAr ? 'مكتمل' : 'Completed';
+
+    final pdf = pw.Document();
 
     // Filter orders to only this customer
     final customerOrders = orders.where((o) => o.customerId == customer.id).toList();
@@ -237,7 +277,7 @@ class PdfService {
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        textDirection: pw.TextDirection.rtl,
+        textDirection: isAr ? pw.TextDirection.rtl : pw.TextDirection.ltr,
         theme: pw.ThemeData.withFont(
           base: font,
           bold: boldFont,
@@ -250,16 +290,16 @@ class PdfService {
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
                   pw.Center(
-                    child: pw.Text(AppLocalizations.of(buildContext)!.text17, style: pw.TextStyle(fontSize: 28, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                    child: pw.Text(lblTitle, style: pw.TextStyle(fontSize: 28, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
                   ),
                   pw.SizedBox(height: 20),
                   
                   // Customer Info
                   pw.Container(
                     padding: const pw.EdgeInsets.all(12),
-                    decoration: pw.BoxDecoration(
+                    decoration: const pw.BoxDecoration(
                       color: PdfColors.grey100,
-                      borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+                      borderRadius: pw.BorderRadius.all(pw.Radius.circular(8)),
                     ),
                     child: pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -267,17 +307,17 @@ class PdfService {
                         pw.Column(
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
-                            pw.Text('الاسم: ${customer.name}', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                            pw.Text('${isAr ? "الاسم:" : "Name:"} ${customer.name}', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
                             pw.SizedBox(height: 4),
-                            pw.Text('رقم الهاتف: ${customer.phone}'),
+                            pw.Text('${isAr ? "رقم الهاتف:" : "Phone:"} ${customer.phone}'),
                           ],
                         ),
                         pw.Column(
                           crossAxisAlignment: pw.CrossAxisAlignment.end,
                           children: [
-                            pw.Text('إجمالي المشتريات: ${customer.totalPurchases} $currency'),
+                            pw.Text('${isAr ? "إجمالي المشتريات:" : "Total Purchases:"} ${customer.totalPurchases} $currency'),
                             pw.SizedBox(height: 4),
-                            pw.Text('إجمالي الديون: ${customer.totalDebt} $currency', style: pw.TextStyle(color: PdfColors.red800, fontWeight: pw.FontWeight.bold)),
+                            pw.Text('${isAr ? "إجمالي الديون:" : "Total Debt:"} ${customer.totalDebt} $currency', style: pw.TextStyle(color: PdfColors.red800, fontWeight: pw.FontWeight.bold)),
                           ],
                         ),
                       ],
@@ -285,19 +325,19 @@ class PdfService {
                   ),
                   
                   pw.SizedBox(height: 20),
-                  pw.Text(AppLocalizations.of(buildContext)!.text18, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+                  pw.Text(lblOrdersHistory, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
                   pw.SizedBox(height: 10),
                   
                   // Orders Table
                   pw.Table.fromTextArray(
-                    headers: [AppLocalizations.of(buildContext)!.text19, AppLocalizations.of(buildContext)!.text9, AppLocalizations.of(buildContext)!.text12, AppLocalizations.of(buildContext)!.text20, AppLocalizations.of(buildContext)!.text21, AppLocalizations.of(buildContext)!.text22],
+                    headers: [lblDate, lblItems, lblTotal, lblPaid, lblDebt, lblStatus],
                     data: customerOrders.map((o) => [
                       AppDateFormatter.format(o.createdAt),
-                      o.items.map((i) => '${i.productName} (x${i.quantity})').join('\n'), // Support multiple items
+                      o.items.map((i) => '${i.productName} (x${i.quantity})').join('\n'),
                       '${o.total}',
                       '${o.paidAmount}',
                       '${o.isCredit ? (o.total - o.paidAmount) : 0}',
-                      o.status == 'cancelled' ? AppLocalizations.of(buildContext)!.text98 : AppLocalizations.of(buildContext)!.text24,
+                      o.status == 'cancelled' ? lblCancelled : lblCompleted,
                     ]).toList(),
                     headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
                     headerDecoration: const pw.BoxDecoration(color: PdfColors.blue800),

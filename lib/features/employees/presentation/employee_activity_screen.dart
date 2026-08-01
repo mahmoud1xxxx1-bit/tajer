@@ -5,25 +5,31 @@ import '../../authentication/data/auth_repository.dart';
 import '../../orders/data/order_repository.dart';
 import '../../orders/domain/order.dart';
 import '../../orders/presentation/order_details_screen.dart';
+import '../../expenses/data/expense_repository.dart';
+import '../../expenses/domain/expense.dart';
 import '../../../core/providers/settings_provider.dart';
 
 class EmployeeActivityItem {
   final String title;
   final String subtitle;
+  final String details;
   final DateTime timestamp;
   final double amount;
   final bool isSale;
   final String actionType;
   final AppOrder? order;
+  final Color badgeColor;
 
   EmployeeActivityItem({
     required this.title,
     required this.subtitle,
+    this.details = '',
     required this.timestamp,
     required this.amount,
     required this.isSale,
     required this.actionType,
     this.order,
+    required this.badgeColor,
   });
 }
 
@@ -54,29 +60,22 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
   String _getPaymentMethodName(String? method, bool isAr) {
     switch (method) {
       case 'cash':
-        return isAr ? 'نقداً' : 'Cash';
+        return isAr ? 'نقداً (كاش)' : 'Cash';
       case 'card':
-        return isAr ? 'بطاقة' : 'Card';
+        return isAr ? 'بطاقة شبكة' : 'Card';
       case 'debt':
-        return isAr ? 'آجل / ذمم' : 'Credit';
+        return isAr ? 'آجل / ذمم على العميل' : 'Credit / Debt';
       default:
-        return method ?? (isAr ? 'غير محدد' : 'Unknown');
+        return method ?? (isAr ? 'نقدي' : 'Cash');
     }
   }
 
   IconData _getIconForAction(String type, bool isSale) {
     if (isSale) return Icons.point_of_sale;
-    if (type.contains('عميل') || type.toLowerCase().contains('customer')) return Icons.person_add_outlined;
-    if (type.contains('مصروف') || type.toLowerCase().contains('expense')) return Icons.money_off;
-    if (type.contains('منتج') || type.toLowerCase().contains('product') || type.contains('بضاعة')) return Icons.inventory_2_outlined;
+    if (type.contains('عميل') || type.toLowerCase().contains('customer')) return Icons.person_add_alt_1_outlined;
+    if (type.contains('مصروف') || type.toLowerCase().contains('expense')) return Icons.account_balance_wallet_outlined;
+    if (type.contains('منتج') || type.toLowerCase().contains('product') || type.contains('بضاعة') || type.contains('مخزون')) return Icons.inventory_2_outlined;
     return Icons.work_history_outlined;
-  }
-
-  Color _getColorForAction(String type, bool isSale) {
-    if (isSale) return Colors.greenAccent;
-    if (type.contains('مصروف') || type.toLowerCase().contains('expense')) return Colors.redAccent;
-    if (type.contains('عميل') || type.toLowerCase().contains('customer')) return Colors.blueAccent;
-    return Colors.amberAccent;
   }
 
   @override
@@ -87,6 +86,7 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
     final appUser = ref.watch(appUserProvider).value;
     final merchantId = appUser?.role == 'employee' ? appUser?.merchantId : appUser?.id;
     final ordersAsync = ref.watch(ordersStreamProvider);
+    final expensesAsync = ref.watch(expensesStreamProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -105,59 +105,127 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
                   .collection('inventory_logs')
                   .snapshots(),
               builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting || ordersAsync.isLoading) {
+                if (snapshot.connectionState == ConnectionState.waiting && ordersAsync.isLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
                 final allOrders = ordersAsync.value ?? [];
                 final employeeOrders = allOrders.where((o) => 
                   o.creatorId == widget.employeeId || 
-                  (o.creatorName == widget.employeeName && widget.employeeName.isNotEmpty)
+                  (o.creatorName != null && o.creatorName == widget.employeeName && widget.employeeName.isNotEmpty)
                 ).toList();
 
                 final List<EmployeeActivityItem> items = [];
 
                 // 1. Add Sales Orders
                 for (final order in employeeOrders) {
-                  items.add(
-                    EmployeeActivityItem(
-                      title: isAr 
-                          ? 'فاتورة مبيعات # ${order.queueNumber ?? (order.id.length > 6 ? order.id.substring(0, 6) : order.id)}' 
-                          : 'Sales Order #${order.queueNumber ?? (order.id.length > 6 ? order.id.substring(0, 6) : order.id)}',
-                      subtitle: isAr 
-                          ? 'طريقة الدفع: ${_getPaymentMethodName(order.paymentMethod, isAr)} - إجمالي الأصناف: ${order.items.length}' 
-                          : 'Payment: ${_getPaymentMethodName(order.paymentMethod, isAr)} - Items: ${order.items.length}',
-                      timestamp: order.createdAt,
-                      amount: order.total,
-                      isSale: true,
-                      actionType: 'مبيعات',
-                      order: order,
-                    ),
-                  );
+                  try {
+                    final isCancelled = order.status == 'cancelled';
+                    final refNum = order.queueNumber != null ? '#${order.queueNumber}' : (order.id.length >= 6 ? '#${order.id.substring(0, 6).toUpperCase()}' : '#${order.id.toUpperCase()}');
+                    final itemsSummary = order.items.map((i) => '${i.productName} (${i.quantity}x)').join('، ');
+                    
+                    items.add(
+                      EmployeeActivityItem(
+                        title: isAr 
+                            ? '🛒 فاتورة مبيعات $refNum ${isCancelled ? "[ملغى]" : ""}' 
+                            : '🛒 Sales Order $refNum ${isCancelled ? "[Cancelled]" : ""}',
+                        subtitle: isAr 
+                            ? '🤝 العميل: ${order.customerName} | 💵 الدفع: ${_getPaymentMethodName(order.paymentMethod, isAr)}' 
+                            : '🤝 Customer: ${order.customerName} | 💵 Payment: ${_getPaymentMethodName(order.paymentMethod, isAr)}',
+                        details: isAr ? '📦 الأصناف: $itemsSummary' : '📦 Items: $itemsSummary',
+                        timestamp: order.createdAt,
+                        amount: isCancelled ? 0.0 : order.total,
+                        isSale: true,
+                        actionType: 'مبيعات',
+                        order: order,
+                        badgeColor: isCancelled ? Colors.redAccent : Colors.green,
+                      ),
+                    );
+                  } catch (e) {
+                    // Prevent crash on malformed record
+                  }
                 }
 
-                // 2. Add Activity Logs from Firestore
+                // 2. Add Expenses by Employee
+                final allExpenses = expensesAsync.value ?? [];
+                final employeeExpenses = allExpenses.where((e) => 
+                  e.creatorId == widget.employeeId || 
+                  (e.creatorName != null && e.creatorName == widget.employeeName && widget.employeeName.isNotEmpty)
+                ).toList();
+
+                for (final exp in employeeExpenses) {
+                  try {
+                    items.add(
+                      EmployeeActivityItem(
+                        title: isAr ? '💸 مصروف: ${exp.title}' : '💸 Expense: ${exp.title}',
+                        subtitle: isAr ? '📝 البيان: ${exp.category ?? ""} ${exp.notes ?? ""}' : '📝 Note: ${exp.category ?? ""} ${exp.notes ?? ""}',
+                        timestamp: exp.date,
+                        amount: -exp.amount,
+                        isSale: false,
+                        actionType: 'مصروفات',
+                        badgeColor: Colors.orangeAccent,
+                      ),
+                    );
+                  } catch (e) {
+                    // Safe skip
+                  }
+                }
+
+                // 3. Add Activity Logs from Firestore
                 if (snapshot.hasData && snapshot.data != null) {
                   for (final doc in snapshot.data!.docs) {
-                    if (doc.id.startsWith('act_')) {
+                    try {
+                      if (doc.id == 'store_profile_doc' || doc.id.startsWith('counter_')) continue;
                       final data = doc.data() as Map<String, dynamic>? ?? {};
-                      final empId = data['employeeId']?.toString() ?? '';
-                      final empName = data['employeeName']?.toString() ?? '';
                       
-                      if (empId == widget.employeeId || (empName == widget.employeeName && widget.employeeName.isNotEmpty)) {
-                        final ts = (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
-                        final amount = (data['amount'] as num? ?? 0.0).toDouble();
-                        items.add(
-                          EmployeeActivityItem(
-                            title: data['actionType']?.toString() ?? (isAr ? 'عملية نظام' : 'System Action'),
-                            subtitle: data['description']?.toString() ?? '',
-                            timestamp: ts,
-                            amount: amount,
-                            isSale: false,
-                            actionType: data['actionType']?.toString() ?? (isAr ? 'عملية' : 'Action'),
-                          ),
-                        );
+                      if (doc.id.startsWith('act_')) {
+                        final empId = data['employeeId']?.toString() ?? '';
+                        final empName = data['employeeName']?.toString() ?? '';
+                        
+                        if (empId == widget.employeeId || (empName == widget.employeeName && widget.employeeName.isNotEmpty)) {
+                          final ts = (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
+                          final amount = (data['amount'] as num? ?? 0.0).toDouble();
+                          final action = data['actionType']?.toString() ?? (isAr ? 'عملية نظام' : 'System Action');
+                          
+                          items.add(
+                            EmployeeActivityItem(
+                              title: '⚙️ $action',
+                              subtitle: data['description']?.toString() ?? '',
+                              timestamp: ts,
+                              amount: amount,
+                              isSale: false,
+                              actionType: action,
+                              badgeColor: action.contains('حذف') || action.contains('إلغاء') ? Colors.redAccent : Colors.blueAccent,
+                            ),
+                          );
+                        }
+                      } else {
+                        // Inventory logs by this employee
+                        final empEmail = data['userEmail']?.toString() ?? '';
+                        if (empEmail == widget.employeeName || empEmail.contains(widget.employeeName)) {
+                          final ts = (data['date'] as Timestamp?)?.toDate() ?? DateTime.now();
+                          final pName = data['productName']?.toString() ?? (isAr ? 'صنف/منتج' : 'Product');
+                          final change = (data['changeQuantity'] as num? ?? 0).toInt();
+                          final prev = (data['previousQuantity'] as num? ?? 0).toInt();
+                          final next = (data['newQuantity'] as num? ?? 0).toInt();
+                          final reason = data['reason']?.toString() ?? '';
+                          
+                          final changeStr = change > 0 ? '+$change' : '$change';
+                          items.add(
+                            EmployeeActivityItem(
+                              title: isAr ? '📦 مخزون: $pName ($changeStr)' : '📦 Inventory: $pName ($changeStr)',
+                              subtitle: isAr ? '🔄 من ($prev) إلى ($next) | 📝 السبب: $reason' : '🔄 From ($prev) to ($next) | 📝 Reason: $reason',
+                              timestamp: ts,
+                              amount: 0.0,
+                              isSale: false,
+                              actionType: 'مخزون',
+                              badgeColor: change > 0 ? Colors.teal : Colors.amber,
+                            ),
+                          );
+                        }
                       }
+                    } catch (e) {
+                      // Prevent type cast errors
                     }
                   }
                 }
@@ -167,13 +235,13 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.history_toggle_off, size: 64, color: Colors.grey[600]),
+                        Icon(Icons.history_toggle_off, size: 80, color: Colors.grey[500]),
                         const SizedBox(height: 16),
                         Text(
                           isAr 
-                              ? 'لا توجد عمليات مسجلة للموظف (${widget.employeeName}) حتى الآن' 
+                              ? 'لا توجد عمليات أو مبيعات مسجلة للموظف (${widget.employeeName}) حتى الآن' 
                               : 'No activity logs found for (${widget.employeeName}) yet',
-                          style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, color: Colors.grey[400]),
+                          style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, color: Colors.grey[400], fontWeight: FontWeight.bold),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -200,26 +268,26 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
                   itemBuilder: (context, index) {
                     final day = days[index];
                     final dayItems = groupedByDay[day]!;
-                    final dailySales = dayItems.where((i) => i.isSale).fold<double>(0.0, (sum, i) => sum + i.amount);
+                    final dailySales = dayItems.where((i) => i.isSale && i.amount > 0).fold<double>(0.0, (sum, i) => sum + i.amount);
 
                     return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
+                      margin: const EdgeInsets.only(bottom: 14),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 2,
+                      elevation: 3,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16),
                         child: ExpansionTile(
                           initiallyExpanded: index == 0,
-                          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                          backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.3),
-                          collapsedBackgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.15),
+                          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.35),
+                          collapsedBackgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.18),
                           leading: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
                               color: theme.colorScheme.primary.withOpacity(0.2),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(Icons.calendar_today, color: theme.colorScheme.primary, size: 22),
+                            child: Icon(Icons.calendar_month_outlined, color: theme.colorScheme.primary, size: 24),
                           ),
                           title: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -228,90 +296,36 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
                                 '${isAr ? "تاريخ:" : "Date:"} $day',
                                 style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16),
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: Colors.green.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.green.withOpacity(0.4)),
+                              if (dailySales > 0)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withOpacity(0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(color: Colors.green.withOpacity(0.4)),
+                                  ),
+                                  child: Text(
+                                    '${isAr ? "مبيعات الموظف:" : "Sales:"} ${dailySales.toStringAsFixed(2)} ${currency.code}',
+                                    style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.green, fontSize: 13),
+                                  ),
                                 ),
-                                child: Text(
-                                  '${isAr ? "المبيعات:" : "Sales:"} ${dailySales.toStringAsFixed(2)} ${currency.code}',
-                                  style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.green, fontSize: 13),
-                                ),
-                              ),
                             ],
                           ),
                           subtitle: Padding(
                             padding: const EdgeInsets.only(top: 6),
                             child: Text(
-                              '${isAr ? "عدد العمليات المنفذة في هذا اليوم:" : "Actions performed today:"} ${dayItems.length}',
+                              '${isAr ? "عدد العمليات والحركات المنفذة في هذا اليوم:" : "Actions performed today:"} ${dayItems.length}',
                               style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey[400]),
                             ),
                           ),
                           children: dayItems.map((item) {
                             final icon = _getIconForAction(item.actionType, item.isSale);
-                            final color = _getColorForAction(item.actionType, item.isSale);
 
                             return Container(
                               decoration: BoxDecoration(
-                                border: Border(top: BorderSide(color: Colors.white.withOpacity(0.05))),
+                                border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.15))),
                               ),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-                                leading: CircleAvatar(
-                                  backgroundColor: color.withOpacity(0.15),
-                                  child: Icon(icon, color: color, size: 20),
-                                ),
-                                title: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        item.title,
-                                        style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 14),
-                                      ),
-                                    ),
-                                    if (item.amount > 0)
-                                      Text(
-                                        '${item.amount.toStringAsFixed(2)} ${currency.code}',
-                                        style: TextStyle(
-                                          fontFamily: 'Tajawal',
-                                          fontWeight: FontWeight.bold,
-                                          color: item.isSale ? Colors.green : Colors.amber,
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                subtitle: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    if (item.subtitle.isNotEmpty)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 4, bottom: 4),
-                                        child: Text(
-                                          item.subtitle,
-                                          style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey[400]),
-                                        ),
-                                      ),
-                                    Row(
-                                      children: [
-                                        Icon(Icons.access_time, size: 13, color: Colors.grey[500]),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          _formatTime(item.timestamp, isAr),
-                                          style: TextStyle(fontFamily: 'Tajawal', fontSize: 11, color: Colors.grey[500]),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Text(
-                                          '${isAr ? "👤 منفذ العملية:" : "👤 By:"} ${widget.employeeName}',
-                                          style: TextStyle(fontFamily: 'Tajawal', fontSize: 11, color: Colors.blueAccent[200]),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                trailing: item.order != null ? Icon(Icons.chevron_right, color: Colors.blue[300]) : null,
+                              child: InkWell(
                                 onTap: item.order != null
                                     ? () {
                                         Navigator.push(
@@ -322,6 +336,96 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
                                         );
                                       }
                                     : null,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: item.badgeColor.withOpacity(0.15),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(icon, color: item.badgeColor, size: 22),
+                                      ),
+                                      const SizedBox(width: 14),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    item.title,
+                                                    style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 15),
+                                                    maxLines: 2,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                                if (item.amount != 0.0)
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(left: 8, right: 8),
+                                                    child: Text(
+                                                      '${item.amount.toStringAsFixed(2)} ${currency.code}',
+                                                      style: TextStyle(
+                                                        fontFamily: 'Tajawal',
+                                                        fontWeight: FontWeight.bold,
+                                                        fontSize: 14,
+                                                        color: item.amount > 0 ? Colors.green : Colors.orangeAccent,
+                                                      ),
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 6),
+                                            if (item.subtitle.isNotEmpty)
+                                              Text(
+                                                item.subtitle,
+                                                style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey[300], height: 1.4),
+                                              ),
+                                            if (item.details.isNotEmpty) ...[
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                item.details,
+                                                style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.blue[300], fontWeight: FontWeight.w500),
+                                              ),
+                                            ],
+                                            const SizedBox(height: 8),
+                                            Row(
+                                              children: [
+                                                Icon(Icons.access_time, size: 13, color: Colors.grey[500]),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  _formatTime(item.timestamp, isAr),
+                                                  style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey[400]),
+                                                ),
+                                                const SizedBox(width: 14),
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.purple.withOpacity(0.12),
+                                                    borderRadius: BorderRadius.circular(8),
+                                                  ),
+                                                  child: Text(
+                                                    '👤 ${widget.employeeName}',
+                                                    style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.purpleAccent, fontWeight: FontWeight.bold),
+                                                  ),
+                                                ),
+                                                if (item.order != null) ...[
+                                                  const Spacer(),
+                                                  Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey[400]),
+                                                ]
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             );
                           }).toList(),
