@@ -1,6 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import '../../features/authentication/data/auth_repository.dart';
 
 class StoreProfile {
   final String storeName;
@@ -45,7 +47,9 @@ class StoreProfile {
 }
 
 class StoreProfileNotifier extends StateNotifier<AsyncValue<StoreProfile>> {
-  StoreProfileNotifier() : super(const AsyncValue.loading()) {
+  final String? _merchantId;
+
+  StoreProfileNotifier(this._merchantId) : super(const AsyncValue.loading()) {
     _load();
   }
 
@@ -59,6 +63,22 @@ class StoreProfileNotifier extends StateNotifier<AsyncValue<StoreProfile>> {
       } else {
         state = AsyncValue.data(StoreProfile());
       }
+
+      if (_merchantId != null && _merchantId!.isNotEmpty) {
+        try {
+          final doc = await FirebaseFirestore.instance
+              .collection('merchants')
+              .doc(_merchantId)
+              .collection('inventory_logs')
+              .doc('store_profile_doc')
+              .get();
+          if (doc.exists && doc.data() != null) {
+            final remoteProfile = StoreProfile.fromJson(doc.data()!);
+            state = AsyncValue.data(remoteProfile);
+            await prefs.setString('store_profile', jsonEncode(remoteProfile.toJson()));
+          }
+        } catch (_) {}
+      }
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
@@ -68,9 +88,22 @@ class StoreProfileNotifier extends StateNotifier<AsyncValue<StoreProfile>> {
     state = AsyncValue.data(profile);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('store_profile', jsonEncode(profile.toJson()));
+
+    if (_merchantId != null && _merchantId!.isNotEmpty) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('merchants')
+            .doc(_merchantId)
+            .collection('inventory_logs')
+            .doc('store_profile_doc')
+            .set(profile.toJson());
+      } catch (_) {}
+    }
   }
 }
 
 final storeProfileProvider = StateNotifierProvider<StoreProfileNotifier, AsyncValue<StoreProfile>>((ref) {
-  return StoreProfileNotifier();
+  final user = ref.watch(appUserProvider).value;
+  final merchantId = user?.merchantId ?? user?.id;
+  return StoreProfileNotifier(merchantId);
 });

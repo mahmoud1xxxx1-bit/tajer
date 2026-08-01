@@ -17,16 +17,24 @@ class InventoryLogRepository {
   Stream<List<InventoryLog>> watchLogs() {
     return _logsRef.withConverter(
       fromFirestore: (snapshot, _) {
-        final data = snapshot.data()!;
+        final data = snapshot.data() ?? {};
         data['id'] = snapshot.id;
+        data['productId'] = data['productId']?.toString() ?? '';
+        data['productName'] = data['productName']?.toString() ?? '';
+        data['reason'] = data['reason']?.toString() ?? '';
+        data['merchantId'] = data['merchantId']?.toString() ?? '';
         data['changeQuantity'] = (data['changeQuantity'] ?? 0).toInt();
         data['previousQuantity'] = (data['previousQuantity'] ?? 0).toInt();
         data['newQuantity'] = (data['newQuantity'] ?? 0).toInt();
+        if (data['date'] == null) data['date'] = Timestamp.now();
         return InventoryLog.fromJson(data);
       },
       toFirestore: (log, _) => log.toJson(),
     ).orderBy('date', descending: true).snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => doc.data()).toList();
+      return snapshot.docs
+          .where((doc) => doc.id != 'store_profile_doc' && !doc.id.startsWith('counter_') && !doc.id.startsWith('act_'))
+          .map((doc) => doc.data())
+          .toList();
     });
   }
 

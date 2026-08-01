@@ -233,40 +233,97 @@ class OrdersScreen extends ConsumerWidget {
                                           ),
                                         ],
                                         const SizedBox(height: 8),
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.blue.withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Text(
-                                            _getPaymentMethodName(order.paymentMethod),
-                                            style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 12),
-                                          ),
+                                        Wrap(
+                                          spacing: 8,
+                                          runSpacing: 4,
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: Colors.blue.withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Text(
+                                                _getPaymentMethodName(order.paymentMethod),
+                                                style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 12),
+                                              ),
+                                            ),
+                                            if (order.creatorName != null && order.creatorName!.isNotEmpty)
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.teal.withOpacity(0.15),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                                child: Text(
+                                                  '👤 بواسطة: ${order.creatorName}',
+                                                  style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 12),
+                                                ),
+                                              ),
+                                          ],
                                         ),
                                       ],
                                     ),
                                   ),
                                 ],
                               ),
-                              if (canCancelOrders && order.status != 'cancelled') ...[
-                                const SizedBox(height: 16),
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: TextButton.icon(
-                                    onPressed: () {
-                                      ref.read(orderRepositoryProvider).updateOrderStatus(order, 'cancelled');
-                                    },
-                                    icon: const Icon(Icons.cancel_outlined, color: Colors.red, size: 18),
-                                    label: Text(l10n.cancel, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
-                                    style: TextButton.styleFrom(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                      minimumSize: Size.zero,
-                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                    ),
+                              const SizedBox(height: 12),
+                              Divider(color: Colors.white.withOpacity(0.1)),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Wrap(
+                                    spacing: 8,
+                                    children: [
+                                      TextButton.icon(
+                                        onPressed: () {
+                                          PdfService.printInvoice(context, order, currency);
+                                        },
+                                        icon: const Icon(Icons.picture_as_pdf, color: Colors.amber, size: 18),
+                                        label: const Text('فاتورة PDF', style: TextStyle(color: Colors.amber, fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
+                                        style: TextButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                          minimumSize: Size.zero,
+                                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                        ),
+                                      ),
+                                      TextButton.icon(
+                                        onPressed: () async {
+                                          try {
+                                            await PrinterService.printReceipt(order, currency, isKitchen: false).timeout(const Duration(seconds: 5));
+                                          } catch (_) {
+                                            if (context.mounted) {
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                const SnackBar(content: Text('تعذر الاتصال بالطابعة الحرارية. تأكد من إعداد الطابعة بشكل صحيح.', style: TextStyle(fontFamily: 'Tajawal'))),
+                                              );
+                                            }
+                                          }
+                                        },
+                                        icon: const Icon(Icons.print_outlined, color: Colors.blueAccent, size: 18),
+                                        label: const Text('طباعة حرارية', style: TextStyle(color: Colors.blueAccent, fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
+                                        style: TextButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                          minimumSize: Size.zero,
+                                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
-                              ],
+                                  if (canCancelOrders && order.status != 'cancelled')
+                                    TextButton.icon(
+                                      onPressed: () {
+                                        ref.read(orderRepositoryProvider).updateOrderStatus(order, 'cancelled');
+                                      },
+                                      icon: const Icon(Icons.cancel_outlined, color: Colors.red, size: 18),
+                                      label: Text(l10n.cancel, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
+                                      style: TextButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                                        minimumSize: Size.zero,
+                                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ],
                           ),
                         ),

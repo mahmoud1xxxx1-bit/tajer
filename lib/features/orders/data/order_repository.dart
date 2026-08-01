@@ -59,17 +59,49 @@ class OrderRepository {
     final customerRef = _firestore.collection('customers').doc(order.customerId);
     final orderRef = _firestore.collection('orders').doc(order.id);
     
-    // Manage QueueNumber locally
-    final prefs = await SharedPreferences.getInstance();
+    // Manage QueueNumber Atomically via Firestore Transaction (with local fallback)
+    int nextQueueNumber = 1;
     final now = DateTime.now();
     final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final lastDate = prefs.getString('queue_date_${order.merchantId}');
-    int nextQueueNumber = 1;
-    if (lastDate == todayStr) {
-      nextQueueNumber = (prefs.getInt('queue_num_${order.merchantId}') ?? 0) + 1;
+    final prefs = await SharedPreferences.getInstance();
+
+    try {
+      final counterRef = _firestore.collection('merchants').doc(order.merchantId).collection('counters').doc('daily_orders');
+      nextQueueNumber = await _firestore.runTransaction<int>((transaction) async {
+        final docSnap = await transaction.get(counterRef);
+        if (docSnap.exists) {
+          final data = docSnap.data()!;
+          final lastDate = data['date'] as String?;
+          if (lastDate == todayStr) {
+            final lastNum = (data['lastNumber'] as num? ?? 0).toInt();
+            final nextNum = lastNum + 1;
+            transaction.update(counterRef, {'lastNumber': nextNum, 'date': todayStr, 'updatedAt': FieldValue.serverTimestamp()});
+            return nextNum;
+          } else {
+            // New day! Reset counter to 1
+            transaction.update(counterRef, {'date': todayStr, 'lastNumber': 1, 'updatedAt': FieldValue.serverTimestamp()});
+            return 1;
+          }
+        } else {
+          transaction.set(counterRef, {'date': todayStr, 'lastNumber': 1, 'updatedAt': FieldValue.serverTimestamp()});
+          return 1;
+        }
+      }).timeout(const Duration(seconds: 4));
+      
+      // Update local prefs to stay in sync with server counter
+      await prefs.setString('queue_date_${order.merchantId}', todayStr);
+      await prefs.setInt('queue_num_${order.merchantId}', nextQueueNumber);
+    } catch (e) {
+      // Offline fallback: use SharedPreferences sequentially
+      final lastDate = prefs.getString('queue_date_${order.merchantId}');
+      if (lastDate == todayStr) {
+        nextQueueNumber = (prefs.getInt('queue_num_${order.merchantId}') ?? 0) + 1;
+      } else {
+        nextQueueNumber = 1;
+      }
+      await prefs.setString('queue_date_${order.merchantId}', todayStr);
+      await prefs.setInt('queue_num_${order.merchantId}', nextQueueNumber);
     }
-    await prefs.setString('queue_date_${order.merchantId}', todayStr);
-    await prefs.setInt('queue_num_${order.merchantId}', nextQueueNumber);
     
     final orderWithQueue = order.copyWith(queueNumber: nextQueueNumber);
 

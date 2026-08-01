@@ -85,6 +85,15 @@ service cloud.firestore {
         allow read, update, delete: if hasAccess(merchantId);
         allow create: if hasAccess(merchantId);
       }
+      match /counters/{counterId} {
+        allow read, write: if hasAccess(merchantId);
+      }
+      match /employee_actions/{actionId} {
+        allow read, write: if hasAccess(merchantId);
+      }
+      match /{subcollection=**} {
+        allow read, write: if hasAccess(merchantId);
+      }
     }
   }
 }

@@ -7,6 +7,7 @@ import 'package:tajer/l10n/app_localizations.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../orders/data/order_repository.dart';
 import '../../../core/providers/settings_provider.dart';
+import 'employee_activity_screen.dart';
 
 class EmployeesScreen extends ConsumerStatefulWidget {
   const EmployeesScreen({super.key});
@@ -219,9 +220,20 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                               final totalSales = employeeOrders.fold<double>(0, (sum, o) => sum + o.total);
 
                               return ListTile(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => EmployeeActivityScreen(
+                                        employeeId: id,
+                                        employeeName: name,
+                                      ),
+                                    ),
+                                  );
+                                },
                                 leading: CircleAvatar(
                                   backgroundColor: theme.colorScheme.primaryContainer,
-                                  child: Icon(Icons.badge, color: theme.colorScheme.primary),
+                                  child: Icon(Icons.history, color: theme.colorScheme.primary),
                                 ),
                                 title: Text(name, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                                 subtitle: Column(

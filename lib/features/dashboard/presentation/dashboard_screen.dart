@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:tajer/l10n/app_localizations.dart';
@@ -11,6 +12,7 @@ import '../../orders/data/order_repository.dart';
 import '../../products/data/product_repository.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
+import '../../../core/providers/store_profile_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../authentication/data/auth_repository.dart';
@@ -135,6 +137,7 @@ class DashboardHome extends ConsumerWidget {
     final productsAsync = ref.watch(productsStreamProvider);
     final currentCurrency = ref.watch(currencyProvider);
     final appUser = ref.watch(appUserProvider).value;
+    final storeProfile = ref.watch(storeProfileProvider).value;
 
     return Scaffold(
       appBar: AppBar(
@@ -154,10 +157,106 @@ class DashboardHome extends ConsumerWidget {
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Colors.blueAccent,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade900, Colors.blueAccent],
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                ),
               ),
-              child: Text(l10n.managementAndInventory, style: TextStyle(color: Colors.white, fontSize: 24, fontFamily: 'Tajawal')),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        if (storeProfile?.logoBase64 != null && storeProfile!.logoBase64.isNotEmpty) ...[
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.memory(
+                              base64Decode(storeProfile.logoBase64),
+                              width: 48,
+                              height: 48,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                        ] else ...[
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.storefront, color: Colors.white, size: 32),
+                          ),
+                          const SizedBox(width: 12),
+                        ],
+                        Expanded(
+                          child: Text(
+                            (storeProfile?.storeName.isNotEmpty ?? false)
+                                ? storeProfile!.storeName
+                                : l10n.managementAndInventory,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Tajawal',
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: appUser?.role == 'employee' ? Colors.amber.withOpacity(0.2) : Colors.green.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: appUser?.role == 'employee' ? Colors.amberAccent : Colors.greenAccent,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            appUser?.role == 'employee' ? Icons.badge_outlined : Icons.admin_panel_settings_outlined,
+                            color: appUser?.role == 'employee' ? Colors.amberAccent : Colors.greenAccent,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 6),
+                          Flexible(
+                            child: Text(
+                              appUser?.role == 'employee'
+                                  ? 'موظف: ${appUser?.name ?? ""}'
+                                  : 'حساب التاجر (الإدارة)',
+                              style: TextStyle(
+                                color: appUser?.role == 'employee' ? Colors.amberAccent : Colors.greenAccent,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Tajawal',
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (storeProfile?.phone != null && storeProfile!.phone.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        '📞 ${storeProfile.phone}',
+                        style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12, fontFamily: 'Tajawal'),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
             ),
             if (appUser?.hasPermission('can_manage_expenses') ?? false)
             ListTile(

@@ -238,7 +238,8 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           isKitchen: false,
         ).timeout(const Duration(seconds: 5));
       } catch (e) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم حفظ الفاتورة بنجاح. (تنبيه الطباعة: $e)', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12))));
+        // Silently ignore print timeouts when no physical printer is connected so user sees only the success notification
+        debugPrint('Auto-print ignored or failed: $e');
       }
     } catch (e) {
       if (mounted) {

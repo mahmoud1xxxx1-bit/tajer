@@ -282,10 +282,17 @@ class AuthRepository {
           }
           
           Map<String, dynamic> permissions = {};
+          String empName = 'موظف';
           if (merchantUid != null) {
             final empDoc = await _firestore.collection('users').doc(merchantUid).collection('employees').doc(uid).get();
-            if (empDoc.exists && empDoc.data()!.containsKey('permissions')) {
-              permissions = Map<String, dynamic>.from(empDoc.data()!['permissions']);
+            if (empDoc.exists && empDoc.data() != null) {
+              final data = empDoc.data()!;
+              if (data.containsKey('permissions')) {
+                permissions = Map<String, dynamic>.from(data['permissions']);
+              }
+              if (data.containsKey('name')) {
+                empName = data['name']?.toString() ?? 'موظف';
+              }
             }
           }
           
@@ -296,7 +303,7 @@ class AuthRepository {
             'role': 'employee',
             'merchantId': merchantUid ?? '',
             'createdAt': FieldValue.serverTimestamp(),
-            'name': 'موظف',
+            'name': empName,
             'email': hiddenEmail,
             'deviceId': await _getDeviceId(),
             'permissions': permissions,
