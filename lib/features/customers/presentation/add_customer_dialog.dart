@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/customer_repository.dart';
 import '../domain/customer.dart';
+import '../../../core/services/activity_logger.dart';
 
 class AddCustomerDialog extends ConsumerStatefulWidget {
   final Customer? customerToEdit;
@@ -46,23 +47,36 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
       if (user == null) throw Exception(AppLocalizations.of(context)!.text47);
 
       final customerRepo = ref.read(customerRepositoryProvider);
-
+      final appUser = ref.read(appUserProvider).value;
       final isEditing = widget.customerToEdit != null;
+      final isAr = Localizations.localeOf(context).languageCode == 'ar';
+
       final newCustomer = Customer(
         id: isEditing ? widget.customerToEdit!.id : Uuid().v4(),
-        merchantId: isEditing ? widget.customerToEdit!.merchantId : (ref.read(appUserProvider).value?.merchantId ?? user.uid),
+        merchantId: isEditing ? widget.customerToEdit!.merchantId : (appUser?.merchantId ?? user.uid),
         name: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
         createdAt: isEditing ? widget.customerToEdit!.createdAt : DateTime.now(),
         totalPurchases: isEditing ? widget.customerToEdit!.totalPurchases : 0.0,
         orderCount: isEditing ? widget.customerToEdit!.orderCount : 0,
         totalDebt: isEditing ? widget.customerToEdit!.totalDebt : 0.0,
+        creatorName: isEditing ? widget.customerToEdit!.creatorName : (appUser?.name ?? (isAr ? 'التاجر' : 'Owner')),
       );
 
       if (isEditing) {
         await customerRepo.updateCustomer(newCustomer);
+        await ActivityLogger.log(
+          user: appUser,
+          actionType: isAr ? 'تعديل عميل' : 'Customer Updated',
+          description: isAr ? 'تم تعديل بيانات العميل (${newCustomer.name})' : 'Updated customer details (${newCustomer.name})',
+        );
       } else {
         await customerRepo.addCustomer(newCustomer);
+        await ActivityLogger.log(
+          user: appUser,
+          actionType: isAr ? 'إضافة عميل' : 'Customer Added',
+          description: isAr ? 'تم إضافة العميل الجديد (${newCustomer.name}) بواسطة (${newCustomer.creatorName})' : 'Added new customer (${newCustomer.name}) by (${newCustomer.creatorName})',
+        );
       }
       if (mounted) Navigator.pop(context);
     } catch (e) {

@@ -3,27 +3,183 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/theme/glass_card.dart';
+import '../../authentication/data/auth_repository.dart';
 import '../data/inventory_log_repository.dart';
+import '../domain/inventory_log.dart';
+import '../../../core/services/activity_logger.dart';
 
-class InventoryLogsScreen extends ConsumerWidget {
+class InventoryLogsScreen extends ConsumerStatefulWidget {
   const InventoryLogsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<InventoryLogsScreen> createState() => _InventoryLogsScreenState();
+}
+
+class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
+  void _showEditDialog(BuildContext context, InventoryLog log, bool isAr) {
+    final qtyController = TextEditingController(text: log.changeQuantity.toString());
+    final reasonController = TextEditingController(text: log.reason);
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          isAr ? 'تعديل سجل المخزون' : 'Edit Inventory Log',
+          style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        content: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '${log.productName}',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: qtyController,
+                keyboardType: const TextInputType.numberWithOptions(signed: true),
+                decoration: InputDecoration(
+                  labelText: isAr ? 'الكمية (موجب لإضافة، سالب لنقص)' : 'Quantity Change (+ add, - remove)',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                validator: (val) {
+                  if (val == null || val.isEmpty || int.tryParse(val) == null) {
+                    return isAr ? 'أدخل رقم صحيح' : 'Enter valid integer';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: reasonController,
+                decoration: InputDecoration(
+                  labelText: isAr ? 'السبب / الوصف' : 'Reason / Description',
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                validator: (val) => val == null || val.isEmpty ? (isAr ? 'مطلوب' : 'Required') : null,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(isAr ? 'إلغاء' : 'Cancel', style: const TextStyle(fontFamily: 'Tajawal')),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) return;
+              final newQty = int.parse(qtyController.text);
+              final newReason = reasonController.text.trim();
+              Navigator.pop(ctx);
+
+              final repo = ref.read(inventoryLogRepositoryProvider);
+              if (repo != null) {
+                await repo.updateLog(log, newQty, newReason);
+                final appUser = ref.read(appUserProvider).value;
+                await ActivityLogger.log(
+                  user: appUser,
+                  actionType: isAr ? 'تعديل سجل مخزون' : 'Inventory Log Edited',
+                  description: isAr 
+                      ? 'تم تعديل كمية السجل للمنتج (${log.productName}) من (${log.changeQuantity}) إلى ($newQty)' 
+                      : 'Updated quantity log for (${log.productName}) from (${log.changeQuantity}) to ($newQty)',
+                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(isAr ? 'تم تعديل السجل وتحديث المخزون بنجاح' : 'Log updated & inventory reconciled successfully', style: const TextStyle(fontFamily: 'Tajawal'))),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: Text(isAr ? 'حفظ' : 'Save', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmDelete(BuildContext context, InventoryLog log, bool isAr) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          isAr ? 'حذف سجل المخزون' : 'Delete Inventory Log',
+          style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.redAccent),
+        ),
+        content: Text(
+          isAr 
+              ? 'هل أنت متأكد من رغبتك في حذف هذا السجل للمنتج (${log.productName})؟ سيتم إعادة تسوية المخزون بناءً على ذلك.' 
+              : 'Are you sure you want to delete this log for (${log.productName})? Inventory will be reconciled accordingly.',
+          style: const TextStyle(fontFamily: 'Tajawal'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(isAr ? 'إلغاء' : 'Cancel', style: const TextStyle(fontFamily: 'Tajawal')),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final repo = ref.read(inventoryLogRepositoryProvider);
+              if (repo != null) {
+                await repo.deleteLog(log, adjustInventory: true);
+                final appUser = ref.read(appUserProvider).value;
+                await ActivityLogger.log(
+                  user: appUser,
+                  actionType: isAr ? 'حذف سجل مخزون' : 'Inventory Log Deleted',
+                  description: isAr 
+                      ? 'تم حذف سجل المخزون للمنتج (${log.productName}) بكمية (${log.changeQuantity}) بواسطة التاجر' 
+                      : 'Deleted inventory log for (${log.productName}) quantity (${log.changeQuantity}) by merchant',
+                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(isAr ? 'تم حذف السجل وتسوية المخزون بنجاح' : 'Log deleted & inventory reconciled successfully', style: const TextStyle(fontFamily: 'Tajawal'))),
+                  );
+                }
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text(isAr ? 'حذف' : 'Delete', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final logsAsync = ref.watch(inventoryLogsStreamProvider);
+    final appUser = ref.watch(appUserProvider).value;
+    final isMerchant = appUser?.role == 'admin' || appUser?.role != 'employee';
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.text73, style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(AppLocalizations.of(context)!.text73, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
       ),
       body: logsAsync.when(
         data: (logs) {
           if (logs.isEmpty) {
-            return Center(child: Text(AppLocalizations.of(context)!.text74, style: TextStyle(fontFamily: 'Tajawal')));
+            return Center(child: Text(AppLocalizations.of(context)!.text74, style: const TextStyle(fontFamily: 'Tajawal')));
           }
           
           return ListView.builder(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             itemCount: logs.length,
             itemBuilder: (context, index) {
               final log = logs[index];
@@ -67,7 +223,7 @@ class InventoryLogsScreen extends ConsumerWidget {
                                 Expanded(
                                   child: Text(
                                     log.reason,
-                                    style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey[700], fontSize: 13),
+                                    style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey[400], fontSize: 13),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -86,19 +242,19 @@ class InventoryLogsScreen extends ConsumerWidget {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
-                                    'من ${log.previousQuantity} إلى ${log.newQuantity}',
-                                    style: TextStyle(fontSize: 12, color: Colors.grey[700], fontFamily: 'Tajawal'),
+                                    isAr ? 'من ${log.previousQuantity} إلى ${log.newQuantity}' : 'From ${log.previousQuantity} to ${log.newQuantity}',
+                                    style: TextStyle(fontSize: 12, color: Colors.grey[400], fontFamily: 'Tajawal'),
                                   ),
                                 ),
                                 if (log.userEmail != null)
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.person_pin, size: 14, color: Colors.blueGrey.withOpacity(0.7)),
+                                      Icon(Icons.person_pin, size: 14, color: Colors.blueAccent.withOpacity(0.7)),
                                       const SizedBox(width: 4),
                                       Text(
                                         log.userEmail!,
-                                        style: TextStyle(fontSize: 12, color: Colors.blueGrey, fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+                                        style: const TextStyle(fontSize: 12, color: Colors.blueAccent, fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
                                       ),
                                     ],
                                   ),
@@ -130,6 +286,29 @@ class InventoryLogsScreen extends ConsumerWidget {
                               fontSize: 20,
                             ),
                           ),
+                          if (isMerchant) ...[
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit_outlined, color: Colors.amber, size: 20),
+                                  onPressed: () => _showEditDialog(context, log, isAr),
+                                  constraints: const BoxConstraints(),
+                                  padding: const EdgeInsets.all(4),
+                                  tooltip: isAr ? 'تعديل السجل' : 'Edit Log',
+                                ),
+                                const SizedBox(width: 4),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
+                                  onPressed: () => _confirmDelete(context, log, isAr),
+                                  constraints: const BoxConstraints(),
+                                  padding: const EdgeInsets.all(4),
+                                  tooltip: isAr ? 'حذف السجل' : 'Delete Log',
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ],
@@ -139,8 +318,8 @@ class InventoryLogsScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('خطأ: $e')),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, st) => Center(child: Text('خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
       ),
     );
   }

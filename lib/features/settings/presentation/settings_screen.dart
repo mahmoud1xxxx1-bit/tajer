@@ -35,17 +35,24 @@ class SettingsScreen extends ConsumerWidget {
               subtitle: Text(appUser?.name ?? 'غير معروف', style: TextStyle(color: Colors.grey)),
               onTap: () => context.push('/profile'),
             ),
-            if (appUser?.role == 'merchant')
+            if (appUser?.role == 'merchant' || appUser?.role == 'admin') ...[
               ListTile(
-                leading: Icon(Icons.people, color: Colors.purple),
-                title: Text('إدارة الموظفين والصلاحيات', style: TextStyle(fontFamily: 'Tajawal')),
+                leading: const Icon(Icons.people, color: Colors.purple),
+                title: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'إدارة الموظفين والصلاحيات' : 'Employees & Permissions', style: const TextStyle(fontFamily: 'Tajawal')),
                 onTap: () => context.push('/employees'),
               ),
+              ListTile(
+                leading: const Icon(Icons.history_edu_outlined, color: Colors.teal),
+                title: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'سجل الحركة الشامل (المراجعة)' : 'Centralized Audit Log', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                subtitle: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'مراقبة كافة عمليات الموظفين والمخزون في الوقت الحقيقي' : 'Monitor all employee & store actions in real-time', style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+                onTap: () => context.push('/audit_log'),
+              ),
+            ],
           ],
-          if (appUser?.role == 'merchant')
+          if (appUser?.role == 'merchant' || appUser?.role == 'admin')
             ListTile(
-              leading: Icon(Icons.workspace_premium, color: Colors.amber),
-              title: Text(l10n.subscriptions, style: TextStyle(fontFamily: 'Tajawal')),
+              leading: const Icon(Icons.workspace_premium, color: Colors.amber),
+              title: Text(l10n.subscriptions, style: const TextStyle(fontFamily: 'Tajawal')),
               onTap: () => context.push('/paywall'),
             ),
           ListTile(

@@ -64,6 +64,57 @@ class InventoryLogRepository {
 
     await _logsRef.doc(log.id).set(log.toJson());
   }
+
+  Future<void> deleteLog(InventoryLog log, {bool adjustInventory = true}) async {
+    if (adjustInventory && log.productId.isNotEmpty && log.changeQuantity != 0) {
+      final productRef = _firestore.collection('products').doc(log.productId);
+      final rawRef = _firestore.collection('raw_materials').doc(log.productId);
+      final pDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
+      if (pDoc.exists) {
+        await productRef.update({
+          'quantity': FieldValue.increment(-log.changeQuantity),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      } else {
+        final rDoc = await rawRef.get(const GetOptions(source: Source.serverAndCache));
+        if (rDoc.exists) {
+          await rawRef.update({
+            'quantity': FieldValue.increment(-log.changeQuantity),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+      }
+    }
+    await _logsRef.doc(log.id).delete();
+  }
+
+  Future<void> updateLog(InventoryLog oldLog, int newChangeQuantity, String newReason) async {
+    final diff = newChangeQuantity - oldLog.changeQuantity;
+    if (diff != 0 && oldLog.productId.isNotEmpty) {
+      final productRef = _firestore.collection('products').doc(oldLog.productId);
+      final rawRef = _firestore.collection('raw_materials').doc(oldLog.productId);
+      final pDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
+      if (pDoc.exists) {
+        await productRef.update({
+          'quantity': FieldValue.increment(diff),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      } else {
+        final rDoc = await rawRef.get(const GetOptions(source: Source.serverAndCache));
+        if (rDoc.exists) {
+          await rawRef.update({
+            'quantity': FieldValue.increment(diff),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+      }
+    }
+    await _logsRef.doc(oldLog.id).update({
+      'changeQuantity': newChangeQuantity,
+      'newQuantity': oldLog.previousQuantity + newChangeQuantity,
+      'reason': newReason,
+    });
+  }
 }
 
 final inventoryLogRepositoryProvider = Provider<InventoryLogRepository?>((ref) {

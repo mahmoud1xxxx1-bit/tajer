@@ -147,10 +147,22 @@ class CustomersScreen extends ConsumerWidget {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
-                                    '${customer.orderCount} طلبات',
+                                    '${customer.orderCount} ${Localizations.localeOf(context).languageCode == "ar" ? "طلبات" : "orders"}',
                                     style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.secondary, fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
                                   ),
                                 ),
+                                if (customer.creatorName != null && customer.creatorName!.isNotEmpty)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.teal.withOpacity(0.15),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      '👤 ${Localizations.localeOf(context).languageCode == "ar" ? "بواسطة:" : "By:"} ${customer.creatorName}',
+                                      style: const TextStyle(fontSize: 12, color: Colors.teal, fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
                               ],
                             ),
                           ],

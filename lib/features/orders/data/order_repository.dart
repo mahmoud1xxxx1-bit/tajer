@@ -164,64 +164,20 @@ class OrderRepository {
 
   Future<void> deleteOrder(AppOrder order) async {
     final batch = _firestore.batch();
-    final customerRef = _firestore.collection('customers').doc(order.customerId);
     final orderRef = _firestore.collection('orders').doc(order.id);
 
-    for (final item in order.items) {
-      final productRef = _firestore.collection('products').doc(item.productId);
-      final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
-      if (productDoc.exists) {
-        final data = productDoc.data()!;
-        final recipeList = data['recipe'] as List<dynamic>? ?? [];
+    // If order is NOT cancelled, restore inventory and subtract customer debt/purchases.
+    // If order was ALREADY cancelled, its inventory & debt were already restored upon cancellation!
+    if (order.status != 'cancelled') {
+      final customerRef = _firestore.collection('customers').doc(order.customerId);
 
-        if (recipeList.isNotEmpty) {
-          for (final recipeItem in recipeList) {
-            final rawMaterialId = recipeItem['rawMaterialId'] as String;
-            final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
-            final rawMaterialRef = _firestore.collection('raw_materials').doc(rawMaterialId);
-            batch.update(rawMaterialRef, {
-              'quantity': FieldValue.increment(amountRequired * item.quantity),
-              'updatedAt': FieldValue.serverTimestamp(),
-            });
-          }
-        } else {
-          batch.update(productRef, {
-            'quantity': FieldValue.increment(item.quantity),
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
-        }
-      }
-    }
+      for (final item in order.items) {
+        final productRef = _firestore.collection('products').doc(item.productId);
+        final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
+        if (productDoc.exists) {
+          final data = productDoc.data()!;
+          final recipeList = data['recipe'] as List<dynamic>? ?? [];
 
-    if (order.customerId != 'walk_in') {
-      final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
-      batch.update(customerRef, {
-        'totalPurchases': FieldValue.increment(-order.total),
-        'orderCount': FieldValue.increment(-1),
-        'totalDebt': FieldValue.increment(-debtDecrease),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    }
-
-    batch.delete(orderRef);
-    await batch.commit();
-  }
-
-  Future<void> updateOrderStatus(AppOrder order, String newStatus) async {
-    if (order.status == newStatus) return;
-
-    final batch = _firestore.batch();
-    final orderRef = _firestore.collection('orders').doc(order.id);
-
-    for (final item in order.items) {
-      final productRef = _firestore.collection('products').doc(item.productId);
-      final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
-
-      if (productDoc.exists) {
-        final data = productDoc.data()!;
-        final recipeList = data['recipe'] as List<dynamic>? ?? [];
-
-        if (newStatus == 'cancelled' && order.status != 'cancelled') {
           if (recipeList.isNotEmpty) {
             for (final recipeItem in recipeList) {
               final rawMaterialId = recipeItem['rawMaterialId'] as String;
@@ -238,7 +194,80 @@ class OrderRepository {
               'updatedAt': FieldValue.serverTimestamp(),
             });
           }
-        } else if (order.status == 'cancelled' && newStatus != 'cancelled') {
+        }
+      }
+
+      if (order.customerId != 'walk_in' && order.customerId.isNotEmpty) {
+        final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
+        batch.update(customerRef, {
+          'totalPurchases': FieldValue.increment(-order.total),
+          'orderCount': FieldValue.increment(-1),
+          'totalDebt': FieldValue.increment(-debtDecrease),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+    }
+
+    batch.delete(orderRef);
+    await batch.commit();
+  }
+
+  Future<void> updateOrderStatus(AppOrder order, String newStatus) async {
+    if (order.status == newStatus) return;
+
+    final batch = _firestore.batch();
+    final orderRef = _firestore.collection('orders').doc(order.id);
+
+    // Handle inventory and customer balances upon status transitions
+    if (newStatus == 'cancelled' && order.status != 'cancelled') {
+      // Transitioning TO cancelled: Restore inventory & deduct from customer purchases/debt
+      for (final item in order.items) {
+        final productRef = _firestore.collection('products').doc(item.productId);
+        final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
+
+        if (productDoc.exists) {
+          final data = productDoc.data()!;
+          final recipeList = data['recipe'] as List<dynamic>? ?? [];
+
+          if (recipeList.isNotEmpty) {
+            for (final recipeItem in recipeList) {
+              final rawMaterialId = recipeItem['rawMaterialId'] as String;
+              final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
+              final rawMaterialRef = _firestore.collection('raw_materials').doc(rawMaterialId);
+              batch.update(rawMaterialRef, {
+                'quantity': FieldValue.increment(amountRequired * item.quantity),
+                'updatedAt': FieldValue.serverTimestamp(),
+              });
+            }
+          } else {
+            batch.update(productRef, {
+              'quantity': FieldValue.increment(item.quantity),
+              'updatedAt': FieldValue.serverTimestamp(),
+            });
+          }
+        }
+      }
+
+      if (order.customerId != 'walk_in' && order.customerId.isNotEmpty) {
+        final customerRef = _firestore.collection('customers').doc(order.customerId);
+        final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
+        batch.update(customerRef, {
+          'totalPurchases': FieldValue.increment(-order.total),
+          'orderCount': FieldValue.increment(-1),
+          'totalDebt': FieldValue.increment(-debtDecrease),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+    } else if (order.status == 'cancelled' && newStatus != 'cancelled') {
+      // Transitioning FROM cancelled back to active: Re-deduct inventory & re-add customer purchases/debt
+      for (final item in order.items) {
+        final productRef = _firestore.collection('products').doc(item.productId);
+        final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
+
+        if (productDoc.exists) {
+          final data = productDoc.data()!;
+          final recipeList = data['recipe'] as List<dynamic>? ?? [];
+
           if (recipeList.isNotEmpty) {
             for (final recipeItem in recipeList) {
               final rawMaterialId = recipeItem['rawMaterialId'] as String;
@@ -256,6 +285,17 @@ class OrderRepository {
             });
           }
         }
+      }
+
+      if (order.customerId != 'walk_in' && order.customerId.isNotEmpty) {
+        final customerRef = _firestore.collection('customers').doc(order.customerId);
+        final debtIncrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
+        batch.update(customerRef, {
+          'totalPurchases': FieldValue.increment(order.total),
+          'orderCount': FieldValue.increment(1),
+          'totalDebt': FieldValue.increment(debtIncrease),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
       }
     }
 

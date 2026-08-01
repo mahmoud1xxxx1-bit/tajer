@@ -18,6 +18,7 @@ import '../features/inventory_log/presentation/inventory_logs_screen.dart';
 import '../features/employees/presentation/employees_screen.dart';
 import '../features/subscription/presentation/subscription_screen.dart';
 import '../features/settings/presentation/profile_screen.dart';
+import '../features/settings/presentation/audit_log_screen.dart';
 import '../features/shifts/presentation/end_shift_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -107,6 +108,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/raw_materials',
         builder: (context, state) => const RawMaterialsScreen(),
+      ),
+      GoRoute(
+        path: '/audit_log',
+        builder: (context, state) => const AuditLogScreen(),
       ),
     ],
   );

@@ -23,9 +23,10 @@ class PdfService {
     return pw.Font.ttf(fontData);
   }
 
-  static Future<void> printInvoice(BuildContext buildContext, AppOrder order, String currency, {double? taxPercentage}) async {
+  static Future<Uint8List> generateInvoicePdf(BuildContext buildContext, AppOrder order, String currency, {double? taxPercentage}) async {
     final font = await _getFont();
     final boldFont = await _getBoldFont();
+    final isAr = Localizations.localeOf(buildContext).languageCode == 'ar';
     
     final prefs = await SharedPreferences.getInstance();
     final profileStr = prefs.getString('store_profile');
@@ -50,12 +51,10 @@ class PdfService {
 
     final pdf = pw.Document();
     
-
-
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        textDirection: pw.TextDirection.rtl,
+        textDirection: isAr ? pw.TextDirection.rtl : pw.TextDirection.ltr,
         theme: pw.ThemeData.withFont(
           base: font,
           bold: boldFont,
@@ -85,15 +84,19 @@ class PdfService {
                           if (storeAddress.isNotEmpty)
                             pw.Text(storeAddress, style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
                           if (storePhone.isNotEmpty)
-                            pw.Text('هاتف: $storePhone', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
+                            pw.Text('${isAr ? "هاتف:" : "Phone:"} $storePhone', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
                         ],
                       ),
                       pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.end,
                         children: [
-                          pw.Text('فاتورة رقم: #${order.id.substring(0, 8).toUpperCase()}', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.grey800)),
+                          pw.Text('${isAr ? "فاتورة رقم" : "Invoice #"} ${order.queueNumber != null ? "#${order.queueNumber}" : order.id.substring(0, 8).toUpperCase()}', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.grey800)),
                           pw.SizedBox(height: 4),
                           pw.Text(AppDateFormatter.format(order.createdAt), style: const pw.TextStyle(fontSize: 14)),
+                          if (order.creatorName != null && order.creatorName!.isNotEmpty) ...[
+                            pw.SizedBox(height: 4),
+                            pw.Text('${isAr ? "المنفذ:" : "By:"} ${order.creatorName}', style: pw.TextStyle(fontSize: 12, color: PdfColors.blue700, fontWeight: pw.FontWeight.bold)),
+                          ],
                         ],
                       ),
                     ],
@@ -112,7 +115,7 @@ class PdfService {
                         children: [
                           pw.Text(AppLocalizations.of(buildContext)!.text7, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
                           pw.SizedBox(height: 8),
-                          pw.Text('الاسم: ${order.customerName}', style: const pw.TextStyle(fontSize: 14)),
+                          pw.Text('${isAr ? "الاسم:" : "Name:"} ${order.customerName}', style: const pw.TextStyle(fontSize: 14)),
                         ],
                       ),
                     ],
@@ -156,7 +159,7 @@ class PdfService {
                             pw.Row(
                               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                               children: [
-                                pw.Text('الضريبة ($taxPercentage%)', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                                pw.Text('${isAr ? "الضريبة" : "Tax"} ($taxPercentage%)', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                                 pw.SizedBox(width: 20),
                                 pw.Text('${(order.total * (taxPercentage / 100)).toStringAsFixed(2)} $currency'),
                               ],
@@ -165,7 +168,7 @@ class PdfService {
                             pw.Row(
                               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                               children: [
-                                pw.Text('الإجمالي بعد الضريبة', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                                pw.Text(isAr ? 'الإجمالي بعد الضريبة' : 'Total after tax', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
                                 pw.SizedBox(width: 20),
                                 pw.Text('${(order.total + (order.total * (taxPercentage / 100))).toStringAsFixed(2)} $currency', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
                               ],
@@ -210,9 +213,16 @@ class PdfService {
       ),
     );
 
+    return pdf.save();
+  }
+
+  static Future<void> printInvoice(BuildContext buildContext, AppOrder order, String currency, {double? taxPercentage}) async {
+    final bytes = await generateInvoicePdf(buildContext, order, currency, taxPercentage: taxPercentage);
     await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => pdf.save(),
-      name: 'Invoice_${order.id}.pdf',
+      onLayout: (PdfPageFormat format) async => bytes,
+      name: 'Invoice_${order.queueNumber != null ? "#${order.queueNumber}" : order.id}.pdf',
+    );
+  }me: 'Invoice_${order.id}.pdf',
     );
   }
 

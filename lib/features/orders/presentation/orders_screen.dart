@@ -6,6 +6,8 @@ import 'package:tajer/l10n/app_localizations.dart';
 import '../data/order_repository.dart';
 import 'add_order_dialog.dart';
 import 'pos_screen.dart';
+import 'order_details_screen.dart';
+import 'pdf_viewer_screen.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../../core/services/pdf_service.dart';
 import '../../../core/services/whatsapp_service.dart';
@@ -122,6 +124,14 @@ class OrdersScreen extends ConsumerWidget {
                       return GlassCard(
                         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         padding: const EdgeInsets.all(0),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => OrderDetailsScreen(order: order),
+                            ),
+                          );
+                        },
                         onLongPress: () {
                           showDialog(
                             context: context,
@@ -277,10 +287,15 @@ class OrdersScreen extends ConsumerWidget {
                                     children: [
                                       TextButton.icon(
                                         onPressed: () {
-                                          PdfService.printInvoice(context, order, currency);
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => PdfViewerScreen(order: order, currency: currency),
+                                            ),
+                                          );
                                         },
                                         icon: const Icon(Icons.picture_as_pdf, color: Colors.amber, size: 18),
-                                        label: const Text('فاتورة PDF', style: TextStyle(color: Colors.amber, fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
+                                        label: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'فاتورة PDF' : 'PDF Invoice', style: const TextStyle(color: Colors.amber, fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
                                         style: TextButton.styleFrom(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                                           minimumSize: Size.zero,
@@ -294,13 +309,13 @@ class OrdersScreen extends ConsumerWidget {
                                           } catch (_) {
                                             if (context.mounted) {
                                               ScaffoldMessenger.of(context).showSnackBar(
-                                                const SnackBar(content: Text('تعذر الاتصال بالطابعة الحرارية. تأكد من إعداد الطابعة بشكل صحيح.', style: TextStyle(fontFamily: 'Tajawal'))),
+                                                SnackBar(content: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'تعذر الاتصال بالطابعة الحرارية. تأكد من إعداد الطابعة بشكل صحيح.' : 'Unable to connect to printer.', style: const TextStyle(fontFamily: 'Tajawal'))),
                                               );
                                             }
                                           }
                                         },
                                         icon: const Icon(Icons.print_outlined, color: Colors.blueAccent, size: 18),
-                                        label: const Text('طباعة حرارية', style: TextStyle(color: Colors.blueAccent, fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
+                                        label: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'طباعة حرارية' : 'Thermal Print', style: const TextStyle(color: Colors.blueAccent, fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
                                         style: TextButton.styleFrom(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                                           minimumSize: Size.zero,
