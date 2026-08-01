@@ -5,6 +5,7 @@ import 'package:tajer/l10n/app_localizations.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../authentication/domain/app_user.dart';
+import '../../../core/services/app_review_service.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -69,6 +70,18 @@ class SettingsScreen extends ConsumerWidget {
             leading: Icon(Icons.storefront, color: Colors.deepOrange),
             title: Text('هوية المتجر (الشعار والفاتورة)', style: TextStyle(fontFamily: 'Tajawal')),
             onTap: () => context.push('/store_branding'),
+          ),
+          ListTile(
+            leading: const Icon(Icons.star_rounded, color: Colors.amber, size: 28),
+            title: Text(
+              Localizations.localeOf(context).languageCode == 'ar' ? 'تقييم التطبيق على متجر جوجل ⭐' : 'Rate on Google Play Store ⭐',
+              style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              Localizations.localeOf(context).languageCode == 'ar' ? 'دعمك لنا بتقييم 5 نجوم يساعدنا على التطوير السريع' : 'Support us with a 5-star review to help us grow',
+              style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade500),
+            ),
+            onTap: () => AppReviewService.instance.showReviewDialog(context, fromSettings: true),
           ),
 
           Divider(),

@@ -17,6 +17,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../authentication/domain/app_user.dart';
+import '../../../core/services/app_review_service.dart';
+
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
@@ -26,6 +28,14 @@ class DashboardScreen extends ConsumerStatefulWidget {
 
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AppReviewService.instance.checkAndPromptForReview(context);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

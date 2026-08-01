@@ -50,8 +50,15 @@ class PdfService {
     pw.MemoryImage? logoImage;
     if (logoBase64.isNotEmpty) {
       try {
-        logoImage = pw.MemoryImage(base64Decode(logoBase64));
-      } catch (_) {}
+        final decodedBytes = base64Decode(logoBase64);
+        final tempImage = pw.MemoryImage(decodedBytes);
+        // Safely verify image dimensions to avoid Null check operator exception in pdf package
+        if (tempImage.width != null && tempImage.height != null) {
+          logoImage = tempImage;
+        }
+      } catch (_) {
+        logoImage = null;
+      }
     }
 
     final lblCustomer = isAr ? 'بيانات العميل' : 'Customer Details';
