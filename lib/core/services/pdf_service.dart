@@ -222,8 +222,6 @@ class PdfService {
       onLayout: (PdfPageFormat format) async => bytes,
       name: 'Invoice_${order.queueNumber != null ? "#${order.queueNumber}" : order.id}.pdf',
     );
-  }me: 'Invoice_${order.id}.pdf',
-    );
   }
 
   static Future<void> printCustomerStatement(BuildContext buildContext, Customer customer, List<AppOrder> orders, String currency) async {
