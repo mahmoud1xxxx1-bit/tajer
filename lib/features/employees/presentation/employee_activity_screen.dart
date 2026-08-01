@@ -47,7 +47,7 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
     return '$hour:$min $period';
   }
 
-  String _getPaymentMethodName(String method) {
+  String _getPaymentMethodName(String? method) {
     switch (method) {
       case 'cash':
         return 'نقداً';
@@ -56,7 +56,7 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
       case 'debt':
         return 'آجل / ذمم';
       default:
-        return method;
+        return method ?? 'غير محدد';
     }
   }
 
