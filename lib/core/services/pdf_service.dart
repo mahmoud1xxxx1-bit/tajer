@@ -12,13 +12,21 @@ import 'dart:convert';
 
 class PdfService {
   static Future<pw.Font> _getFont() async {
-    final fontData = await rootBundle.load('assets/fonts/Cairo-Regular.ttf');
-    return pw.Font.ttf(fontData);
+    try {
+      return await PdfGoogleFonts.cairoRegular();
+    } catch (_) {
+      final fontData = await rootBundle.load('assets/fonts/Cairo-Regular.ttf');
+      return pw.Font.ttf(fontData);
+    }
   }
 
   static Future<pw.Font> _getBoldFont() async {
-    final fontData = await rootBundle.load('assets/fonts/Cairo-Bold.ttf');
-    return pw.Font.ttf(fontData);
+    try {
+      return await PdfGoogleFonts.cairoBold();
+    } catch (_) {
+      final fontData = await rootBundle.load('assets/fonts/Cairo-Bold.ttf');
+      return pw.Font.ttf(fontData);
+    }
   }
 
   static Future<Uint8List> generateInvoicePdf(BuildContext buildContext, AppOrder order, String currency, {double? taxPercentage}) async {
@@ -51,16 +59,34 @@ class PdfService {
     if (logoBase64.isNotEmpty) {
       try {
         final decodedBytes = base64Decode(logoBase64);
-        final tempImage = pw.MemoryImage(decodedBytes);
-        // Safely verify image dimensions to avoid Null check operator exception in pdf package
-        if (tempImage.width != null && tempImage.height != null) {
-          logoImage = tempImage;
-        }
+        logoImage = pw.MemoryImage(decodedBytes);
       } catch (_) {
         logoImage = null;
       }
     }
 
+    // Attempt to generate and save PDF with logoImage; if pdf package throws any exception (such as Null check operator on unsupported image formats), rebuild cleanly without image.
+    try {
+      final pdf = _buildInvoiceDoc(order, currency, taxPercentage, font, boldFont, isAr, storeName, storePhone, storeAddress, logoImage);
+      return await pdf.save();
+    } catch (e) {
+      final fallbackPdf = _buildInvoiceDoc(order, currency, taxPercentage, font, boldFont, isAr, storeName, storePhone, storeAddress, null);
+      return await fallbackPdf.save();
+    }
+  }
+
+  static pw.Document _buildInvoiceDoc(
+    AppOrder order,
+    String currency,
+    double? taxPercentage,
+    pw.Font font,
+    pw.Font boldFont,
+    bool isAr,
+    String storeName,
+    String storePhone,
+    String storeAddress,
+    pw.MemoryImage? logoImage,
+  ) {
     final lblCustomer = isAr ? 'بيانات العميل' : 'Customer Details';
     final lblColProduct = isAr ? 'الصنف / المنتج' : 'Product / Item';
     final lblColQty = isAr ? 'الكمية' : 'Qty';
@@ -240,7 +266,7 @@ class PdfService {
       ),
     );
 
-    return pdf.save();
+    return pdf;
   }
 
   static Future<void> printInvoice(BuildContext buildContext, AppOrder order, String currency, {double? taxPercentage}) async {
@@ -249,7 +275,7 @@ class PdfService {
         ? "#${order.queueNumber}" 
         : (order.id.length >= 8 ? order.id.substring(0, 8).toUpperCase() : order.id.toUpperCase());
     await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => bytes,
+      onLayout: (format) async => bytes,
       name: 'Invoice_$orderRef.pdf',
     );
   }
@@ -362,7 +388,7 @@ class PdfService {
     );
 
     await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => pdf.save(),
+      onLayout: (format) async => pdf.save(),
       name: 'Statement_${customer.name}.pdf',
     );
   }
