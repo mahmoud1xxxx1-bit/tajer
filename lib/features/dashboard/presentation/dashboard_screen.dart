@@ -94,6 +94,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: (index) {
+          FocusManager.instance.primaryFocus?.unfocus();
           setState(() {
             _currentIndex = index;
           });

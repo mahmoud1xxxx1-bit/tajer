@@ -28,6 +28,12 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
     currentOrder = widget.order;
   }
 
+  @override
+  void dispose() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    super.dispose();
+  }
+
   String _getPaymentMethod(String method, bool isAr) {
     switch (method) {
       case 'cash':

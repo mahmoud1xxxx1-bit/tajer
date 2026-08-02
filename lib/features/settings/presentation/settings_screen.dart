@@ -38,7 +38,7 @@ class SettingsScreen extends ConsumerWidget {
               else ...[
                 ListTile(
                   leading: const Icon(Icons.person, color: Colors.blue),
-                  title: const Text('الملف الشخصي للموظف', style: TextStyle(fontFamily: 'Tajawal')),
+                  title: const Text('الحساب شخصي لتاجر', style: TextStyle(fontFamily: 'Tajawal')),
                   subtitle: Text(appUser?.name ?? 'غير معروف', style: const TextStyle(color: Colors.grey)),
                   onTap: () => context.push('/profile'),
                 ),

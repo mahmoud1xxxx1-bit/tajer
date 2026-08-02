@@ -149,7 +149,7 @@ class PdfService {
                           if (vatNumber.isNotEmpty)
                             pw.Text('${isAr ? "الرقم الضريبي:" : "VAT No:"} $vatNumber', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey800)),
                           if (crNumber.isNotEmpty)
-                            pw.Text('${isAr ? "سجل تجاري:" : "CR No:"} $crNumber', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey800)),
+                            pw.Text('${isAr ? "السجل التجاري:" : "CR No:"} $crNumber', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey800)),
                         ],
                       )),
                       pw.SizedBox(width: 16),
