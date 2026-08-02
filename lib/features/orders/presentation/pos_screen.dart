@@ -653,8 +653,9 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            SwitchListTile(
+          ),
+          const SizedBox(height: 16),
+          SwitchListTile(
               title: const Text('طلب مجدول 🗓', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
               subtitle: _isScheduled && _scheduledDate != null && _scheduledTime != null
                   ? Text('${_scheduledDate!.toString().split(' ')[0]} - ${_scheduledTime!.format(context)}', style: TextStyle(color: Colors.blue))
