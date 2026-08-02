@@ -203,8 +203,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 height: 250,
                 child: dailySales.isEmpty 
                   ? Center(child: Text(AppLocalizations.of(context)!.text109, style: TextStyle(fontFamily: 'Tajawal')))
-                  : LineChart(
-                      LineChartData(
+                  : BarChart(
+                      BarChartData(
                         gridData: const FlGridData(show: false),
                         titlesData: FlTitlesData(
                           rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -220,12 +220,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                                   
                                   final date = dailySales[value.toInt()].date;
                                   return Padding(
-                                    padding: EdgeInsets.only(top: 8.0, right: 12.0),
+                                    padding: const EdgeInsets.only(top: 8.0, right: 12.0),
                                     child: Transform.rotate(
                                       angle: -0.5,
                                       child: Text(
                                         '${date.day}/${date.month}',
-                                        style: TextStyle(fontSize: 10, fontFamily: 'Tajawal'),
+                                        style: const TextStyle(fontSize: 10, fontFamily: 'Tajawal'),
                                       ),
                                     ),
                                   );
@@ -248,29 +248,31 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                                 }
                                 return Text(
                                   text,
-                                  style: TextStyle(fontSize: 10, fontFamily: 'Tajawal'),
+                                  style: const TextStyle(fontSize: 10, fontFamily: 'Tajawal'),
                                 );
                               },
                             ),
                           ),
                         ),
                         borderData: FlBorderData(show: false),
-                        lineBarsData: [
-                          LineChartBarData(
-                            spots: dailySales.asMap().entries.map((e) {
-                              return FlSpot(e.key.toDouble(), e.value.amount);
-                            }).toList(),
-                            isCurved: true,
-                            color: Theme.of(context).colorScheme.primary,
-                            barWidth: 4,
-                            isStrokeCapRound: true,
-                            dotData: const FlDotData(show: true),
-                            belowBarData: BarAreaData(
-                              show: true,
-                              color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                            ),
-                          ),
-                        ],
+                        barGroups: dailySales.asMap().entries.map((e) {
+                          return BarChartGroupData(
+                            x: e.key,
+                            barRods: [
+                              BarChartRodData(
+                                toY: e.value.amount,
+                                color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                                width: dailySales.length <= 3 ? 30 : 16,
+                                borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+                                backDrawRodData: BackgroundBarChartRodData(
+                                  show: true,
+                                  toY: dailySales.isEmpty ? 100 : (dailySales.map((d) => d.amount).reduce((a, b) => a > b ? a : b) * 1.1).clamp(100.0, double.infinity),
+                                  color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
                       ),
                     ),
               ),
