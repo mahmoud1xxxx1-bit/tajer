@@ -214,7 +214,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                               showTitles: true,
                               getTitlesWidget: (value, meta) {
                                 if (value.toInt() >= 0 && value.toInt() < dailySales.length) {
-                                  int skip = (dailySales.length / 6).ceil();
+                                  int skip = (dailySales.length / 5).ceil();
                                   if (skip == 0) skip = 1;
                                   if (value.toInt() % skip != 0 && value.toInt() != dailySales.length - 1) return const Text('');
                                   
@@ -232,13 +232,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                                 }
                                 return const Text('');
                               },
-                              reservedSize: 40,
+                              reservedSize: 30,
                             ),
                           ),
                           leftTitles: AxisTitles(
                             sideTitles: SideTitles(
                               showTitles: true,
-                              reservedSize: 50,
+                              reservedSize: 55,
                               getTitlesWidget: (value, meta) {
                                 String text;
                                 if (value >= 1000) {

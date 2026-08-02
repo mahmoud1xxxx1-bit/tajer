@@ -240,11 +240,6 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       try {
         final storeProfile = ref.read(storeProfileProvider).value;
         double? tax = storeProfile?.defaultTaxPercentage;
-        if (tax == null || tax <= 0) {
-          if (mounted) {
-            tax = await TaxDialog.show(context);
-          }
-        }
         await PrinterService.printReceipt(
           savedOrder, 
           ref.read(currencyProvider).code,
@@ -495,11 +490,14 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
   DateTime? _scheduledDate;
   TimeOfDay? _scheduledTime;
   String? _selectedCustomerId;
+  late List<Customer> _localCustomers;
+  bool _highlightCustomer = false;
 
   @override
   void initState() {
     super.initState();
     _paidController.text = widget.total.toString();
+    _localCustomers = List.from(widget.customers);
   }
 
   Future<void> _selectDateTime() async {
@@ -575,7 +573,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
               if (mounted) {
                 Navigator.pop(ctx);
                 setState(() {
-                  // select the newly added customer automatically
+                  _localCustomers.add(newCustomer);
                   _selectedCustomerId = newCustomer.id;
                 });
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -605,26 +603,34 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
           children: [
             const Text('إنهاء الطلب', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'), textAlign: TextAlign.center),
             const SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedCustomerId,
-                    decoration: const InputDecoration(
-                      labelText: 'اسم العميل',
-                      border: OutlineInputBorder(),
-                      labelStyle: TextStyle(fontFamily: 'Tajawal'),
-                    ),
-                    items: [
-                      const DropdownMenuItem(
-                        value: null,
-                        child: Text('عميل عام (Walk-in)', style: TextStyle(fontFamily: 'Tajawal')),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: _highlightCustomer ? Colors.red.withOpacity(0.1) : Colors.transparent,
+                border: Border.all(color: _highlightCustomer ? Colors.red : Colors.transparent, width: 2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedCustomerId,
+                      decoration: InputDecoration(
+                        labelText: 'اسم العميل',
+                        border: const OutlineInputBorder(),
+                        labelStyle: TextStyle(fontFamily: 'Tajawal', color: _highlightCustomer ? Colors.red : null),
                       ),
-                      ...widget.customers.map((c) => DropdownMenuItem(
-                            value: c.id,
-                            child: Text(c.name, style: const TextStyle(fontFamily: 'Tajawal')),
-                          )),
-                    ],
+                      items: [
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text('عميل عام (Walk-in)', style: TextStyle(fontFamily: 'Tajawal')),
+                        ),
+                        ..._localCustomers.map((c) => DropdownMenuItem(
+                              value: c.id,
+                              child: Text(c.name, style: const TextStyle(fontFamily: 'Tajawal')),
+                            )),
+                      ],
                     onChanged: (val) {
                       setState(() {
                         _selectedCustomerId = val;
@@ -633,13 +639,14 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Container(
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    color: _highlightCustomer ? Colors.red.withOpacity(0.2) : Theme.of(context).colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: IconButton(
-                    icon: Icon(Icons.person_add, color: Theme.of(context).colorScheme.primary),
+                    icon: Icon(Icons.person_add, color: _highlightCustomer ? Colors.red : Theme.of(context).colorScheme.primary),
                     tooltip: 'إضافة عميل جديد',
                     onPressed: _showQuickAddCustomerDialog,
                   ),
@@ -715,23 +722,31 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                 
                 // --- Validation for Anonymous Debt ---
                 if (_isCredit && _selectedCustomerId == null) {
-                   ScaffoldMessenger.of(context).showSnackBar(
-                     const SnackBar(
-                       content: Text('لا يمكن تسجيل فاتورة آجلة لعميل عام! يرجى اختيار أو إضافة العميل لضمان حفظ المديونية.', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                       backgroundColor: Colors.red,
-                       duration: Duration(seconds: 4),
-                     ),
+                   _triggerHighlight();
+                   showDialog(
+                     context: context,
+                     builder: (ctx) => AlertDialog(
+                       title: const Text('تنبيه', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange)),
+                       content: const Text('لا يمكن تسجيل فاتورة آجلة لعميل عام.\nيرجى اختيار العميل من القائمة أو إضافة عميل جديد بالضغط على علامة (+).', style: TextStyle(fontFamily: 'Tajawal')),
+                       actions: [
+                         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('حسناً', style: TextStyle(fontFamily: 'Tajawal')))
+                       ],
+                     )
                    );
                    return;
                 }
 
                 if (paid < widget.total && _selectedCustomerId == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                     const SnackBar(
-                       content: Text('المبلغ المدفوع أقل من الإجمالي. يرجى إضافة العميل لتسجيل المتبقي كدين في حسابه.', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                       backgroundColor: Colors.red,
-                       duration: Duration(seconds: 4),
-                     ),
+                   _triggerHighlight();
+                   showDialog(
+                     context: context,
+                     builder: (ctx) => AlertDialog(
+                       title: const Text('تنبيه', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange)),
+                       content: const Text('المبلغ المدفوع أقل من الإجمالي.\nيرجى إضافة العميل لتسجيل المتبقي كدين في حسابه.', style: TextStyle(fontFamily: 'Tajawal')),
+                       actions: [
+                         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('حسناً', style: TextStyle(fontFamily: 'Tajawal')))
+                       ],
+                     )
                    );
                    return;
                 }
@@ -744,7 +759,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                 String finalCustomerId = 'walk_in';
                 String finalCustomerName = 'عميل عام';
                 if (_selectedCustomerId != null) {
-                  final customer = widget.customers.firstWhere((c) => c.id == _selectedCustomerId, orElse: () => Customer(id: _selectedCustomerId!, merchantId: '', name: 'عميل عام', phone: '', createdAt: DateTime.now()));
+                  final customer = _localCustomers.firstWhere((c) => c.id == _selectedCustomerId, orElse: () => Customer(id: _selectedCustomerId!, merchantId: '', name: 'عميل عام', phone: '', createdAt: DateTime.now()));
                   finalCustomerId = customer.id;
                   finalCustomerName = customer.name;
                 }
@@ -765,5 +780,15 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
         ),
       ),
     );
+  }
+
+  void _triggerHighlight() async {
+    setState(() => _highlightCustomer = true);
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (mounted) setState(() => _highlightCustomer = false);
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (mounted) setState(() => _highlightCustomer = true);
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (mounted) setState(() => _highlightCustomer = false);
   }
 }
