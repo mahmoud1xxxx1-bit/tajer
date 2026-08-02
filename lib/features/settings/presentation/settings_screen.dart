@@ -113,6 +113,50 @@ class SettingsScreen extends ConsumerWidget {
             title: Localizations.localeOf(context).languageCode == 'ar' ? 'دعم وتقييم' : 'Support & Rating',
             children: [
               ListTile(
+                leading: const Icon(Icons.music_note_rounded, color: Colors.black, size: 28),
+                title: Text(
+                  Localizations.localeOf(context).languageCode == 'ar' ? 'تابعنا على تيك توك 🎵' : 'Follow us on TikTok 🎵',
+                  style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(
+                  Localizations.localeOf(context).languageCode == 'ar' ? 'اقتراحات، ومتابعة جديد التطبيق' : 'Suggestions and updates',
+                  style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12),
+                ),
+                trailing: const Icon(Icons.open_in_new, size: 16, color: Colors.grey),
+                onTap: () async {
+                  final url = Uri.parse('https://www.tiktok.com/@tajer_ap?_r=1&_t=ZS-98YixiC56sH');
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                  }
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.email_outlined, color: Colors.blueAccent, size: 28),
+                title: Text(
+                  Localizations.localeOf(context).languageCode == 'ar' ? 'الدعم الفني عبر البريد الإلكتروني ✉️' : 'Email Support ✉️',
+                  style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(
+                  Localizations.localeOf(context).languageCode == 'ar' ? 'لحل المشاكل والاستفسارات المتقدمة' : 'For technical issues and inquiries',
+                  style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12),
+                ),
+                trailing: const Icon(Icons.open_in_new, size: 16, color: Colors.grey),
+                onTap: () async {
+                  final url = Uri.parse('mailto:dotkxxx1@gmail.com?subject=تطبيق تاجر - دعم فني');
+                  if (await canLaunchUrl(url)) {
+                    await launchUrl(url);
+                  } else {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('لا يوجد تطبيق بريد إلكتروني مثبت', style: TextStyle(fontFamily: 'Tajawal'))),
+                      );
+                    }
+                  }
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
                 leading: const Icon(Icons.star_rounded, color: Colors.amber, size: 28),
                 title: Text(
                   Localizations.localeOf(context).languageCode == 'ar' ? 'تقييم التطبيق على متجر جوجل ⭐' : 'Rate on Google Play Store ⭐',
