@@ -4,10 +4,62 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:tajer/l10n/app_localizations.dart';
+import 'package:go_router/go_router.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../orders/data/order_repository.dart';
 import '../../../core/providers/settings_provider.dart';
 import 'employee_activity_screen.dart';
+
+void showBeautifulUpgradeDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      title: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.amber.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.workspace_premium, color: Colors.amber, size: 48),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "ترقية الحساب",
+            style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
+          ),
+        ],
+      ),
+      content: const Text(
+        "لقد وصلت للحد المسموح به في الباقة الحالية.\n\nلتتمكن من إضافة المزيد من الموظفين وإدارة متجرك بلا حدود، نرجو ترقية حسابك إلى الباقة المميزة والاستمتاع بكافة المزايا! 🚀",
+        style: TextStyle(fontFamily: 'Tajawal', height: 1.5, fontSize: 15),
+        textAlign: TextAlign.center,
+      ),
+      actionsAlignment: MainAxisAlignment.center,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx),
+          child: const Text("ربما لاحقاً", style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.amber,
+            foregroundColor: Colors.black,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
+          onPressed: () {
+            Navigator.pop(ctx);
+            context.push('/paywall');
+          },
+          child: const Text("ترقية حسابي الآن ⭐", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        ),
+      ],
+    ),
+  );
+}
 
 class EmployeesScreen extends ConsumerStatefulWidget {
   const EmployeesScreen({super.key});
@@ -49,7 +101,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
 
   void _showAddEmployeeDialog(int currentCount) {
     if (currentCount >= 3) {
-      _showError("لقد وصلت للحد الأقصى (3 موظفين). قم بحذف موظف لإضافة بديل له.");
+      showBeautifulUpgradeDialog(context);
       return;
     }
     showDialog(
@@ -446,7 +498,13 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
                 _showSuccess("تم إضافة الموظف بنجاح");
               }
             } catch (e) {
-              _showError(e.toString().replaceAll("Exception: ", ""));
+              final errorMsg = e.toString().replaceAll("Exception: ", "");
+              if (errorMsg.contains("الباقة الشهرية") || errorMsg.contains("حد") || errorMsg.contains("تفعيل") || errorMsg.contains("limit")) {
+                if (mounted) Navigator.of(context).pop();
+                showBeautifulUpgradeDialog(context);
+              } else {
+                _showError(errorMsg);
+              }
             } finally {
               if (mounted) setState(() => isSaving = false);
             }
