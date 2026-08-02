@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../domain/order.dart';
 import '../data/order_repository.dart';
 import '../../../core/providers/settings_provider.dart';
+import '../../../core/providers/store_profile_provider.dart';
+import '../../../core/widgets/tax_dialog.dart';
 import '../../../core/services/activity_logger.dart';
 import '../../authentication/data/auth_repository.dart';
 import 'pdf_viewer_screen.dart';
@@ -143,6 +145,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
     final theme = Theme.of(context);
     final isCancelled = currentOrder.status == 'cancelled';
     final dateStr = DateFormat('yyyy-MM-dd | hh:mm a').format(currentOrder.createdAt);
+    final storeProfile = ref.watch(storeProfileProvider).value;
 
     return Scaffold(
       appBar: AppBar(
@@ -338,11 +341,16 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                     ),
                     icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
                     label: Text(isAr ? 'فاتورة PDF' : 'PDF Invoice', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.white)),
-                    onPressed: () {
+                    onPressed: () async {
+                      double? tax = storeProfile?.defaultTaxPercentage;
+                      if (tax == null || tax <= 0) {
+                        tax = await TaxDialog.show(context);
+                      }
+                      if (!context.mounted) return;
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => PdfViewerScreen(order: currentOrder, currency: currency.code),
+                          builder: (_) => PdfViewerScreen(order: currentOrder, currency: currency.code, taxPercentage: tax),
                         ),
                       );
                     },

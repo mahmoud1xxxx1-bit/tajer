@@ -11,9 +11,11 @@ import '../domain/order.dart';
 import '../domain/cart_item.dart';
 import '../../customers/domain/customer.dart';
 import '../../customers/data/customer_repository.dart';
-import '../../../core/theme/glass_card.dart';
+import '../../../core/services/pdf_service.dart';
+import '../../../core/services/whatsapp_service.dart';
 import '../../../core/services/printer_service.dart';
-import '../../../core/providers/settings_provider.dart';
+import '../../../core/widgets/tax_dialog.dart';
+import '../../../core/theme/glass_card.dart';
 import 'package:flutter/foundation.dart';
 import '../../shifts/data/shift_repository.dart';
 import '../../shifts/presentation/start_shift_dialog.dart';
@@ -236,11 +238,18 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       // Attempt to print receipt asynchronously in background with a 5-second timeout
       try {
         final storeProfile = ref.read(storeProfileProvider).value;
+        double? tax = storeProfile?.defaultTaxPercentage;
+        if (tax == null || tax <= 0) {
+          if (mounted) {
+            tax = await TaxDialog.show(context);
+          }
+        }
         await PrinterService.printReceipt(
           savedOrder, 
           ref.read(currencyProvider).code,
           storeProfile: storeProfile,
           isKitchen: false,
+          taxPercentage: tax,
         ).timeout(const Duration(seconds: 5));
       } catch (e) {
         // Silently ignore print timeouts when no physical printer is connected so user sees only the success notification
@@ -734,7 +743,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                 String finalCustomerId = 'walk_in';
                 String finalCustomerName = 'عميل عام';
                 if (_selectedCustomerId != null) {
-                  final customer = widget.customers.firstWhere((c) => c.id == _selectedCustomerId, orElse: () => Customer(id: _selectedCustomerId!, merchantId: '', name: 'عميل عام', createdAt: DateTime.now()));
+                  final customer = widget.customers.firstWhere((c) => c.id == _selectedCustomerId, orElse: () => Customer(id: _selectedCustomerId!, merchantId: '', name: 'عميل عام', phone: '', createdAt: DateTime.now()));
                   finalCustomerId = customer.id;
                   finalCustomerName = customer.name;
                 }

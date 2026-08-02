@@ -83,10 +83,18 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           }
 
           final expenses = ref.watch(expensesStreamProvider).value ?? [];
-          final shiftExpenses = expenses.where((e) => e.date.isAfter(shift.startTime)).fold(0.0, (sum, e) => sum + e.amount);
+          final allShiftExpenses = expenses.where((e) => e.date.isAfter(shift.startTime));
+          
+          final operatingExpenses = allShiftExpenses
+              .where((e) => e.category != 'سداد ديون موردين')
+              .fold(0.0, (sum, e) => sum + e.amount);
+              
+          final supplierPayments = allShiftExpenses
+              .where((e) => e.category == 'سداد ديون موردين')
+              .fold(0.0, (sum, e) => sum + e.amount);
 
-          // Expected Cash = Start Cash + Cash Sales - Expenses
-          final expectedCash = shift.startCash + (shift.cashSales ?? 0.0) - shiftExpenses;
+          // Expected Cash = Start Cash + Cash Sales - Operating Expenses - Supplier Payments
+          final expectedCash = shift.startCash + (shift.cashSales ?? 0.0) - operatingExpenses - supplierPayments;
 
           return Padding(
             padding: const EdgeInsets.all(24.0),
@@ -107,7 +115,9 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                         _buildRow('مبيعات مدى/تحويل:', '${((shift.cardTotal ?? 0) + (shift.transferTotal ?? 0)).toStringAsFixed(2)} ر.س'),
                         const Divider(),
                         _buildRow('المبيعات النقدية:', '${(shift.cashSales ?? 0.0).toStringAsFixed(2)} ر.س'),
-                        _buildRow('إجمالي المصروفات:', '${shiftExpenses.toStringAsFixed(2)} ر.س', color: Colors.red),
+                        _buildRow('إجمالي المصروفات:', '${operatingExpenses.toStringAsFixed(2)} ر.س', color: Colors.red),
+                        if (supplierPayments > 0)
+                          _buildRow('سداد ديون الموردين:', '${supplierPayments.toStringAsFixed(2)} ر.س', color: Colors.orange),
                         _buildRow('الكاش المتوقع في الدرج:', '${expectedCash.toStringAsFixed(2)} ر.س', isBold: true),
                       ],
                     ),

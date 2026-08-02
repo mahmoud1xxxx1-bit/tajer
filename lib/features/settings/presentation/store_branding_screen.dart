@@ -17,6 +17,7 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
+  final _taxController = TextEditingController();
   String _logoBase64 = '';
   bool _isInit = false;
 
@@ -25,6 +26,7 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
     _nameController.dispose();
     _phoneController.dispose();
     _addressController.dispose();
+    _taxController.dispose();
     super.dispose();
   }
 
@@ -55,6 +57,7 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
       storeName: _nameController.text.trim(),
       phone: _phoneController.text.trim(),
       address: _addressController.text.trim(),
+      defaultTaxPercentage: double.tryParse(_taxController.text.trim()),
       logoBase64: _logoBase64,
     );
     ref.read(storeProfileProvider.notifier).updateProfile(profile);
@@ -79,6 +82,7 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
             _nameController.text = profile.storeName;
             _phoneController.text = profile.phone;
             _addressController.text = profile.address;
+            _taxController.text = profile.defaultTaxPercentage != null ? profile.defaultTaxPercentage.toString() : '';
             _logoBase64 = profile.logoBase64;
             _isInit = true;
           }
@@ -155,6 +159,18 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 2,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _taxController,
+                decoration: const InputDecoration(
+                  labelText: 'نسبة الضريبة الافتراضية (%)',
+                  prefixIcon: Icon(Icons.percent),
+                  border: OutlineInputBorder(),
+                  helperText: 'إذا قمت بتعيين نسبة هنا، سيتم تطبيقها تلقائياً على كل الفواتير المطبوعة. اترك الحقل فارغاً إذا كنت تريد إدخال النسبة يدوياً في كل مرة.',
+                  helperMaxLines: 3,
+                ),
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
               ),
             ],
           );

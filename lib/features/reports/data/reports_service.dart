@@ -40,18 +40,18 @@ class ReportsService {
     return ReportsService(filteredOrders, products, filteredExpenses, customers, suppliers);
   }
 
-  double get totalRevenue => orders.where((o) => o.status != 'cancelled').fold(0.0, (sum, order) => sum + order.total);
+  double get totalRevenue => orders.where((o) => o.status != 'cancelled' && o.status != 'debt_repayment').fold(0.0, (sum, order) => sum + order.total);
   
   double get totalDebt => orders.where((o) => o.status != 'cancelled' && o.isCredit).fold(0.0, (sum, order) => sum + (order.total - order.paidAmount));
 
-  double get totalExpenses => expenses.fold(0.0, (sum, expense) => sum + expense.amount);
+  double get totalExpenses => expenses.where((e) => e.category != 'سداد ديون موردين').fold(0.0, (sum, expense) => sum + expense.amount);
 
   double get netProfit => totalRevenue - totalExpenses;
 
   List<SalesData> getDailySales() {
     final Map<String, double> dailyMap = {};
     for (var order in orders) {
-      if (order.status == 'cancelled') continue;
+      if (order.status == 'cancelled' || order.status == 'debt_repayment') continue;
       final dateStr = '${order.createdAt.year}-${order.createdAt.month.toString().padLeft(2, '0')}-${order.createdAt.day.toString().padLeft(2, '0')}';
       dailyMap[dateStr] = (dailyMap[dateStr] ?? 0.0) + order.total;
     }
@@ -71,7 +71,7 @@ class ReportsService {
     final Map<String, double> revenueMap = {};
     
     for (var order in orders) {
-      if (order.status == 'cancelled') continue;
+      if (order.status == 'cancelled' || order.status == 'debt_repayment') continue;
       
       for (var item in order.items) {
         qtyMap[item.productId] = (qtyMap[item.productId] ?? 0) + item.quantity;

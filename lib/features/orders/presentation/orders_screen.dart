@@ -14,6 +14,8 @@ import '../../../core/services/whatsapp_service.dart';
 import '../../../core/services/printer_service.dart';
 
 import '../../../core/providers/settings_provider.dart';
+import '../../../core/providers/store_profile_provider.dart';
+import '../../../core/widgets/tax_dialog.dart';
 import '../../../core/utils/date_formatter.dart';
 
 import '../../../core/theme/glass_card.dart';
@@ -31,6 +33,7 @@ class OrdersScreen extends ConsumerWidget {
     final appUser = ref.watch(appUserProvider).value;
     final canCreateOrders = appUser?.hasPermission('can_create_orders') ?? false;
     final canCancelOrders = appUser?.hasPermission('can_cancel_orders') ?? false;
+    final storeProfile = ref.watch(storeProfileProvider).value;
 
     return Scaffold(
       appBar: AppBar(
@@ -286,11 +289,16 @@ class OrdersScreen extends ConsumerWidget {
                                     spacing: 8,
                                     children: [
                                       TextButton.icon(
-                                        onPressed: () {
+                                        onPressed: () async {
+                                          double? tax = storeProfile?.defaultTaxPercentage;
+                                          if (tax == null || tax <= 0) {
+                                            tax = await TaxDialog.show(context);
+                                          }
+                                          if (!context.mounted) return;
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (_) => PdfViewerScreen(order: order, currency: currency),
+                                              builder: (_) => PdfViewerScreen(order: order, currency: currency, taxPercentage: tax),
                                             ),
                                           );
                                         },
@@ -304,8 +312,12 @@ class OrdersScreen extends ConsumerWidget {
                                       ),
                                       TextButton.icon(
                                         onPressed: () async {
+                                          double? tax = storeProfile?.defaultTaxPercentage;
+                                          if (tax == null || tax <= 0) {
+                                            tax = await TaxDialog.show(context);
+                                          }
                                           try {
-                                            await PrinterService.printReceipt(order, currency, isKitchen: false).timeout(const Duration(seconds: 5));
+                                            await PrinterService.printReceipt(order, currency, isKitchen: false, taxPercentage: tax).timeout(const Duration(seconds: 5));
                                           } catch (_) {
                                             if (context.mounted) {
                                               ScaffoldMessenger.of(context).showSnackBar(

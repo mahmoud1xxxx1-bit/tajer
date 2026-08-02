@@ -10,16 +10,18 @@ import '../../../core/services/pdf_service.dart';
 class PdfViewerScreen extends StatelessWidget {
   final AppOrder order;
   final String currency;
+  final double? taxPercentage;
 
   const PdfViewerScreen({
     super.key,
     required this.order,
     required this.currency,
+    this.taxPercentage,
   });
 
   Future<void> _handleDirectPrint(BuildContext context) async {
     try {
-      final bytes = await PdfService.generateInvoicePdf(context, order, currency);
+      final bytes = await PdfService.generateInvoicePdf(context, order, currency, taxPercentage: taxPercentage);
       final fileName = 'Invoice_${order.queueNumber ?? order.id}.pdf';
       await Printing.layoutPdf(
         onLayout: (format) async => bytes,
@@ -44,7 +46,7 @@ class PdfViewerScreen extends StatelessWidget {
 
   Future<void> _handleDirectShare(BuildContext context) async {
     try {
-      final bytes = await PdfService.generateInvoicePdf(context, order, currency);
+      final bytes = await PdfService.generateInvoicePdf(context, order, currency, taxPercentage: taxPercentage);
       final dir = await getTemporaryDirectory();
       final fileName = 'Invoice_${order.queueNumber ?? order.id}.pdf';
       final file = File('${dir.path}/$fileName');
@@ -98,7 +100,7 @@ class PdfViewerScreen extends StatelessWidget {
         ],
       ),
       body: PdfPreview(
-        build: (format) => PdfService.generateInvoicePdf(context, order, currency),
+        build: (format) => PdfService.generateInvoicePdf(context, order, currency, taxPercentage: taxPercentage),
         allowPrinting: true,
         allowSharing: true,
         canChangeOrientation: false,
