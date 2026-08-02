@@ -279,7 +279,7 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                   ),
                   child: const Icon(Icons.money_off, color: Colors.orange, size: 20),
                 ),
-                const const SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
