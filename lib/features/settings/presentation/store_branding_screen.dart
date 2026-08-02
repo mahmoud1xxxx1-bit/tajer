@@ -207,7 +207,7 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
                     ),
                     const SizedBox(height: 8),
                     const Text(
-                      'إذا قمت بإدخال "الرقم الضريبي" أدناه، سيقوم التطبيق تلقائياً بطباعة "فاتورة ضريبية مبسطة" متوافقة مع متطلبات هيئة الزكاة والضريبة والجمارك (ZATCA)، مع وضع رمز الاستجابة السريعة المشفر والمطلوب رسمياً.',
+                      'بإدخالك "الرقم الضريبي"، سيتم تحويل الفواتير تلقائياً إلى "فواتير ضريبية" رسمية.\n(ملاحظة: للتجار في السعودية، الفاتورة ستكون متوافقة كلياً مع متطلبات هيئة الزكاة والضريبة ZATCA ومزودة بالـ QR Code المشفر).',
                       style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.5),
                     ),
                     const SizedBox(height: 16),
@@ -217,10 +217,9 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
                         labelText: 'الرقم الضريبي (VAT Number)',
                         prefixIcon: Icon(Icons.confirmation_number),
                         border: OutlineInputBorder(),
-                        helperText: 'يجب أن يتكون من 15 رقماً ويبدأ وينتهي برقم 3.',
+                        helperText: 'للتجار في السعودية: 15 رقماً. في الدول الأخرى: أدخل الرقم المعتمد لديكم (يقبل حروف وأرقام).',
                       ),
-                      keyboardType: TextInputType.number,
-                      maxLength: 15,
+                      keyboardType: TextInputType.text,
                     ),
                     const SizedBox(height: 12),
                     TextField(
