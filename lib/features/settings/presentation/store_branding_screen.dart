@@ -186,9 +186,9 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
+                  color: Colors.blue.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue.shade200),
+                  border: Border.all(color: Colors.blue),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

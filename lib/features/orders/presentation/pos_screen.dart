@@ -590,9 +590,11 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -779,6 +781,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
             ),
           ],
         ),
+      ),
       ),
     );
   }

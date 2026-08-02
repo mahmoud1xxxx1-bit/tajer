@@ -127,20 +127,23 @@ class PdfService {
                   // Header with Branding
                   pw.Row(
                     mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                          if (logoImage != null)
-                            pw.Container(
-                              width: 60,
-                              height: 60,
-                              margin: const pw.EdgeInsets.only(bottom: 8),
-                              child: pw.Image(logoImage, fit: pw.BoxFit.contain),
-                            ),
-                          pw.Text(storeName, style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
-                          if (storeAddress.isNotEmpty)
-                            pw.Text(storeAddress, style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
+                      pw.Expanded(
+                        flex: 3,
+                        child: pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
+                          children: [
+                            if (logoImage != null)
+                              pw.Container(
+                                width: 60,
+                                height: 60,
+                                margin: const pw.EdgeInsets.only(bottom: 8),
+                                child: pw.Image(logoImage, fit: pw.BoxFit.contain),
+                              ),
+                            pw.Text(storeName, style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                            if (storeAddress.isNotEmpty)
+                              pw.Text(storeAddress, style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
                           if (storePhone.isNotEmpty)
                             pw.Text('${isAr ? "هاتف:" : "Phone:"} $storePhone', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
                           if (vatNumber.isNotEmpty)
@@ -148,16 +151,19 @@ class PdfService {
                           if (crNumber.isNotEmpty)
                             pw.Text('${isAr ? "سجل تجاري:" : "CR No:"} $crNumber', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey800)),
                         ],
-                      ),
-                      pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.end,
-                        children: [
-                          if (vatNumber.isNotEmpty)
-                            pw.Text(
-                              isAr ? 'فاتورة ضريبية مبسطة' : 'Simplified Tax Invoice',
-                              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800),
-                            ),
-                          pw.Text('${isAr ? "فاتورة رقم" : "Invoice #"} $orderRef', style: pw.TextStyle(fontSize: vatNumber.isNotEmpty ? 12 : 16, fontWeight: pw.FontWeight.bold, color: PdfColors.grey800)),
+                      )),
+                      pw.SizedBox(width: 16),
+                      pw.Expanded(
+                        flex: 2,
+                        child: pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.end,
+                          children: [
+                            if (vatNumber.isNotEmpty)
+                              pw.Text(
+                                isAr ? 'فاتورة ضريبية مبسطة' : 'Simplified Tax Invoice',
+                                style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800),
+                              ),
+                            pw.Text('${isAr ? "فاتورة رقم" : "Invoice #"} $orderRef', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold, color: PdfColors.grey800)),
                           pw.SizedBox(height: 4),
                           pw.Text(AppDateFormatter.format(order.createdAt), style: const pw.TextStyle(fontSize: 14)),
                           if (creator.isNotEmpty) ...[
@@ -165,7 +171,7 @@ class PdfService {
                             pw.Text('${isAr ? "المنفذ:" : "By:"} $creator', style: pw.TextStyle(fontSize: 12, color: PdfColors.blue700, fontWeight: pw.FontWeight.bold)),
                           ],
                         ],
-                      ),
+                      )),
                     ],
                   ),
                   pw.SizedBox(height: 20),
