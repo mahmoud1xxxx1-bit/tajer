@@ -35,10 +35,10 @@ class ProductsScreen extends ConsumerWidget {
               borderRadius: BorderRadius.circular(14),
               border: Border.all(color: Colors.indigo.withOpacity(0.3)),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.lightbulb_outline, color: Colors.amber, size: 26),
-                SizedBox(width: 12),
+                const Icon(Icons.lightbulb_outline, color: Colors.amber, size: 26),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     '💡 دليل المنتجات: أضف أصناف وجباتك أو بضائعك هنا. يمكنك ربط المنتج بالمواد الخام (المكونات) ليتم الخصم التلقائي من المستودع عند البيع في شاشة الـ POS.',

@@ -69,10 +69,10 @@ class ExpensesScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(color: Colors.indigo.withOpacity(0.3)),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.lightbulb_outline, color: Colors.amber, size: 26),
-                    SizedBox(width: 12),
+                    const Icon(Icons.lightbulb_outline, color: Colors.amber, size: 26),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         '💡 دليل المصروفات: سجل هنا كافة مصاريف تشغيل مشروعك (مثل: إيجار، رواتب، فواتير كهرباء أو وقود). يقوم التطبيق بخصمها من إجمالي المبيعات لحساب صافي أرباحك الحقيقي بدقة.',
@@ -279,7 +279,7 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                   ),
                   child: const Icon(Icons.money_off, color: Colors.orange, size: 20),
                 ),
-                const SizedBox(width: 12),
+                const const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,

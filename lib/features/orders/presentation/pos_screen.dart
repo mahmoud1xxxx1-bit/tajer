@@ -339,9 +339,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.indigo.withOpacity(0.3)),
                     ),
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Icon(Icons.lightbulb_outline, color: Colors.amber, size: 24),
+                        const Icon(Icons.lightbulb_outline, color: Colors.amber, size: 24),
                         SizedBox(width: 10),
                         Expanded(
                           child: Text(

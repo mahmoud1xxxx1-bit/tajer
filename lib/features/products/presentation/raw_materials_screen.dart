@@ -178,10 +178,10 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.indigo.withOpacity(0.3)),
             ),
-            child: const Row(
+            child: Row(
               children: [
-                Icon(Icons.lightbulb_outline, color: Colors.amber, size: 28),
-                SizedBox(width: 12),
+                const Icon(Icons.lightbulb_outline, color: Colors.amber, size: 28),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     '💡 دليل المواد الخام: هنا يمكنك إضافة مكونات مستودعك (مثل: لحم برجر، جبن، أكواب، بن قهوة). عند ربط هذه المكونات بوصفات المنتجات في شاشة المنتجات، سيقوم النظام بخصم كمياتها تلقائياً عند كل عملية بيع لحماية مشروعك من الهدر ومعرفة التكلفة الحقيقية لأرباحك.',
