@@ -16,6 +16,7 @@ import '../../../core/services/whatsapp_service.dart';
 import '../../../core/services/printer_service.dart';
 import '../../../core/widgets/tax_dialog.dart';
 import '../../../core/theme/glass_card.dart';
+import '../../../core/providers/settings_provider.dart';
 import 'package:flutter/foundation.dart';
 import '../../shifts/data/shift_repository.dart';
 import '../../shifts/presentation/start_shift_dialog.dart';
