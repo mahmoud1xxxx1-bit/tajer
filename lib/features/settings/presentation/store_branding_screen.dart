@@ -18,6 +18,8 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
   final _phoneController = TextEditingController();
   final _addressController = TextEditingController();
   final _taxController = TextEditingController();
+  final _vatNumberController = TextEditingController();
+  final _crNumberController = TextEditingController();
   String _logoBase64 = '';
   bool _isInit = false;
 
@@ -27,6 +29,8 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
     _phoneController.dispose();
     _addressController.dispose();
     _taxController.dispose();
+    _vatNumberController.dispose();
+    _crNumberController.dispose();
     super.dispose();
   }
 
@@ -58,6 +62,8 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
       phone: _phoneController.text.trim(),
       address: _addressController.text.trim(),
       defaultTaxPercentage: double.tryParse(_taxController.text.trim()),
+      vatNumber: _vatNumberController.text.trim().isEmpty ? null : _vatNumberController.text.trim(),
+      crNumber: _crNumberController.text.trim().isEmpty ? null : _crNumberController.text.trim(),
       logoBase64: _logoBase64,
     );
     ref.read(storeProfileProvider.notifier).updateProfile(profile);
@@ -83,6 +89,8 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
             _phoneController.text = profile.phone;
             _addressController.text = profile.address;
             _taxController.text = profile.defaultTaxPercentage != null ? profile.defaultTaxPercentage.toString() : '';
+            _vatNumberController.text = profile.vatNumber ?? '';
+            _crNumberController.text = profile.crNumber ?? '';
             _logoBase64 = profile.logoBase64;
             _isInit = true;
           }
@@ -172,6 +180,62 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
                 ),
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
               ),
+              const SizedBox(height: 24),
+              
+              // ZATCA Section
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.verified, color: Colors.blue.shade700),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            'تفعيل الفاتورة الضريبية المبسطة (الرسمية)',
+                            style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.blue),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'إذا قمت بإدخال "الرقم الضريبي" أدناه، سيقوم التطبيق تلقائياً بطباعة "فاتورة ضريبية مبسطة" متوافقة مع متطلبات هيئة الزكاة والضريبة والجمارك (ZATCA)، مع وضع رمز الاستجابة السريعة المشفر والمطلوب رسمياً.',
+                      style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.5),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _vatNumberController,
+                      decoration: const InputDecoration(
+                        labelText: 'الرقم الضريبي (VAT Number)',
+                        prefixIcon: Icon(Icons.confirmation_number),
+                        border: OutlineInputBorder(),
+                        helperText: 'يجب أن يتكون من 15 رقماً ويبدأ وينتهي برقم 3.',
+                      ),
+                      keyboardType: TextInputType.number,
+                      maxLength: 15,
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _crNumberController,
+                      decoration: const InputDecoration(
+                        labelText: 'رقم السجل التجاري (CR Number) - اختياري',
+                        prefixIcon: Icon(Icons.assignment),
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
             ],
           );
         },

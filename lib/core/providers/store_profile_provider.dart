@@ -10,6 +10,8 @@ class StoreProfile {
   final String address;
   final String logoBase64;
   final double? defaultTaxPercentage;
+  final String? vatNumber;
+  final String? crNumber;
 
   StoreProfile({
     this.storeName = '',
@@ -17,6 +19,8 @@ class StoreProfile {
     this.address = '',
     this.logoBase64 = '',
     this.defaultTaxPercentage,
+    this.vatNumber,
+    this.crNumber,
   });
 
   StoreProfile copyWith({
@@ -25,6 +29,8 @@ class StoreProfile {
     String? address,
     String? logoBase64,
     double? defaultTaxPercentage,
+    String? vatNumber,
+    String? crNumber,
   }) {
     return StoreProfile(
       storeName: storeName ?? this.storeName,
@@ -32,6 +38,8 @@ class StoreProfile {
       address: address ?? this.address,
       logoBase64: logoBase64 ?? this.logoBase64,
       defaultTaxPercentage: defaultTaxPercentage ?? this.defaultTaxPercentage,
+      vatNumber: vatNumber ?? this.vatNumber,
+      crNumber: crNumber ?? this.crNumber,
     );
   }
 
@@ -41,6 +49,8 @@ class StoreProfile {
     'address': address,
     'logoBase64': logoBase64,
     'defaultTaxPercentage': defaultTaxPercentage,
+    'vatNumber': vatNumber,
+    'crNumber': crNumber,
   };
 
   factory StoreProfile.fromJson(Map<String, dynamic> json) => StoreProfile(
@@ -49,6 +59,8 @@ class StoreProfile {
     address: json['address'] ?? '',
     logoBase64: json['logoBase64'] ?? '',
     defaultTaxPercentage: json['defaultTaxPercentage'] != null ? (json['defaultTaxPercentage'] as num).toDouble() : null,
+    vatNumber: json['vatNumber'],
+    crNumber: json['crNumber'],
   );
 }
 

@@ -19,6 +19,9 @@ class AppUser with _$AppUser {
     String? merchantId,
     String? deviceId,
     @Default({}) Map<String, dynamic> permissions,
+    String? vatNumber,
+    String? crNumber,
+    String? nationalAddress,
   }) = _AppUser;
 
   factory AppUser.fromJson(Map<String, dynamic> json) => _$AppUserFromJson(json);

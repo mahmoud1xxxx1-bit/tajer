@@ -9,6 +9,7 @@ import '../utils/date_formatter.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import '../utils/zatca_qr_generator.dart';
 
 class PdfService {
   static Future<pw.Font> _getFont() async {
@@ -54,6 +55,8 @@ class PdfService {
     final storePhone = profile?['phone'] as String? ?? '';
     final storeAddress = profile?['address'] as String? ?? '';
     final logoBase64 = profile?['logoBase64'] as String? ?? '';
+    final vatNumber = profile?['vatNumber'] as String? ?? '';
+    final crNumber = profile?['crNumber'] as String? ?? '';
     
     pw.MemoryImage? logoImage;
     if (logoBase64.isNotEmpty) {
@@ -67,10 +70,10 @@ class PdfService {
 
     // Attempt to generate and save PDF with logoImage; if pdf package throws any exception (such as Null check operator on unsupported image formats), rebuild cleanly without image.
     try {
-      final pdf = _buildInvoiceDoc(order, currency, taxPercentage, font, boldFont, isAr, storeName, storePhone, storeAddress, logoImage);
+      final pdf = _buildInvoiceDoc(order, currency, taxPercentage, font, boldFont, isAr, storeName, storePhone, storeAddress, logoImage, vatNumber, crNumber);
       return await pdf.save();
     } catch (e) {
-      final fallbackPdf = _buildInvoiceDoc(order, currency, taxPercentage, font, boldFont, isAr, storeName, storePhone, storeAddress, null);
+      final fallbackPdf = _buildInvoiceDoc(order, currency, taxPercentage, font, boldFont, isAr, storeName, storePhone, storeAddress, null, vatNumber, crNumber);
       return await fallbackPdf.save();
     }
   }
@@ -86,6 +89,8 @@ class PdfService {
     String storePhone,
     String storeAddress,
     pw.MemoryImage? logoImage,
+    String vatNumber,
+    String crNumber,
   ) {
     final lblCustomer = isAr ? 'بيانات العميل' : 'Customer Details';
     final lblColProduct = isAr ? 'الصنف / المنتج' : 'Product / Item';
@@ -138,12 +143,21 @@ class PdfService {
                             pw.Text(storeAddress, style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
                           if (storePhone.isNotEmpty)
                             pw.Text('${isAr ? "هاتف:" : "Phone:"} $storePhone', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
+                          if (vatNumber.isNotEmpty)
+                            pw.Text('${isAr ? "الرقم الضريبي:" : "VAT No:"} $vatNumber', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey800)),
+                          if (crNumber.isNotEmpty)
+                            pw.Text('${isAr ? "سجل تجاري:" : "CR No:"} $crNumber', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey800)),
                         ],
                       ),
                       pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.end,
                         children: [
-                          pw.Text('${isAr ? "فاتورة رقم" : "Invoice #"} $orderRef', style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.grey800)),
+                          if (vatNumber.isNotEmpty)
+                            pw.Text(
+                              isAr ? 'فاتورة ضريبية مبسطة' : 'Simplified Tax Invoice',
+                              style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: PdfColors.blue800),
+                            ),
+                          pw.Text('${isAr ? "فاتورة رقم" : "Invoice #"} $orderRef', style: pw.TextStyle(fontSize: vatNumber.isNotEmpty ? 12 : 16, fontWeight: pw.FontWeight.bold, color: PdfColors.grey800)),
                           pw.SizedBox(height: 4),
                           pw.Text(AppDateFormatter.format(order.createdAt), style: const pw.TextStyle(fontSize: 14)),
                           if (creator.isNotEmpty) ...[
@@ -173,7 +187,25 @@ class PdfService {
                       ),
                     ],
                   ),
-                  pw.SizedBox(height: 30),
+                  pw.SizedBox(height: 20),
+                  
+                  if (vatNumber.isNotEmpty) ...[
+                    pw.Center(
+                      child: pw.BarcodeWidget(
+                        barcode: pw.Barcode.qrCode(),
+                        data: ZatcaQrGenerator.generateQr(
+                          sellerName: storeName,
+                          vatNumber: vatNumber,
+                          timestamp: order.createdAt,
+                          invoiceTotal: taxPercentage != null ? order.total + (order.total * (taxPercentage / 100)) : order.total,
+                          vatTotal: taxPercentage != null ? (order.total * (taxPercentage / 100)) : 0.0,
+                        ),
+                        width: 100,
+                        height: 100,
+                      ),
+                    ),
+                    pw.SizedBox(height: 20),
+                  ],
                   
                   // Table
                   pw.Table.fromTextArray(

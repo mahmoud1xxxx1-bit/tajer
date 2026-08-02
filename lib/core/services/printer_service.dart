@@ -11,6 +11,7 @@ import 'package:tajer/features/orders/domain/order.dart';
 import 'package:tajer/features/shifts/domain/shift.dart';
 import 'package:tajer/core/providers/store_profile_provider.dart';
 import 'package:tajer/core/utils/date_formatter.dart';
+import 'package:tajer/core/utils/zatca_qr_generator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PrinterService {
@@ -94,6 +95,8 @@ class PrinterService {
         // ignore
       }
     }
+    
+    final isOfficial = !isKitchen && storeProfile != null && storeProfile.vatNumber != null && storeProfile.vatNumber!.isNotEmpty;
 
     final double pageWidth = 58.0 * PdfPageFormat.mm;
     
@@ -120,9 +123,15 @@ class PrinterService {
                     style: pw.TextStyle(font: ttfBold, fontSize: 16),
                     textAlign: pw.TextAlign.center,
                   ),
+                if (isOfficial) ...[
+                  pw.Text('الرقم الضريبي: ${storeProfile.vatNumber}', style: pw.TextStyle(font: ttf, fontSize: 10), textAlign: pw.TextAlign.center),
+                  if (storeProfile.crNumber != null && storeProfile.crNumber!.isNotEmpty)
+                    pw.Text('س.ت: ${storeProfile.crNumber}', style: pw.TextStyle(font: ttf, fontSize: 10), textAlign: pw.TextAlign.center),
+                  pw.SizedBox(height: 5),
+                ],
                 
                 pw.Text(
-                  isKitchen ? 'تذكرة مطبخ (تحضير)' : 'فاتورة مبيعات',
+                  isKitchen ? 'تذكرة مطبخ (تحضير)' : (isOfficial ? 'فاتورة ضريبية مبسطة' : 'فاتورة مبيعات'),
                   style: pw.TextStyle(font: ttfBold, fontSize: 14),
                   textAlign: pw.TextAlign.center,
                 ),
@@ -238,7 +247,26 @@ class PrinterService {
                     ),
                 ],
 
-                pw.SizedBox(height: 15),
+                pw.SizedBox(height: 10),
+                
+                if (isOfficial) ...[
+                  pw.Center(
+                    child: pw.BarcodeWidget(
+                      barcode: pw.Barcode.qrCode(),
+                      data: ZatcaQrGenerator.generateQr(
+                        sellerName: storeProfile!.storeName,
+                        vatNumber: storeProfile.vatNumber!,
+                        timestamp: order.createdAt,
+                        invoiceTotal: taxPercentage != null ? order.total + (order.total * (taxPercentage / 100)) : order.total,
+                        vatTotal: taxPercentage != null ? (order.total * (taxPercentage / 100)) : 0.0,
+                      ),
+                      width: 80,
+                      height: 80,
+                    ),
+                  ),
+                  pw.SizedBox(height: 10),
+                ],
+
                 if (!isKitchen && storeProfile != null && storeProfile.phone.isNotEmpty)
                   pw.Text('للتواصل: ${storeProfile.phone}', style: pw.TextStyle(font: ttf, fontSize: 10), textAlign: pw.TextAlign.center),
                 
