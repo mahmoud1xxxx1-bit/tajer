@@ -31,14 +31,19 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       case 'اليوم':
         start = DateTime(now.year, now.month, now.day);
         break;
+      case 'أمس':
+        start = DateTime(now.year, now.month, now.day - 1);
+        end = DateTime(now.year, now.month, now.day - 1, 23, 59, 59);
+        break;
+      case 'قبل يومين':
+        start = DateTime(now.year, now.month, now.day - 2);
+        end = DateTime(now.year, now.month, now.day - 2, 23, 59, 59);
+        break;
       case 'أسبوع':
         start = now.subtract(const Duration(days: 7));
         break;
       case 'شهر':
         start = DateTime(now.year, now.month - 1, now.day);
-        break;
-      case 'ربع سنوي':
-        start = DateTime(now.year, now.month - 3, now.day);
         break;
       case 'نصف سنوي':
         start = DateTime(now.year, now.month - 6, now.day);
@@ -120,7 +125,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               children: [
                 DropdownButton<String>(
                   value: _selectedFilter,
-                  items: ['اليوم', 'أسبوع', 'شهر', 'ربع سنوي', 'نصف سنوي', 'سنة'].map((String value) {
+                  items: ['اليوم', 'أمس', 'قبل يومين', 'أسبوع', 'شهر', 'نصف سنوي', 'سنة'].map((String value) {
                     return DropdownMenuItem<String>(
                       value: value,
                       child: Text(value, style: TextStyle(fontFamily: 'Tajawal')),
@@ -400,33 +405,43 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
-      padding: EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: color, size: 24),
-              SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(fontSize: 14, fontFamily: 'Tajawal'),
+    return SizedBox(
+      height: 95,
+      child: GlassCard(
+        padding: EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: color, size: 20),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(fontSize: 13, fontFamily: 'Tajawal'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 8),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: color,
                 ),
               ),
-            ],
-          ),
-          SizedBox(height: 12),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: color,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

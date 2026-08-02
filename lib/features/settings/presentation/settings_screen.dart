@@ -22,122 +22,214 @@ class SettingsScreen extends ConsumerWidget {
         title: Text(l10n.settings, style: TextStyle(fontFamily: 'Tajawal')),
       ),
       body: ListView(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         children: [
-          if (isAnonymous) ...[
-            ListTile(
-              leading: Icon(Icons.verified_user),
-              title: Text(l10n.upgradeAccount, style: TextStyle(fontFamily: 'Tajawal')),
-              onTap: () => context.push('/upgrade'),
-            ),
-          ] else ...[
-            ListTile(
-              leading: Icon(Icons.person, color: Colors.blue),
-              title: Text('الملف الشخصي للموظف', style: TextStyle(fontFamily: 'Tajawal')),
-              subtitle: Text(appUser?.name ?? 'غير معروف', style: TextStyle(color: Colors.grey)),
-              onTap: () => context.push('/profile'),
-            ),
-            if (appUser?.role == 'merchant' || appUser?.role == 'admin') ...[
-              ListTile(
-                leading: const Icon(Icons.people, color: Colors.purple),
-                title: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'إدارة الموظفين والصلاحيات' : 'Employees & Permissions', style: const TextStyle(fontFamily: 'Tajawal')),
-                onTap: () => context.push('/employees'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.history_edu_outlined, color: Colors.teal),
-                title: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'سجل الحركة الشامل (المراجعة)' : 'Centralized Audit Log', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                subtitle: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'مراقبة كافة عمليات الموظفين والمخزون في الوقت الحقيقي' : 'Monitor all employee & store actions in real-time', style: TextStyle(color: Colors.grey[400], fontSize: 12)),
-                onTap: () => context.push('/audit_log'),
-              ),
+          // القسم الأول: الحساب والموظفين
+          _buildSettingsGroup(
+            context: context,
+            title: Localizations.localeOf(context).languageCode == 'ar' ? 'الحساب والموظفين' : 'Account & Employees',
+            children: [
+              if (isAnonymous)
+                ListTile(
+                  leading: const Icon(Icons.verified_user, color: Colors.blue),
+                  title: Text(l10n.upgradeAccount, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                  onTap: () => context.push('/upgrade'),
+                )
+              else ...[
+                ListTile(
+                  leading: const Icon(Icons.person, color: Colors.blue),
+                  title: const Text('الملف الشخصي للموظف', style: TextStyle(fontFamily: 'Tajawal')),
+                  subtitle: Text(appUser?.name ?? 'غير معروف', style: const TextStyle(color: Colors.grey)),
+                  onTap: () => context.push('/profile'),
+                ),
+                if (appUser?.role == 'merchant' || appUser?.role == 'admin') ...[
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.people, color: Colors.purple),
+                    title: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'إدارة الموظفين والصلاحيات' : 'Employees & Permissions', style: const TextStyle(fontFamily: 'Tajawal')),
+                    onTap: () => context.push('/employees'),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.history_edu_outlined, color: Colors.teal),
+                    title: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'سجل الحركة الشامل (المراجعة)' : 'Centralized Audit Log', style: const TextStyle(fontFamily: 'Tajawal')),
+                    subtitle: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'مراقبة كافة عمليات الموظفين والمخزون' : 'Monitor all employee & store actions', style: TextStyle(color: Colors.grey[600], fontSize: 12, fontFamily: 'Tajawal')),
+                    onTap: () => context.push('/audit_log'),
+                  ),
+                ],
+              ],
             ],
-          ],
-          if (appUser?.role == 'merchant' || appUser?.role == 'admin')
-            ListTile(
-              leading: const Icon(Icons.workspace_premium, color: Colors.amber),
-              title: Text(l10n.subscriptions, style: const TextStyle(fontFamily: 'Tajawal')),
-              onTap: () => context.push('/paywall'),
-            ),
-          ListTile(
-            leading: Icon(Icons.security, color: Colors.blue),
-            title: Text('النسخ الاحتياطي والأمان', style: TextStyle(fontFamily: 'Tajawal')),
-            onTap: () => context.push('/backup_security'),
-          ),
-          ListTile(
-            leading: Icon(Icons.print, color: Colors.indigo),
-            title: Text('إعدادات الطابعة الحرارية', style: TextStyle(fontFamily: 'Tajawal')),
-            onTap: () => context.push('/printer_settings'),
-          ),
-          ListTile(
-            leading: Icon(Icons.storefront, color: Colors.deepOrange),
-            title: Text('هوية المتجر (الشعار والفاتورة)', style: TextStyle(fontFamily: 'Tajawal')),
-            onTap: () => context.push('/store_branding'),
-          ),
-          ListTile(
-            leading: const Icon(Icons.star_rounded, color: Colors.amber, size: 28),
-            title: Text(
-              Localizations.localeOf(context).languageCode == 'ar' ? 'تقييم التطبيق على متجر جوجل ⭐' : 'Rate on Google Play Store ⭐',
-              style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(
-              Localizations.localeOf(context).languageCode == 'ar' ? 'دعمك لنا بتقييم 5 نجوم يساعدنا على التطوير السريع' : 'Support us with a 5-star review to help us grow',
-              style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey.shade500),
-            ),
-            onTap: () => AppReviewService.instance.showReviewDialog(context, fromSettings: true),
           ),
 
-          Divider(),
-          _LanguageSelector(),
-          _CurrencySelector(),
-          _ThemeSelector(),
-          ListTile(
-            leading: Icon(Icons.privacy_tip_outlined, color: Colors.blue),
-            title: Text(
-              Localizations.localeOf(context).languageCode == 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy',
-              style: TextStyle(fontFamily: 'Tajawal'),
-            ),
-            trailing: Icon(Icons.arrow_forward_ios, size: 16),
-            onTap: () async {
-              final url = Uri.parse('https://alldown.uk/privacy.html');
-              if (await canLaunchUrl(url)) {
-                await launchUrl(url, mode: LaunchMode.externalApplication);
-              }
-            },
+          // القسم الثاني: إعدادات المتجر والأمان
+          _buildSettingsGroup(
+            context: context,
+            title: Localizations.localeOf(context).languageCode == 'ar' ? 'إعدادات المتجر' : 'Store Settings',
+            children: [
+              if (appUser?.role == 'merchant' || appUser?.role == 'admin') ...[
+                ListTile(
+                  leading: const Icon(Icons.workspace_premium, color: Colors.amber),
+                  title: Text(l10n.subscriptions, style: const TextStyle(fontFamily: 'Tajawal')),
+                  onTap: () => context.push('/paywall'),
+                ),
+                const Divider(height: 1),
+              ],
+              ListTile(
+                leading: const Icon(Icons.security, color: Colors.blueGrey),
+                title: const Text('النسخ الاحتياطي والأمان', style: TextStyle(fontFamily: 'Tajawal')),
+                onTap: () => context.push('/backup_security'),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.print, color: Colors.indigo),
+                title: const Text('إعدادات الطابعة الحرارية', style: TextStyle(fontFamily: 'Tajawal')),
+                onTap: () => context.push('/printer_settings'),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.storefront, color: Colors.deepOrange),
+                title: const Text('هوية المتجر (الشعار والفاتورة)', style: TextStyle(fontFamily: 'Tajawal')),
+                onTap: () => context.push('/store_branding'),
+              ),
+            ],
           ),
-          Divider(),
-          ListTile(
-            leading: Icon(isAnonymous ? Icons.delete_forever : Icons.logout, color: Colors.red),
-            title: Text(
-              isAnonymous ? 'إنهاء الجلسة التجريبية (وحذف البيانات)' : l10n.logout, 
-              style: TextStyle(fontFamily: 'Tajawal', color: Colors.red)
+
+          // القسم الثالث: التفضيلات والنظام
+          _buildSettingsGroup(
+            context: context,
+            title: Localizations.localeOf(context).languageCode == 'ar' ? 'التفضيلات والنظام' : 'System Preferences',
+            children: [
+              _LanguageSelector(),
+              const Divider(height: 1),
+              _CurrencySelector(),
+              const Divider(height: 1),
+              _ThemeSelector(),
+            ],
+          ),
+
+          // القسم الرابع: الدعم وحول التطبيق
+          _buildSettingsGroup(
+            context: context,
+            title: Localizations.localeOf(context).languageCode == 'ar' ? 'دعم وتقييم' : 'Support & Rating',
+            children: [
+              ListTile(
+                leading: const Icon(Icons.star_rounded, color: Colors.amber, size: 28),
+                title: Text(
+                  Localizations.localeOf(context).languageCode == 'ar' ? 'تقييم التطبيق على متجر جوجل ⭐' : 'Rate on Google Play Store ⭐',
+                  style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+                ),
+                onTap: () => AppReviewService.instance.showReviewDialog(context, fromSettings: true),
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.privacy_tip_outlined, color: Colors.blue),
+                title: Text(
+                  Localizations.localeOf(context).languageCode == 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy',
+                  style: const TextStyle(fontFamily: 'Tajawal'),
+                ),
+                trailing: const Icon(Icons.open_in_new, size: 16, color: Colors.grey),
+                onTap: () async {
+                  final url = Uri.parse('https://alldown.uk/privacy.html');
+                  try {
+                    await launchUrl(url, mode: LaunchMode.externalApplication);
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('تعذر فتح المتصفح. تأكد من وجود متصفح في هاتفك.', style: TextStyle(fontFamily: 'Tajawal'))),
+                      );
+                    }
+                  }
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: Icon(isAnonymous ? Icons.delete_forever : Icons.logout, color: Colors.red),
+                title: Text(
+                  isAnonymous ? 'إنهاء الجلسة التجريبية (وحذف البيانات)' : l10n.logout, 
+                  style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontWeight: FontWeight.bold)
+                ),
+                onTap: () async {
+                  if (isAnonymous) {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text("تحذير", style: TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontWeight: FontWeight.bold)),
+                        content: const Text("أنت تستخدم التطبيق كزائر. تسجيل الخروج الآن سيؤدي إلى فقدان جميع بياناتك التجريبية بشكل نهائي ولن تتمكن من استعادتها. هل أنت متأكد؟", style: TextStyle(fontFamily: 'Tajawal')),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text("تراجع", style: TextStyle(fontFamily: 'Tajawal')),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                            onPressed: () => Navigator.pop(context, true),
+                            child: const Text("نعم، احذف البيانات واخرج", style: TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
+                          ),
+                        ],
+                      ),
+                    );
+                    
+                    if (confirm == true) {
+                      await ref.read(authRepositoryProvider).signOut();
+                    }
+                  } else {
+                    ref.read(authRepositoryProvider).signOut();
+                  }
+                },
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 32),
+          Center(
+            child: Text(
+              'Tajer POS v1.0.1+7\nMade with ❤️',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade400, fontSize: 12),
             ),
-            onTap: () async {
-              if (isAnonymous) {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text("تحذير", style: TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontWeight: FontWeight.bold)),
-                    content: Text("أنت تستخدم التطبيق كزائر. تسجيل الخروج الآن سيؤدي إلى فقدان جميع بياناتك التجريبية بشكل نهائي ولن تتمكن من استعادتها. هل أنت متأكد؟", style: TextStyle(fontFamily: 'Tajawal')),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: Text("تراجع", style: TextStyle(fontFamily: 'Tajawal')),
-                      ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                        onPressed: () => Navigator.pop(context, true),
-                        child: Text("نعم، احذف البيانات واخرج", style: TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
-                      ),
-                    ],
-                  ),
-                );
-                
-                if (confirm == true) {
-                  await ref.read(authRepositoryProvider).signOut();
-                }
-              } else {
-                ref.read(authRepositoryProvider).signOut();
-              }
-            },
+          ),
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsGroup({required BuildContext context, required String title, required List<Widget> children}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8, left: 8, bottom: 8),
+            child: Text(
+              title,
+              style: TextStyle(
+                fontFamily: 'Tajawal',
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Column(
+                children: children,
+              ),
+            ),
           ),
         ],
       ),
