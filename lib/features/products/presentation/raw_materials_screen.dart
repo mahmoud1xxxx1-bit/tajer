@@ -185,7 +185,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                 Expanded(
                   child: Text(
                     '💡 دليل المواد الخام: هنا يمكنك إضافة مكونات مستودعك (مثل: لحم برجر، جبن، أكواب، بن قهوة). عند ربط هذه المكونات بوصفات المنتجات في شاشة المنتجات، سيقوم النظام بخصم كمياتها تلقائياً عند كل عملية بيع لحماية مشروعك من الهدر ومعرفة التكلفة الحقيقية لأرباحك.',
-                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.5, color: Colors.white70),
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.5, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                   ),
                 ),
               ],

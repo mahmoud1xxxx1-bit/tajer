@@ -42,7 +42,7 @@ class ProductsScreen extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     '💡 دليل المنتجات: أضف أصناف وجباتك أو بضائعك هنا. يمكنك ربط المنتج بالمواد الخام (المكونات) ليتم الخصم التلقائي من المستودع عند البيع في شاشة الـ POS.',
-                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.4, color: Colors.white70),
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.4, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                   ),
                 ),
               ],

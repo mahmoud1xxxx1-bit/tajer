@@ -168,8 +168,8 @@ class SupplierDetailsScreen extends ConsumerWidget {
                   icon: const Icon(Icons.add),
                   label: const Text('إضافة دين', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.withOpacity(0.1),
-                    foregroundColor: Colors.red,
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                    foregroundColor: Theme.of(context).colorScheme.onError,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                 ),

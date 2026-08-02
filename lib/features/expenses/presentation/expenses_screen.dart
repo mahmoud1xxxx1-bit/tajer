@@ -76,7 +76,7 @@ class ExpensesScreen extends ConsumerWidget {
                     Expanded(
                       child: Text(
                         '💡 دليل المصروفات: سجل هنا كافة مصاريف تشغيل مشروعك (مثل: إيجار، رواتب، فواتير كهرباء أو وقود). يقوم التطبيق بخصمها من إجمالي المبيعات لحساب صافي أرباحك الحقيقي بدقة.',
-                        style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.4, color: Colors.white70),
+                        style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.4, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                       ),
                     ),
                   ],

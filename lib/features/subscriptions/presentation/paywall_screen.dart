@@ -218,6 +218,8 @@ class _FeatureRow extends StatelessWidget {
                 fontFamily: 'Tajawal',
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
+                color: Colors.white,
+                height: 1.5,
               ),
             ),
           ),

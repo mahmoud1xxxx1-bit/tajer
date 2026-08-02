@@ -240,6 +240,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                               showTitles: true,
                               reservedSize: 55,
                               getTitlesWidget: (value, meta) {
+                                if (value == meta.max || value == meta.min && value != 0) {
+                                  return const SizedBox.shrink();
+                                }
                                 String text;
                                 if (value >= 1000) {
                                   text = '${(value / 1000).toStringAsFixed(1)}k';

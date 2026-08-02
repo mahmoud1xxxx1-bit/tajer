@@ -74,7 +74,7 @@ class _StartShiftDialogState extends ConsumerState<StartShiftDialog> {
               ),
               child: const Text(
                 '💡 لماذا نفتح وردية؟\nنظام الورديات يحمي أموالك! أدخل المبلغ الموجود في الدرج قبل بدء البيع، وسيقوم النظام بحساب مبيعات اليوم ومقارنتها تلقائياً بالدرج لكشف أي عجز أو تلاعب نهاية الوردية.',
-                style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.5, color: Colors.white70),
+                style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.5, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
               ),
             ),
             const SizedBox(height: 16),

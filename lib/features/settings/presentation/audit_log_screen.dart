@@ -236,16 +236,16 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.history_edu_outlined, size: 80, color: Colors.grey[500]),
+                        Icon(Icons.history_edu_outlined, size: 80, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
                         const SizedBox(height: 20),
                         Text(
                           isAr ? 'لا توجد حركات أو مبيعات مسجلة في المتجر حتى الآن' : 'No store actions or sales recorded yet',
-                          style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, color: Colors.grey[400], fontWeight: FontWeight.bold),
+                          style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           isAr ? 'أي فاتورة، مصروف، أو تعديل مخزون سيظهر هنا بالتفصيل التام' : 'Any order, expense, or inventory change will appear here in detail',
-                          style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Colors.grey[600]),
+                          style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
                         ),
                       ],
                     ),
@@ -388,23 +388,23 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                                             if (item.subtitle.isNotEmpty)
                                               Text(
                                                 item.subtitle,
-                                                style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey[300], height: 1.4),
+                                                style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8), height: 1.4),
                                               ),
                                             if (item.details.isNotEmpty) ...[
                                               const SizedBox(height: 4),
                                               Text(
                                                 item.details,
-                                                style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.blue[300], fontWeight: FontWeight.w500),
+                                                style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w500),
                                               ),
                                             ],
                                             const SizedBox(height: 8),
                                             Row(
                                               children: [
-                                                Icon(Icons.access_time, size: 13, color: Colors.grey[500]),
+                                                Icon(Icons.access_time, size: 13, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
                                                 const SizedBox(width: 4),
                                                 Text(
                                                   _formatTime(item.timestamp, isAr),
-                                                  style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey[400]),
+                                                  style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
                                                 ),
                                                 const SizedBox(width: 16),
                                                 Container(
@@ -420,7 +420,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                                                 ),
                                                 if (item.order != null) ...[
                                                   const Spacer(),
-                                                  Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey[400]),
+                                                  Icon(Icons.arrow_forward_ios, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
                                                 ]
                                               ],
                                             ),

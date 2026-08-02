@@ -346,7 +346,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                         Expanded(
                           child: Text(
                             '💡 دليل الكاشير: اضغط على المنتج لإضافته للسلة. لحفظ الفاتورة مؤقتاً أثناء انتظام العميل اضغط على زر "تعليق" بالأعلى. لإصدار الفاتورة اضغط "دفع الإجمالي" بالأسفل.',
-                            style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, height: 1.4, color: Colors.white70),
+                            style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, height: 1.4, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                           ),
                         ),
                       ],
