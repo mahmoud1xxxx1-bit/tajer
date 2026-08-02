@@ -44,6 +44,15 @@ class CustomerRepository {
     await _firestore.collection('customers').doc(customerId).delete();
   }
 
+  Future<void> moveCustomersToFolder(List<String> customerIds, String? folderName) async {
+    final batch = _firestore.batch();
+    for (final id in customerIds) {
+      final docRef = _firestore.collection('customers').doc(id);
+      batch.update(docRef, {'folderName': folderName});
+    }
+    await batch.commit();
+  }
+
   Future<int> getCustomerCount(String merchantId) async {
     final snapshot = await _firestore
         .collection('customers')

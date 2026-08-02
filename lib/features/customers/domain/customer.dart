@@ -11,6 +11,7 @@ class Customer {
   final DateTime? lastPurchaseDate;
   final DateTime createdAt;
   final String? creatorName;
+  final String? folderName;
 
   const Customer({
     required this.id,
@@ -23,6 +24,7 @@ class Customer {
     this.lastPurchaseDate,
     required this.createdAt,
     this.creatorName,
+    this.folderName,
   });
 
   Customer copyWith({
@@ -36,6 +38,7 @@ class Customer {
     DateTime? lastPurchaseDate,
     DateTime? createdAt,
     String? creatorName,
+    String? folderName,
   }) {
     return Customer(
       id: id ?? this.id,
@@ -48,6 +51,7 @@ class Customer {
       lastPurchaseDate: lastPurchaseDate ?? this.lastPurchaseDate,
       createdAt: createdAt ?? this.createdAt,
       creatorName: creatorName ?? this.creatorName,
+      folderName: folderName ?? this.folderName,
     );
   }
 
@@ -67,6 +71,7 @@ class Customer {
           ? (json['createdAt'] as Timestamp).toDate()
           : DateTime.now(),
       creatorName: json['creatorName'] as String?,
+      folderName: json['folderName'] as String?,
     );
   }
 
@@ -82,6 +87,7 @@ class Customer {
       'lastPurchaseDate': lastPurchaseDate != null ? Timestamp.fromDate(lastPurchaseDate!) : null,
       'createdAt': Timestamp.fromDate(createdAt),
       'creatorName': creatorName,
+      'folderName': folderName,
     };
   }
 }

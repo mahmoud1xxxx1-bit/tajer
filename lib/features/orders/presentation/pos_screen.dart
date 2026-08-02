@@ -616,28 +616,87 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
               child: Row(
                 children: [
                   Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: _selectedCustomerId,
-                      decoration: InputDecoration(
-                        labelText: 'اسم العميل',
-                        border: const OutlineInputBorder(),
-                        labelStyle: TextStyle(fontFamily: 'Tajawal', color: _highlightCustomer ? Colors.red : null),
-                      ),
-                      items: [
-                        const DropdownMenuItem(
-                          value: null,
-                          child: Text('عميل عام (Walk-in)', style: TextStyle(fontFamily: 'Tajawal')),
-                        ),
-                        ..._localCustomers.map((c) => DropdownMenuItem(
-                              value: c.id,
-                              child: Text(c.name, style: const TextStyle(fontFamily: 'Tajawal')),
-                            )),
-                      ],
-                    onChanged: (val) {
-                      setState(() {
-                        _selectedCustomerId = val;
-                      });
-                    },
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return Autocomplete<Customer>(
+                          optionsBuilder: (TextEditingValue textEditingValue) {
+                            if (textEditingValue.text.isEmpty) {
+                              return const Iterable<Customer>.empty();
+                            }
+                            return _localCustomers.where((Customer customer) {
+                              return customer.name.toLowerCase().contains(textEditingValue.text.toLowerCase()) || 
+                                     customer.phone.contains(textEditingValue.text);
+                            });
+                          },
+                          displayStringForOption: (Customer option) => option.name,
+                          onSelected: (Customer selection) {
+                            setState(() {
+                              _selectedCustomerId = selection.id;
+                            });
+                          },
+                          fieldViewBuilder: (BuildContext context, TextEditingController textEditingController, FocusNode focusNode, VoidCallback onFieldSubmitted) {
+                            if (_selectedCustomerId != null) {
+                              final currentCustomer = _localCustomers.firstWhere((c) => c.id == _selectedCustomerId, orElse: () => Customer(id: '', merchantId: '', name: '', phone: '', createdAt: DateTime.now()));
+                              if (currentCustomer.id.isNotEmpty && textEditingController.text != currentCustomer.name) {
+                                textEditingController.text = currentCustomer.name;
+                              }
+                            }
+                            
+                            return TextFormField(
+                              controller: textEditingController,
+                              focusNode: focusNode,
+                              decoration: InputDecoration(
+                                labelText: 'ابحث عن اسم أو رقم العميل',
+                                border: const OutlineInputBorder(),
+                                labelStyle: TextStyle(fontFamily: 'Tajawal', color: _highlightCustomer ? Colors.red : null),
+                                suffixIcon: IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: () {
+                                    textEditingController.clear();
+                                    setState(() {
+                                      _selectedCustomerId = null;
+                                    });
+                                  },
+                                ),
+                              ),
+                              onFieldSubmitted: (String value) {
+                                onFieldSubmitted();
+                              },
+                            );
+                          },
+                          optionsViewBuilder: (BuildContext context, AutocompleteOnSelected<Customer> onSelected, Iterable<Customer> options) {
+                            return Align(
+                              alignment: Alignment.topLeft,
+                              child: Material(
+                                elevation: 4.0,
+                                borderRadius: BorderRadius.circular(8),
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxHeight: 200, 
+                                    maxWidth: constraints.maxWidth,
+                                  ),
+                                  child: ListView.builder(
+                                    padding: EdgeInsets.zero,
+                                    shrinkWrap: true,
+                                    itemCount: options.length,
+                                    itemBuilder: (BuildContext context, int index) {
+                                      final Customer option = options.elementAt(index);
+                                      return ListTile(
+                                        title: Text(option.name, style: const TextStyle(fontFamily: 'Tajawal')),
+                                        subtitle: Text(option.phone, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12)),
+                                        onTap: () {
+                                          onSelected(option);
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      }
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
