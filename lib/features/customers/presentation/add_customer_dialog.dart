@@ -19,6 +19,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
+  final _debtController = TextEditingController();
   bool _isLoading = false;
 
   @override
@@ -27,6 +28,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
     if (widget.customerToEdit != null) {
       _nameController.text = widget.customerToEdit!.name;
       _phoneController.text = widget.customerToEdit!.phone;
+      _debtController.text = widget.customerToEdit!.totalDebt.toString();
     }
   }
 
@@ -34,6 +36,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _debtController.dispose();
     super.dispose();
   }
 
@@ -59,7 +62,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
         createdAt: isEditing ? widget.customerToEdit!.createdAt : DateTime.now(),
         totalPurchases: isEditing ? widget.customerToEdit!.totalPurchases : 0.0,
         orderCount: isEditing ? widget.customerToEdit!.orderCount : 0,
-        totalDebt: isEditing ? widget.customerToEdit!.totalDebt : 0.0,
+        totalDebt: double.tryParse(_debtController.text.trim()) ?? 0.0,
         creatorName: isEditing ? widget.customerToEdit!.creatorName : (appUser?.name ?? (isAr ? 'التاجر' : 'Owner')),
       );
 
@@ -127,6 +130,16 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
                 border: OutlineInputBorder(),
               ),
               validator: (value) => value!.isEmpty ? AppLocalizations.of(context)!.text51 : null,
+            ),
+            SizedBox(height: 16),
+            TextFormField(
+              controller: _debtController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'الرصيد الافتتاحي (ديون سابقة)',
+                border: OutlineInputBorder(),
+                labelStyle: TextStyle(fontFamily: 'Tajawal'),
+              ),
             ),
             SizedBox(height: 24),
             ElevatedButton(

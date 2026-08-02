@@ -9,6 +9,7 @@ import '../../../core/services/guest_limit_service.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/services/pdf_service.dart';
 import '../../orders/data/order_repository.dart';
+import '../../shifts/data/shift_repository.dart';
 
 import '../../../core/providers/settings_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -367,9 +368,18 @@ class CustomersScreen extends ConsumerWidget {
             onPressed: () async {
               final paid = double.tryParse(amountController.text.trim()) ?? 0.0;
               if (paid <= 0) return;
-              final newDebt = (customer.totalDebt - paid) < 0 ? 0.0 : (customer.totalDebt - paid);
-              final updatedCustomer = customer.copyWith(totalDebt: newDebt);
-              await ref.read(customerRepositoryProvider).updateCustomer(updatedCustomer);
+              
+              final user = ref.read(appUserProvider).value;
+              final merchantId = user?.merchantId ?? user?.id ?? '';
+              final currentShift = ref.read(currentShiftProvider(merchantId)).value;
+              
+              await ref.read(orderRepositoryProvider).payCustomerDebt(
+                merchantId: merchantId,
+                customerId: customer.id,
+                amountPaid: paid,
+                shiftId: currentShift?.id,
+              );
+              
               if (context.mounted) Navigator.pop(context);
             },
             child: const Text('تأكيد السداد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),

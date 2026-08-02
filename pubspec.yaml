@@ -24,11 +24,9 @@ dependencies:
   firebase_auth: ^5.0.0
   cloud_firestore: ^5.0.0
   google_sign_in: ^6.2.1
-  firebase_app_check: ^0.3.1
 
   # Security & Anti-Tamper
   ntp: ^2.0.0
-  freerasp: ^6.1.2
 
   url_launcher: ^6.2.2
   shared_preferences: ^2.2.3

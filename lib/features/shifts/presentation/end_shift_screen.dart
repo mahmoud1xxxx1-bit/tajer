@@ -6,6 +6,7 @@ import '../../authentication/data/auth_repository.dart';
 import '../../authentication/domain/app_user.dart';
 import '../../../core/services/printer_service.dart';
 import '../../../core/providers/store_profile_provider.dart';
+import '../../expenses/data/expense_repository.dart';
 
 class EndShiftScreen extends ConsumerStatefulWidget {
   const EndShiftScreen({super.key});
@@ -81,8 +82,11 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
             );
           }
 
-          // Expected Cash = Start Cash + Cash Sales
-          final expectedCash = shift.startCash + (shift.cashSales ?? 0.0);
+          final expenses = ref.watch(expensesStreamProvider).value ?? [];
+          final shiftExpenses = expenses.where((e) => e.date.isAfter(shift.startTime)).fold(0.0, (sum, e) => sum + e.amount);
+
+          // Expected Cash = Start Cash + Cash Sales - Expenses
+          final expectedCash = shift.startCash + (shift.cashSales ?? 0.0) - shiftExpenses;
 
           return Padding(
             padding: const EdgeInsets.all(24.0),
@@ -103,6 +107,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                         _buildRow('مبيعات مدى/تحويل:', '${((shift.cardTotal ?? 0) + (shift.transferTotal ?? 0)).toStringAsFixed(2)} ر.س'),
                         const Divider(),
                         _buildRow('المبيعات النقدية:', '${(shift.cashSales ?? 0.0).toStringAsFixed(2)} ر.س'),
+                        _buildRow('إجمالي المصروفات:', '${shiftExpenses.toStringAsFixed(2)} ر.س', color: Colors.red),
                         _buildRow('الكاش المتوقع في الدرج:', '${expectedCash.toStringAsFixed(2)} ر.س', isBold: true),
                       ],
                     ),
@@ -146,14 +151,14 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
     );
   }
 
-  Widget _buildRow(String label, String value, {bool isBold = false}) {
+  Widget _buildRow(String label, String value, {bool isBold = false, Color? color}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(fontFamily: 'Tajawal', fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
-          Text(value, style: TextStyle(fontFamily: 'Tajawal', fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+          Text(label, style: TextStyle(fontFamily: 'Tajawal', fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: color)),
+          Text(value, style: TextStyle(fontFamily: 'Tajawal', fontWeight: isBold ? FontWeight.bold : FontWeight.normal, color: color)),
         ],
       ),
     );

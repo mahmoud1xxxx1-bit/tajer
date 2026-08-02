@@ -240,11 +240,16 @@ class OrderRepository {
       }
 
       if (order.customerId != 'walk_in' && order.customerId.isNotEmpty) {
+        final customerDoc = await customerRef.get();
+        final currentDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
+        
         final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
+        final actualDecrease = currentDebt >= debtDecrease ? debtDecrease : currentDebt;
+
         batch.update(customerRef, {
           'totalPurchases': FieldValue.increment(-order.total),
           'orderCount': FieldValue.increment(-1),
-          'totalDebt': FieldValue.increment(-debtDecrease),
+          'totalDebt': FieldValue.increment(-actualDecrease),
           'updatedAt': FieldValue.serverTimestamp(),
         });
       }
@@ -292,11 +297,16 @@ class OrderRepository {
 
       if (order.customerId != 'walk_in' && order.customerId.isNotEmpty) {
         final customerRef = _firestore.collection('customers').doc(order.customerId);
+        final customerDoc = await customerRef.get();
+        final currentDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
+        
         final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
+        final actualDecrease = currentDebt >= debtDecrease ? debtDecrease : currentDebt;
+
         batch.update(customerRef, {
           'totalPurchases': FieldValue.increment(-order.total),
           'orderCount': FieldValue.increment(-1),
-          'totalDebt': FieldValue.increment(-debtDecrease),
+          'totalDebt': FieldValue.increment(-actualDecrease),
           'updatedAt': FieldValue.serverTimestamp(),
         });
       }
@@ -342,6 +352,61 @@ class OrderRepository {
     }
 
     batch.update(orderRef, {'status': newStatus});
+    await batch.commit();
+  }
+
+  Future<void> payCustomerDebt({
+    required String merchantId,
+    required String customerId,
+    required double amountPaid,
+    required String? shiftId,
+  }) async {
+    final batch = _firestore.batch();
+    
+    // 1. Update customer total debt
+    final customerRef = _firestore.collection('customers').doc(customerId);
+    batch.update(customerRef, {
+      'totalDebt': FieldValue.increment(-amountPaid),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    // 2. Fetch all unpaid credit orders for this customer to distribute the payment
+    final allCreditOrdersSnapshot = await _firestore
+        .collection('orders')
+        .where('merchantId', isEqualTo: merchantId)
+        .where('customerId', isEqualTo: customerId)
+        .where('isCredit', isEqualTo: true)
+        .get();
+        
+    var orders = allCreditOrdersSnapshot.docs
+        .map((d) => AppOrder.fromJson(d.data()))
+        .where((o) => o.status != 'cancelled' && (o.total - o.paidAmount) > 0)
+        .toList();
+    
+    orders.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+    double remainingToDistribute = amountPaid;
+    for (var order in orders) {
+      if (remainingToDistribute <= 0) break;
+      final unpaidForOrder = order.total - order.paidAmount;
+      if (unpaidForOrder > 0) {
+        final amountToApply = remainingToDistribute >= unpaidForOrder ? unpaidForOrder : remainingToDistribute;
+        batch.update(_firestore.collection('orders').doc(order.id), {
+          'paidAmount': FieldValue.increment(amountToApply),
+        });
+        remainingToDistribute -= amountToApply;
+      }
+    }
+
+    // 3. Add to shift cash sales
+    if (shiftId != null && shiftId.isNotEmpty) {
+      final shiftRef = _firestore.collection('shifts').doc(shiftId);
+      batch.update(shiftRef, {
+        'cashSales': FieldValue.increment(amountPaid),
+        // expectedCash will be calculated at closing based on startCash + cashSales - expenses
+      });
+    }
+
     await batch.commit();
   }
 

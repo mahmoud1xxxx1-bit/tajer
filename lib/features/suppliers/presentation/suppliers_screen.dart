@@ -8,6 +8,8 @@ import '../../../core/services/guest_limit_service.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/supplier_repository.dart';
 import '../domain/supplier.dart';
+import '../../expenses/data/expense_repository.dart';
+import '../../expenses/domain/expense.dart';
 
 class SuppliersScreen extends ConsumerWidget {
   const SuppliersScreen({super.key});
@@ -154,6 +156,30 @@ class SuppliersScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
+                      if (canManageInventory) ...[
+                        const SizedBox(width: 8),
+                        PopupMenuButton<String>(
+                          icon: const Icon(Icons.more_vert, color: Colors.grey),
+                          onSelected: (value) {
+                            if (value == 'edit') {
+                              _showEditSupplierDialog(context, ref, supplier);
+                            } else if (value == 'pay') {
+                              _showPaySupplierDebtDialog(context, ref, supplier);
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: 'edit',
+                              child: Text(AppLocalizations.of(context)!.text130, style: const TextStyle(fontFamily: 'Tajawal')),
+                            ),
+                            if (supplier.totalDebt > 0)
+                              const PopupMenuItem(
+                                value: 'pay',
+                                child: Text('تسديد ديون المورد / دفع مبلغ', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.green)),
+                              ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -301,6 +327,67 @@ class SuppliersScreen extends ConsumerWidget {
           ],
         );
       },
+    );
+  }
+
+  void _showPaySupplierDebtDialog(BuildContext context, WidgetRef ref, Supplier supplier) {
+    final amountController = TextEditingController(text: supplier.totalDebt.toString());
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('تسديد ديون المورد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('إجمالي دين المورد: ${supplier.totalDebt}', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: amountController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(
+                labelText: 'المبلغ المدفوع للمورد',
+                labelStyle: TextStyle(fontFamily: 'Tajawal'),
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(AppLocalizations.of(context)!.text43, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final paid = double.tryParse(amountController.text.trim()) ?? 0.0;
+              if (paid <= 0) return;
+              
+              final newDebt = (supplier.totalDebt - paid) < 0 ? 0.0 : (supplier.totalDebt - paid);
+              final updatedSupplier = supplier.copyWith(totalDebt: newDebt);
+              await ref.read(supplierRepositoryProvider)?.updateSupplier(updatedSupplier);
+              
+              // Register as expense
+              final user = ref.read(appUserProvider).value;
+              final merchantId = user?.merchantId ?? user?.id ?? '';
+              final expense = Expense(
+                id: const Uuid().v4(),
+                merchantId: merchantId,
+                amount: paid,
+                category: 'سداد ديون موردين',
+                date: DateTime.now(),
+                description: 'دفعة سداد ديون للمورد: ${supplier.name}',
+                addedBy: user?.name ?? 'المدير',
+              );
+              
+              await ref.read(expenseRepositoryProvider)?.addExpense(expense);
+              
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: const Text('تأكيد السداد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -171,6 +171,8 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   void _checkout() {
     if (_cart.isEmpty) return;
     
+    final customers = ref.read(customersStreamProvider).value ?? [];
+    
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -178,6 +180,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       builder: (ctx) => _CheckoutSheet(
         cart: _cart,
         total: _cartTotal,
+        customers: customers,
         onCheckoutComplete: (OrderDetails details) async {
           Navigator.pop(ctx);
           await _processOrder(details);
@@ -463,9 +466,10 @@ class OrderDetails {
 class _CheckoutSheet extends StatefulWidget {
   final List<CartItem> cart;
   final double total;
+  final List<Customer> customers;
   final Function(OrderDetails) onCheckoutComplete;
 
-  const _CheckoutSheet({required this.cart, required this.total, required this.onCheckoutComplete});
+  const _CheckoutSheet({required this.cart, required this.total, required this.customers, required this.onCheckoutComplete});
 
   @override
   State<_CheckoutSheet> createState() => _CheckoutSheetState();
@@ -478,6 +482,7 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
   bool _isScheduled = false;
   DateTime? _scheduledDate;
   TimeOfDay? _scheduledTime;
+  String? _selectedCustomerId;
 
   @override
   void initState() {
@@ -525,6 +530,30 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
           children: [
             const Text('إنهاء الطلب', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'), textAlign: TextAlign.center),
             const SizedBox(height: 24),
+            DropdownButtonFormField<String>(
+              value: _selectedCustomerId,
+              decoration: const InputDecoration(
+                labelText: 'اسم العميل',
+                border: OutlineInputBorder(),
+                labelStyle: TextStyle(fontFamily: 'Tajawal'),
+              ),
+              items: [
+                const DropdownMenuItem(
+                  value: null,
+                  child: Text('عميل عام (Walk-in)', style: TextStyle(fontFamily: 'Tajawal')),
+                ),
+                ...widget.customers.map((c) => DropdownMenuItem(
+                      value: c.id,
+                      child: Text(c.name, style: const TextStyle(fontFamily: 'Tajawal')),
+                    )),
+              ],
+              onChanged: (val) {
+                setState(() {
+                  _selectedCustomerId = val;
+                });
+              },
+            ),
+            const SizedBox(height: 16),
             SwitchListTile(
               title: const Text('طلب مجدول 🗓', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
               subtitle: _isScheduled && _scheduledDate != null && _scheduledTime != null
@@ -594,9 +623,17 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
                 if (_isScheduled && _scheduledDate != null && _scheduledTime != null) {
                   finalSchedule = DateTime(_scheduledDate!.year, _scheduledDate!.month, _scheduledDate!.day, _scheduledTime!.hour, _scheduledTime!.minute);
                 }
+                String finalCustomerId = 'walk_in';
+                String finalCustomerName = 'عميل عام';
+                if (_selectedCustomerId != null) {
+                  final customer = widget.customers.firstWhere((c) => c.id == _selectedCustomerId);
+                  finalCustomerId = customer.id;
+                  finalCustomerName = customer.name;
+                }
+                
                 widget.onCheckoutComplete(OrderDetails(
-                  customerId: 'walk_in',
-                  customerName: 'عميل عام',
+                  customerId: finalCustomerId,
+                  customerName: finalCustomerName,
                   paidAmount: paid,
                   isCredit: _isCredit,
                   notes: '',

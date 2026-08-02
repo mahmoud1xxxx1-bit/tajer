@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../../core/providers/settings_provider.dart';
@@ -88,6 +89,20 @@ class SettingsScreen extends ConsumerWidget {
           _LanguageSelector(),
           _CurrencySelector(),
           _ThemeSelector(),
+          ListTile(
+            leading: Icon(Icons.privacy_tip_outlined, color: Colors.blue),
+            title: Text(
+              Localizations.localeOf(context).languageCode == 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy',
+              style: TextStyle(fontFamily: 'Tajawal'),
+            ),
+            trailing: Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () async {
+              final url = Uri.parse('https://alldown.uk/privacy.html');
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              }
+            },
+          ),
           Divider(),
           ListTile(
             leading: Icon(isAnonymous ? Icons.delete_forever : Icons.logout, color: Colors.red),
