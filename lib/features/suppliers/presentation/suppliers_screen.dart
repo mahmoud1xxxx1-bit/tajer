@@ -376,8 +376,9 @@ class SuppliersScreen extends ConsumerWidget {
                 amount: paid,
                 category: 'سداد ديون موردين',
                 date: DateTime.now(),
-                description: 'دفعة سداد ديون للمورد: ${supplier.name}',
-                addedBy: user?.name ?? 'المدير',
+                createdAt: DateTime.now(),
+                title: 'دفعة سداد ديون للمورد: ${supplier.name}',
+                creatorName: user?.name ?? 'المدير',
               );
               
               await ref.read(expenseRepositoryProvider)?.addExpense(expense);

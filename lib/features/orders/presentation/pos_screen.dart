@@ -9,6 +9,8 @@ import '../../authentication/domain/app_user.dart';
 import '../data/order_repository.dart';
 import '../domain/order.dart';
 import '../domain/cart_item.dart';
+import '../../customers/domain/customer.dart';
+import '../../customers/data/customer_repository.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/services/printer_service.dart';
 import '../../../core/providers/settings_provider.dart';
