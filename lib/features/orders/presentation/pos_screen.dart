@@ -698,8 +698,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                       }
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
+                  const SizedBox(width: 8),
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   decoration: BoxDecoration(
