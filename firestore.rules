@@ -80,6 +80,10 @@ service cloud.firestore {
       match /suppliers/{supplierId} {
         allow read, update, delete: if hasAccess(merchantId);
         allow create: if hasAccess(merchantId);
+        
+        match /transactions/{transactionId} {
+          allow read, write: if hasAccess(merchantId);
+        }
       }
       match /inventory_logs/{logId} {
         allow read, update, delete: if hasAccess(merchantId);
