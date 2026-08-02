@@ -465,7 +465,7 @@ class OrderDetails {
   OrderDetails({required this.customerId, required this.customerName, required this.paidAmount, required this.isCredit, this.notes, this.paymentMethod = 'cash', this.scheduledDate});
 }
 
-class _CheckoutSheet extends StatefulWidget {
+class _CheckoutSheet extends ConsumerStatefulWidget {
   final List<CartItem> cart;
   final double total;
   final List<Customer> customers;
@@ -474,10 +474,10 @@ class _CheckoutSheet extends StatefulWidget {
   const _CheckoutSheet({required this.cart, required this.total, required this.customers, required this.onCheckoutComplete});
 
   @override
-  State<_CheckoutSheet> createState() => _CheckoutSheetState();
+  ConsumerState<_CheckoutSheet> createState() => _CheckoutSheetState();
 }
 
-class _CheckoutSheetState extends State<_CheckoutSheet> {
+class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
   bool _isCredit = false;
   final _paidController = TextEditingController();
   String _paymentMethod = 'cash';
@@ -517,6 +517,69 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
     }
   }
 
+  void _showQuickAddCustomerDialog() {
+    final nameController = TextEditingController();
+    final phoneController = TextEditingController();
+    
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('إضافة عميل سريع', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(labelText: 'اسم العميل', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: phoneController,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(labelText: 'رقم الهاتف (اختياري)', border: OutlineInputBorder()),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (nameController.text.trim().isEmpty) return;
+              
+              final user = ref.read(appUserProvider).value;
+              if (user == null) return;
+              
+              final newCustomer = Customer(
+                id: const Uuid().v4(),
+                merchantId: user.merchantId ?? user.id,
+                name: nameController.text.trim(),
+                phone: phoneController.text.trim(),
+                createdAt: DateTime.now(),
+              );
+              
+              await ref.read(customerRepositoryProvider).addCustomer(newCustomer);
+              
+              if (mounted) {
+                Navigator.pop(ctx);
+                setState(() {
+                  // select the newly added customer automatically
+                  _selectedCustomerId = newCustomer.id;
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('تم إضافة العميل ${newCustomer.name} بنجاح', style: const TextStyle(fontFamily: 'Tajawal'))),
+                );
+              }
+            },
+            child: const Text('حفظ', style: TextStyle(fontFamily: 'Tajawal')),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -532,28 +595,46 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
           children: [
             const Text('إنهاء الطلب', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'), textAlign: TextAlign.center),
             const SizedBox(height: 24),
-            DropdownButtonFormField<String>(
-              value: _selectedCustomerId,
-              decoration: const InputDecoration(
-                labelText: 'اسم العميل',
-                border: OutlineInputBorder(),
-                labelStyle: TextStyle(fontFamily: 'Tajawal'),
-              ),
-              items: [
-                const DropdownMenuItem(
-                  value: null,
-                  child: Text('عميل عام (Walk-in)', style: TextStyle(fontFamily: 'Tajawal')),
+            Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedCustomerId,
+                    decoration: const InputDecoration(
+                      labelText: 'اسم العميل',
+                      border: OutlineInputBorder(),
+                      labelStyle: TextStyle(fontFamily: 'Tajawal'),
+                    ),
+                    items: [
+                      const DropdownMenuItem(
+                        value: null,
+                        child: Text('عميل عام (Walk-in)', style: TextStyle(fontFamily: 'Tajawal')),
+                      ),
+                      ...widget.customers.map((c) => DropdownMenuItem(
+                            value: c.id,
+                            child: Text(c.name, style: const TextStyle(fontFamily: 'Tajawal')),
+                          )),
+                    ],
+                    onChanged: (val) {
+                      setState(() {
+                        _selectedCustomerId = val;
+                      });
+                    },
+                  ),
                 ),
-                ...widget.customers.map((c) => DropdownMenuItem(
-                      value: c.id,
-                      child: Text(c.name, style: const TextStyle(fontFamily: 'Tajawal')),
-                    )),
+                const SizedBox(width: 8),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    icon: Icon(Icons.person_add, color: Theme.of(context).colorScheme.primary),
+                    tooltip: 'إضافة عميل جديد',
+                    onPressed: _showQuickAddCustomerDialog,
+                  ),
+                ),
               ],
-              onChanged: (val) {
-                setState(() {
-                  _selectedCustomerId = val;
-                });
-              },
             ),
             const SizedBox(height: 16),
             SwitchListTile(
@@ -621,6 +702,31 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
               ),
               onPressed: () {
                 final paid = _isCredit ? (double.tryParse(_paidController.text) ?? 0.0) : widget.total;
+                
+                // --- Validation for Anonymous Debt ---
+                if (_isCredit && _selectedCustomerId == null) {
+                   ScaffoldMessenger.of(context).showSnackBar(
+                     const SnackBar(
+                       content: Text('لا يمكن تسجيل فاتورة آجلة لعميل عام! يرجى اختيار أو إضافة العميل لضمان حفظ المديونية.', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                       backgroundColor: Colors.red,
+                       duration: Duration(seconds: 4),
+                     ),
+                   );
+                   return;
+                }
+
+                if (paid < widget.total && _selectedCustomerId == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                     const SnackBar(
+                       content: Text('المبلغ المدفوع أقل من الإجمالي. يرجى إضافة العميل لتسجيل المتبقي كدين في حسابه.', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                       backgroundColor: Colors.red,
+                       duration: Duration(seconds: 4),
+                     ),
+                   );
+                   return;
+                }
+                // -------------------------------------
+
                 DateTime? finalSchedule;
                 if (_isScheduled && _scheduledDate != null && _scheduledTime != null) {
                   finalSchedule = DateTime(_scheduledDate!.year, _scheduledDate!.month, _scheduledDate!.day, _scheduledTime!.hour, _scheduledTime!.minute);
@@ -628,7 +734,7 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
                 String finalCustomerId = 'walk_in';
                 String finalCustomerName = 'عميل عام';
                 if (_selectedCustomerId != null) {
-                  final customer = widget.customers.firstWhere((c) => c.id == _selectedCustomerId);
+                  final customer = widget.customers.firstWhere((c) => c.id == _selectedCustomerId, orElse: () => Customer(id: _selectedCustomerId!, merchantId: '', name: 'عميل عام', createdAt: DateTime.now()));
                   finalCustomerId = customer.id;
                   finalCustomerName = customer.name;
                 }
@@ -637,7 +743,7 @@ class _CheckoutSheetState extends State<_CheckoutSheet> {
                   customerId: finalCustomerId,
                   customerName: finalCustomerName,
                   paidAmount: paid,
-                  isCredit: _isCredit,
+                  isCredit: _isCredit || paid < widget.total,
                   notes: '',
                   paymentMethod: _paymentMethod,
                   scheduledDate: finalSchedule,
