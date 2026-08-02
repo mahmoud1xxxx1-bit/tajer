@@ -8,8 +8,12 @@ import '../../../core/services/guest_limit_service.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/supplier_repository.dart';
 import '../domain/supplier.dart';
+import 'package:flutter/cupertino.dart';
 import '../../expenses/data/expense_repository.dart';
 import '../../expenses/domain/expense.dart';
+import 'supplier_details_screen.dart';
+import '../data/supplier_transaction_repository.dart';
+import '../domain/supplier_transaction.dart';
 
 class SuppliersScreen extends ConsumerWidget {
   const SuppliersScreen({super.key});
@@ -87,7 +91,7 @@ class SuppliersScreen extends ConsumerWidget {
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: EdgeInsets.zero,
                 onTap: canManageInventory ? () {
-                  _showEditSupplierDialog(context, ref, supplier);
+                  Navigator.push(context, CupertinoPageRoute(builder: (_) => SupplierDetailsScreen(supplier: supplier)));
                 } : null,
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -158,26 +162,11 @@ class SuppliersScreen extends ConsumerWidget {
                       ),
                       if (canManageInventory) ...[
                         const SizedBox(width: 8),
-                        PopupMenuButton<String>(
-                          icon: const Icon(Icons.more_vert, color: Colors.grey),
-                          onSelected: (value) {
-                            if (value == 'edit') {
-                              _showEditSupplierDialog(context, ref, supplier);
-                            } else if (value == 'pay') {
-                              _showPaySupplierDebtDialog(context, ref, supplier);
-                            }
+                        IconButton(
+                          icon: const Icon(Icons.arrow_forward_ios, color: Colors.grey, size: 16),
+                          onPressed: () {
+                             Navigator.push(context, CupertinoPageRoute(builder: (_) => SupplierDetailsScreen(supplier: supplier)));
                           },
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              value: 'edit',
-                              child: Text(AppLocalizations.of(context)!.text130, style: const TextStyle(fontFamily: 'Tajawal')),
-                            ),
-                            if (supplier.totalDebt > 0)
-                              const PopupMenuItem(
-                                value: 'pay',
-                                child: Text('تسديد ديون المورد / دفع مبلغ', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.green)),
-                              ),
-                          ],
                         ),
                       ],
                     ],
@@ -248,16 +237,32 @@ class SuppliersScreen extends ConsumerWidget {
                 
                 if (nameController.text.isEmpty) return;
 
+                final initialDebt = double.tryParse(debtController.text) ?? 0.0;
                 final supplier = Supplier(
                   id: Uuid().v4(),
                   merchantId: ref.read(appUserProvider).value?.merchantId ?? user.uid,
                   name: nameController.text,
                   phone: phoneController.text,
-                  totalDebt: double.tryParse(debtController.text) ?? 0.0,
+                  totalDebt: initialDebt,
                   createdAt: DateTime.now(),
                 );
 
                 ref.read(supplierRepositoryProvider)?.addSupplier(supplier);
+                
+                if (initialDebt > 0) {
+                  final tx = SupplierTransaction(
+                    id: const Uuid().v4(),
+                    supplierId: supplier.id,
+                    merchantId: supplier.merchantId,
+                    amount: initialDebt,
+                    type: 'debt_addition',
+                    description: 'رصيد افتتاحي / دين أولي',
+                    date: DateTime.now(),
+                    createdAt: DateTime.now(),
+                  );
+                  ref.read(supplierTransactionRepositoryProvider)?.addTransaction(tx);
+                }
+                
                 Navigator.pop(context);
               },
               child: Text(AppLocalizations.of(context)!.text44),
@@ -268,128 +273,6 @@ class SuppliersScreen extends ConsumerWidget {
     );
   }
 
-  void _showEditSupplierDialog(BuildContext context, WidgetRef ref, Supplier supplier) {
-    final nameController = TextEditingController(text: supplier.name);
-    final phoneController = TextEditingController(text: supplier.phone);
-    final debtController = TextEditingController(text: supplier.totalDebt.toString());
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text(AppLocalizations.of(context)!.text130, style: TextStyle(fontFamily: 'Tajawal')),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text127),
-                ),
-                SizedBox(height: 12),
-                TextField(
-                  controller: phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text128),
-                ),
-                SizedBox(height: 12),
-                TextField(
-                  controller: debtController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text131),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                ref.read(supplierRepositoryProvider)?.deleteSupplier(supplier.id);
-                Navigator.pop(context);
-              },
-              child: Text(AppLocalizations.of(context)!.text59, style: TextStyle(color: Colors.red)),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (nameController.text.isEmpty) return;
-
-                final updatedSupplier = supplier.copyWith(
-                  name: nameController.text,
-                  phone: phoneController.text,
-                  totalDebt: double.tryParse(debtController.text) ?? 0.0,
-                );
-
-                ref.read(supplierRepositoryProvider)?.updateSupplier(updatedSupplier);
-                Navigator.pop(context);
-              },
-              child: Text(AppLocalizations.of(context)!.text46),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showPaySupplierDebtDialog(BuildContext context, WidgetRef ref, Supplier supplier) {
-    final amountController = TextEditingController(text: supplier.totalDebt.toString());
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('تسديد ديون المورد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('إجمالي دين المورد: ${supplier.totalDebt}', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600)),
-            const SizedBox(height: 16),
-            TextField(
-              controller: amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'المبلغ المدفوع للمورد',
-                labelStyle: TextStyle(fontFamily: 'Tajawal'),
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context)!.text43, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final paid = double.tryParse(amountController.text.trim()) ?? 0.0;
-              if (paid <= 0) return;
-              
-              final newDebt = (supplier.totalDebt - paid) < 0 ? 0.0 : (supplier.totalDebt - paid);
-              final updatedSupplier = supplier.copyWith(totalDebt: newDebt);
-              await ref.read(supplierRepositoryProvider)?.updateSupplier(updatedSupplier);
-              
-              // Register as expense
-              final user = ref.read(appUserProvider).value;
-              final merchantId = user?.merchantId ?? user?.id ?? '';
-              final expense = Expense(
-                id: const Uuid().v4(),
-                merchantId: merchantId,
-                amount: paid,
-                category: 'سداد ديون موردين',
-                date: DateTime.now(),
-                createdAt: DateTime.now(),
-                title: 'دفعة سداد ديون للمورد: ${supplier.name}',
-                creatorName: user?.name ?? 'المدير',
-              );
-              
-              await ref.read(expenseRepositoryProvider)?.addExpense(expense);
-              
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('تأكيد السداد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-  }
+  // Removed old _showEditSupplierDialog and _showPaySupplierDebtDialog as they are now in SupplierDetailsScreen
 }
 
