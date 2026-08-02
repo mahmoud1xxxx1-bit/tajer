@@ -125,8 +125,14 @@ class SettingsScreen extends ConsumerWidget {
                 trailing: const Icon(Icons.open_in_new, size: 16, color: Colors.grey),
                 onTap: () async {
                   final url = Uri.parse('https://www.tiktok.com/@tajer_ap?_r=1&_t=ZS-98YixiC56sH');
-                  if (await canLaunchUrl(url)) {
+                  try {
                     await launchUrl(url, mode: LaunchMode.externalApplication);
+                  } catch (e) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('تعذر فتح الرابط', style: TextStyle(fontFamily: 'Tajawal'))),
+                      );
+                    }
                   }
                 },
               ),
@@ -144,12 +150,12 @@ class SettingsScreen extends ConsumerWidget {
                 trailing: const Icon(Icons.open_in_new, size: 16, color: Colors.grey),
                 onTap: () async {
                   final url = Uri.parse('mailto:dotkxxx1@gmail.com?subject=تطبيق تاجر - دعم فني');
-                  if (await canLaunchUrl(url)) {
+                  try {
                     await launchUrl(url);
-                  } else {
+                  } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('لا يوجد تطبيق بريد إلكتروني مثبت', style: TextStyle(fontFamily: 'Tajawal'))),
+                        const SnackBar(content: Text('تعذر فتح تطبيق البريد الإلكتروني', style: TextStyle(fontFamily: 'Tajawal'))),
                       );
                     }
                   }
