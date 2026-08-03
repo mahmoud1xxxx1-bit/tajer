@@ -282,7 +282,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('نقطة البيع (POS)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+            title: Text('نقطة البيع (POS)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
             actions: [
               if (_heldOrders.isNotEmpty)
                 TextButton.icon(
@@ -291,13 +291,13 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     backgroundColor: Colors.red,
                     child: const Icon(Icons.history, color: Colors.amber),
                   ),
-                  label: const Text('المعلقة', style: TextStyle(color: Colors.amber, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                  label: Text('المعلقة', style: TextStyle(color: Colors.amber, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                   onPressed: _showHeldOrders,
                 ),
               if (_cart.isNotEmpty)
                 TextButton.icon(
                   icon: const Icon(Icons.pause_circle_outline, color: Colors.amber),
-                  label: const Text('تعليق', style: TextStyle(color: Colors.amber, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                  label: Text('تعليق', style: TextStyle(color: Colors.amber, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                   onPressed: () {
                     setState(() {
                       _heldOrders.add(List.from(_cart));
@@ -532,7 +532,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('إضافة عميل سريع', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        title: Text('إضافة عميل سريع', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -551,7 +551,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
+            child: Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -581,7 +581,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                 );
               }
             },
-            child: const Text('حفظ', style: TextStyle(fontFamily: 'Tajawal')),
+            child: Text('حفظ', style: TextStyle(fontFamily: 'Tajawal')),
           ),
         ],
       ),
@@ -603,7 +603,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('إنهاء الطلب', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'), textAlign: TextAlign.center),
+            Text('إنهاء الطلب', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'), textAlign: TextAlign.center),
             const SizedBox(height: 24),
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
@@ -716,7 +716,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
           ),
           const SizedBox(height: 16),
           SwitchListTile(
-              title: const Text('طلب مجدول 🗓', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              title: Text('طلب مجدول 🗓', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
               subtitle: _isScheduled && _scheduledDate != null && _scheduledTime != null
                   ? Text('${_scheduledDate!.toString().split(' ')[0]} - ${_scheduledTime!.format(context)}', style: TextStyle(color: Colors.blue))
                   : null,
@@ -729,7 +729,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
               },
             ),
             const SizedBox(height: 16),
-            const Text('طريقة الدفع', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+            Text('طريقة الدفع', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -737,22 +737,22 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
               alignment: WrapAlignment.center,
               children: [
                 ChoiceChip(
-                  label: const Text('كاش 💵'),
+                  label: Text('كاش 💵'),
                   selected: _paymentMethod == 'cash',
                   onSelected: (val) => setState(() => _paymentMethod = 'cash'),
                 ),
                 ChoiceChip(
-                  label: const Text('مدى 💳'),
+                  label: Text('مدى 💳'),
                   selected: _paymentMethod == 'mada',
                   onSelected: (val) => setState(() => _paymentMethod = 'mada'),
                 ),
                 ChoiceChip(
-                  label: const Text('تحويل بنكي 🏦'),
+                  label: Text('تحويل بنكي 🏦'),
                   selected: _paymentMethod == 'transfer',
                   onSelected: (val) => setState(() => _paymentMethod = 'transfer'),
                 ),
                 ChoiceChip(
-                  label: const Text('Apple Pay 🍏'),
+                  label: Text('Apple Pay 🍏'),
                   selected: _paymentMethod == 'apple_pay',
                   onSelected: (val) => setState(() => _paymentMethod = 'apple_pay'),
                 ),
@@ -760,7 +760,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
             ),
             const SizedBox(height: 16),
             SwitchListTile(
-              title: const Text('دفع آجل؟ (دين)', style: TextStyle(fontFamily: 'Tajawal')),
+              title: Text('دفع آجل؟ (دين)', style: TextStyle(fontFamily: 'Tajawal')),
               value: _isCredit,
               onChanged: (val) => setState(() => _isCredit = val),
             ),
@@ -787,10 +787,10 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                    showDialog(
                      context: context,
                      builder: (ctx) => AlertDialog(
-                       title: const Text('تنبيه', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange)),
-                       content: const Text('لا يمكن تسجيل فاتورة آجلة لعميل عام.\nيرجى اختيار العميل من القائمة أو إضافة عميل جديد بالضغط على علامة (+).', style: TextStyle(fontFamily: 'Tajawal')),
+                       title: Text('تنبيه', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange)),
+                       content: Text('لا يمكن تسجيل فاتورة آجلة لعميل عام.\nيرجى اختيار العميل من القائمة أو إضافة عميل جديد بالضغط على علامة (+).', style: TextStyle(fontFamily: 'Tajawal')),
                        actions: [
-                         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('حسناً', style: TextStyle(fontFamily: 'Tajawal')))
+                         TextButton(onPressed: () => Navigator.pop(ctx), child: Text('حسناً', style: TextStyle(fontFamily: 'Tajawal')))
                        ],
                      )
                    );
@@ -802,10 +802,10 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                    showDialog(
                      context: context,
                      builder: (ctx) => AlertDialog(
-                       title: const Text('تنبيه', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange)),
-                       content: const Text('المبلغ المدفوع أقل من الإجمالي.\nيرجى إضافة العميل لتسجيل المتبقي كدين في حسابه.', style: TextStyle(fontFamily: 'Tajawal')),
+                       title: Text('تنبيه', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange)),
+                       content: Text('المبلغ المدفوع أقل من الإجمالي.\nيرجى إضافة العميل لتسجيل المتبقي كدين في حسابه.', style: TextStyle(fontFamily: 'Tajawal')),
                        actions: [
-                         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('حسناً', style: TextStyle(fontFamily: 'Tajawal')))
+                         TextButton(onPressed: () => Navigator.pop(ctx), child: Text('حسناً', style: TextStyle(fontFamily: 'Tajawal')))
                        ],
                      )
                    );
@@ -835,7 +835,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                   scheduledDate: finalSchedule,
                 ));
               },
-              child: const Text('تأكيد وإصدار الفاتورة', style: TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              child: Text('تأكيد وإصدار الفاتورة', style: TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
             ),
           ],
         ),

@@ -347,19 +347,19 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                           showDialog(
                             context: context,
                             builder: (context) => AlertDialog(
-                              title: const Text('حذف المصروف', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                              content: const Text('هل أنت متأكد من حذف هذا المصروف؟', style: TextStyle(fontFamily: 'Tajawal')),
+                              title: Text('حذف المصروف', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                              content: Text('هل أنت متأكد من حذف هذا المصروف؟', style: TextStyle(fontFamily: 'Tajawal')),
                               actions: [
                                 TextButton(
                                   onPressed: () => Navigator.pop(context),
-                                  child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                                  child: Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
                                 ),
                                 TextButton(
                                   onPressed: () {
                                     ref.read(expenseRepositoryProvider)?.deleteExpense(expense.id);
                                     Navigator.pop(context);
                                   },
-                                  child: const Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                  child: Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                                 ),
                               ],
                             ),

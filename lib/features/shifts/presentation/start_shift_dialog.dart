@@ -72,13 +72,13 @@ class _StartShiftDialogState extends ConsumerState<StartShiftDialog> {
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.indigo.withOpacity(0.3)),
               ),
-              child: const Text(
+              child: Text(
                 '💡 لماذا نفتح وردية؟\nنظام الورديات يحمي أموالك! أدخل المبلغ الموجود في الدرج قبل بدء البيع، وسيقوم النظام بحساب مبيعات اليوم ومقارنتها تلقائياً بالدرج لكشف أي عجز أو تلاعب نهاية الوردية.',
                 style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.5, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
               ),
             ),
             const SizedBox(height: 16),
-            const Text('أدخل مبلغ العهدة الافتتاحية (الكاش الموجود حالياً في الدرج):', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
+            Text('أدخل مبلغ العهدة الافتتاحية (الكاش الموجود حالياً في الدرج):', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
             const SizedBox(height: 12),
             TextField(
               controller: _cashController,
@@ -106,7 +106,7 @@ class _StartShiftDialogState extends ConsumerState<StartShiftDialog> {
               ),
               onPressed: _startShift,
               icon: const Icon(Icons.play_arrow),
-              label: const Text('بدء الوردية والبيع الآن', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 15)),
+              label: Text('بدء الوردية والبيع الآن', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 15)),
             ),
       ],
     );

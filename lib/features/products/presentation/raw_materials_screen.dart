@@ -39,7 +39,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     '💡 ستستخدم هذه المادة لربطها بوجبات ومنتجات البيع ليتم الخصم التلقائي عند إصدار الفواتير.',
                     style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.amber),
                   ),
@@ -65,7 +65,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   ),
                   const SizedBox(height: 16),
-                  const Text('وحدة القياس:', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                  Text('وحدة القياس:', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
                     value: selectedUnit,
@@ -91,11 +91,11 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontWeight: FontWeight.bold)),
+              child: Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontWeight: FontWeight.bold)),
             ),
             ElevatedButton.icon(
               icon: const Icon(Icons.save, size: 18),
-              label: const Text('حفظ في المستودع', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              label: Text('حفظ في المستودع', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.amber,
                 foregroundColor: Colors.black,
@@ -159,12 +159,12 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('المواد الخام (مستودع المكونات)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        title: Text('المواد الخام (مستودع المكونات)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
       ),
       floatingActionButton: canManageInventory ? FloatingActionButton.extended(
         onPressed: () => _showAddEditDialog(),
         icon: const Icon(Icons.add),
-        label: const Text('إضافة مادة خام', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        label: Text('إضافة مادة خام', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         backgroundColor: Colors.amber,
         foregroundColor: Colors.black,
       ) : null,
@@ -203,7 +203,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                       children: [
                         Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey.shade600),
                         const SizedBox(height: 16),
-                        const Text('لا توجد مواد خام في المستودع بعد.\nاضغط على زر "إضافة مادة خام" بالأسفل للبدء!', textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, color: Colors.grey)),
+                        Text('لا توجد مواد خام في المستودع بعد.\nاضغط على زر "إضافة مادة خام" بالأسفل للبدء!', textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, color: Colors.grey)),
                       ],
                     ),
                   );
@@ -239,11 +239,11 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                                 final confirm = await showDialog<bool>(
                                   context: context,
                                   builder: (ctx) => AlertDialog(
-                                    title: const Text('تأكيد الحذف', style: TextStyle(fontFamily: 'Tajawal')),
+                                    title: Text('تأكيد الحذف', style: TextStyle(fontFamily: 'Tajawal')),
                                     content: Text('هل أنت متأكد من حذف مادة "${item.name}" من المستودع؟', style: const TextStyle(fontFamily: 'Tajawal')),
                                     actions: [
-                                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal'))),
-                                      TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold))),
+                                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal'))),
+                                      TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold))),
                                     ],
                                   ),
                                 );
