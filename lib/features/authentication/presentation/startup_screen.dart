@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../authentication/data/auth_repository.dart';
@@ -14,31 +13,6 @@ class StartupScreen extends ConsumerStatefulWidget {
 
 class _StartupScreenState extends ConsumerState<StartupScreen> {
   bool _isLoading = false;
-  String _appSignature = "جاري استخراج البصمة...";
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchSignature();
-  }
-
-  Future<void> _fetchSignature() async {
-    try {
-      const platform = MethodChannel('com.allldown.tajer/signature');
-      final String result = await platform.invokeMethod('getSignature');
-      if (mounted) {
-        setState(() {
-          _appSignature = result;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _appSignature = "تعذر استخراج البصمة";
-        });
-      }
-    }
-  }
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -268,12 +242,6 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
                 onPressed: _isLoading ? null : _enterAsGuest,
                 child: const Text("الدخول كزائر وتجربة النظام", style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, decoration: TextDecoration.underline)),
               ),
-              const SizedBox(height: 32),
-              SelectableText(
-                "SHA-1:\n$_appSignature",
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Colors.grey, fontWeight: FontWeight.bold),
-              ),
             ],
           ),
         ),
@@ -281,3 +249,4 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
     );
   }
 }
+
