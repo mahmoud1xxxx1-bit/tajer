@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "88663100884-3r9qv5d24l6ifn6ekedih9s88hbv5k5u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.allldown.tajer",
+            "certificate_hash": "3d42bc8f319cd780ece09e08174641a09704c53f"
+          }
+        },
+        {
           "client_id": "88663100884-7sqjqf84phr3ps0hgj8d13ffc0rauq70.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
