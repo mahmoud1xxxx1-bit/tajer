@@ -180,9 +180,7 @@ class AuthRepository {
           }
       } else {
         // Native platforms (Android/iOS)
-        final GoogleSignIn googleSignIn = GoogleSignIn(
-          serverClientId: '88663100884-1g4lvc7f9okgd0vh53fgrd1hemv0go01.apps.googleusercontent.com',
-        );
+        final GoogleSignIn googleSignIn = GoogleSignIn();
         final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
         if (googleUser == null) return; // User canceled
 
