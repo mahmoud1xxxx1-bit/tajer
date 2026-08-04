@@ -358,6 +358,35 @@ class DashboardHome extends ConsumerWidget {
             padding: EdgeInsets.all(16.0),
             child: ListView(
               children: [
+                if (storeProfile?.storeName.isEmpty ?? true) ...[
+                  Container(
+                    margin: EdgeInsets.only(bottom: 16),
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline, color: Colors.orange),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            '⚠️ يرجى إكمال إعدادات هوية المتجر (الاسم، الضريبة) لضمان طباعة الفواتير بشكل صحيح ومطابق للمواصفات.',
+                            style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            context.push('/store_branding');
+                          },
+                          child: Text('أكمل الآن', style: TextStyle(color: Colors.orange, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 if (lowStockProducts.isNotEmpty) ...[
                   Container(
                     margin: EdgeInsets.only(bottom: 16),
