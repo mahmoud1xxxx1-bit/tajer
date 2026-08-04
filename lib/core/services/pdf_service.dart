@@ -30,7 +30,7 @@ class PdfService {
     }
   }
 
-  static Future<Uint8List> generateInvoicePdf(BuildContext buildContext, AppOrder order, String currency, {double? taxPercentage}) async {
+  static Future<Uint8List> generateInvoicePdf(BuildContext buildContext, AppOrder order, String currency, {double? taxPercentage, bool defaultIsTaxInclusive = false}) async {
     final font = await _getFont();
     final boldFont = await _getBoldFont();
     
@@ -70,10 +70,10 @@ class PdfService {
 
     // Attempt to generate and save PDF with logoImage; if pdf package throws any exception (such as Null check operator on unsupported image formats), rebuild cleanly without image.
     try {
-      final pdf = _buildInvoiceDoc(order, currency, taxPercentage, font, boldFont, isAr, storeName, storePhone, storeAddress, logoImage, vatNumber, crNumber);
+      final pdf = _buildInvoiceDoc(order, currency, taxPercentage ?? 0.0, defaultIsTaxInclusive, font, boldFont, isAr, storeName, storePhone, storeAddress, logoImage, vatNumber, crNumber);
       return await pdf.save();
     } catch (e) {
-      final fallbackPdf = _buildInvoiceDoc(order, currency, taxPercentage, font, boldFont, isAr, storeName, storePhone, storeAddress, null, vatNumber, crNumber);
+      final fallbackPdf = _buildInvoiceDoc(order, currency, taxPercentage ?? 0.0, defaultIsTaxInclusive, font, boldFont, isAr, storeName, storePhone, storeAddress, null, vatNumber, crNumber);
       return await fallbackPdf.save();
     }
   }
@@ -81,7 +81,8 @@ class PdfService {
   static pw.Document _buildInvoiceDoc(
     AppOrder order,
     String currency,
-    double? taxPercentage,
+    double defaultTaxPercentage,
+    bool defaultIsTaxInclusive,
     pw.Font font,
     pw.Font boldFont,
     bool isAr,
@@ -195,21 +196,40 @@ class PdfService {
                   ),
                   pw.SizedBox(height: 20),
                   
-                  if (vatNumber.isNotEmpty) ...[
-                    pw.Center(
-                      child: pw.BarcodeWidget(
-                        barcode: pw.Barcode.qrCode(),
-                        data: ZatcaQrGenerator.generateQr(
-                          sellerName: storeName,
-                          vatNumber: vatNumber,
-                          timestamp: order.createdAt,
-                          invoiceTotal: taxPercentage != null ? order.total + (order.total * (taxPercentage / 100)) : order.total,
-                          vatTotal: taxPercentage != null ? (order.total * (taxPercentage / 100)) : 0.0,
-                        ),
-                        width: 100,
-                        height: 100,
-                      ),
-                    ),
+                  if (vatNumber.isNotEmpty)
+                        pw.Builder(builder: (context) {
+                        double totalTaxAmount = 0.0;
+                        double grandTotal = 0.0;
+                        for (var item in order.items) {
+                          final taxRate = item.taxPercentage ?? defaultTaxPercentage;
+                          final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
+                          if (taxRate > 0) {
+                            if (isInclusive) {
+                              totalTaxAmount += item.total - (item.total / (1 + (taxRate / 100)));
+                              grandTotal += item.total;
+                            } else {
+                              totalTaxAmount += item.total * (taxRate / 100);
+                              grandTotal += item.total + (item.total * (taxRate / 100));
+                            }
+                          } else {
+                            grandTotal += item.total;
+                          }
+                        }
+                        
+                        return pw.BarcodeWidget(
+                          color: PdfColor.fromHex('#000000'),
+                          barcode: pw.Barcode.qrCode(),
+                          data: _generateTlvZatcaQr(
+                            sellerName: storeName,
+                            vatRegistrationNumber: vatNumber,
+                            timestamp: order.createdAt.toIso8601String(),
+                            invoiceTotal: grandTotal,
+                            vatTotal: totalTaxAmount,
+                          ),
+                          width: 80,
+                          height: 80,
+                        );
+                      }),
                     pw.SizedBox(height: 20),
                   ],
                   
@@ -237,78 +257,115 @@ class PdfService {
                       pw.Column(
                         crossAxisAlignment: pw.CrossAxisAlignment.start,
                         children: [
+                    double totalTaxAmount = 0.0;
+                    double grandTotal = 0.0;
+                    bool hasTax = false;
+                    for (var item in order.items) {
+                      final taxRate = item.taxPercentage ?? defaultTaxPercentage;
+                      final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
+                      if (taxRate > 0) {
+                        hasTax = true;
+                        if (isInclusive) {
+                          totalTaxAmount += item.total - (item.total / (1 + (taxRate / 100)));
+                          grandTotal += item.total;
+                        } else {
+                          totalTaxAmount += item.total * (taxRate / 100);
+                          grandTotal += item.total + (item.total * (taxRate / 100));
+                        }
+                      } else {
+                        grandTotal += item.total;
+                      }
+                    }
+                    
+                    String paymentMethodText = '';
+                    if (order.paymentMethod == 'cash') {
+                      paymentMethodText = isAr ? 'دفع نقدي 💵' : 'Cash 💵';
+                    } else if (order.paymentMethod == 'card') {
+                      paymentMethodText = isAr ? 'دفع شبكة 💳' : 'Card 💳';
+                    } else if (order.paymentMethod == 'transfer') {
+                      paymentMethodText = isAr ? 'تحويل بنكي 🏦' : 'Bank Transfer 🏦';
+                    }
+                    
+                    return pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
+                      children: [
+                        if (paymentMethodText.isNotEmpty) ...[
+                          pw.Text('${isAr ? "طريقة الدفع: " : "Payment Method: "}$paymentMethodText', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14)),
+                          pw.SizedBox(height: 12),
+                        ],
+                        pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                          children: [
+                            pw.Text(lblGrandTotal, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                            pw.SizedBox(width: 20),
+                            pw.Text('${order.total} $currency'),
+                          ],
+                        ),
+                        if (hasTax) ...[
+                          pw.SizedBox(height: 8),
                           pw.Row(
                             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                             children: [
-                              pw.Text(lblGrandTotal, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                              pw.Text('${isAr ? "إجمالي الضريبة" : "Total Tax"}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                               pw.SizedBox(width: 20),
-                              pw.Text('${order.total} $currency'),
+                              pw.Text('${totalTaxAmount.toStringAsFixed(2)} $currency'),
                             ],
                           ),
-                          if (taxPercentage != null && taxPercentage > 0) ...[
+                          pw.SizedBox(height: 8),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                            children: [
+                              pw.Text(isAr ? 'الإجمالي النهائي' : 'Grand Total', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                              pw.SizedBox(width: 20),
+                              pw.Text('${grandTotal.toStringAsFixed(2)} $currency', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                            ],
+                          ),
+                        ],
+                        if (order.isCredit) ...[
+                          pw.SizedBox(height: 8),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                            children: [
+                              pw.Text(lblPaid, style: const pw.TextStyle(color: PdfColors.green700)),
+                              pw.SizedBox(width: 20),
+                              pw.Text('${order.paidAmount} $currency', style: const pw.TextStyle(color: PdfColors.green700)),
+                            ],
+                          ),
+                          pw.SizedBox(height: 8),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                            children: [
+                              pw.Text(lblRemaining, style: pw.TextStyle(color: PdfColors.red700, fontWeight: pw.FontWeight.bold)),
+                              pw.SizedBox(width: 20),
+                              pw.Text('${(grandTotal - order.paidAmount).toStringAsFixed(2)} $currency', style: pw.TextStyle(color: PdfColors.red700, fontWeight: pw.FontWeight.bold)),
+                            ],
+                          ),
+                        ] else if (order.paymentMethod == 'cash' && order.tenderedAmount != null) ...[
+                          pw.SizedBox(height: 8),
+                          pw.Row(
+                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                            children: [
+                              pw.Text(isAr ? 'المبلغ المستلم' : 'Tendered Cash', style: const pw.TextStyle(color: PdfColors.grey700)),
+                              pw.SizedBox(width: 20),
+                              pw.Text('${order.tenderedAmount} $currency', style: const pw.TextStyle(color: PdfColors.grey700)),
+                            ],
+                          ),
+                          if (order.changeAmount != null) ...[
                             pw.SizedBox(height: 8),
                             pw.Row(
                               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                               children: [
-                                pw.Text('${isAr ? "الضريبة" : "Tax"} ($taxPercentage%)', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                                pw.Text(isAr ? 'المتبقي للعميل' : 'Change', style: pw.TextStyle(color: PdfColors.green700, fontWeight: pw.FontWeight.bold)),
                                 pw.SizedBox(width: 20),
-                                pw.Text('${(order.total * (taxPercentage / 100)).toStringAsFixed(2)} $currency'),
-                              ],
-                            ),
-                            pw.SizedBox(height: 8),
-                            pw.Row(
-                              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                              children: [
-                                pw.Text(isAr ? 'الإجمالي بعد الضريبة' : 'Total after tax', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
-                                pw.SizedBox(width: 20),
-                                pw.Text('${(order.total + (order.total * (taxPercentage / 100))).toStringAsFixed(2)} $currency', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                                pw.Text('${order.changeAmount} $currency', style: pw.TextStyle(color: PdfColors.green700, fontWeight: pw.FontWeight.bold)),
                               ],
                             ),
                           ],
-                          if (order.isCredit) ...[
-                            pw.SizedBox(height: 8),
-                            pw.Row(
-                              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                              children: [
-                                pw.Text(lblPaid, style: const pw.TextStyle(color: PdfColors.green700)),
-                                pw.SizedBox(width: 20),
-                                pw.Text('${order.paidAmount} $currency', style: const pw.TextStyle(color: PdfColors.green700)),
-                              ],
-                            ),
-                            pw.SizedBox(height: 8),
-                            pw.Row(
-                              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                              children: [
-                                pw.Text(lblRemaining, style: pw.TextStyle(color: PdfColors.red700, fontWeight: pw.FontWeight.bold)),
-                                pw.SizedBox(width: 20),
-                                pw.Text('${order.total - order.paidAmount} $currency', style: pw.TextStyle(color: PdfColors.red700, fontWeight: pw.FontWeight.bold)),
-                              ],
-                            ),
-                          ] else if (order.paymentMethod == 'cash' && order.tenderedAmount != null) ...[
-                            pw.SizedBox(height: 8),
-                            pw.Row(
-                              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                              children: [
-                                pw.Text(isAr ? 'المبلغ المستلم' : 'Tendered Cash', style: const pw.TextStyle(color: PdfColors.grey700)),
-                                pw.SizedBox(width: 20),
-                                pw.Text('${order.tenderedAmount} $currency', style: const pw.TextStyle(color: PdfColors.grey700)),
-                              ],
-                            ),
-                            if (order.changeAmount != null) ...[
-                              pw.SizedBox(height: 8),
-                              pw.Row(
-                                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                                children: [
-                                  pw.Text(isAr ? 'المتبقي للعميل' : 'Change', style: pw.TextStyle(color: PdfColors.green700, fontWeight: pw.FontWeight.bold)),
-                                  pw.SizedBox(width: 20),
-                                  pw.Text('${order.changeAmount} $currency', style: pw.TextStyle(color: PdfColors.green700, fontWeight: pw.FontWeight.bold)),
-                                ],
-                              ),
-                            ],
-                          ]
-                        ],
-                      ),
-                    ],
+                        ]
+                      ],
+                    );
+                  }),
+                ],
                   ),
                   
                   pw.SizedBox(height: 20),
@@ -328,8 +385,8 @@ class PdfService {
     return pdf;
   }
 
-  static Future<void> printInvoice(BuildContext buildContext, AppOrder order, String currency, {double? taxPercentage}) async {
-    final bytes = await generateInvoicePdf(buildContext, order, currency, taxPercentage: taxPercentage);
+  static Future<void> printInvoice(BuildContext buildContext, AppOrder order, String currency, {double? taxPercentage, bool defaultIsTaxInclusive = false}) async {
+    final bytes = await generateInvoicePdf(buildContext, order, currency, taxPercentage: taxPercentage, defaultIsTaxInclusive: defaultIsTaxInclusive);
     final orderRef = order.queueNumber != null 
         ? "#${order.queueNumber}" 
         : (order.id.length >= 8 ? order.id.substring(0, 8).toUpperCase() : order.id.toUpperCase());

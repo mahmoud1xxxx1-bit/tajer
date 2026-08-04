@@ -29,6 +29,8 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
   final _barcodeController = TextEditingController();
   final _modifiersController = TextEditingController();
   final _rawMaterialQtyController = TextEditingController();
+  final _taxPercentageController = TextEditingController();
+  bool? _isTaxInclusive;
   String? _selectedCategoryId;
   String? _selectedRawMaterialId;
   bool _isLoading = false;
@@ -42,6 +44,8 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       _quantityController.text = widget.productToEdit!.quantity.toString();
       _barcodeController.text = widget.productToEdit!.barcode ?? '';
       _modifiersController.text = widget.productToEdit!.modifiers.join('، ');
+      _taxPercentageController.text = widget.productToEdit!.taxPercentage?.toString() ?? '';
+      _isTaxInclusive = widget.productToEdit!.isTaxInclusive;
       _selectedCategoryId = widget.productToEdit!.categoryId;
       if (widget.productToEdit!.recipe.isNotEmpty) {
         _selectedRawMaterialId = widget.productToEdit!.recipe.first.rawMaterialId;
@@ -58,6 +62,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     _barcodeController.dispose();
     _modifiersController.dispose();
     _rawMaterialQtyController.dispose();
+    _taxPercentageController.dispose();
     super.dispose();
   }
 
@@ -110,6 +115,8 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
         barcode: _barcodeController.text.trim().isEmpty ? null : _barcodeController.text.trim(),
         modifiers: _modifiersController.text.trim().isEmpty ? [] : _modifiersController.text.split('،').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
         recipe: updatedRecipe,
+        isTaxInclusive: _isTaxInclusive,
+        taxPercentage: _taxPercentageController.text.trim().isEmpty ? null : double.tryParse(_taxPercentageController.text.trim()),
         createdAt: isEditing ? widget.productToEdit!.createdAt : DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -260,7 +267,46 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
               ),
               onFieldSubmitted: (_) => _submit(),
             ),
-            SizedBox(height: 16),
+            SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.shade200),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'إعدادات الضريبة (اختياري)',
+                    style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange.shade800),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'تحديد الإعدادات هنا سيلغي إعدادات المتجر العامة لهذا المنتج، وسيؤثر مباشرة على الحساب النهائي.',
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.orange.shade900),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _taxPercentageController,
+                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      labelText: 'نسبة الضريبة الخاصة بالمنتج (%)',
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SwitchListTile(
+                    title: const Text('السعر المحدد يشمل الضريبة', style: TextStyle(fontFamily: 'Tajawal')),
+                    value: _isTaxInclusive ?? false,
+                    onChanged: (val) => setState(() => _isTaxInclusive = val),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(height: 24),
             Text(isAr ? 'المقادير (المواد الخام) - اختياري' : 'Recipe (Raw Material) - Optional', style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', color: Colors.blueGrey)),
             const SizedBox(height: 8),
             rawMaterialsAsync.when(

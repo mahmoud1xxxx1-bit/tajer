@@ -56,6 +56,8 @@ class _PosScreenState extends ConsumerState<PosScreen> {
             price: product.price,
             total: product.price,
             selectedModifiers: List.from(selectedModifiers),
+            isTaxInclusive: product.isTaxInclusive,
+            taxPercentage: product.taxPercentage,
           ));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('المنتج نفذ من المخزون', style: TextStyle(fontFamily: 'Tajawal'))));
@@ -213,6 +215,8 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         notes: details.notes,
         paymentMethod: details.paymentMethod,
         scheduledDate: details.scheduledDate,
+        tenderedAmount: details.tenderedAmount,
+        changeAmount: details.changeAmount,
         creatorId: appUser.id,
         creatorName: appUser.name ?? 'غير معروف',
         createdAt: DateTime.now(),
@@ -466,8 +470,10 @@ class OrderDetails {
   final String? notes;
   final String paymentMethod;
   final DateTime? scheduledDate;
+  final double? tenderedAmount;
+  final double? changeAmount;
 
-  OrderDetails({required this.customerId, required this.customerName, required this.paidAmount, required this.isCredit, this.notes, this.paymentMethod = 'cash', this.scheduledDate});
+  OrderDetails({required this.customerId, required this.customerName, required this.paidAmount, required this.isCredit, this.notes, this.paymentMethod = 'cash', this.scheduledDate, this.tenderedAmount, this.changeAmount});
 }
 
 class _CheckoutSheet extends ConsumerStatefulWidget {
@@ -794,8 +800,22 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                 const SizedBox(height: 8),
                 Builder(
                   builder: (context) {
+                    final storeProfile = ref.read(storeProfileProvider).value;
+                    final defaultTaxPercentage = storeProfile?.defaultTaxPercentage ?? 0.0;
+                    final defaultIsTaxInclusive = storeProfile?.defaultIsTaxInclusive ?? false;
+                    
+                    double grandTotal = 0.0;
+                    for (var item in widget.cart) {
+                      final itemTax = item.taxPercentage ?? defaultTaxPercentage;
+                      final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
+                      if (isInclusive) {
+                        grandTotal += item.total;
+                      } else {
+                        grandTotal += item.total + (item.total * (itemTax / 100));
+                      }
+                    }
                     final tendered = double.tryParse(_tenderedController.text) ?? 0.0;
-                    final requiredAmount = _isCredit ? (double.tryParse(_paidController.text) ?? 0.0) : widget.total;
+                    final requiredAmount = _isCredit ? (double.tryParse(_paidController.text) ?? 0.0) : grandTotal;
                     final change = tendered - requiredAmount;
                     if (tendered > 0 && change >= 0) {
                       return Container(
@@ -823,7 +843,21 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                 foregroundColor: Colors.white,
               ),
               onPressed: () {
-                final paid = _isCredit ? (double.tryParse(_paidController.text) ?? 0.0) : widget.total;
+                final storeProfile = ref.read(storeProfileProvider).value;
+                final defaultTaxPercentage = storeProfile?.defaultTaxPercentage ?? 0.0;
+                final defaultIsTaxInclusive = storeProfile?.defaultIsTaxInclusive ?? false;
+                
+                double grandTotal = 0.0;
+                for (var item in widget.cart) {
+                  final itemTax = item.taxPercentage ?? defaultTaxPercentage;
+                  final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
+                  if (isInclusive) {
+                    grandTotal += item.total;
+                  } else {
+                    grandTotal += item.total + (item.total * (itemTax / 100));
+                  }
+                }
+                final paid = _isCredit ? (double.tryParse(_paidController.text) ?? 0.0) : grandTotal;
                 
                 // --- Validation for Anonymous Debt ---
                 if (_isCredit && _selectedCustomerId == null) {
@@ -841,7 +875,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                    return;
                 }
 
-                if (paid < widget.total && _selectedCustomerId == null) {
+                if (paid < grandTotal && _selectedCustomerId == null) {
                    _triggerHighlight();
                    showDialog(
                      context: context,
@@ -873,10 +907,12 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                   customerId: finalCustomerId,
                   customerName: finalCustomerName,
                   paidAmount: paid,
-                  isCredit: _isCredit || paid < widget.total,
+                  isCredit: _isCredit || paid < grandTotal,
                   notes: '',
                   paymentMethod: _paymentMethod,
                   scheduledDate: finalSchedule,
+                  tenderedAmount: _paymentMethod == 'cash' && _tenderedController.text.isNotEmpty ? double.tryParse(_tenderedController.text) : null,
+                  changeAmount: _paymentMethod == 'cash' && _tenderedController.text.isNotEmpty ? (double.tryParse(_tenderedController.text) ?? 0) - grandTotal : null,
                 ));
               },
               child: Text('تأكيد وإصدار الفاتورة', style: TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),

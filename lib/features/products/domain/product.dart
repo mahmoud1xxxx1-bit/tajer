@@ -11,6 +11,8 @@ class Product {
   final int quantity;
   final List<String> modifiers;
   final List<RecipeItem> recipe;
+  final bool? isTaxInclusive;
+  final double? taxPercentage;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -24,6 +26,8 @@ class Product {
     required this.quantity,
     this.modifiers = const [],
     this.recipe = const [],
+    this.isTaxInclusive,
+    this.taxPercentage,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -39,6 +43,8 @@ class Product {
       quantity: (json['quantity'] as num).toInt(),
       modifiers: (json['modifiers'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [],
       recipe: (json['recipe'] as List<dynamic>?)?.map((e) => RecipeItem.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
+      isTaxInclusive: json['isTaxInclusive'] as bool?,
+      taxPercentage: json['taxPercentage'] != null ? (json['taxPercentage'] as num).toDouble() : null,
       createdAt: _parseDate(json['createdAt']),
       updatedAt: _parseDate(json['updatedAt']),
     );
@@ -55,6 +61,8 @@ class Product {
       'quantity': quantity,
       'modifiers': modifiers,
       'recipe': recipe.map((e) => e.toJson()).toList(),
+      'isTaxInclusive': isTaxInclusive,
+      'taxPercentage': taxPercentage,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
     };
@@ -70,6 +78,8 @@ class Product {
     int? quantity,
     List<String>? modifiers,
     List<RecipeItem>? recipe,
+    bool? isTaxInclusive,
+    double? taxPercentage,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -83,6 +93,8 @@ class Product {
       quantity: quantity ?? this.quantity,
       modifiers: modifiers ?? this.modifiers,
       recipe: recipe ?? this.recipe,
+      isTaxInclusive: isTaxInclusive ?? this.isTaxInclusive,
+      taxPercentage: taxPercentage ?? this.taxPercentage,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

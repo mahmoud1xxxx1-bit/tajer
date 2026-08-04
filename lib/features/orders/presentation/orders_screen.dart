@@ -140,7 +140,7 @@ class OrdersScreen extends ConsumerWidget {
                           showDialog(
                             context: context,
                             builder: (ctx) => AlertDialog(
-                              title: Text(AppLocalizations.of(context)!.text92, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
+                              title: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'تأكيد الحذف' : 'Confirm Deletion', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
                               content: Text(
                                 Localizations.localeOf(context).languageCode == 'ar'
                                     ? 'هل أنت متأكد من رغبتك في مسح الفاتورة نهائياً؟ لا يمكن التراجع عن هذه الخطوة.'
@@ -148,7 +148,7 @@ class OrdersScreen extends ConsumerWidget {
                                 style: const TextStyle(fontFamily: 'Tajawal'),
                               ),
                               actions: [
-                                TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)!.text93, style: const TextStyle(fontFamily: 'Tajawal'))),
+                                TextButton(onPressed: () => Navigator.pop(ctx), child: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'إلغاء' : 'Cancel', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey))),
                                 ElevatedButton(
                                   style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                                   onPressed: () async {
@@ -173,16 +173,16 @@ class OrdersScreen extends ConsumerWidget {
                                       if (context.mounted) {
                                         ScaffoldMessenger.of(context).showSnackBar(
                                           SnackBar(
-                                            content: Text('حدث خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
+                                            content: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'فشل مسح الفاتورة نهائياً لعدم وجود صلاحية أو لا توجد فاتورة.' : 'Failed to delete. Permission denied.', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
                                             backgroundColor: Colors.red,
                                             duration: const Duration(seconds: 10),
-                                            action: SnackBarAction(label: 'إخفاء', textColor: Colors.white, onPressed: () {}),
+                                            action: SnackBarAction(label: Localizations.localeOf(context).languageCode == 'ar' ? 'إخفاء' : 'Dismiss', textColor: Colors.white, onPressed: () {}),
                                           ),
                                         );
                                       }
                                     }
                                   },
-                                  child: Text(AppLocalizations.of(context)!.text94, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
+                                  child: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'حذف' : 'Delete', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
                                 ),
                               ],
                             ),
@@ -330,7 +330,7 @@ class OrdersScreen extends ConsumerWidget {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (_) => PdfViewerScreen(order: order, currency: currency, taxPercentage: tax),
+                                              builder: (_) => PdfViewerScreen(order: order, currency: currency, taxPercentage: tax, defaultIsTaxInclusive: storeProfile?.defaultIsTaxInclusive ?? false),
                                             ),
                                           );
                                         },

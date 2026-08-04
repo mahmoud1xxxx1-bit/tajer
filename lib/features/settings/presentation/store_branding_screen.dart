@@ -22,6 +22,7 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
   final _crNumberController = TextEditingController();
   String _logoBase64 = '';
   bool _isInit = false;
+  bool _defaultIsTaxInclusive = false;
 
   @override
   void dispose() {
@@ -62,6 +63,7 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
       phone: _phoneController.text.trim(),
       address: _addressController.text.trim(),
       defaultTaxPercentage: double.tryParse(_taxController.text.trim()),
+      defaultIsTaxInclusive: _defaultIsTaxInclusive,
       vatNumber: _vatNumberController.text.trim().isEmpty ? null : _vatNumberController.text.trim(),
       crNumber: _crNumberController.text.trim().isEmpty ? null : _crNumberController.text.trim(),
       logoBase64: _logoBase64,
@@ -91,6 +93,7 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
             _taxController.text = profile.defaultTaxPercentage != null ? profile.defaultTaxPercentage.toString() : '';
             _vatNumberController.text = profile.vatNumber ?? '';
             _crNumberController.text = profile.crNumber ?? '';
+            _defaultIsTaxInclusive = profile.defaultIsTaxInclusive;
             _logoBase64 = profile.logoBase64;
             _isInit = true;
           }
@@ -179,6 +182,18 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
                   helperMaxLines: 3,
                 ),
                 keyboardType: TextInputType.numberWithOptions(decimal: true),
+              ),
+              const SizedBox(height: 12),
+              SwitchListTile(
+                title: const Text('الأسعار شاملة الضريبة (افتراضياً)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                subtitle: const Text('تفعيل هذا الخيار يعني أن الضريبة من ضمن السعر ولن تتم إضافتها كزيادة على العميل.', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12)),
+                value: _defaultIsTaxInclusive,
+                onChanged: (val) {
+                  setState(() {
+                    _defaultIsTaxInclusive = val;
+                  });
+                },
+                activeColor: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(height: 24),
               

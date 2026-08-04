@@ -5,6 +5,8 @@ class CartItem {
   final double price;
   final double total;
   final List<String> selectedModifiers;
+  final bool? isTaxInclusive;
+  final double? taxPercentage;
 
   const CartItem({
     required this.productId,
@@ -13,6 +15,8 @@ class CartItem {
     required this.price,
     required this.total,
     this.selectedModifiers = const [],
+    this.isTaxInclusive,
+    this.taxPercentage,
   });
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
@@ -23,6 +27,8 @@ class CartItem {
       price: (json['price'] ?? 0.0).toDouble(),
       total: (json['total'] ?? 0.0).toDouble(),
       selectedModifiers: (json['selectedModifiers'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      isTaxInclusive: json['isTaxInclusive'] as bool?,
+      taxPercentage: json['taxPercentage'] != null ? (json['taxPercentage'] as num).toDouble() : null,
     );
   }
 
@@ -34,6 +40,8 @@ class CartItem {
       'price': price,
       'total': total,
       'selectedModifiers': selectedModifiers,
+      'isTaxInclusive': isTaxInclusive,
+      'taxPercentage': taxPercentage,
     };
   }
 
@@ -43,6 +51,8 @@ class CartItem {
     int? quantity,
     double? price,
     double? total,
+    bool? isTaxInclusive,
+    double? taxPercentage,
   }) {
     return CartItem(
       productId: productId ?? this.productId,
@@ -50,6 +60,8 @@ class CartItem {
       quantity: quantity ?? this.quantity,
       price: price ?? this.price,
       total: total ?? this.total,
+      isTaxInclusive: isTaxInclusive ?? this.isTaxInclusive,
+      taxPercentage: taxPercentage ?? this.taxPercentage,
     );
   }
 }

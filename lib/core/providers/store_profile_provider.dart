@@ -10,6 +10,7 @@ class StoreProfile {
   final String address;
   final String logoBase64;
   final double? defaultTaxPercentage;
+  final bool defaultIsTaxInclusive;
   final String? vatNumber;
   final String? crNumber;
 
@@ -19,6 +20,7 @@ class StoreProfile {
     this.address = '',
     this.logoBase64 = '',
     this.defaultTaxPercentage,
+    this.defaultIsTaxInclusive = false,
     this.vatNumber,
     this.crNumber,
   });
@@ -29,6 +31,7 @@ class StoreProfile {
     String? address,
     String? logoBase64,
     double? defaultTaxPercentage,
+    bool? defaultIsTaxInclusive,
     String? vatNumber,
     String? crNumber,
   }) {
@@ -38,6 +41,7 @@ class StoreProfile {
       address: address ?? this.address,
       logoBase64: logoBase64 ?? this.logoBase64,
       defaultTaxPercentage: defaultTaxPercentage ?? this.defaultTaxPercentage,
+      defaultIsTaxInclusive: defaultIsTaxInclusive ?? this.defaultIsTaxInclusive,
       vatNumber: vatNumber ?? this.vatNumber,
       crNumber: crNumber ?? this.crNumber,
     );
@@ -49,6 +53,7 @@ class StoreProfile {
     'address': address,
     'logoBase64': logoBase64,
     'defaultTaxPercentage': defaultTaxPercentage,
+    'defaultIsTaxInclusive': defaultIsTaxInclusive,
     'vatNumber': vatNumber,
     'crNumber': crNumber,
   };
@@ -59,6 +64,7 @@ class StoreProfile {
     address: json['address'] ?? '',
     logoBase64: json['logoBase64'] ?? '',
     defaultTaxPercentage: json['defaultTaxPercentage'] != null ? (json['defaultTaxPercentage'] as num).toDouble() : null,
+    defaultIsTaxInclusive: json['defaultIsTaxInclusive'] ?? false,
     vatNumber: json['vatNumber'],
     crNumber: json['crNumber'],
   );

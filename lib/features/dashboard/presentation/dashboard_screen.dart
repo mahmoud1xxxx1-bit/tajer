@@ -528,24 +528,34 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
-      padding: EdgeInsets.all(20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
+    return SizedBox(
+      height: 150, // Fixed height to prevent expanding
+      child: GlassCard(
+        padding: EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, size: 28, color: color),
             ),
-            child: Icon(icon, size: 28, color: color),
-          ),
-          SizedBox(height: 16),
-          Text(title, style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey, fontSize: 14)),
-          SizedBox(height: 4),
-          Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-        ],
+            SizedBox(height: 12),
+            Text(title, style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
+            SizedBox(height: 4),
+            Expanded(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

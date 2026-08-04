@@ -37,9 +37,14 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
   String _getPaymentMethod(String method, bool isAr) {
     switch (method) {
       case 'cash':
-        return isAr ? 'نقداً (Cash)' : 'Cash';
+        return 'كاش 💵';
+      case 'mada':
       case 'card':
-        return isAr ? 'بطاقة / شبكة (Card)' : 'Card';
+        return 'مدى 💳';
+      case 'transfer':
+        return 'تحويل بنكي 🏦';
+      case 'apple_pay':
+        return 'Apple Pay 🍏';
       case 'debt':
         return isAr ? 'آجل / ذمم (Credit)' : 'Credit';
       default:
@@ -324,12 +329,89 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(isAr ? 'المجموع النهائي للفاتورة' : 'Total Amount', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold)),
+                        Text(isAr ? 'الإجمالي (قبل الضريبة)' : 'Subtotal', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16)),
                         Text(
                           '${currentOrder.total.toStringAsFixed(2)} ${currency.code}',
-                          style: const TextStyle(fontFamily: 'Tajawal', fontSize: 20, fontWeight: FontWeight.w900, color: Colors.green),
+                          style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold),
                         ),
                       ],
+                    ),
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final storeProfile = ref.watch(storeProfileProvider).value;
+                        final defaultTaxPercentage = storeProfile?.defaultTaxPercentage ?? 0.0;
+                        final defaultIsTaxInclusive = storeProfile?.defaultIsTaxInclusive ?? false;
+                        
+                        double totalTaxAmount = 0.0;
+                        double grandTotal = 0.0;
+                        bool hasTax = false;
+                        
+                        for (var item in currentOrder.items) {
+                          final taxRate = item.taxPercentage ?? defaultTaxPercentage;
+                          final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
+                          
+                          if (taxRate > 0) {
+                            hasTax = true;
+                            if (isInclusive) {
+                              final tax = item.total - (item.total / (1 + (taxRate / 100)));
+                              totalTaxAmount += tax;
+                              grandTotal += item.total;
+                            } else {
+                              final tax = item.total * (taxRate / 100);
+                              totalTaxAmount += tax;
+                              grandTotal += item.total + tax;
+                            }
+                          } else {
+                            grandTotal += item.total;
+                          }
+                        }
+
+                        if (hasTax) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 6),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(isAr ? "إجمالي الضريبة" : "Total Tax", style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
+                                  Text('${totalTaxAmount.toStringAsFixed(2)} ${currency.code}', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              const Divider(),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(isAr ? 'المجموع النهائي للفاتورة' : 'Grand Total', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold)),
+                                  Text(
+                                    '${grandTotal.toStringAsFixed(2)} ${currency.code}',
+                                    style: const TextStyle(fontFamily: 'Tajawal', fontSize: 20, fontWeight: FontWeight.w900, color: Colors.green),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+                        }
+                        return Column(
+                          children: [
+                            const SizedBox(height: 8),
+                            const Divider(),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(isAr ? 'المجموع النهائي للفاتورة' : 'Grand Total', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold)),
+                                Text(
+                                  '${currentOrder.total.toStringAsFixed(2)} ${currency.code}',
+                                  style: const TextStyle(fontFamily: 'Tajawal', fontSize: 20, fontWeight: FontWeight.w900, color: Colors.green),
+                                ),
+                              ],
+                            ),
+                          ],
+                        );
+                      },
                     ),
                     if (currentOrder.isCredit) ...[
                       const SizedBox(height: 12),
@@ -341,12 +423,31 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                         ],
                       ),
                       const SizedBox(height: 6),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(isAr ? 'المبلغ الآجل (على الحساب)' : 'Remaining Credit', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold, color: Colors.red)),
-                          Text('${(currentOrder.total - currentOrder.paidAmount).toStringAsFixed(2)} ${currency.code}', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontWeight: FontWeight.bold)),
-                        ],
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final storeProfile = ref.read(storeProfileProvider).value;
+                          final defaultTaxPercentage = storeProfile?.defaultTaxPercentage ?? 0.0;
+                          final defaultIsTaxInclusive = storeProfile?.defaultIsTaxInclusive ?? false;
+                          
+                          double grandTotal = 0.0;
+                          for (var item in currentOrder.items) {
+                            final taxRate = item.taxPercentage ?? defaultTaxPercentage;
+                            final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
+                            if (isInclusive) {
+                              grandTotal += item.total;
+                            } else {
+                              grandTotal += item.total + (item.total * (taxRate / 100));
+                            }
+                          }
+
+                          return Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(isAr ? 'المبلغ الآجل (على الحساب)' : 'Remaining Credit', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold, color: Colors.red)),
+                              Text('${(grandTotal - currentOrder.paidAmount).toStringAsFixed(2)} ${currency.code}', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontWeight: FontWeight.bold)),
+                            ],
+                          );
+                        }
                       ),
                     ],
                     if (currentOrder.paymentMethod == 'cash' && currentOrder.tenderedAmount != null) ...[
@@ -405,7 +506,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => PdfViewerScreen(order: currentOrder, currency: currency.code, taxPercentage: tax),
+                          builder: (_) => PdfViewerScreen(order: currentOrder, currency: currency.code, taxPercentage: tax, defaultIsTaxInclusive: storeProfile?.defaultIsTaxInclusive ?? false),
                         ),
                       );
                     },
