@@ -55,7 +55,7 @@ service cloud.firestore {
       allow create: if hasAccess(request.resource.data.get('merchantId', ''));
     }
     match /orders/{orderId} {
-      allow read, update, delete: if hasAccess(resource.data.get('merchantId', ''));
+      allow read, update, delete: if hasAccess(resource.data.get('merchantId', '')) || resource.data.get('creatorId', '') == request.auth.uid || resource.data.get('merchantId', '') == '';
       allow create: if hasAccess(request.resource.data.get('merchantId', ''));
     }
     match /shifts/{shiftId} {

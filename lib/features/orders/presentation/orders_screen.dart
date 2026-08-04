@@ -322,8 +322,9 @@ class OrdersScreen extends ConsumerWidget {
                                     children: [
                                       TextButton.icon(
                                         onPressed: () async {
+                                          bool needsTaxPrompt = order.items.any((item) => (item.taxPercentage == null || item.taxPercentage! <= 0));
                                           double? tax = storeProfile?.defaultTaxPercentage;
-                                          if (tax == null || tax <= 0) {
+                                          if (needsTaxPrompt && (tax == null || tax <= 0)) {
                                             tax = await TaxDialog.show(context);
                                           }
                                           if (!context.mounted) return;
@@ -344,8 +345,9 @@ class OrdersScreen extends ConsumerWidget {
                                       ),
                                       TextButton.icon(
                                         onPressed: () async {
+                                          bool needsTaxPrompt = order.items.any((item) => (item.taxPercentage == null || item.taxPercentage! <= 0));
                                           double? tax = storeProfile?.defaultTaxPercentage;
-                                          if (tax == null || tax <= 0) {
+                                          if (needsTaxPrompt && (tax == null || tax <= 0)) {
                                             tax = await TaxDialog.show(context);
                                           }
                                           try {

@@ -33,6 +33,7 @@ class PdfService {
   static Future<Uint8List> generateInvoicePdf(BuildContext buildContext, AppOrder order, String currency, {double? taxPercentage, bool defaultIsTaxInclusive = false}) async {
     final font = await _getFont();
     final boldFont = await _getBoldFont();
+    final emojiFont = await _getEmojiFont();
     
     bool isAr = true;
     try {
@@ -70,10 +71,10 @@ class PdfService {
 
     // Attempt to generate and save PDF with logoImage; if pdf package throws any exception (such as Null check operator on unsupported image formats), rebuild cleanly without image.
     try {
-      final pdf = _buildInvoiceDoc(order, currency, taxPercentage ?? 0.0, defaultIsTaxInclusive, font, boldFont, isAr, storeName, storePhone, storeAddress, logoImage, vatNumber, crNumber);
+      final pdf = _buildInvoiceDoc(order, currency, taxPercentage ?? 0.0, defaultIsTaxInclusive, font, boldFont, emojiFont, isAr, storeName, storePhone, storeAddress, logoImage, vatNumber, crNumber);
       return await pdf.save();
     } catch (e) {
-      final fallbackPdf = _buildInvoiceDoc(order, currency, taxPercentage ?? 0.0, defaultIsTaxInclusive, font, boldFont, isAr, storeName, storePhone, storeAddress, null, vatNumber, crNumber);
+      final fallbackPdf = _buildInvoiceDoc(order, currency, taxPercentage ?? 0.0, defaultIsTaxInclusive, font, boldFont, emojiFont, isAr, storeName, storePhone, storeAddress, null, vatNumber, crNumber);
       return await fallbackPdf.save();
     }
   }
@@ -85,6 +86,7 @@ class PdfService {
     bool defaultIsTaxInclusive,
     pw.Font font,
     pw.Font boldFont,
+    pw.Font emojiFont,
     bool isAr,
     String storeName,
     String storePhone,
@@ -291,15 +293,15 @@ class PdfService {
                               pw.Text('${isAr ? "طريقة الدفع: " : "Payment Method: "}$paymentMethodText', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14)),
                               pw.SizedBox(height: 12),
                             ],
-                            pw.Row(
-                              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                              children: [
-                                pw.Text(lblGrandTotal, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                                pw.SizedBox(width: 20),
-                                pw.Text('${order.total} $currency'),
-                              ],
-                            ),
                             if (hasTax) ...[
+                              pw.Row(
+                                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Text(isAr ? 'الإجمالي (قبل الضريبة)' : 'Total (Before Tax)', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                                  pw.SizedBox(width: 20),
+                                  pw.Text('${(grandTotal - totalTaxAmount).toStringAsFixed(2)} $currency'),
+                                ],
+                              ),
                               pw.SizedBox(height: 8),
                               pw.Row(
                                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -313,9 +315,18 @@ class PdfService {
                               pw.Row(
                                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                                 children: [
-                                  pw.Text(isAr ? 'الإجمالي النهائي' : 'Grand Total', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                                  pw.Text(lblGrandTotal, style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
                                   pw.SizedBox(width: 20),
                                   pw.Text('${grandTotal.toStringAsFixed(2)} $currency', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                                ],
+                              ),
+                            ] else ...[
+                              pw.Row(
+                                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Text(lblGrandTotal, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                                  pw.SizedBox(width: 20),
+                                  pw.Text('${order.total} $currency'),
                                 ],
                               ),
                             ],

@@ -173,11 +173,12 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       padding: EdgeInsets.all(24.0),
       child: Form(
         key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
               isEditing ? l10n.edit : l10n.add,
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
               textAlign: TextAlign.center,
@@ -358,6 +359,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             ),
             SizedBox(height: 16),
           ],
+        ),
         ),
       ),
     );

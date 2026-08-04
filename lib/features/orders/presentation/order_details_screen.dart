@@ -374,6 +374,14 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
+                                  Text(isAr ? 'الإجمالي (قبل الضريبة)' : 'Total (Before Tax)', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
+                                  Text('${(grandTotal - totalTaxAmount).toStringAsFixed(2)} ${currency.code}', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
                                   Text(isAr ? "إجمالي الضريبة" : "Total Tax", style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
                                   Text('${totalTaxAmount.toStringAsFixed(2)} ${currency.code}', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
                                 ],
@@ -498,8 +506,9 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                     icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
                     label: Text(isAr ? 'فاتورة PDF' : 'PDF Invoice', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.white)),
                     onPressed: () async {
+                      bool needsTaxPrompt = currentOrder.items.any((item) => (item.taxPercentage == null || item.taxPercentage! <= 0));
                       double? tax = storeProfile?.defaultTaxPercentage;
-                      if (tax == null || tax <= 0) {
+                      if (needsTaxPrompt && (tax == null || tax <= 0)) {
                         tax = await TaxDialog.show(context);
                       }
                       if (!context.mounted) return;
