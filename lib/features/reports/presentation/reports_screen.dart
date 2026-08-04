@@ -12,6 +12,7 @@ import '../data/pdf_service.dart';
 import 'package:printing/printing.dart';
 import '../../../core/services/excel_service.dart';
 import '../../../core/widgets/tax_dialog.dart';
+import '../../../core/providers/store_profile_provider.dart';
 
 class ReportsScreen extends ConsumerStatefulWidget {
   const ReportsScreen({super.key});
