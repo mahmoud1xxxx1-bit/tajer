@@ -164,10 +164,13 @@ class OrderRepository {
             final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
             
             final rawMaterialRef = _firestore.collection('raw_materials').doc(rawMaterialId);
-            batch.update(rawMaterialRef, {
-              'quantity': FieldValue.increment(-(amountRequired * item.quantity)),
-              'updatedAt': FieldValue.serverTimestamp(),
-            });
+            final rmDoc = await rawMaterialRef.get(const GetOptions(source: Source.serverAndCache));
+            if (rmDoc.exists) {
+              batch.update(rawMaterialRef, {
+                'quantity': FieldValue.increment(-(amountRequired * item.quantity)),
+                'updatedAt': FieldValue.serverTimestamp(),
+              });
+            }
           }
         } else {
           // No recipe -> deduct product quantity
@@ -179,14 +182,17 @@ class OrderRepository {
       }
     }
 
-    if (order.customerId != 'walk_in') {
-      final debtIncrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
-      batch.update(customerRef, {
-        'totalPurchases': FieldValue.increment(order.total),
-        'orderCount': FieldValue.increment(1),
-        'totalDebt': FieldValue.increment(debtIncrease),
-        'lastPurchaseDate': FieldValue.serverTimestamp(),
-      });
+    if (order.customerId != 'walk_in' && order.customerId.isNotEmpty) {
+      final customerDoc = await customerRef.get();
+      if (customerDoc.exists) {
+        final debtIncrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
+        batch.update(customerRef, {
+          'totalPurchases': FieldValue.increment(order.total),
+          'orderCount': FieldValue.increment(1),
+          'totalDebt': FieldValue.increment(debtIncrease),
+          'lastPurchaseDate': FieldValue.serverTimestamp(),
+        });
+      }
     }
 
     if (shiftId != null) {
@@ -225,10 +231,13 @@ class OrderRepository {
               final rawMaterialId = recipeItem['rawMaterialId'] as String;
               final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
               final rawMaterialRef = _firestore.collection('raw_materials').doc(rawMaterialId);
-              batch.update(rawMaterialRef, {
-                'quantity': FieldValue.increment(amountRequired * item.quantity),
-                'updatedAt': FieldValue.serverTimestamp(),
-              });
+              final rmDoc = await rawMaterialRef.get(const GetOptions(source: Source.serverAndCache));
+              if (rmDoc.exists) {
+                batch.update(rawMaterialRef, {
+                  'quantity': FieldValue.increment(amountRequired * item.quantity),
+                  'updatedAt': FieldValue.serverTimestamp(),
+                });
+              }
             }
           } else {
             batch.update(productRef, {
@@ -242,17 +251,19 @@ class OrderRepository {
       if (order.customerId.isNotEmpty && order.customerId != 'walk_in') {
         final customerRef = _firestore.collection('customers').doc(order.customerId);
         final customerDoc = await customerRef.get();
-        final currentDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
-        
-        final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
-        final actualDecrease = currentDebt >= debtDecrease ? debtDecrease : currentDebt;
+        if (customerDoc.exists) {
+          final currentDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
+          
+          final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
+          final actualDecrease = currentDebt >= debtDecrease ? debtDecrease : currentDebt;
 
-        batch.update(customerRef, {
-          'totalPurchases': FieldValue.increment(-order.total),
-          'orderCount': FieldValue.increment(-1),
-          'totalDebt': FieldValue.increment(-actualDecrease),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
+          batch.update(customerRef, {
+            'totalPurchases': FieldValue.increment(-order.total),
+            'orderCount': FieldValue.increment(-1),
+            'totalDebt': FieldValue.increment(-actualDecrease),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
       }
     }
 
@@ -283,10 +294,13 @@ class OrderRepository {
               final rawMaterialId = recipeItem['rawMaterialId'] as String;
               final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
               final rawMaterialRef = _firestore.collection('raw_materials').doc(rawMaterialId);
-              batch.update(rawMaterialRef, {
-                'quantity': FieldValue.increment(amountRequired * item.quantity),
-                'updatedAt': FieldValue.serverTimestamp(),
-              });
+              final rmDoc = await rawMaterialRef.get(const GetOptions(source: Source.serverAndCache));
+              if (rmDoc.exists) {
+                batch.update(rawMaterialRef, {
+                  'quantity': FieldValue.increment(amountRequired * item.quantity),
+                  'updatedAt': FieldValue.serverTimestamp(),
+                });
+              }
             }
           } else {
             batch.update(productRef, {
@@ -300,17 +314,19 @@ class OrderRepository {
       if (order.customerId != 'walk_in' && order.customerId.isNotEmpty) {
         final customerRef = _firestore.collection('customers').doc(order.customerId);
         final customerDoc = await customerRef.get();
-        final currentDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
-        
-        final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
-        final actualDecrease = currentDebt >= debtDecrease ? debtDecrease : currentDebt;
+        if (customerDoc.exists) {
+          final currentDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
+          
+          final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
+          final actualDecrease = currentDebt >= debtDecrease ? debtDecrease : currentDebt;
 
-        batch.update(customerRef, {
-          'totalPurchases': FieldValue.increment(-order.total),
-          'orderCount': FieldValue.increment(-1),
-          'totalDebt': FieldValue.increment(-actualDecrease),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
+          batch.update(customerRef, {
+            'totalPurchases': FieldValue.increment(-order.total),
+            'orderCount': FieldValue.increment(-1),
+            'totalDebt': FieldValue.increment(-actualDecrease),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
       }
     } else if (order.status == 'cancelled' && newStatus != 'cancelled') {
       // Transitioning FROM cancelled back to active: Re-deduct inventory & re-add customer purchases/debt
@@ -328,10 +344,13 @@ class OrderRepository {
               final rawMaterialId = recipeItem['rawMaterialId'] as String;
               final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
               final rawMaterialRef = _firestore.collection('raw_materials').doc(rawMaterialId);
-              batch.update(rawMaterialRef, {
-                'quantity': FieldValue.increment(-(amountRequired * item.quantity)),
-                'updatedAt': FieldValue.serverTimestamp(),
-              });
+              final rmDoc = await rawMaterialRef.get(const GetOptions(source: Source.serverAndCache));
+              if (rmDoc.exists) {
+                batch.update(rawMaterialRef, {
+                  'quantity': FieldValue.increment(-(amountRequired * item.quantity)),
+                  'updatedAt': FieldValue.serverTimestamp(),
+                });
+              }
             }
           } else {
             batch.update(productRef, {
@@ -344,13 +363,16 @@ class OrderRepository {
 
       if (order.customerId != 'walk_in' && order.customerId.isNotEmpty) {
         final customerRef = _firestore.collection('customers').doc(order.customerId);
-        final debtIncrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
-        batch.update(customerRef, {
-          'totalPurchases': FieldValue.increment(order.total),
-          'orderCount': FieldValue.increment(1),
-          'totalDebt': FieldValue.increment(debtIncrease),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
+        final customerDoc = await customerRef.get();
+        if (customerDoc.exists) {
+          final debtIncrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
+          batch.update(customerRef, {
+            'totalPurchases': FieldValue.increment(order.total),
+            'orderCount': FieldValue.increment(1),
+            'totalDebt': FieldValue.increment(debtIncrease),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
       }
     }
 
@@ -368,10 +390,13 @@ class OrderRepository {
     
     // 1. Update customer total debt
     final customerRef = _firestore.collection('customers').doc(customerId);
-    batch.update(customerRef, {
-      'totalDebt': FieldValue.increment(-amountPaid),
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    final customerDoc = await customerRef.get();
+    if (customerDoc.exists) {
+      batch.update(customerRef, {
+        'totalDebt': FieldValue.increment(-amountPaid),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    }
 
     // 2. Fetch all unpaid credit orders for this customer to distribute the payment
     final allCreditOrdersSnapshot = await _firestore
