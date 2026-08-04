@@ -13,11 +13,15 @@ service cloud.firestore {
       return userDoc != null ? userDoc.data.get('merchantId', '') : '';
     }
     
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.email == 'dotkxxx1@gmail.com';
+    }
+
     function hasAccess(merchantId) {
-      return isAuthenticated() && (
+      return isAdmin() || (isAuthenticated() && (
         request.auth.uid == merchantId || 
         getUserMerchantId() == merchantId
-      );
+      ));
     }
     
     // Users Collection (AppUser profile)

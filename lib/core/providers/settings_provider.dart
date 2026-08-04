@@ -1,14 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
+  throw UnimplementedError();
+});
 
 class LocaleNotifier extends Notifier<Locale> {
   @override
   Locale build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final localeString = prefs.getString('app_locale');
+    if (localeString != null && localeString.isNotEmpty) {
+      return Locale(localeString);
+    }
     return const Locale('ar');
   }
 
   void setLocale(Locale locale) {
     state = locale;
+    final prefs = ref.read(sharedPreferencesProvider);
+    prefs.setString('app_locale', locale.languageCode);
   }
 }
 
@@ -42,11 +54,22 @@ enum AppCurrency {
 class CurrencyNotifier extends Notifier<AppCurrency> {
   @override
   AppCurrency build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final currencyString = prefs.getString('app_currency');
+    if (currencyString != null) {
+      try {
+        return AppCurrency.values.firstWhere((e) => e.name == currencyString);
+      } catch (e) {
+        return AppCurrency.sar;
+      }
+    }
     return AppCurrency.sar;
   }
 
   void setCurrency(AppCurrency currency) {
     state = currency;
+    final prefs = ref.read(sharedPreferencesProvider);
+    prefs.setString('app_currency', currency.name);
   }
 }
 
@@ -57,11 +80,23 @@ final currencyProvider = NotifierProvider<CurrencyNotifier, AppCurrency>(() {
 class ThemeModeNotifier extends Notifier<ThemeMode> {
   @override
   ThemeMode build() {
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final themeString = prefs.getString('app_theme');
+    if (themeString == 'light') return ThemeMode.light;
+    if (themeString == 'dark') return ThemeMode.dark;
     return ThemeMode.system;
   }
 
   void setThemeMode(ThemeMode mode) {
     state = mode;
+    final prefs = ref.read(sharedPreferencesProvider);
+    if (mode == ThemeMode.light) {
+      prefs.setString('app_theme', 'light');
+    } else if (mode == ThemeMode.dark) {
+      prefs.setString('app_theme', 'dark');
+    } else {
+      prefs.setString('app_theme', 'system');
+    }
   }
 }
 

@@ -1,3 +1,4 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -52,8 +53,15 @@ void main() async {
   // Keep screen awake
   WakelockPlus.enable();
 
+  // Initialize SharedPreferences
+  final prefs = await SharedPreferences.getInstance();
+
   // Initialize RevenueCat Subscription Service
-  final container = ProviderContainer();
+  final container = ProviderContainer(
+    overrides: [
+      sharedPreferencesProvider.overrideWithValue(prefs),
+    ],
+  );
   try {
     await container.read(subscriptionServiceProvider).initPlatformState();
   } catch (e) {
