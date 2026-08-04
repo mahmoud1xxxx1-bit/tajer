@@ -18,6 +18,8 @@ class AppOrder {
   final String? paymentMethod;
   final DateTime? scheduledDate;
   final int? queueNumber;
+  final double? tenderedAmount;
+  final double? changeAmount;
   final DateTime createdAt;
 
   const AppOrder({
@@ -36,6 +38,8 @@ class AppOrder {
     this.paymentMethod,
     this.scheduledDate,
     this.queueNumber,
+    this.tenderedAmount,
+    this.changeAmount,
     required this.createdAt,
   });
 
@@ -59,6 +63,8 @@ class AppOrder {
       paymentMethod: json['paymentMethod'] as String? ?? 'cash',
       scheduledDate: json['scheduledDate'] != null ? (json['scheduledDate'] as Timestamp).toDate() : null,
       queueNumber: json['queueNumber'] as int?,
+      tenderedAmount: (json['tenderedAmount'] as num?)?.toDouble(),
+      changeAmount: (json['changeAmount'] as num?)?.toDouble(),
       createdAt: (json['createdAt'] as Timestamp).toDate(),
     );
   }
@@ -80,6 +86,8 @@ class AppOrder {
       'paymentMethod': paymentMethod ?? 'cash',
       'scheduledDate': scheduledDate != null ? Timestamp.fromDate(scheduledDate!) : null,
       'queueNumber': queueNumber,
+      'tenderedAmount': tenderedAmount,
+      'changeAmount': changeAmount,
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }
@@ -100,6 +108,8 @@ class AppOrder {
     String? paymentMethod,
     DateTime? scheduledDate,
     int? queueNumber,
+    double? tenderedAmount,
+    double? changeAmount,
     DateTime? createdAt,
   }) {
     return AppOrder(
@@ -118,6 +128,8 @@ class AppOrder {
       paymentMethod: paymentMethod ?? this.paymentMethod,
       scheduledDate: scheduledDate ?? this.scheduledDate,
       queueNumber: queueNumber ?? this.queueNumber,
+      tenderedAmount: tenderedAmount ?? this.tenderedAmount,
+      changeAmount: changeAmount ?? this.changeAmount,
       createdAt: createdAt ?? this.createdAt,
     );
   }

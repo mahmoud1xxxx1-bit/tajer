@@ -485,6 +485,8 @@ class _CheckoutSheet extends ConsumerStatefulWidget {
 class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
   bool _isCredit = false;
   final _paidController = TextEditingController();
+  final _tenderedController = TextEditingController();
+  final _notesController = TextEditingController();
   String _paymentMethod = 'cash';
   bool _isScheduled = false;
   DateTime? _scheduledDate;
@@ -498,6 +500,14 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
     super.initState();
     _paidController.text = widget.total.toString();
     _localCustomers = List.from(widget.customers);
+  }
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    _paidController.dispose();
+    _tenderedController.dispose();
+    super.dispose();
   }
 
   Future<void> _selectDateTime() async {
@@ -769,7 +779,41 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                 controller: _paidController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(labelText: 'المبلغ المدفوع الان', border: OutlineInputBorder()),
+                onChanged: (val) => setState(() {}),
               )
+            ],
+            if (_paymentMethod == 'cash') ...[
+              const SizedBox(height: 16),
+              TextField(
+                controller: _tenderedController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'المبلغ المستلم من العميل (للكاش فقط)', border: OutlineInputBorder(), prefixIcon: Icon(Icons.payments_outlined)),
+                onChanged: (val) => setState(() {}),
+              ),
+              if (_tenderedController.text.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Builder(
+                  builder: (context) {
+                    final tendered = double.tryParse(_tenderedController.text) ?? 0.0;
+                    final requiredAmount = _isCredit ? (double.tryParse(_paidController.text) ?? 0.0) : widget.total;
+                    final change = tendered - requiredAmount;
+                    if (tendered > 0 && change >= 0) {
+                      return Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.green)),
+                        child: Text(
+                          'المتبقي للعميل: ${change.toStringAsFixed(2)}',
+                          style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.green, fontSize: 16),
+                          textAlign: TextAlign.center,
+                        ),
+                      );
+                    } else if (tendered > 0 && change < 0) {
+                      return Text('المبلغ غير كافٍ', style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold), textAlign: TextAlign.center);
+                    }
+                    return const SizedBox.shrink();
+                  }
+                ),
+              ],
             ],
             const SizedBox(height: 24),
             ElevatedButton(

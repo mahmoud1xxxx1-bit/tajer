@@ -284,6 +284,27 @@ class PdfService {
                                 pw.Text('${order.total - order.paidAmount} $currency', style: pw.TextStyle(color: PdfColors.red700, fontWeight: pw.FontWeight.bold)),
                               ],
                             ),
+                          ] else if (order.paymentMethod == 'cash' && order.tenderedAmount != null) ...[
+                            pw.SizedBox(height: 8),
+                            pw.Row(
+                              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                              children: [
+                                pw.Text(isAr ? 'المبلغ المستلم' : 'Tendered Cash', style: const pw.TextStyle(color: PdfColors.grey700)),
+                                pw.SizedBox(width: 20),
+                                pw.Text('${order.tenderedAmount} $currency', style: const pw.TextStyle(color: PdfColors.grey700)),
+                              ],
+                            ),
+                            if (order.changeAmount != null) ...[
+                              pw.SizedBox(height: 8),
+                              pw.Row(
+                                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Text(isAr ? 'المتبقي للعميل' : 'Change', style: pw.TextStyle(color: PdfColors.green700, fontWeight: pw.FontWeight.bold)),
+                                  pw.SizedBox(width: 20),
+                                  pw.Text('${order.changeAmount} $currency', style: pw.TextStyle(color: PdfColors.green700, fontWeight: pw.FontWeight.bold)),
+                                ],
+                              ),
+                            ],
                           ]
                         ],
                       ),

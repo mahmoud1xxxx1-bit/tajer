@@ -30,15 +30,6 @@ class CategoriesScreen extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(AppLocalizations.of(context)!.text40, style: TextStyle(fontFamily: 'Tajawal')),
-                  const SizedBox(height: 16),
-                  if (canManageProducts)
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        ref.read(categoryRepositoryProvider)?.seedDefaultCategories();
-                      },
-                      icon: const Icon(Icons.auto_awesome),
-                      label: const Text('إضافة تصنيفات افتراضية', style: TextStyle(fontFamily: 'Tajawal')),
-                    ),
                 ],
               ),
             );

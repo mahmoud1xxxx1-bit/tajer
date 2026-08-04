@@ -99,7 +99,7 @@ class GuestLimitService {
           ElevatedButton.icon(
             onPressed: () {
               Navigator.pop(context);
-              context.push('/subscription');
+              context.push('/paywall');
             },
             icon: Icon(Icons.star),
             label: Text('الترقية الآن (10\$/شهر)', style: TextStyle(fontFamily: 'Tajawal')),
@@ -131,7 +131,7 @@ class GuestLimitService {
           ElevatedButton.icon(
             onPressed: () {
               Navigator.pop(context);
-              context.push('/subscription');
+              context.push('/paywall');
             },
             icon: Icon(Icons.star),
             label: Text('الترقية الآن (10\$/شهر)', style: TextStyle(fontFamily: 'Tajawal')),

@@ -245,6 +245,26 @@ class PrinterService {
                         pw.Text('${(order.total - order.paidAmount).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 10)),
                       ]
                     ),
+                  if (order.paymentMethod == 'cash' && order.tenderedAmount != null) ...[
+                    pw.SizedBox(height: 4),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text('المبلغ المستلم:', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                        pw.Text('${order.tenderedAmount!.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                      ]
+                    ),
+                    if (order.changeAmount != null) ...[
+                      pw.SizedBox(height: 4),
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Text('المتبقي للعميل:', style: pw.TextStyle(font: ttfBold, fontSize: 10)),
+                          pw.Text('${order.changeAmount!.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 10)),
+                        ]
+                      ),
+                    ]
+                  ],
                 ],
 
                 pw.SizedBox(height: 10),

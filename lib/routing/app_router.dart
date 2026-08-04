@@ -19,6 +19,7 @@ import '../features/employees/presentation/employees_screen.dart';
 import '../features/subscription/presentation/subscription_screen.dart';
 import '../features/settings/presentation/profile_screen.dart';
 import '../features/settings/presentation/audit_log_screen.dart';
+import '../features/settings/presentation/user_guide_screen.dart';
 import '../features/shifts/presentation/end_shift_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -52,6 +53,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/user_guide',
+        builder: (context, state) => const UserGuideScreen(),
       ),
       GoRoute(
         path: '/upgrade',

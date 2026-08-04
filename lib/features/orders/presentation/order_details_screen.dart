@@ -345,9 +345,32 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(isAr ? 'المبلغ الآجل (على الحساب)' : 'Remaining Credit', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold, color: Colors.red)),
+                          Text('${(currentOrder.total - currentOrder.paidAmount).toStringAsFixed(2)} ${currency.code}', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontWeight: FontWeight.bold)),
                         ],
                       ),
-                    ]
+                    ],
+                    if (currentOrder.paymentMethod == 'cash' && currentOrder.tenderedAmount != null) ...[
+                      const SizedBox(height: 12),
+                      const Divider(),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(isAr ? 'المبلغ المستلم (كاش)' : 'Tendered Cash', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
+                          Text('${currentOrder.tenderedAmount!.toStringAsFixed(2)} ${currency.code}', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600)),
+                        ],
+                      ),
+                      if (currentOrder.changeAmount != null) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(isAr ? 'المتبقي للعميل' : 'Change Given', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
+                            Text('${currentOrder.changeAmount!.toStringAsFixed(2)} ${currency.code}', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.green, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ],
+                    ],
                   ],
                 ),
               ),

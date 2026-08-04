@@ -113,6 +113,19 @@ class SettingsScreen extends ConsumerWidget {
             title: Localizations.localeOf(context).languageCode == 'ar' ? 'دعم وتقييم' : 'Support & Rating',
             children: [
               ListTile(
+                leading: const Icon(Icons.menu_book, color: Colors.green, size: 28),
+                title: Text(
+                  Localizations.localeOf(context).languageCode == 'ar' ? 'دليل استخدام التطبيق (خطوة بخطوة) 📖' : 'App User Guide 📖',
+                  style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(
+                  Localizations.localeOf(context).languageCode == 'ar' ? 'كيفية إعداد المتجر والمنتجات والمستودع' : 'How to setup your store and products',
+                  style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12),
+                ),
+                onTap: () => context.push('/user_guide'),
+              ),
+              const Divider(height: 1),
+              ListTile(
                 leading: const Icon(Icons.music_note_rounded, color: Colors.black, size: 28),
                 title: Text(
                   Localizations.localeOf(context).languageCode == 'ar' ? 'تابعنا على تيك توك 🎵' : 'Follow us on TikTok 🎵',
