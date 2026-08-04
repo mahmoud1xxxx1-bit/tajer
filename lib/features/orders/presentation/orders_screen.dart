@@ -135,28 +135,7 @@ class OrdersScreen extends ConsumerWidget {
                             ),
                           );
                         },
-                        onLongPress: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text(l10n.delete, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                              content: Text(AppLocalizations.of(context)!.text87, style: const TextStyle(fontFamily: 'Tajawal')),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text(l10n.cancel, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    ref.read(orderRepositoryProvider).deleteOrder(order);
-                                    Navigator.pop(context);
-                                  },
-                                  child: Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
+
                         child: Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: Column(

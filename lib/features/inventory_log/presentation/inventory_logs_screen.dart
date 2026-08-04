@@ -178,12 +178,78 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
             return Center(child: Text(AppLocalizations.of(context)!.text74, style: const TextStyle(fontFamily: 'Tajawal')));
           }
           
+          final Map<String, List<InventoryLog>> groupedLogs = {};
+          final now = DateTime.now();
+          final today = DateTime(now.year, now.month, now.day);
+          final yesterday = today.subtract(const Duration(days: 1));
+          final startOfWeek = today.subtract(Duration(days: today.weekday % 7));
+
+          for (var log in logs) {
+            final d = log.date;
+            final logDate = DateTime(d.year, d.month, d.day);
+            
+            String groupKey;
+            if (logDate == today) {
+              groupKey = '01_اليوم - ' + DateFormat('yyyy/MM/dd').format(logDate);
+            } else if (logDate == yesterday) {
+              groupKey = '02_أمس - ' + DateFormat('yyyy/MM/dd').format(logDate);
+            } else if (logDate.isAfter(startOfWeek.subtract(const Duration(days: 1)))) {
+              final endOfWeek = startOfWeek.add(const Duration(days: 6));
+              groupKey = '03_هذا الأسبوع (من ' + DateFormat('MM/dd').format(startOfWeek) + ' إلى ' + DateFormat('MM/dd').format(endOfWeek) + ')';
+            } else if (logDate.isAfter(today.subtract(const Duration(days: 30)))) {
+              final diffDays = startOfWeek.difference(logDate).inDays;
+              final weeksAgo = (diffDays / 7).floor() + 1;
+              final wStart = startOfWeek.subtract(Duration(days: weeksAgo * 7));
+              final wEnd = wStart.add(const Duration(days: 6));
+              groupKey = '04_قبل ' + weeksAgo.toString() + ' أسبوع (من ' + DateFormat('MM/dd').format(wStart) + ' إلى ' + DateFormat('MM/dd').format(wEnd) + ')';
+            } else if (logDate.year == today.year) {
+              groupKey = '05_شهر ' + DateFormat('MMMM').format(logDate);
+            } else {
+              groupKey = '06_سنة ' + DateFormat('yyyy').format(logDate);
+            }
+            
+            groupedLogs.putIfAbsent(groupKey, () => []).add(log);
+          }
+          
+          final sortedKeys = groupedLogs.keys.toList()..sort();
+
           return ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: logs.length,
+            itemCount: sortedKeys.length,
             itemBuilder: (context, index) {
-              final log = logs[index];
-              final isPositive = log.changeQuantity > 0;
+              final key = sortedKeys[index];
+              final groupLogs = groupedLogs[key]!;
+              final displayName = key.substring(3);
+              
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Theme(
+                  data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                  child: ExpansionTile(
+                    initiallyExpanded: index == 0,
+                    title: Text(
+                      displayName,
+                      style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    subtitle: Text(
+                      isAr ? 'عدد الحركات: ${groupLogs.length}' : 'Movements: ${groupLogs.length}',
+                      style: TextStyle(color: Colors.grey.shade600, fontFamily: 'Tajawal', fontSize: 13),
+                    ),
+                    childrenPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    children: groupLogs.map<Widget>((log) {
+                      final isPositive = log.changeQuantity > 0;
+                      
               
               return GlassCard(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -315,8 +381,12 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                   ),
                 ),
               );
-            },
-          );
+            }).toList(),
+            ),
+          ),
+        );
+      },
+    );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal'))),

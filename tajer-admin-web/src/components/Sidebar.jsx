@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, LogOut, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, LogOut, ShieldCheck, Bell } from 'lucide-react';
 import { auth } from '../firebase';
 import { signOut } from 'firebase/auth';
 
@@ -16,6 +16,7 @@ const Sidebar = () => {
     { path: '/', label: 'الرئيسية', icon: LayoutDashboard },
     { path: '/users', label: 'إدارة التجار', icon: Users },
     { path: '/plans', label: 'خطط الأسعار', icon: CreditCard },
+    { path: '/notifications', label: 'الإشعارات', icon: Bell },
   ];
 
   return (

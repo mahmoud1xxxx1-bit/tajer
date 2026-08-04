@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Plans from './pages/Plans';
+import Notifications from './pages/Notifications';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -39,6 +40,7 @@ function App() {
         <Route path="/" element={user ? <Dashboard /> : <Navigate to="/login" />} />
         <Route path="/users" element={user ? <Users /> : <Navigate to="/login" />} />
         <Route path="/plans" element={user ? <Plans /> : <Navigate to="/login" />} />
+        <Route path="/notifications" element={user ? <Notifications /> : <Navigate to="/login" />} />
       </Routes>
     </Router>
   );
