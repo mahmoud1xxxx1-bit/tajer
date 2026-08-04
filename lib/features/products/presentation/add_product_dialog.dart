@@ -289,7 +289,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                         controller: _rawMaterialQtyController,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
-                          labelText: isAr ? 'الكمية' : 'Qty',
+                          labelText: isAr ? 'الكمية المخصومة لكل 1 طلب' : 'Qty Deducted per Order',
                           border: const OutlineInputBorder(),
                         ),
                       ),
