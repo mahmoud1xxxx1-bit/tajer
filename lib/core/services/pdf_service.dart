@@ -128,8 +128,6 @@ class PdfService {
         theme: pw.ThemeData.withFont(
           base: font,
           bold: boldFont,
-        ).copyWith(
-          fontFallback: [emojiFont],
         ),
         build: (pw.Context context) {
           return [
@@ -301,7 +299,7 @@ class PdfService {
                           crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
                             if (paymentMethodText.isNotEmpty) ...[
-                              pw.Text('${isAr ? "طريقة الدفع: " : "Payment Method: "}$paymentMethodText', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14)),
+                              pw.Text('${isAr ? "طريقة الدفع: " : "Payment Method: "}$paymentMethodText', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14, fontFallback: [emojiFont])),
                               pw.SizedBox(height: 12),
                             ],
                             if (hasTax) ...[
