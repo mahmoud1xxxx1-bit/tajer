@@ -188,23 +188,84 @@ class ProductsScreen extends ConsumerWidget {
                               } else if (value == 'delete') {
                                 showDialog(
                                   context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: Text(l10n.delete, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                                    content: Text(AppLocalizations.of(context)!.text103, style: const TextStyle(fontFamily: 'Tajawal')),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: Text(l10n.cancel, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                                  builder: (context) {
+                                    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+                                    return AlertDialog(
+                                      title: Text(isArabic ? 'تأكيد الحذف' : 'Confirm Deletion', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
+                                      content: SingleChildScrollView(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              isArabic ? 'هل أنت متأكد من رغبتك في حذف هذا المنتج نهائياً؟' : 'Are you sure you want to permanently delete this product?',
+                                              style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16),
+                                            ),
+                                            const SizedBox(height: 16),
+                                            Container(
+                                              padding: const EdgeInsets.all(12),
+                                              decoration: BoxDecoration(
+                                                color: Colors.red.withOpacity(0.1),
+                                                borderRadius: BorderRadius.circular(8),
+                                                border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                              ),
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      const Text('🔴 ', style: TextStyle(fontSize: 12)),
+                                                      Expanded(child: Text(
+                                                        isArabic ? 'حذف هذا المنتج سيمنعك من مسح أو إلغاء أي فاتورة سابقة تحتوي عليه.' : 'Deleting this product prevents cancelling past invoices containing it.',
+                                                        style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13),
+                                                      )),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Row(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      const Text('🔴 ', style: TextStyle(fontSize: 12)),
+                                                      Expanded(child: Text(
+                                                        isArabic ? 'إذا كان المنتج مربوطاً بمواد خام، يجب عليك الذهاب وحذف مواده الخام أولاً.' : 'If linked to raw materials, please delete the raw materials first.',
+                                                        style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13),
+                                                      )),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Row(
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                                    children: [
+                                                      const Text('🔴 ', style: TextStyle(fontSize: 12)),
+                                                      Expanded(child: Text(
+                                                        isArabic ? 'سيبقى سجل المخزون الخاص بهذا المنتج كما هو ولن يتم مسحه أو تعديله مثل الفواتير تماماً.' : 'The inventory log for this product will remain and cannot be modified.',
+                                                        style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13),
+                                                      )),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                      TextButton(
-                                        onPressed: () {
-                                          ref.read(productRepositoryProvider).deleteProduct(product.id);
-                                          Navigator.pop(context);
-                                        },
-                                        child: Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                                      ),
-                                    ],
-                                  ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(context),
+                                          child: Text(l10n.cancel, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                                        ),
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                          onPressed: () {
+                                            ref.read(productRepositoryProvider).deleteProduct(product.id);
+                                            Navigator.pop(context);
+                                          },
+                                          child: Text(l10n.delete, style: const TextStyle(color: Colors.white, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                        ),
+                                      ],
+                                    );
+                                  },
                                 );
                               }
                             },
