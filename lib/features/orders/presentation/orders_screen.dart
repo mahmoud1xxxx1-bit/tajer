@@ -21,6 +21,7 @@ import '../../../core/utils/date_formatter.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../authentication/domain/app_user.dart';
+import '../../../core/services/activity_logger.dart';
 
 class OrdersScreen extends ConsumerWidget {
   const OrdersScreen({super.key});
@@ -132,6 +133,58 @@ class OrdersScreen extends ConsumerWidget {
                             context,
                             MaterialPageRoute(
                               builder: (_) => OrderDetailsScreen(order: order),
+                            ),
+                          );
+                        },
+                        onLongPress: () {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: Text(AppLocalizations.of(context)!.text92, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
+                              content: Text(
+                                Localizations.localeOf(context).languageCode == 'ar'
+                                    ? 'هل أنت متأكد من رغبتك في مسح الفاتورة نهائياً؟ لا يمكن التراجع عن هذه الخطوة.'
+                                    : 'Are you sure you want to permanently delete this order? This action cannot be undone.',
+                                style: const TextStyle(fontFamily: 'Tajawal'),
+                              ),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppLocalizations.of(context)!.text93, style: const TextStyle(fontFamily: 'Tajawal'))),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                  onPressed: () async {
+                                    Navigator.pop(ctx);
+                                    try {
+                                      await ref.read(orderRepositoryProvider).deleteOrder(order);
+                                      final user = ref.read(appUserProvider).value;
+                                      await ActivityLogger.log(
+                                        user: user,
+                                        actionType: Localizations.localeOf(context).languageCode == 'ar' ? 'حذف فاتورة' : 'Order Deleted',
+                                        description: Localizations.localeOf(context).languageCode == 'ar' 
+                                            ? 'تم حذف الفاتورة رقم #${order.queueNumber ?? order.id.substring(0, 6)} نهائياً من قبل ${user?.name ?? "التاجر"}' 
+                                            : 'Permanently deleted order #${order.queueNumber ?? order.id.substring(0, 6)} by ${user?.name ?? "Owner"}',
+                                        amount: order.total,
+                                      );
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'تم حذف الفاتورة بنجاح' : 'Order deleted successfully', style: const TextStyle(fontFamily: 'Tajawal'))),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text('حدث خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
+                                            backgroundColor: Colors.red,
+                                            duration: const Duration(seconds: 10),
+                                            action: SnackBarAction(label: 'إخفاء', textColor: Colors.white, onPressed: () {}),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  child: Text(AppLocalizations.of(context)!.text94, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
+                                ),
+                              ],
                             ),
                           );
                         },
