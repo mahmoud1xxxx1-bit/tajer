@@ -324,14 +324,19 @@ class OrdersScreen extends ConsumerWidget {
                                         onPressed: () async {
                                           bool needsTaxPrompt = order.items.any((item) => (item.taxPercentage == null || item.taxPercentage! <= 0));
                                           double? tax = storeProfile?.defaultTaxPercentage;
+                                          bool isInclusive = storeProfile?.defaultIsTaxInclusive ?? false;
                                           if (needsTaxPrompt && (tax == null || tax <= 0)) {
-                                            tax = await TaxDialog.show(context);
+                                            final taxResult = await TaxDialog.show(context);
+                                            tax = taxResult?.percentage;
+                                            if (taxResult != null) {
+                                              isInclusive = taxResult.isInclusive;
+                                            }
                                           }
                                           if (!context.mounted) return;
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (_) => PdfViewerScreen(order: order, currency: currency, taxPercentage: tax, defaultIsTaxInclusive: storeProfile?.defaultIsTaxInclusive ?? false),
+                                              builder: (_) => PdfViewerScreen(order: order, currency: currency, taxPercentage: tax, defaultIsTaxInclusive: isInclusive),
                                             ),
                                           );
                                         },
@@ -347,11 +352,16 @@ class OrdersScreen extends ConsumerWidget {
                                         onPressed: () async {
                                           bool needsTaxPrompt = order.items.any((item) => (item.taxPercentage == null || item.taxPercentage! <= 0));
                                           double? tax = storeProfile?.defaultTaxPercentage;
+                                          bool isInclusive = storeProfile?.defaultIsTaxInclusive ?? false;
                                           if (needsTaxPrompt && (tax == null || tax <= 0)) {
-                                            tax = await TaxDialog.show(context);
+                                            final taxResult = await TaxDialog.show(context);
+                                            tax = taxResult?.percentage;
+                                            if (taxResult != null) {
+                                              isInclusive = taxResult.isInclusive;
+                                            }
                                           }
                                           try {
-                                            await PrinterService.printReceipt(order, currency, isKitchen: false, taxPercentage: tax).timeout(const Duration(seconds: 5));
+                                            await PrinterService.printReceipt(order, currency, isKitchen: false, taxPercentage: tax, defaultIsTaxInclusive: isInclusive).timeout(const Duration(seconds: 5));
                                           } catch (_) {
                                             if (context.mounted) {
                                               ScaffoldMessenger.of(context).showSnackBar(

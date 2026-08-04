@@ -426,11 +426,14 @@ class DashboardHome extends ConsumerWidget {
                       icon: Icons.point_of_sale,
                       label: 'كاشير (POS)',
                       color: Colors.green,
-                      onTap: () {
-                        Navigator.push(
+                      onTap: () async {
+                        final shouldGoToOrders = await Navigator.push<bool>(
                           context,
                           MaterialPageRoute(builder: (context) => const PosScreen()),
                         );
+                        if (shouldGoToOrders == true) {
+                          onNavigateToTab(1); // 1 is the index of Orders tab
+                        }
                       },
                     ),
                     _QuickAction(

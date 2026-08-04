@@ -240,21 +240,24 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         ));
       }
       
-      // Attempt to print receipt asynchronously in background with a 5-second timeout
-      try {
-        final storeProfile = ref.read(storeProfileProvider).value;
-        double? tax = storeProfile?.defaultTaxPercentage;
-        await PrinterService.printReceipt(
-          savedOrder, 
-          ref.read(currencyProvider).code,
-          storeProfile: storeProfile,
-          isKitchen: false,
-          taxPercentage: tax,
-        ).timeout(const Duration(seconds: 5));
-      } catch (e) {
-        // Silently ignore print timeouts when no physical printer is connected so user sees only the success notification
-        debugPrint('Auto-print ignored or failed: $e');
+      final storeProfile = ref.read(storeProfileProvider).value;
+      double? tax = storeProfile?.defaultTaxPercentage;
+      final currency = ref.read(currencyProvider).code;
+      
+      if (mounted) {
+        Navigator.pop(context, true);
       }
+
+      // Attempt to print receipt asynchronously in background with a 5-second timeout
+      PrinterService.printReceipt(
+        savedOrder, 
+        currency,
+        storeProfile: storeProfile,
+        isKitchen: false,
+        taxPercentage: tax,
+      ).timeout(const Duration(seconds: 5)).catchError((e) {
+        debugPrint('Auto-print ignored or failed: $e');
+      });
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);

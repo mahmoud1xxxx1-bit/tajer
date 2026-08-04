@@ -508,14 +508,19 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                     onPressed: () async {
                       bool needsTaxPrompt = currentOrder.items.any((item) => (item.taxPercentage == null || item.taxPercentage! <= 0));
                       double? tax = storeProfile?.defaultTaxPercentage;
+                      bool isInclusive = storeProfile?.defaultIsTaxInclusive ?? false;
                       if (needsTaxPrompt && (tax == null || tax <= 0)) {
-                        tax = await TaxDialog.show(context);
+                        final taxResult = await TaxDialog.show(context);
+                        tax = taxResult?.percentage;
+                        if (taxResult != null) {
+                          isInclusive = taxResult.isInclusive;
+                        }
                       }
                       if (!context.mounted) return;
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => PdfViewerScreen(order: currentOrder, currency: currency.code, taxPercentage: tax, defaultIsTaxInclusive: storeProfile?.defaultIsTaxInclusive ?? false),
+                          builder: (_) => PdfViewerScreen(order: currentOrder, currency: currency.code, taxPercentage: tax, defaultIsTaxInclusive: isInclusive),
                         ),
                       );
                     },
