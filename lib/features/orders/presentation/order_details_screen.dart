@@ -68,38 +68,51 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
     );
 
     if (confirmed == true) {
-      await ref.read(orderRepositoryProvider).updateOrderStatus(currentOrder, 'cancelled');
-      final user = ref.read(appUserProvider).value;
-      await ActivityLogger.log(
-        user: user,
-        actionType: isAr ? 'إلغاء فاتورة' : 'Order Cancelled',
-        description: isAr 
-            ? 'تم إلغاء الفاتورة رقم #${currentOrder.queueNumber ?? currentOrder.id.substring(0, 6)} بقيمة ${currentOrder.total}' 
-            : 'Cancelled order #${currentOrder.queueNumber ?? currentOrder.id.substring(0, 6)} with total ${currentOrder.total}',
-        amount: currentOrder.total,
-      );
-      setState(() {
-        currentOrder = AppOrder(
-          id: currentOrder.id,
-          merchantId: currentOrder.merchantId,
-          customerId: currentOrder.customerId,
-          customerName: currentOrder.customerName,
-          items: currentOrder.items,
-          total: currentOrder.total,
-          paidAmount: currentOrder.paidAmount,
-          isCredit: currentOrder.isCredit,
-          paymentMethod: currentOrder.paymentMethod,
-          createdAt: currentOrder.createdAt,
-          status: 'cancelled',
-          queueNumber: currentOrder.queueNumber,
-          creatorId: currentOrder.creatorId,
-          creatorName: currentOrder.creatorName,
+      try {
+        await ref.read(orderRepositoryProvider).updateOrderStatus(currentOrder, 'cancelled');
+        final user = ref.read(appUserProvider).value;
+        await ActivityLogger.log(
+          user: user,
+          actionType: isAr ? 'إلغاء فاتورة' : 'Order Cancelled',
+          description: isAr 
+              ? 'تم إلغاء الفاتورة رقم #${currentOrder.queueNumber ?? currentOrder.id.substring(0, 6)} بقيمة ${currentOrder.total}' 
+              : 'Cancelled order #${currentOrder.queueNumber ?? currentOrder.id.substring(0, 6)} with total ${currentOrder.total}',
+          amount: currentOrder.total,
         );
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(isAr ? 'تم إلغاء الفاتورة بنجاح وإرجاع المواد للمخزون' : 'Order cancelled and inventory restored successfully.', style: const TextStyle(fontFamily: 'Tajawal'))),
-        );
+        setState(() {
+          currentOrder = AppOrder(
+            id: currentOrder.id,
+            merchantId: currentOrder.merchantId,
+            customerId: currentOrder.customerId,
+            customerName: currentOrder.customerName,
+            items: currentOrder.items,
+            total: currentOrder.total,
+            paidAmount: currentOrder.paidAmount,
+            isCredit: currentOrder.isCredit,
+            paymentMethod: currentOrder.paymentMethod,
+            createdAt: currentOrder.createdAt,
+            status: 'cancelled',
+            queueNumber: currentOrder.queueNumber,
+            creatorId: currentOrder.creatorId,
+            creatorName: currentOrder.creatorName,
+          );
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(isAr ? 'تم إلغاء الفاتورة بنجاح وإرجاع المواد للمخزون' : 'Order cancelled and inventory restored successfully.', style: const TextStyle(fontFamily: 'Tajawal'))),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('حدث خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 10),
+              action: SnackBarAction(label: 'إخفاء', textColor: Colors.white, onPressed: () {}),
+            ),
+          );
+        }
       }
     }
   }
@@ -125,21 +138,34 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
     );
 
     if (confirmed == true) {
-      await ref.read(orderRepositoryProvider).deleteOrder(currentOrder);
-      final user = ref.read(appUserProvider).value;
-      await ActivityLogger.log(
-        user: user,
-        actionType: isAr ? 'حذف فاتورة' : 'Order Deleted',
-        description: isAr 
-            ? 'تم حذف الفاتورة رقم #${currentOrder.queueNumber ?? currentOrder.id.substring(0, 6)} نهائياً من قبل ${user?.name ?? "التاجر"}' 
-            : 'Permanently deleted order #${currentOrder.queueNumber ?? currentOrder.id.substring(0, 6)} by ${user?.name ?? "Owner"}',
-        amount: currentOrder.total,
-      );
-      if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(isAr ? 'تم حذف الفاتورة نهائياً' : 'Order deleted permanently.', style: const TextStyle(fontFamily: 'Tajawal'))),
+      try {
+        await ref.read(orderRepositoryProvider).deleteOrder(currentOrder);
+        final user = ref.read(appUserProvider).value;
+        await ActivityLogger.log(
+          user: user,
+          actionType: isAr ? 'حذف فاتورة' : 'Order Deleted',
+          description: isAr 
+              ? 'تم حذف الفاتورة رقم #${currentOrder.queueNumber ?? currentOrder.id.substring(0, 6)} نهائياً من قبل ${user?.name ?? "التاجر"}' 
+              : 'Permanently deleted order #${currentOrder.queueNumber ?? currentOrder.id.substring(0, 6)} by ${user?.name ?? "Owner"}',
+          amount: currentOrder.total,
         );
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(isAr ? 'تم حذف الفاتورة نهائياً' : 'Order deleted permanently.', style: const TextStyle(fontFamily: 'Tajawal'))),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('حدث خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 10),
+              action: SnackBarAction(label: 'إخفاء', textColor: Colors.white, onPressed: () {}),
+            ),
+          );
+        }
       }
     }
   }
