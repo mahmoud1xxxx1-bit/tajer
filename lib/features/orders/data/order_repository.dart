@@ -148,6 +148,7 @@ class OrderRepository {
     final orderWithQueue = order.copyWith(queueNumber: nextQueueNumber);
 
     for (final item in order.items) {
+      if (item.productId.isEmpty) continue;
       final productRef = _firestore.collection('products').doc(item.productId);
       
       // Fetch product to get its recipe
@@ -211,9 +212,8 @@ class OrderRepository {
     // If order is NOT cancelled, restore inventory and subtract customer debt/purchases.
     // If order was ALREADY cancelled, its inventory & debt were already restored upon cancellation!
     if (order.status != 'cancelled') {
-      final customerRef = _firestore.collection('customers').doc(order.customerId);
-
       for (final item in order.items) {
+        if (item.productId.isEmpty) continue;
         final productRef = _firestore.collection('products').doc(item.productId);
         final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
         if (productDoc.exists) {
@@ -239,7 +239,8 @@ class OrderRepository {
         }
       }
 
-      if (order.customerId != 'walk_in' && order.customerId.isNotEmpty) {
+      if (order.customerId.isNotEmpty && order.customerId != 'walk_in') {
+        final customerRef = _firestore.collection('customers').doc(order.customerId);
         final customerDoc = await customerRef.get();
         final currentDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
         
@@ -269,6 +270,7 @@ class OrderRepository {
     if (newStatus == 'cancelled' && order.status != 'cancelled') {
       // Transitioning TO cancelled: Restore inventory & deduct from customer purchases/debt
       for (final item in order.items) {
+        if (item.productId.isEmpty) continue;
         final productRef = _firestore.collection('products').doc(item.productId);
         final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
 
@@ -313,6 +315,7 @@ class OrderRepository {
     } else if (order.status == 'cancelled' && newStatus != 'cancelled') {
       // Transitioning FROM cancelled back to active: Re-deduct inventory & re-add customer purchases/debt
       for (final item in order.items) {
+        if (item.productId.isEmpty) continue;
         final productRef = _firestore.collection('products').doc(item.productId);
         final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
 

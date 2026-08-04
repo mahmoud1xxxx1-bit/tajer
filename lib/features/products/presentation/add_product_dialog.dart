@@ -31,7 +31,6 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
   final _rawMaterialQtyController = TextEditingController();
   String? _selectedCategoryId;
   String? _selectedRawMaterialId;
-  List<RecipeItem> _recipe = [];
   bool _isLoading = false;
 
   @override
@@ -44,7 +43,10 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       _barcodeController.text = widget.productToEdit!.barcode ?? '';
       _modifiersController.text = widget.productToEdit!.modifiers.join('، ');
       _selectedCategoryId = widget.productToEdit!.categoryId;
-      _recipe = List.from(widget.productToEdit!.recipe);
+      if (widget.productToEdit!.recipe.isNotEmpty) {
+        _selectedRawMaterialId = widget.productToEdit!.recipe.first.rawMaterialId;
+        _rawMaterialQtyController.text = widget.productToEdit!.recipe.first.amountRequired.toString();
+      }
     }
   }
 
@@ -87,17 +89,27 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       final isEditing = widget.productToEdit != null;
       final newQuantity = int.parse(_quantityController.text);
       final previousQuantity = isEditing ? widget.productToEdit!.quantity : 0;
+
+      List<RecipeItem> updatedRecipe = [];
+      if (_selectedRawMaterialId != null && _rawMaterialQtyController.text.isNotEmpty) {
+        final qty = double.tryParse(_rawMaterialQtyController.text) ?? 0.0;
+        if (qty > 0) {
+          updatedRecipe.add(RecipeItem(rawMaterialId: _selectedRawMaterialId!, amountRequired: qty));
+        }
+      }
+      
+      final merchantId = isEditing ? widget.productToEdit!.merchantId : (appUser?.merchantId ?? user.uid);
       
       final newProduct = Product(
-        id: isEditing ? widget.productToEdit!.id : Uuid().v4(),
-        merchantId: isEditing ? widget.productToEdit!.merchantId : (ref.read(appUserProvider).value?.merchantId ?? user.uid),
+        id: isEditing ? widget.productToEdit!.id : const Uuid().v4(),
+        merchantId: merchantId,
         name: _nameController.text.trim(),
         price: double.parse(_priceController.text),
         quantity: newQuantity,
         categoryId: _selectedCategoryId,
         barcode: _barcodeController.text.trim().isEmpty ? null : _barcodeController.text.trim(),
         modifiers: _modifiersController.text.trim().isEmpty ? [] : _modifiersController.text.split('،').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
-        recipe: _recipe,
+        recipe: updatedRecipe,
         createdAt: isEditing ? widget.productToEdit!.createdAt : DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -249,88 +261,39 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
               onFieldSubmitted: (_) => _submit(),
             ),
             SizedBox(height: 16),
-            Text(isAr ? 'المقادير (المواد الخام)' : 'Recipe (Raw Materials)', style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
+            Text(isAr ? 'المقادير (المواد الخام) - اختياري' : 'Recipe (Raw Material) - Optional', style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', color: Colors.blueGrey)),
             const SizedBox(height: 8),
             rawMaterialsAsync.when(
               data: (materials) {
                 if (materials.isEmpty) {
                   return Text(isAr ? 'لا توجد مواد خام مضافة' : 'No raw materials added', style: const TextStyle(color: Colors.grey, fontFamily: 'Tajawal'));
                 }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                return Row(
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: DropdownButtonFormField<String>(
-                            value: _selectedRawMaterialId,
-                            decoration: InputDecoration(
-                              labelText: isAr ? 'المادة الخام' : 'Raw Material',
-                              border: const OutlineInputBorder(),
-                            ),
-                            items: materials.map((m) => DropdownMenuItem(value: m.id, child: Text(m.name, style: const TextStyle(fontFamily: 'Tajawal')))).toList(),
-                            onChanged: (val) => setState(() => _selectedRawMaterialId = val),
-                          ),
+                    Expanded(
+                      flex: 2,
+                      child: DropdownButtonFormField<String>(
+                        value: _selectedRawMaterialId,
+                        decoration: InputDecoration(
+                          labelText: isAr ? 'اختر المادة الخام' : 'Select Raw Material',
+                          border: const OutlineInputBorder(),
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          flex: 1,
-                          child: TextFormField(
-                            controller: _rawMaterialQtyController,
-                            keyboardType: TextInputType.number,
-                            decoration: InputDecoration(
-                              labelText: isAr ? 'الكمية' : 'Qty',
-                              border: const OutlineInputBorder(),
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () {
-                            if (_selectedRawMaterialId == null || _rawMaterialQtyController.text.isEmpty) return;
-                            final qty = double.tryParse(_rawMaterialQtyController.text);
-                            if (qty == null || qty <= 0) return;
-                            
-                            setState(() {
-                              final existingIndex = _recipe.indexWhere((r) => r.rawMaterialId == _selectedRawMaterialId);
-                              if (existingIndex >= 0) {
-                                _recipe[existingIndex] = _recipe[existingIndex].copyWith(amountRequired: _recipe[existingIndex].amountRequired + qty);
-                              } else {
-                                _recipe.add(RecipeItem(rawMaterialId: _selectedRawMaterialId!, amountRequired: qty));
-                              }
-                              _selectedRawMaterialId = null;
-                              _rawMaterialQtyController.clear();
-                            });
-                          },
-                          icon: const Icon(Icons.add_circle, color: Colors.green, size: 32),
-                        ),
-                      ],
-                    ),
-                    if (_recipe.isNotEmpty) ...[
-                      const SizedBox(height: 8),
-                      ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: _recipe.length,
-                        itemBuilder: (context, index) {
-                          final recipeItem = _recipe[index];
-                          final material = materials.firstWhere((m) => m.id == recipeItem.rawMaterialId, orElse: () => RawMaterial(id: '', merchantId: '', name: 'Unknown', quantity: 0, unit: '', createdAt: DateTime.now(), updatedAt: DateTime.now()));
-                          return ListTile(
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            title: Text('${material.name} - ${recipeItem.amountRequired} ${material.unit}', style: const TextStyle(fontFamily: 'Tajawal')),
-                            trailing: IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red, size: 20),
-                              onPressed: () {
-                                setState(() {
-                                  _recipe.removeAt(index);
-                                });
-                              },
-                            ),
-                          );
-                        },
+                        items: materials.map((m) => DropdownMenuItem(value: m.id, child: Text(m.name, style: const TextStyle(fontFamily: 'Tajawal')))).toList(),
+                        onChanged: (val) => setState(() => _selectedRawMaterialId = val),
                       ),
-                    ]
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 1,
+                      child: TextFormField(
+                        controller: _rawMaterialQtyController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: isAr ? 'الكمية' : 'Qty',
+                          border: const OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
                   ],
                 );
               },
