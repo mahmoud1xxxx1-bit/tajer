@@ -219,10 +219,10 @@ class PdfService {
                         return pw.BarcodeWidget(
                           color: PdfColor.fromHex('#000000'),
                           barcode: pw.Barcode.qrCode(),
-                          data: _generateTlvZatcaQr(
+                          data: ZatcaQrGenerator.generateQr(
                             sellerName: storeName,
-                            vatRegistrationNumber: vatNumber,
-                            timestamp: order.createdAt.toIso8601String(),
+                            vatNumber: vatNumber,
+                            timestamp: order.createdAt,
                             invoiceTotal: grandTotal,
                             vatTotal: totalTaxAmount,
                           ),
