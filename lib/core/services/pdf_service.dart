@@ -254,118 +254,116 @@ class PdfService {
                   pw.Row(
                     mainAxisAlignment: pw.MainAxisAlignment.end,
                     children: [
-                      pw.Column(
-                        crossAxisAlignment: pw.CrossAxisAlignment.start,
-                        children: [
-                    double totalTaxAmount = 0.0;
-                    double grandTotal = 0.0;
-                    bool hasTax = false;
-                    for (var item in order.items) {
-                      final taxRate = item.taxPercentage ?? defaultTaxPercentage;
-                      final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
-                      if (taxRate > 0) {
-                        hasTax = true;
-                        if (isInclusive) {
-                          totalTaxAmount += item.total - (item.total / (1 + (taxRate / 100)));
-                          grandTotal += item.total;
-                        } else {
-                          totalTaxAmount += item.total * (taxRate / 100);
-                          grandTotal += item.total + (item.total * (taxRate / 100));
+                      pw.Builder(builder: (context) {
+                        double totalTaxAmount = 0.0;
+                        double grandTotal = 0.0;
+                        bool hasTax = false;
+                        for (var item in order.items) {
+                          final taxRate = item.taxPercentage ?? defaultTaxPercentage;
+                          final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
+                          if (taxRate > 0) {
+                            hasTax = true;
+                            if (isInclusive) {
+                              totalTaxAmount += item.total - (item.total / (1 + (taxRate / 100)));
+                              grandTotal += item.total;
+                            } else {
+                              totalTaxAmount += item.total * (taxRate / 100);
+                              grandTotal += item.total + (item.total * (taxRate / 100));
+                            }
+                          } else {
+                            grandTotal += item.total;
+                          }
                         }
-                      } else {
-                        grandTotal += item.total;
-                      }
-                    }
-                    
-                    String paymentMethodText = '';
-                    if (order.paymentMethod == 'cash') {
-                      paymentMethodText = isAr ? 'دفع نقدي 💵' : 'Cash 💵';
-                    } else if (order.paymentMethod == 'card') {
-                      paymentMethodText = isAr ? 'دفع شبكة 💳' : 'Card 💳';
-                    } else if (order.paymentMethod == 'transfer') {
-                      paymentMethodText = isAr ? 'تحويل بنكي 🏦' : 'Bank Transfer 🏦';
-                    }
-                    
-                    return pw.Column(
-                      crossAxisAlignment: pw.CrossAxisAlignment.start,
-                      children: [
-                        if (paymentMethodText.isNotEmpty) ...[
-                          pw.Text('${isAr ? "طريقة الدفع: " : "Payment Method: "}$paymentMethodText', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14)),
-                          pw.SizedBox(height: 12),
-                        ],
-                        pw.Row(
-                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        
+                        String paymentMethodText = '';
+                        if (order.paymentMethod == 'cash') {
+                          paymentMethodText = isAr ? 'دفع نقدي 💵' : 'Cash 💵';
+                        } else if (order.paymentMethod == 'card') {
+                          paymentMethodText = isAr ? 'دفع شبكة 💳' : 'Card 💳';
+                        } else if (order.paymentMethod == 'transfer') {
+                          paymentMethodText = isAr ? 'تحويل بنكي 🏦' : 'Bank Transfer 🏦';
+                        }
+                        
+                        return pw.Column(
+                          crossAxisAlignment: pw.CrossAxisAlignment.start,
                           children: [
-                            pw.Text(lblGrandTotal, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                            pw.SizedBox(width: 20),
-                            pw.Text('${order.total} $currency'),
-                          ],
-                        ),
-                        if (hasTax) ...[
-                          pw.SizedBox(height: 8),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                            children: [
-                              pw.Text('${isAr ? "إجمالي الضريبة" : "Total Tax"}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                              pw.SizedBox(width: 20),
-                              pw.Text('${totalTaxAmount.toStringAsFixed(2)} $currency'),
+                            if (paymentMethodText.isNotEmpty) ...[
+                              pw.Text('${isAr ? "طريقة الدفع: " : "Payment Method: "}$paymentMethodText', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14)),
+                              pw.SizedBox(height: 12),
                             ],
-                          ),
-                          pw.SizedBox(height: 8),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                            children: [
-                              pw.Text(isAr ? 'الإجمالي النهائي' : 'Grand Total', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
-                              pw.SizedBox(width: 20),
-                              pw.Text('${grandTotal.toStringAsFixed(2)} $currency', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
-                            ],
-                          ),
-                        ],
-                        if (order.isCredit) ...[
-                          pw.SizedBox(height: 8),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                            children: [
-                              pw.Text(lblPaid, style: const pw.TextStyle(color: PdfColors.green700)),
-                              pw.SizedBox(width: 20),
-                              pw.Text('${order.paidAmount} $currency', style: const pw.TextStyle(color: PdfColors.green700)),
-                            ],
-                          ),
-                          pw.SizedBox(height: 8),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                            children: [
-                              pw.Text(lblRemaining, style: pw.TextStyle(color: PdfColors.red700, fontWeight: pw.FontWeight.bold)),
-                              pw.SizedBox(width: 20),
-                              pw.Text('${(grandTotal - order.paidAmount).toStringAsFixed(2)} $currency', style: pw.TextStyle(color: PdfColors.red700, fontWeight: pw.FontWeight.bold)),
-                            ],
-                          ),
-                        ] else if (order.paymentMethod == 'cash' && order.tenderedAmount != null) ...[
-                          pw.SizedBox(height: 8),
-                          pw.Row(
-                            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                            children: [
-                              pw.Text(isAr ? 'المبلغ المستلم' : 'Tendered Cash', style: const pw.TextStyle(color: PdfColors.grey700)),
-                              pw.SizedBox(width: 20),
-                              pw.Text('${order.tenderedAmount} $currency', style: const pw.TextStyle(color: PdfColors.grey700)),
-                            ],
-                          ),
-                          if (order.changeAmount != null) ...[
-                            pw.SizedBox(height: 8),
                             pw.Row(
                               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                               children: [
-                                pw.Text(isAr ? 'المتبقي للعميل' : 'Change', style: pw.TextStyle(color: PdfColors.green700, fontWeight: pw.FontWeight.bold)),
+                                pw.Text(lblGrandTotal, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                                 pw.SizedBox(width: 20),
-                                pw.Text('${order.changeAmount} $currency', style: pw.TextStyle(color: PdfColors.green700, fontWeight: pw.FontWeight.bold)),
+                                pw.Text('${order.total} $currency'),
                               ],
                             ),
+                            if (hasTax) ...[
+                              pw.SizedBox(height: 8),
+                              pw.Row(
+                                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Text('${isAr ? "إجمالي الضريبة" : "Total Tax"}', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                                  pw.SizedBox(width: 20),
+                                  pw.Text('${totalTaxAmount.toStringAsFixed(2)} $currency'),
+                                ],
+                              ),
+                              pw.SizedBox(height: 8),
+                              pw.Row(
+                                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Text(isAr ? 'الإجمالي النهائي' : 'Grand Total', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                                  pw.SizedBox(width: 20),
+                                  pw.Text('${grandTotal.toStringAsFixed(2)} $currency', style: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.blue800)),
+                                ],
+                              ),
+                            ],
+                            if (order.isCredit) ...[
+                              pw.SizedBox(height: 8),
+                              pw.Row(
+                                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Text(lblPaid, style: const pw.TextStyle(color: PdfColors.green700)),
+                                  pw.SizedBox(width: 20),
+                                  pw.Text('${order.paidAmount} $currency', style: const pw.TextStyle(color: PdfColors.green700)),
+                                ],
+                              ),
+                              pw.SizedBox(height: 8),
+                              pw.Row(
+                                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Text(lblRemaining, style: pw.TextStyle(color: PdfColors.red700, fontWeight: pw.FontWeight.bold)),
+                                  pw.SizedBox(width: 20),
+                                  pw.Text('${(grandTotal - order.paidAmount).toStringAsFixed(2)} $currency', style: pw.TextStyle(color: PdfColors.red700, fontWeight: pw.FontWeight.bold)),
+                                ],
+                              ),
+                            ] else if (order.paymentMethod == 'cash' && order.tenderedAmount != null) ...[
+                              pw.SizedBox(height: 8),
+                              pw.Row(
+                                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Text(isAr ? 'المبلغ المستلم' : 'Tendered Cash', style: const pw.TextStyle(color: PdfColors.grey700)),
+                                  pw.SizedBox(width: 20),
+                                  pw.Text('${order.tenderedAmount} $currency', style: const pw.TextStyle(color: PdfColors.grey700)),
+                                ],
+                              ),
+                              if (order.changeAmount != null) ...[
+                                pw.SizedBox(height: 8),
+                                pw.Row(
+                                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    pw.Text(isAr ? 'المتبقي للعميل' : 'Change', style: pw.TextStyle(color: PdfColors.green700, fontWeight: pw.FontWeight.bold)),
+                                    pw.SizedBox(width: 20),
+                                    pw.Text('${order.changeAmount} $currency', style: pw.TextStyle(color: PdfColors.green700, fontWeight: pw.FontWeight.bold)),
+                                  ],
+                                ),
+                              ],
+                            ]
                           ],
-                        ]
-                      ],
-                    );
-                  }),
-                ],
+                        );
+                      }),
+                    ],
                   ),
                   
                   pw.SizedBox(height: 20),
