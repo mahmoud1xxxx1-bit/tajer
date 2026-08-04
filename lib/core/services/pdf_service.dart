@@ -196,7 +196,7 @@ class PdfService {
                   ),
                   pw.SizedBox(height: 20),
                   
-                  if (vatNumber.isNotEmpty)
+                  if (vatNumber.isNotEmpty) ...[
                         pw.Builder(builder: (context) {
                         double totalTaxAmount = 0.0;
                         double grandTotal = 0.0;
