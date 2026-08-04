@@ -810,7 +810,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                     double grandTotal = 0.0;
                     for (var item in widget.cart) {
                       final itemTax = item.taxPercentage ?? defaultTaxPercentage;
-                      final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
+                      final isInclusive = (item.taxPercentage != null && item.taxPercentage! > 0) ? (item.isTaxInclusive ?? defaultIsTaxInclusive) : defaultIsTaxInclusive;
                       if (isInclusive) {
                         grandTotal += item.total;
                       } else {
@@ -853,7 +853,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                 double grandTotal = 0.0;
                 for (var item in widget.cart) {
                   final itemTax = item.taxPercentage ?? defaultTaxPercentage;
-                  final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
+                  final isInclusive = (item.taxPercentage != null && item.taxPercentage! > 0) ? (item.isTaxInclusive ?? defaultIsTaxInclusive) : defaultIsTaxInclusive;
                   if (isInclusive) {
                     grandTotal += item.total;
                   } else {

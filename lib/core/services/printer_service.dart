@@ -106,7 +106,7 @@ class PrinterService {
     double totalBeforeTax = 0.0;
     for (var item in order.items) {
       final taxRate = item.taxPercentage ?? taxPercentage ?? 0.0;
-      final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
+      final isInclusive = (item.taxPercentage != null && item.taxPercentage! > 0) ? (item.isTaxInclusive ?? defaultIsTaxInclusive) : defaultIsTaxInclusive;
       if (taxRate > 0) {
         if (isInclusive) {
           totalTaxAmount += item.total - (item.total / (1 + (taxRate / 100)));
