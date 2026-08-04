@@ -47,7 +47,7 @@ service cloud.firestore {
 
     // --- ROOT COLLECTIONS ---
     match /products/{productId} {
-      allow read, update, delete: if hasAccess(resource.data.get('merchantId', ''));
+      allow read, update, delete: if resource == null || hasAccess(resource.data.get('merchantId', ''));
       allow create: if hasAccess(request.resource.data.get('merchantId', ''));
     }
     match /customers/{customerId} {

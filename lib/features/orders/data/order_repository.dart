@@ -157,8 +157,14 @@ class OrderRepository {
         final data = productDoc.data()!;
         final recipeList = data['recipe'] as List<dynamic>? ?? [];
         
+        // ALWAYS deduct product quantity
+        batch.update(productRef, {
+          'quantity': FieldValue.increment(-item.quantity),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        
         if (recipeList.isNotEmpty) {
-          // Has recipe -> deduct raw materials
+          // Has recipe -> ALSO deduct raw materials
           for (final recipeItem in recipeList) {
             final rawMaterialId = recipeItem['rawMaterialId'] as String;
             final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
@@ -172,12 +178,6 @@ class OrderRepository {
               });
             }
           }
-        } else {
-          // No recipe -> deduct product quantity
-          batch.update(productRef, {
-            'quantity': FieldValue.increment(-item.quantity),
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
         }
       }
     }
@@ -226,6 +226,12 @@ class OrderRepository {
           final data = productDoc.data()!;
           final recipeList = data['recipe'] as List<dynamic>? ?? [];
 
+          // ALWAYS restore product quantity
+          batch.update(productRef, {
+            'quantity': FieldValue.increment(item.quantity),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+
           if (recipeList.isNotEmpty) {
             for (final recipeItem in recipeList) {
               final rawMaterialId = recipeItem['rawMaterialId'] as String;
@@ -239,11 +245,6 @@ class OrderRepository {
                 });
               }
             }
-          } else {
-            batch.update(productRef, {
-              'quantity': FieldValue.increment(item.quantity),
-              'updatedAt': FieldValue.serverTimestamp(),
-            });
           }
         }
       }
@@ -289,6 +290,12 @@ class OrderRepository {
           final data = productDoc.data()!;
           final recipeList = data['recipe'] as List<dynamic>? ?? [];
 
+          // ALWAYS restore product quantity
+          batch.update(productRef, {
+            'quantity': FieldValue.increment(item.quantity),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+
           if (recipeList.isNotEmpty) {
             for (final recipeItem in recipeList) {
               final rawMaterialId = recipeItem['rawMaterialId'] as String;
@@ -302,11 +309,6 @@ class OrderRepository {
                 });
               }
             }
-          } else {
-            batch.update(productRef, {
-              'quantity': FieldValue.increment(item.quantity),
-              'updatedAt': FieldValue.serverTimestamp(),
-            });
           }
         }
       }
@@ -339,6 +341,12 @@ class OrderRepository {
           final data = productDoc.data()!;
           final recipeList = data['recipe'] as List<dynamic>? ?? [];
 
+          // ALWAYS deduct product quantity
+          batch.update(productRef, {
+            'quantity': FieldValue.increment(-item.quantity),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+
           if (recipeList.isNotEmpty) {
             for (final recipeItem in recipeList) {
               final rawMaterialId = recipeItem['rawMaterialId'] as String;
@@ -352,11 +360,6 @@ class OrderRepository {
                 });
               }
             }
-          } else {
-            batch.update(productRef, {
-              'quantity': FieldValue.increment(-item.quantity),
-              'updatedAt': FieldValue.serverTimestamp(),
-            });
           }
         }
       }
