@@ -99,11 +99,34 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             icon: Icon(Icons.picture_as_pdf, color: Colors.red),
             onPressed: () async {
               if (reportsService == null) return;
+              
+              final storeProfile = ref.read(storeProfileProvider).value;
+              double taxPercentage = storeProfile?.defaultTaxPercentage ?? 0.0;
+              bool isInclusive = false; // default for reports if not set
+              String vatNumber = storeProfile?.vatNumber ?? '';
+
+              if (storeProfile?.defaultTaxPercentage == null || storeProfile?.defaultTaxPercentage == 0.0) {
+                final result = await TaxDialog.show(context, showVatNumberField: vatNumber.isEmpty);
+                if (result == null) return; // user cancelled
+                taxPercentage = result.percentage;
+                isInclusive = result.isInclusive;
+                if (result.vatNumber != null && result.vatNumber!.isNotEmpty) {
+                  vatNumber = result.vatNumber!;
+                }
+              }
+
               try {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('جاري تجهيز التقرير (PDF)...', style: TextStyle(fontFamily: 'Tajawal'))),
                 );
-                final pdfData = await PdfService.generateReportPdf(reportsService, _selectedFilter, currentCurrency.code);
+                final pdfData = await PdfService.generateReportPdf(
+                  reportsService, 
+                  _selectedFilter, 
+                  currentCurrency.code,
+                  taxPercentage: taxPercentage,
+                  isInclusive: isInclusive,
+                  vatNumber: vatNumber,
+                );
                 await Printing.sharePdf(bytes: pdfData, filename: 'report.pdf');
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(

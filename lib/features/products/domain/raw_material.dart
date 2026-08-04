@@ -6,6 +6,7 @@ class RawMaterial {
   final String merchantId;
   final String name;
   final double quantity; // in smallest unit (e.g., grams, ml)
+  final double initialQuantity; // total registered initially
   final String unit; // 'g', 'ml', 'piece'
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -15,6 +16,7 @@ class RawMaterial {
     required this.merchantId,
     required this.name,
     required this.quantity,
+    required this.initialQuantity,
     required this.unit,
     required this.createdAt,
     required this.updatedAt,
@@ -26,6 +28,7 @@ class RawMaterial {
       merchantId: json['merchantId'] as String,
       name: json['name'] as String,
       quantity: (json['quantity'] as num).toDouble(),
+      initialQuantity: (json['initialQuantity'] as num?)?.toDouble() ?? (json['quantity'] as num).toDouble(),
       unit: json['unit'] as String,
       createdAt: (json['createdAt'] as Timestamp).toDate(),
       updatedAt: (json['updatedAt'] as Timestamp).toDate(),
@@ -38,6 +41,7 @@ class RawMaterial {
       'merchantId': merchantId,
       'name': name,
       'quantity': quantity,
+      'initialQuantity': initialQuantity,
       'unit': unit,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
@@ -49,6 +53,7 @@ class RawMaterial {
     String? merchantId,
     String? name,
     double? quantity,
+    double? initialQuantity,
     String? unit,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -58,6 +63,7 @@ class RawMaterial {
       merchantId: merchantId ?? this.merchantId,
       name: name ?? this.name,
       quantity: quantity ?? this.quantity,
+      initialQuantity: initialQuantity ?? this.initialQuantity,
       unit: unit ?? this.unit,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,

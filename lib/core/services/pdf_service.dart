@@ -128,6 +128,8 @@ class PdfService {
         theme: pw.ThemeData.withFont(
           base: font,
           bold: boldFont,
+        ).copyWith(
+          fontFallback: [emojiFont],
         ),
         build: (pw.Context context) {
           return [

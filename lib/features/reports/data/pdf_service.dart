@@ -7,7 +7,11 @@ import 'reports_service.dart';
 
 class PdfService {
   static Future<Uint8List> generateReportPdf(
-      ReportsService reportsService, String title, String currency) async {
+      ReportsService reportsService, String title, String currency, {
+        double taxPercentage = 0.0,
+        bool isInclusive = false,
+        String vatNumber = '',
+      }) async {
     final pdf = pw.Document();
     
     // Load Arabic Font
@@ -18,6 +22,21 @@ class PdfService {
       base: arabicFont,
       bold: arabicFontBold,
     );
+
+    double totalRevenue = reportsService.totalRevenue;
+    double totalTaxAmount = 0.0;
+    double revenueBeforeTax = totalRevenue;
+    
+    if (taxPercentage > 0) {
+      if (isInclusive) {
+        totalTaxAmount = totalRevenue - (totalRevenue / (1 + (taxPercentage / 100)));
+        revenueBeforeTax = totalRevenue / (1 + (taxPercentage / 100));
+      } else {
+        totalTaxAmount = totalRevenue * (taxPercentage / 100);
+        revenueBeforeTax = totalRevenue;
+        totalRevenue = totalRevenue + totalTaxAmount; // Grand total
+      }
+    }
 
     pdf.addPage(
       pw.MultiPage(
@@ -31,8 +50,15 @@ class PdfService {
               child: pw.Row(
                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                 children: [
-                  pw.Text('تقرير الأرباح والمبيعات',
-                      style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text('تقرير الأرباح والمبيعات',
+                          style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                      if (vatNumber.isNotEmpty)
+                        pw.Text('الرقم الضريبي: $vatNumber', style: pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
+                    ]
+                  ),
                   pw.Text(
                       intl.DateFormat('yyyy/MM/dd HH:mm').format(DateTime.now()),
                       style: const pw.TextStyle(fontSize: 12)),
@@ -42,7 +68,7 @@ class PdfService {
             pw.SizedBox(height: 10),
             pw.Text('الفترة: $title', style: pw.TextStyle(fontSize: 16)),
             pw.SizedBox(height: 20),
-            _buildSummaryRow(reportsService, currency),
+            _buildSummaryRow(reportsService, currency, revenueBeforeTax, totalTaxAmount, totalRevenue, taxPercentage > 0),
             pw.SizedBox(height: 20),
             pw.Text('أفضل المنتجات مبيعاً:',
                 style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
@@ -56,7 +82,45 @@ class PdfService {
     return pdf.save();
   }
 
-  static pw.Widget _buildSummaryRow(ReportsService service, String currency) {
+  static pw.Widget _buildSummaryRow(ReportsService service, String currency, double revenueBeforeTax, double totalTaxAmount, double grandTotal, bool hasTax) {
+    if (hasTax) {
+      return pw.Column(
+        children: [
+          pw.Container(
+            padding: const pw.EdgeInsets.all(12),
+            decoration: pw.BoxDecoration(
+              border: pw.Border.all(color: PdfColors.grey300),
+              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+            ),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
+              children: [
+                _summaryBox('المبيعات (قبل الضريبة)', '${revenueBeforeTax.toStringAsFixed(2)} $currency', PdfColors.green900),
+                _summaryBox('إجمالي الضريبة', '${totalTaxAmount.toStringAsFixed(2)} $currency', PdfColors.red900),
+                _summaryBox('الإجمالي الشامل', '${grandTotal.toStringAsFixed(2)} $currency', PdfColors.blue900),
+              ],
+            ),
+          ),
+          pw.SizedBox(height: 10),
+          pw.Container(
+            padding: const pw.EdgeInsets.all(12),
+            decoration: pw.BoxDecoration(
+              border: pw.Border.all(color: PdfColors.grey300),
+              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+            ),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
+              children: [
+                _summaryBox('صافي الربح', '${service.netProfit.toStringAsFixed(2)} $currency', PdfColors.blue900),
+                _summaryBox('المصروفات', '${service.totalExpenses.toStringAsFixed(2)} $currency', PdfColors.orange900),
+                _summaryBox('الديون', '${service.totalDebt.toStringAsFixed(2)} $currency', PdfColors.red900),
+              ],
+            ),
+          ),
+        ]
+      );
+    }
+    
     return pw.Container(
       padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(

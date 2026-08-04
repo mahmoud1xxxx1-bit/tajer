@@ -124,6 +124,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                     merchantId: merchantId,
                     name: name,
                     quantity: qty,
+                    initialQuantity: qty,
                     unit: selectedUnit,
                     createdAt: DateTime.now(),
                     updatedAt: DateTime.now(),
@@ -214,16 +215,27 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                   itemBuilder: (ctx, index) {
                     final item = materials[index];
                     String unitLabel = item.unit == 'g' ? 'جرام (g)' : item.unit == 'ml' ? 'مللي (ml)' : 'قطعة / حبة';
+                    bool isLowStock = item.initialQuantity > 0 && item.quantity <= (item.initialQuantity * 0.10);
                     return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: isLowStock ? BorderSide(color: Colors.red, width: 1.5) : BorderSide.none,
+                      ),
                       child: ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: Colors.amber.withOpacity(0.2),
-                          child: const Icon(Icons.inventory, color: Colors.amber),
+                          backgroundColor: isLowStock ? Colors.red.withOpacity(0.2) : Colors.amber.withOpacity(0.2),
+                          child: Icon(isLowStock ? Icons.warning_amber_rounded : Icons.inventory, color: isLowStock ? Colors.red : Colors.amber),
                         ),
                         title: Text(item.name, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),
-                        subtitle: Text('الرصيد المتوفر: ${item.quantity}  ($unitLabel)', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.amber)),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('الرصيد المتوفر: ${item.quantity}  ($unitLabel)', style: TextStyle(fontFamily: 'Tajawal', color: isLowStock ? Colors.red : Colors.amber, fontWeight: isLowStock ? FontWeight.bold : FontWeight.normal)),
+                            if (isLowStock)
+                              Text('تنبيه: المورد قارب على الانتهاء', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.red, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
                         trailing: canManageInventory ? Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
