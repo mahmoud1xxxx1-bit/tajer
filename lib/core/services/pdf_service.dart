@@ -30,6 +30,15 @@ class PdfService {
     }
   }
 
+  static Future<pw.Font> _getEmojiFont() async {
+    try {
+      return await PdfGoogleFonts.notoColorEmoji();
+    } catch (_) {
+      final fontData = await rootBundle.load('assets/fonts/Cairo-Regular.ttf');
+      return pw.Font.ttf(fontData);
+    }
+  }
+
   static Future<Uint8List> generateInvoicePdf(BuildContext buildContext, AppOrder order, String currency, {double? taxPercentage, bool defaultIsTaxInclusive = false}) async {
     final font = await _getFont();
     final boldFont = await _getBoldFont();

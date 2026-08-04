@@ -63,6 +63,7 @@ class PrinterService {
     AppOrder order, 
     String currency, {
     double? taxPercentage,
+    bool defaultIsTaxInclusive = false,
     StoreProfile? storeProfile,
     bool isKitchen = false,
   }) async {
@@ -99,7 +100,30 @@ class PrinterService {
     final isOfficial = !isKitchen && storeProfile != null && storeProfile.vatNumber != null && storeProfile.vatNumber!.isNotEmpty;
 
     final double pageWidth = 58.0 * PdfPageFormat.mm;
-    
+
+    double totalTaxAmount = 0.0;
+    double grandTotal = 0.0;
+    double totalBeforeTax = 0.0;
+    for (var item in order.items) {
+      final taxRate = item.taxPercentage ?? taxPercentage ?? 0.0;
+      final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
+      if (taxRate > 0) {
+        if (isInclusive) {
+          totalTaxAmount += item.total - (item.total / (1 + (taxRate / 100)));
+          grandTotal += item.total;
+          totalBeforeTax += item.total / (1 + (taxRate / 100));
+        } else {
+          totalTaxAmount += item.total * (taxRate / 100);
+          grandTotal += item.total + (item.total * (taxRate / 100));
+          totalBeforeTax += item.total;
+        }
+      } else {
+        grandTotal += item.total;
+        totalBeforeTax += item.total;
+      }
+    }
+    bool hasTax = totalTaxAmount > 0;
+
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat(pageWidth, double.infinity, marginAll: 2 * PdfPageFormat.mm),
@@ -196,26 +220,26 @@ class PrinterService {
 
                 // Totals
                 if (!isKitchen) ...[
-                  if (taxPercentage != null && taxPercentage > 0) ...[
+                  if (hasTax) ...[
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
                         pw.Text('الإجمالي (بدون ضريبة):', style: pw.TextStyle(font: ttf, fontSize: 10)),
-                        pw.Text('${order.total.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                        pw.Text('${totalBeforeTax.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 10)),
                       ]
                     ),
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
-                        pw.Text('الضريبة ($taxPercentage%):', style: pw.TextStyle(font: ttf, fontSize: 10)),
-                        pw.Text('${(order.total * (taxPercentage / 100)).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                        pw.Text('الضريبة:', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                        pw.Text('${totalTaxAmount.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 10)),
                       ]
                     ),
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
                         pw.Text('الإجمالي الشامل:', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
-                        pw.Text('${(order.total * (1 + (taxPercentage / 100))).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
+                        pw.Text('${grandTotal.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
                       ]
                     ),
                   ] else ...[
@@ -223,7 +247,7 @@ class PrinterService {
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
                         pw.Text('الإجمالي:', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
-                        pw.Text('${order.total.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
+                        pw.Text('${grandTotal.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
                       ]
                     ),
                   ],
