@@ -41,6 +41,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final appUser = ref.watch(appUserProvider).value;
+    final themeMode = ref.watch(themeProvider); // Force rebuild on theme change
     
     final bool canManageCustomers = appUser?.hasPermission('can_manage_customers') ?? true;
     final bool canViewReports = appUser?.hasPermission('can_view_reports') ?? true;
@@ -54,10 +55,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           _currentIndex = index;
         });
       }),
-      const OrdersScreen(),
-      const ProductsScreen(),
-      if (canManageCustomers) const CustomersScreen(),
-      if (canViewReports) const ReportsScreen(),
+      OrdersScreen(), // Removed const to ensure rebuild
+      ProductsScreen(),
+      if (canManageCustomers) CustomersScreen(),
+      if (canViewReports) ReportsScreen(),
     ];
 
     return PopScope(

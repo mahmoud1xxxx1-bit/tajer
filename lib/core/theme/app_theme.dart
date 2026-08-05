@@ -40,6 +40,7 @@ class AppTheme {
           fontFamily: 'Tajawal',
         ),
       ),
+      cardColor: surfaceLight,
       cardTheme: CardTheme(
         color: surfaceLight,
         elevation: 0,
@@ -104,6 +105,7 @@ class AppTheme {
           fontFamily: 'Tajawal',
         ),
       ),
+      cardColor: surfaceDark,
       cardTheme: CardTheme(
         color: surfaceDark,
         elevation: 0,
