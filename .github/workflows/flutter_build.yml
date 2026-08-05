@@ -22,7 +22,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.3' # Downgraded to 3.22.3 to fix AGP plugin errors
+          flutter-version: '3.22.2' # Downgraded to 3.22.2 to bypass corrupted cache and fix AGP errors
           channel: 'stable'
 
       - name: Get Dependencies
