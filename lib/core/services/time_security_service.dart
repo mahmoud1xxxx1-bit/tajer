@@ -42,8 +42,8 @@ class TimeSecurityService {
       // If offset is more than 5 minutes (300,000 ms), consider it tampered
       return offset.abs() > 300000;
     } catch (e) {
-      // Cannot verify
-      return false;
+      // Cannot verify - Fail Closed to prevent offline spoofing
+      return true;
     }
   }
 }

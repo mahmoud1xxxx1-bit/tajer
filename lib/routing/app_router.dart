@@ -28,7 +28,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     redirect: (context, state) {
-      final isAuthenticated = authState.value != null;
+      if (authState.isLoading) return null; // Wait for auth to resolve before redirecting
+      final isAuthenticated = authState.value != null && !authState.hasError;
       final isStartupRoute = state.uri.path == '/';
 
       if (!isAuthenticated && !isStartupRoute) {

@@ -407,7 +407,10 @@ class AuthRepository {
       final merchantUid = _auth.currentUser?.uid;
       if (merchantUid == null) throw Exception("يجب أن تكون مسجل الدخول");
       
-      await _firestore.collection('users').doc(merchantUid).collection('employees').doc(employeeUid).delete();
+      final batch = _firestore.batch();
+      batch.delete(_firestore.collection('users').doc(merchantUid).collection('employees').doc(employeeUid));
+      batch.delete(_firestore.collection('users').doc(employeeUid));
+      await batch.commit();
     } catch (e) {
       throw Exception("حدث خطأ أثناء حذف الموظف: $e");
     }
@@ -417,6 +420,12 @@ class AuthRepository {
     try {
       final merchantUid = _auth.currentUser?.uid;
       if (merchantUid == null) throw Exception("يجب أن تكون مسجل الدخول");
+      
+      // Security Check: Verify caller is not an employee
+      final currentUserDoc = await _firestore.collection('users').doc(merchantUid).get();
+      if (currentUserDoc.data()?['role'] == 'employee') {
+         throw Exception("غير مصرح لك بتعديل الصلاحيات");
+      }
       
       // Update in subcollection
       await _firestore.collection('users').doc(merchantUid).collection('employees').doc(employeeUid).update({

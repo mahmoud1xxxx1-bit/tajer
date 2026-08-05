@@ -351,8 +351,60 @@ class DashboardHome extends ConsumerWidget {
           final totalSales = orders.fold<double>(0, (sum, order) => sum + order.total);
           final ordersCount = orders.length;
 
-          // Low stock calculation
-          final lowStockProducts = productsAsync.value?.where((p) => p.quantity <= 5).toList() ?? [];
+          // Low stock calculation and widget
+          Widget? lowStockWidget;
+          if (productsAsync.hasError) {
+            lowStockWidget = Container(
+              margin: EdgeInsets.only(bottom: 16),
+              padding: EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red.withOpacity(0.5)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.error_outline, color: Colors.red),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'تعذر جلب بيانات المخزون. يرجى التحقق من اتصالك بالإنترنت.',
+                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          } else {
+            final lowStockProducts = productsAsync.value?.where((p) => p.quantity <= 5).toList() ?? [];
+            if (lowStockProducts.isNotEmpty) {
+              lowStockWidget = Container(
+                margin: EdgeInsets.only(bottom: 16),
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.red.withOpacity(0.5)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.warning_amber_rounded, color: Colors.red),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'تنبيه: يوجد ${lowStockProducts.length} منتج يوشك على النفاذ من المخزون!',
+                        style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => onNavigateToTab(2),
+                      child: Text(AppLocalizations.of(context)!.text63, style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                    ),
+                  ],
+                ),
+              );
+            }
+          }
 
           return Padding(
             padding: EdgeInsets.all(16.0),
@@ -387,33 +439,7 @@ class DashboardHome extends ConsumerWidget {
                     ),
                   ),
                 ],
-                if (lowStockProducts.isNotEmpty) ...[
-                  Container(
-                    margin: EdgeInsets.only(bottom: 16),
-                    padding: EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.red.withOpacity(0.5)),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.warning_amber_rounded, color: Colors.red),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'تنبيه: يوجد ${lowStockProducts.length} منتج يوشك على النفاذ من المخزون!',
-                            style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () => onNavigateToTab(2), // 2 is Products tab
-                          child: Text(AppLocalizations.of(context)!.text63, style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                if (lowStockWidget != null) lowStockWidget,
                 Text(
                   l10n.reports,
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
