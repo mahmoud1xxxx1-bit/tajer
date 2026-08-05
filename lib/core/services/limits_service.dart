@@ -70,10 +70,22 @@ class LimitsService {
             ? _firestore.collection('users').doc(merchantId).collection(collectionName)
             : _firestore.collection('merchants').doc(merchantId).collection(collectionName);
 
-    final snapshot = await query.count().get();
-
-    final currentCount = snapshot.count ?? 0;
-    return currentCount < maxLimit;
+    // Products and Raw Materials support Soft Delete (isArchived).
+    // We cannot use `.where('isArchived', isEqualTo: false)` because old products without the field would be ignored and NOT counted.
+    // So we fetch the documents and filter locally.
+    if (collectionName == 'products' || collectionName == 'raw_materials') {
+      final snapshot = await query.get();
+      int activeCount = 0;
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final isArchived = data['isArchived'] == true;
+        if (!isArchived) activeCount++;
+      }
+      return activeCount < maxLimit;
+    } else {
+      final snapshot = await query.count().get();
+      return (snapshot.count ?? 0) < maxLimit;
+    }
   }
 }
 

@@ -50,10 +50,15 @@ class ProductRepository {
     final snapshot = await _firestore
         .collection('products')
         .where('merchantId', isEqualTo: merchantId)
-        .where('isArchived', isEqualTo: false)
-        .count()
         .get();
-    return snapshot.count ?? 0;
+        
+    int activeCount = 0;
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+      final isArchived = data['isArchived'] == true;
+      if (!isArchived) activeCount++;
+    }
+    return activeCount;
   }
 }
 
