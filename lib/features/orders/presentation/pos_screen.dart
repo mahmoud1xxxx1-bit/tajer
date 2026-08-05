@@ -372,7 +372,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('نقطة البيع (POS)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+            title: Text(isAr ? 'نقطة البيع (POS)' : 'Point of Sale (POS)', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
             actions: [
               if (_heldOrders.isNotEmpty)
                 TextButton.icon(
@@ -381,20 +381,20 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     backgroundColor: Colors.red,
                     child: const Icon(Icons.history, color: Colors.amber),
                   ),
-                  label: Text('المعلقة', style: TextStyle(color: Colors.amber, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                  label: Text(isAr ? 'المعلقة' : 'Held', style: const TextStyle(color: Colors.amber, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                   onPressed: _showHeldOrders,
                 ),
               if (_cart.isNotEmpty)
                 TextButton.icon(
                   icon: const Icon(Icons.pause_circle_outline, color: Colors.amber),
-                  label: Text('تعليق', style: TextStyle(color: Colors.amber, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                  label: Text(isAr ? 'تعليق' : 'Hold', style: const TextStyle(color: Colors.amber, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                   onPressed: () {
                     setState(() {
                       _heldOrders.add(List.from(_cart));
                       _cart.clear();
                     });
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('تم تعليق الطلب وحفظه مؤقتاً في الأعلى 📌', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.orange),
+                      SnackBar(content: Text(isAr ? 'تم تعليق الطلب وحفظه مؤقتاً في الأعلى 📌' : 'Order held and saved temporarily 📌', style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.orange),
                     );
                   },
                 ),
@@ -406,7 +406,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: TextField(
                   decoration: InputDecoration(
-                    hintText: 'ابحث عن منتج...',
+                    hintText: isAr ? 'ابحث عن منتج...' : 'Search for product...',
                     prefixIcon: const Icon(Icons.search),
                     filled: true,
                     fillColor: Theme.of(context).cardColor,
@@ -435,7 +435,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                         SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            '💡 دليل الكاشير: اضغط على المنتج لإضافته للسلة. لحفظ الفاتورة مؤقتاً أثناء انتظام العميل اضغط على زر "تعليق" بالأعلى. لإصدار الفاتورة اضغط "دفع الإجمالي" بالأسفل.',
+                            isAr 
+                              ? '💡 دليل الكاشير: اضغط على المنتج لإضافته للسلة. لحفظ الفاتورة مؤقتاً أثناء انتظام العميل اضغط على زر "تعليق" بالأعلى. لإصدار الفاتورة اضغط "دفع الإجمالي" بالأسفل.'
+                              : '💡 Cashier Guide: Tap product to add to cart. To hold invoice temporarily, tap "Hold" above. To issue invoice, tap "Pay Total" below.',
                             style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, height: 1.4, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                           ),
                         ),
@@ -513,7 +515,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                                 Text(product.name, textAlign: TextAlign.center, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                                 const Spacer(),
                                 Text('${product.price}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16)),
-                                Text('المتبقي: ${product.quantity}', style: const TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'Tajawal')),
+                                Text(isAr ? 'المتبقي: ${product.quantity}' : 'Left: ${product.quantity}', style: const TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'Tajawal')),
                               ],
                             ),
                           ),
@@ -523,7 +525,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, st) => Center(child: Text('خطأ: $e', style: TextStyle(fontFamily: 'Tajawal'))),
+                error: (e, st) => Center(child: Text(isAr ? 'خطأ: $e' : 'Error: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
               ),
             ),
             if (_cart.isNotEmpty)
@@ -574,7 +576,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
                         onPressed: _checkout,
-                        child: Text('دفع الإجمالي: $_cartTotal', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
+                        child: Text(isAr ? 'دفع الإجمالي: $_cartTotal' : 'Pay Total: $_cartTotal', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
                       ),
                     )
                   ],

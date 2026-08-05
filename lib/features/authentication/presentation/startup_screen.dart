@@ -27,22 +27,25 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
   }
 
   Future<void> _handleDataMerge(Function(bool) onDecide) async {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final result = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text("دمج البيانات", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-        content: const Text(
-            "لقد وجدنا حساباً مسجلاً مسبقاً. هل تريد دمج البيانات التجريبية الحالية (إن وجدت) مع حسابك القديم؟",
-            style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(isAr ? "دمج البيانات" : "Merge Data", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        content: Text(
+            isAr 
+              ? "لقد وجدنا حساباً مسجلاً مسبقاً. هل تريد دمج البيانات التجريبية الحالية (إن وجدت) مع حسابك القديم؟"
+              : "We found an existing account. Do you want to merge current trial data (if any) with your old account?",
+            style: const TextStyle(fontFamily: 'Tajawal')),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text("تجاهل البيانات", style: TextStyle(fontFamily: 'Tajawal', color: Colors.red)),
+            child: Text(isAr ? "تجاهل البيانات" : "Ignore Data", style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red)),
           ),
           ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text("نعم، دمج البيانات", style: TextStyle(fontFamily: 'Tajawal')),
+            child: Text(isAr ? "نعم، دمج البيانات" : "Yes, Merge Data", style: const TextStyle(fontFamily: 'Tajawal')),
           ),
         ],
       ),
@@ -57,7 +60,8 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
     try {
       final authRepo = ref.read(authRepositoryProvider);
       await authRepo.signInOrLinkWithGoogle();
-      _showSuccess("تم تسجيل الدخول بنجاح كتاجر");
+      final isAr = Localizations.localeOf(context).languageCode == 'ar';
+      _showSuccess(isAr ? "تم تسجيل الدخول بنجاح كتاجر" : "Logged in successfully as merchant");
     } catch (e) {
       if (e.toString().contains('requires-merge-decision')) {
         await _handleDataMerge((merge) async {
@@ -68,7 +72,8 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
             } else {
                await ref.read(authRepositoryProvider).resolveMerge(merge, ref.read(dataMigrationServiceProvider));
             }
-            _showSuccess("تم تسجيل الدخول بنجاح");
+            final isAr = Localizations.localeOf(context).languageCode == 'ar';
+            _showSuccess(isAr ? "تم تسجيل الدخول بنجاح" : "Logged in successfully");
           } catch(ex) {
             _showError(ex.toString().replaceAll("Exception: ", ""));
           } finally {
@@ -88,7 +93,8 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
     try {
       await ref.read(authRepositoryProvider).signInAnonymously();
     } catch (e) {
-      _showError("حدث خطأ: $e");
+      final isAr = Localizations.localeOf(context).languageCode == 'ar';
+      _showError(isAr ? "حدث خطأ: $e" : "Error: $e");
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -98,6 +104,7 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
     final emailController = TextEditingController();
     final pinController = TextEditingController();
     bool isLoggingIn = false;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     showDialog(
       context: context,
@@ -106,19 +113,19 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text("دخول الموظف", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              title: Text(isAr ? "دخول الموظف" : "Employee Login", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text("أدخل إيميل التاجر ورمز الدخول الخاص بك (PIN).", style: TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
+                  Text(isAr ? "أدخل إيميل التاجر ورمز الدخول الخاص بك (PIN)." : "Enter merchant email and your PIN.", style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
                   const SizedBox(height: 16),
                   TextField(
                     controller: emailController,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: const InputDecoration(
-                      labelText: "إيميل التاجر (الأساسي)",
-                      prefixIcon: Icon(Icons.email),
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: isAr ? "إيميل التاجر (الأساسي)" : "Merchant Email (Primary)",
+                      prefixIcon: const Icon(Icons.email),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -127,10 +134,10 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
                     keyboardType: TextInputType.number,
                     obscureText: true,
                     maxLength: 6,
-                    decoration: const InputDecoration(
-                      labelText: "رمز الدخول (PIN)",
-                      prefixIcon: Icon(Icons.password),
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: isAr ? "رمز الدخول (PIN)" : "PIN code",
+                      prefixIcon: const Icon(Icons.password),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ],
@@ -138,7 +145,7 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
               actions: [
                 TextButton(
                   onPressed: isLoggingIn ? null : () => Navigator.of(context).pop(),
-                  child: const Text("إلغاء", style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                  child: Text(isAr ? "إلغاء" : "Cancel", style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
                 ),
                 ElevatedButton(
                   onPressed: isLoggingIn ? null : () async {
@@ -146,7 +153,7 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
                     final pin = pinController.text.trim();
 
                     if (email.isEmpty || pin.isEmpty) {
-                      _showError("يرجى إدخال الإيميل ورمز الدخول");
+                      _showError(isAr ? "يرجى إدخال الإيميل ورمز الدخول" : "Please enter email and PIN");
                       return;
                     }
 
@@ -155,7 +162,7 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
                     try {
                       await ref.read(authRepositoryProvider).signInAsEmployee(email, pin);
                       Navigator.of(context).pop();
-                      _showSuccess("تم تسجيل دخول الموظف بنجاح");
+                      _showSuccess(isAr ? "تم تسجيل دخول الموظف بنجاح" : "Employee logged in successfully");
                     } catch (e) {
                       _showError(e.toString().replaceAll("Exception: ", ""));
                     } finally {
@@ -166,7 +173,7 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
                   },
                   child: isLoggingIn 
                     ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : const Text("تسجيل الدخول", style: TextStyle(fontFamily: 'Tajawal')),
+                    : Text(isAr ? "تسجيل الدخول" : "Login", style: const TextStyle(fontFamily: 'Tajawal')),
                 ),
               ],
             );
@@ -179,6 +186,7 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
@@ -190,7 +198,7 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
               Icon(Icons.storefront, size: 100, color: theme.colorScheme.primary),
               const SizedBox(height: 16),
               Text(
-                "نظام تاجر",
+                isAr ? "نظام تاجر" : "Tajer System",
                 textAlign: TextAlign.center,
                 style: theme.textTheme.headlineLarge?.copyWith(
                   fontFamily: 'Tajawal',
@@ -200,7 +208,7 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                "أهلاً بك في منصة المبيعات المتكاملة",
+                isAr ? "أهلاً بك في منصة المبيعات المتكاملة" : "Welcome to the integrated sales platform",
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   fontFamily: 'Tajawal',
@@ -215,7 +223,7 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
                 icon: _isLoading ? const SizedBox() : const Icon(Icons.g_mobiledata, size: 32),
                 label: _isLoading 
                   ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text("دخول التاجر (Google)", style: TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                  : Text(isAr ? "دخول التاجر (Google)" : "Merchant Login (Google)", style: const TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                 style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   backgroundColor: theme.colorScheme.primary,
@@ -229,7 +237,7 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
               OutlinedButton.icon(
                 onPressed: _isLoading ? null : _showEmployeeLoginDialog,
                 icon: const Icon(Icons.badge, size: 24),
-                label: const Text("دخول موظف (بالرمز)", style: TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                label: Text(isAr ? "دخول موظف (بالرمز)" : "Employee Login (PIN)", style: const TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
@@ -240,7 +248,7 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
               // Guest Login
               TextButton(
                 onPressed: _isLoading ? null : _enterAsGuest,
-                child: const Text("الدخول كزائر وتجربة النظام", style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, decoration: TextDecoration.underline)),
+                child: Text(isAr ? "الدخول كزائر وتجربة النظام" : "Enter as guest and try the system", style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16, decoration: TextDecoration.underline)),
               ),
             ],
           ),

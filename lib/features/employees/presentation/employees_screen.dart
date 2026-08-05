@@ -16,6 +16,7 @@ import 'employee_activity_screen.dart';
 import '../../../../../../../../core/theme/glass_card.dart';
 
 void showBeautifulUpgradeDialog(BuildContext context) {
+  final isAr = Localizations.localeOf(context).languageCode == 'ar';
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
@@ -32,21 +33,23 @@ void showBeautifulUpgradeDialog(BuildContext context) {
           ),
           const SizedBox(height: 16),
           Text(
-            "ترقية الحساب",
+            isAr ? "ترقية الحساب" : "Upgrade Account",
             style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
           ),
         ],
       ),
-      content: const Text(
-        "لقد وصلت للحد المسموح به في الباقة الحالية.\n\nلتتمكن من إضافة المزيد من الموظفين وإدارة متجرك بلا حدود، نرجو ترقية حسابك إلى الباقة المميزة والاستمتاع بكافة المزايا! 🚀",
-        style: TextStyle(fontFamily: 'Tajawal', height: 1.5, fontSize: 15),
+      content: Text(
+        isAr 
+          ? "لقد وصلت للحد المسموح به في الباقة الحالية.\n\nلتتمكن من إضافة المزيد من الموظفين وإدارة متجرك بلا حدود، نرجو ترقية حسابك إلى الباقة المميزة والاستمتاع بكافة المزايا! 🚀"
+          : "You have reached the limit of your current plan.\n\nTo add more employees and manage your store without limits, please upgrade your account to the premium plan! 🚀",
+        style: const TextStyle(fontFamily: 'Tajawal', height: 1.5, fontSize: 15),
         textAlign: TextAlign.center,
       ),
       actionsAlignment: MainAxisAlignment.center,
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx),
-          child: const Text("ربما لاحقاً", style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+          child: Text(isAr ? "ربما لاحقاً" : "Maybe later", style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
@@ -59,7 +62,7 @@ void showBeautifulUpgradeDialog(BuildContext context) {
             Navigator.pop(ctx);
             context.push('/paywall');
           },
-          child: const Text("ترقية حسابي الآن ⭐", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+          child: Text(isAr ? "ترقية حسابي الآن ⭐" : "Upgrade now ⭐", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         ),
       ],
     ),
@@ -90,8 +93,9 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
     );
   }
 
-  void _shareCredentials(String empName, String pin) {
-    final text = '''
+  void _shareCredentials(BuildContext context, String empName, String pin) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final text = isAr ? '''
 مرحباً $empName،
 تم إنشاء حساب موظف لك في تطبيق تاجر.
 يرجى تحميل التطبيق، ثم اختيار "دخول موظف (بالرمز)".
@@ -100,6 +104,15 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
 رمز الدخول الخاص بك (PIN): $pin
 
 لا تشارك هذا الرمز مع أحد!
+''' : '''
+Hello $empName,
+An employee account has been created for you in Tajer app.
+Please download the app, then select "Employee Login (PIN)".
+
+Store Email: $_merchantEmail
+Your PIN: $pin
+
+Do not share this PIN with anyone!
 ''';
     Share.share(text);
   }
@@ -138,11 +151,14 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
       final pin = await PinService.getDeletePin(appUser);
       if (pin != null) {
         if (!mounted) return;
+        final isAr = Localizations.localeOf(context).languageCode == 'ar';
         final success = await PinConfirmationDialog.show(
           context, 
           pin,
-          title: 'تحذير: طرد موظف',
-          warning: 'حذف الموظف سيمنعه فوراً من الدخول للنظام. لا يمكن التراجع عن هذا الإجراء.',
+          title: isAr ? 'تحذير: طرد موظف' : 'Warning: Fire employee',
+          warning: isAr 
+            ? 'حذف الموظف سيمنعه فوراً من الدخول للنظام. لا يمكن التراجع عن هذا الإجراء.'
+            : 'Deleting the employee will immediately prevent them from accessing the system. This action cannot be undone.',
         );
         if (!success) return;
       }
@@ -151,7 +167,8 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
     try {
       await ref.read(authRepositoryProvider).deleteEmployee(id);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("تم حذف الموظف", style: TextStyle(fontFamily: 'Tajawal'))));
+        final isAr = Localizations.localeOf(context).languageCode == 'ar';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isAr ? "تم حذف الموظف" : "Employee deleted", style: const TextStyle(fontFamily: 'Tajawal'))));
       }
     } catch (e) {
       if (mounted) {
@@ -164,8 +181,9 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     if (_merchantUid == null) {
-      return const Scaffold(body: Center(child: Text("يجب تسجيل الدخول كتاجر")));
+      return Scaffold(body: Center(child: Text(isAr ? "يجب تسجيل الدخول كتاجر" : "You must login as a merchant")));
     }
 
     final l10n = AppLocalizations.of(context)!;
@@ -176,7 +194,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("إدارة الموظفين والأداء", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        title: Text(isAr ? "إدارة الموظفين والأداء" : "Employees & Performance", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         backgroundColor: theme.colorScheme.primaryContainer,
       ),
       body: _isLoading 
@@ -207,18 +225,18 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                               children: [
                                 Icon(Icons.info_outline, color: theme.colorScheme.primary),
                                 const SizedBox(width: 8),
-                                const Text('معلومات عن إضافة الموظفين', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),
+                                Text(isAr ? 'معلومات عن إضافة الموظفين' : 'Employee Addition Info', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),
                               ],
                             ),
                             const SizedBox(height: 12),
-                            const Text(
-                              "1. يمكنك إضافة حد أقصى 3 موظفين.\n"
-                              "2. عندما يحمل الموظف التطبيق، يجب أن يختار (دخول موظف بالرمز).\n"
-                              "3. سيطلب منه التطبيق إدخال إيميلك الأساسي ورمز الدخول الذي أنشأته له.",
-                              style: TextStyle(fontFamily: 'Tajawal', height: 1.5),
+                            Text(
+                              isAr
+                                ? "1. يمكنك إضافة حد أقصى 3 موظفين.\n2. عندما يحمل الموظف التطبيق، يجب أن يختار (دخول موظف بالرمز).\n3. سيطلب منه التطبيق إدخال إيميلك الأساسي ورمز الدخول الذي أنشأته له."
+                                : "1. You can add a maximum of 3 employees.\n2. When the employee downloads the app, they must select (Employee Login by PIN).\n3. The app will ask them to enter your primary email and the PIN you created.",
+                              style: const TextStyle(fontFamily: 'Tajawal', height: 1.5),
                             ),
                             const Divider(height: 24),
-                            const Text("إيميلك الأساسي (الذي يجب أن يكتبه الموظف):", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                            Text(isAr ? "إيميلك الأساسي (الذي يجب أن يكتبه الموظف):" : "Your primary email (employee must enter this):", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                             const SizedBox(height: 8),
                             Container(
                               padding: const EdgeInsets.all(12),
@@ -238,11 +256,11 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("قائمة الموظفين ($currentCount/3)", style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold)),
+                        Text(isAr ? "قائمة الموظفين ($currentCount/3)" : "Employees List ($currentCount/3)", style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold)),
                         ElevatedButton.icon(
                           onPressed: () => _showAddEmployeeDialog(currentCount),
                           icon: const Icon(Icons.person_add, size: 20),
-                          label: const Text("إضافة", style: TextStyle(fontFamily: 'Tajawal')),
+                          label: Text(isAr ? "إضافة" : "Add", style: const TextStyle(fontFamily: 'Tajawal')),
                         ),
                       ],
                     ),
@@ -257,7 +275,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                               children: [
                                 Icon(Icons.people_outline, size: 64, color: Colors.grey[400]),
                                 const SizedBox(height: 16),
-                                Text("لا يوجد موظفين حالياً", style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey[600], fontSize: 16)),
+                                Text(isAr ? "لا يوجد موظفين حالياً" : "No employees currently", style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey[600], fontSize: 16)),
                               ],
                             )
                           )
@@ -267,7 +285,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                             itemBuilder: (context, index) {
                               final data = docs[index].data() as Map<String, dynamic>;
                               final id = docs[index].id;
-                              final name = data['name'] ?? 'بدون اسم';
+                              final name = data['name'] ?? (isAr ? 'بدون اسم' : 'Unnamed');
                               final pin = data['pin'] ?? '****';
 
                               final employeeOrders = allOrders.where((o) => o.creatorId == id).toList();
@@ -293,10 +311,10 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                                 subtitle: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text("رمز الدخول: $pin", style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12)),
+                                    Text(isAr ? "رمز الدخول: $pin" : "PIN: $pin", style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12)),
                                     const SizedBox(height: 4),
                                     Text(
-                                      "المبيعات: $totalSales ${currentCurrency.code}",
+                                      isAr ? "المبيعات: $totalSales ${currentCurrency.code}" : "Sales: $totalSales ${currentCurrency.code}",
                                       style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.green[700]),
                                     ),
                                   ],
@@ -306,17 +324,17 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                                   children: [
                                     IconButton(
                                       icon: const Icon(Icons.share, color: Colors.green),
-                                      tooltip: "مشاركة بيانات الدخول (واتساب)",
-                                      onPressed: () => _shareCredentials(name, pin),
+                                      tooltip: isAr ? "مشاركة بيانات الدخول (واتساب)" : "Share credentials (WhatsApp)",
+                                      onPressed: () => _shareCredentials(context, name, pin),
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.edit, color: Colors.blue),
-                                      tooltip: "تعديل الصلاحيات",
+                                      tooltip: isAr ? "تعديل الصلاحيات" : "Edit permissions",
                                       onPressed: () => _showEditEmployeeDialog(id, data),
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.delete, color: Colors.red),
-                                      tooltip: "حذف الموظف",
+                                      tooltip: isAr ? "حذف الموظف" : "Delete employee",
                                       onPressed: () => _deleteEmployee(id),
                                     ),
                                   ],
@@ -373,6 +391,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
 
   Map<String, String> _getPermissionLabels(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     return {
       'can_manage_products': l10n.permCanManageProducts,
       'can_view_cost': l10n.permCanViewCost,
@@ -383,8 +402,8 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
       'can_manage_customers': l10n.permCanManageCustomers,
       'can_receive_payments': l10n.permCanReceivePayments,
       'can_manage_expenses': l10n.permCanManageExpenses,
-      'can_view_reports': 'السماح برؤية قسم التقارير',
-      'can_view_all_orders': 'السماح برؤية جميع الطلبات',
+      'can_view_reports': isAr ? 'السماح برؤية قسم التقارير' : 'Allow viewing reports',
+      'can_view_all_orders': isAr ? 'السماح برؤية جميع الطلبات' : 'Allow viewing all orders',
     };
   }
 
@@ -420,8 +439,9 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.employeeUid != null;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     return AlertDialog(
-      title: Text(isEdit ? "تعديل الموظف والصلاحيات" : "إضافة موظف جديد", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+      title: Text(isEdit ? (isAr ? "تعديل الموظف والصلاحيات" : "Edit Employee & Permissions") : (isAr ? "إضافة موظف جديد" : "Add New Employee"), style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
       content: SizedBox(
         width: double.maxFinite,
         child: SingleChildScrollView(
@@ -430,10 +450,10 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
             children: [
               TextField(
                 controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: "اسم الموظف",
-                  prefixIcon: Icon(Icons.person),
-                  border: OutlineInputBorder(),
+                decoration: InputDecoration(
+                  labelText: isAr ? "اسم الموظف" : "Employee Name",
+                  prefixIcon: const Icon(Icons.person),
+                  border: const OutlineInputBorder(),
                 ),
               ),
               const SizedBox(height: 16),
@@ -443,15 +463,15 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
                 maxLength: 6,
                 readOnly: isEdit,
                 decoration: InputDecoration(
-                  labelText: "رمز الدخول (6 أرقام)",
+                  labelText: isAr ? "رمز الدخول (6 أرقام)" : "PIN (6 digits)",
                   prefixIcon: const Icon(Icons.pin),
                   border: const OutlineInputBorder(),
-                  helperText: isEdit ? "لا يمكن تعديل رمز الدخول بعد الحفظ" : "مثال: 123456 (باسورد الموظف)",
+                  helperText: isEdit ? (isAr ? "لا يمكن تعديل رمز الدخول بعد الحفظ" : "PIN cannot be edited after save") : (isAr ? "مثال: 123456 (باسورد الموظف)" : "e.g., 123456 (Employee Password)"),
                   helperStyle: const TextStyle(fontFamily: 'Tajawal')
                 ),
               ),
               const Divider(height: 32),
-              const Text("صلاحيات الموظف:", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(isAr ? "صلاحيات الموظف:" : "Employee Permissions:", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),
               const SizedBox(height: 8),
               ...permissions.keys.map((key) {
                 final labels = _getPermissionLabels(context);
@@ -472,7 +492,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
       actions: [
         TextButton(
           onPressed: isSaving ? null : () => Navigator.of(context).pop(),
-          child: const Text("إلغاء", style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+          child: Text(isAr ? "إلغاء" : "Cancel", style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
         ),
         ElevatedButton(
           onPressed: isSaving ? null : () async {
@@ -480,11 +500,11 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
             final pin = pinController.text.trim();
 
             if (name.isEmpty) {
-              _showError("يرجى إدخال اسم الموظف");
+              _showError(isAr ? "يرجى إدخال اسم الموظف" : "Please enter employee name");
               return;
             }
             if (pin.length < 6) {
-              _showError("رمز الدخول يجب أن يكون 6 أرقام على الأقل");
+              _showError(isAr ? "رمز الدخول يجب أن يكون 6 أرقام على الأقل" : "PIN must be at least 6 digits");
               return;
             }
 
@@ -493,11 +513,11 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
               if (isEdit) {
                 await widget.ref.read(authRepositoryProvider).updateEmployeePermissions(widget.employeeUid!, permissions);
                 if (mounted) Navigator.of(context).pop();
-                _showSuccess("تم تحديث الصلاحيات بنجاح");
+                _showSuccess(isAr ? "تم تحديث الصلاحيات بنجاح" : "Permissions updated successfully");
               } else {
                 await widget.ref.read(authRepositoryProvider).createEmployee(widget.merchantEmail, name, pin, permissions: permissions);
                 if (mounted) Navigator.of(context).pop();
-                _showSuccess("تم إضافة الموظف بنجاح");
+                _showSuccess(isAr ? "تم إضافة الموظف بنجاح" : "Employee added successfully");
               }
             } catch (e) {
               final errorMsg = e.toString().replaceAll("Exception: ", "");
@@ -513,7 +533,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
           },
           child: isSaving 
             ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-            : Text(isEdit ? "حفظ التعديلات" : "إضافة", style: const TextStyle(fontFamily: 'Tajawal')),
+            : Text(isEdit ? (isAr ? "حفظ التعديلات" : "Save Changes") : (isAr ? "إضافة" : "Add"), style: const TextStyle(fontFamily: 'Tajawal')),
         ),
       ],
     );

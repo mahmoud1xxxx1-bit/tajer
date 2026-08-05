@@ -29,8 +29,9 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
 
   Future<void> _closeShift(Shift shift) async {
     final actualCash = double.tryParse(_actualCashController.text);
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     if (actualCash == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('الرجاء إدخال مبلغ صحيح', style: TextStyle(fontFamily: 'Tajawal'))));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isAr ? 'الرجاء إدخال مبلغ صحيح' : 'Please enter a valid amount', style: const TextStyle(fontFamily: 'Tajawal'))));
       return;
     }
 
@@ -54,11 +55,11 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إغلاق الوردية بنجاح', style: TextStyle(fontFamily: 'Tajawal'))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isAr ? 'تم إغلاق الوردية بنجاح' : 'Shift closed successfully', style: const TextStyle(fontFamily: 'Tajawal'))));
         Navigator.pop(context);
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e', style: TextStyle(fontFamily: 'Tajawal'))));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isAr ? 'خطأ: $e' : 'Error: $e', style: const TextStyle(fontFamily: 'Tajawal'))));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -70,17 +71,19 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
     final merchantId = user?.merchantId ?? user?.id;
     final shiftAsync = ref.watch(currentShiftProvider(merchantId ?? ''));
 
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إغلاق الوردية وجرد الصندوق', style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(isAr ? 'إغلاق الوردية وجرد الصندوق' : 'Close Shift & Drawer Check', style: const TextStyle(fontFamily: 'Tajawal')),
       ),
       body: shiftAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Error: $err')),
         data: (shift) {
           if (shift == null) {
-            return const Center(
-              child: Text('لا توجد وردية مفتوحة حالياً', style: TextStyle(fontFamily: 'Tajawal', fontSize: 18)),
+            return Center(
+              child: Text(isAr ? 'لا توجد وردية مفتوحة حالياً' : 'No open shift currently', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18)),
             );
           }
 
@@ -109,33 +112,33 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('معلومات الوردية', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 18)),
+                        Text(isAr ? 'معلومات الوردية' : 'Shift Information', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 18)),
                         const SizedBox(height: 16),
-                        _buildRow('تاريخ فتح الوردية:', DateFormat('yyyy-MM-dd HH:mm').format(shift.startTime)),
-                        _buildRow('الوردية فُتحت بواسطة:', shift.employeeName),
+                        _buildRow(isAr ? 'تاريخ فتح الوردية:' : 'Opened at:', DateFormat('yyyy-MM-dd HH:mm').format(shift.startTime)),
+                        _buildRow(isAr ? 'الوردية فُتحت بواسطة:' : 'Opened by:', shift.employeeName),
                         const Divider(height: 32),
-                        _buildRow('رصيد الصندوق الافتتاحي:', '${shift.startCash} ر.س'),
-                        _buildRow('إجمالي مبيعات الكاش:', '${shift.cashSales ?? 0.0} ر.س', color: Colors.green),
-                        _buildRow('إجمالي مبيعات مدى:', '${shift.cardTotal ?? 0.0} ر.س', color: Colors.blue),
-                        _buildRow('إجمالي التحويل البنكي:', '${shift.transferTotal ?? 0.0} ر.س', color: Colors.purple),
+                        _buildRow(isAr ? 'رصيد الصندوق الافتتاحي:' : 'Opening Cash:', '${shift.startCash} ${isAr ? 'ر.س' : 'SAR'}'),
+                        _buildRow(isAr ? 'إجمالي مبيعات الكاش:' : 'Total Cash Sales:', '${shift.cashSales ?? 0.0} ${isAr ? 'ر.س' : 'SAR'}', color: Colors.green),
+                        _buildRow(isAr ? 'إجمالي مبيعات مدى:' : 'Total Card Sales:', '${shift.cardTotal ?? 0.0} ${isAr ? 'ر.س' : 'SAR'}', color: Colors.blue),
+                        _buildRow(isAr ? 'إجمالي التحويل البنكي:' : 'Total Bank Transfer:', '${shift.transferTotal ?? 0.0} ${isAr ? 'ر.س' : 'SAR'}', color: Colors.purple),
                         const Divider(height: 32),
-                        _buildRow('الكاش المتوقع في الدرج الآن:', '${expectedCash.toStringAsFixed(2)} ر.س', isBold: true, color: Colors.blue.shade800),
+                        _buildRow(isAr ? 'الكاش المتوقع في الدرج الآن:' : 'Expected Cash in Drawer:', '${expectedCash.toStringAsFixed(2)} ${isAr ? 'ر.س' : 'SAR'}', isBold: true, color: Colors.blue.shade800),
                       ],
                     ),
                   ),
                 ),
                 const SizedBox(height: 32),
-                const Text('قم بعدّ الكاش الموجود في الدرج الآن وأدخله أدناه:', style: TextStyle(fontFamily: 'Tajawal', fontSize: 16)),
+                Text(isAr ? 'قم بعدّ الكاش الموجود في الدرج الآن وأدخله أدناه:' : 'Count the cash in the drawer now and enter it below:', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16)),
                 const SizedBox(height: 16),
                 TextField(
                   controller: _actualCashController,
                   keyboardType: TextInputType.number,
                   style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  decoration: const InputDecoration(
-                    labelText: 'الكاش الفعلي في الدرج',
-                    border: OutlineInputBorder(),
-                    suffixText: 'ر.س',
-                    prefixIcon: Icon(Icons.money),
+                  decoration: InputDecoration(
+                    labelText: isAr ? 'الكاش الفعلي في الدرج' : 'Actual Cash in Drawer',
+                    border: const OutlineInputBorder(),
+                    suffixText: isAr ? 'ر.س' : 'SAR',
+                    prefixIcon: const Icon(Icons.money),
                   ),
                 ),
                 const Spacer(),
@@ -151,7 +154,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
                     child: _isLoading 
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('إغلاق الوردية وطباعة التقرير', style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold)),
+                      : Text(isAr ? 'إغلاق الوردية وطباعة التقرير' : 'Close Shift & Print Report', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold)),
                   ),
                 )
               ],

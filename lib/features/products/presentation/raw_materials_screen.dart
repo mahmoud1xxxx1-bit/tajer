@@ -34,7 +34,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
             children: [
               Icon(rawMaterial == null ? Icons.add_circle : Icons.edit, color: Colors.amber),
               const SizedBox(width: 10),
-              Text(rawMaterial == null ? l10n.addNewRawMaterial : 'تعديل مادة خام', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              Text(rawMaterial == null ? l10n.addNewRawMaterial : (isAr ? 'تعديل مادة خام' : 'Edit Raw Material'), style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
             ],
           ),
           content: SingleChildScrollView(
@@ -52,7 +52,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                   TextField(
                     controller: nameController,
                     decoration: InputDecoration(
-                      labelText: 'اسم المادة الخام (مثال: لحم برجر، جبن، قهوة بن)',
+                      labelText: isAr ? 'اسم المادة الخام (مثال: لحم برجر، جبن، قهوة بن)' : 'Raw Material Name (e.g., burger meat, cheese, coffee)',
                       labelStyle: const TextStyle(fontFamily: 'Tajawal', fontSize: 13),
                       prefixIcon: const Icon(Icons.inventory_2_outlined),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -62,7 +62,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                   TextField(
                     controller: quantityController,
                     decoration: InputDecoration(
-                      labelText: 'الكمية المتوفرة حالياً في المستودع',
+                      labelText: isAr ? 'الكمية المتوفرة حالياً في المستودع' : 'Quantity available currently in warehouse',
                       labelStyle: const TextStyle(fontFamily: 'Tajawal', fontSize: 13),
                       prefixIcon: const Icon(Icons.numbers),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -96,7 +96,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontWeight: FontWeight.bold)),
+              child: Text(isAr ? 'إلغاء' : 'Cancel', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontWeight: FontWeight.bold)),
             ),
             ElevatedButton.icon(
               icon: const Icon(Icons.save, size: 18),

@@ -42,7 +42,8 @@ class _StartShiftDialogState extends ConsumerState<StartShiftDialog> {
       await ref.read(shiftRepositoryProvider).openShift(shift);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e', style: TextStyle(fontFamily: 'Tajawal'))));
+        final isAr = Localizations.localeOf(context).languageCode == 'ar';
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isAr ? 'خطأ: $e' : 'Error: $e', style: const TextStyle(fontFamily: 'Tajawal'))));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -51,13 +52,14 @@ class _StartShiftDialogState extends ConsumerState<StartShiftDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.point_of_sale, color: Colors.amber, size: 28),
-          SizedBox(width: 10),
-          Text('بداية وردية جديدة', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+          const Icon(Icons.point_of_sale, color: Colors.amber, size: 28),
+          const SizedBox(width: 10),
+          Text(isAr ? 'بداية وردية جديدة' : 'Start New Shift', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         ],
       ),
       content: SingleChildScrollView(
@@ -73,22 +75,24 @@ class _StartShiftDialogState extends ConsumerState<StartShiftDialog> {
                 border: Border.all(color: Colors.indigo.withOpacity(0.3)),
               ),
               child: Text(
-                '💡 لماذا نفتح وردية؟\nنظام الورديات يحمي أموالك! أدخل المبلغ الموجود في الدرج قبل بدء البيع، وسيقوم النظام بحساب مبيعات اليوم ومقارنتها تلقائياً بالدرج لكشف أي عجز أو تلاعب نهاية الوردية.',
+                isAr 
+                  ? '💡 لماذا نفتح وردية؟\nنظام الورديات يحمي أموالك! أدخل المبلغ الموجود في الدرج قبل بدء البيع، وسيقوم النظام بحساب مبيعات اليوم ومقارنتها تلقائياً بالدرج لكشف أي عجز أو تلاعب نهاية الوردية.'
+                  : '💡 Why open a shift?\nThe shift system protects your money! Enter the amount in the drawer before selling, and the system will calculate today\'s sales and automatically compare it with the drawer to detect any shortage at the end of the shift.',
                 style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.5, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
               ),
             ),
             const SizedBox(height: 16),
-            Text('أدخل مبلغ العهدة الافتتاحية (الكاش الموجود حالياً في الدرج):', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
+            Text(isAr ? 'أدخل مبلغ العهدة الافتتاحية (الكاش الموجود حالياً في الدرج):' : 'Enter Opening Amount (Cash currently in drawer):', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
             const SizedBox(height: 12),
             TextField(
               controller: _cashController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: InputDecoration(
-                labelText: 'مبلغ العهدة (مثال: 100)',
+                labelText: isAr ? 'مبلغ العهدة (مثال: 100)' : 'Opening Amount (e.g., 100)',
                 labelStyle: const TextStyle(fontFamily: 'Tajawal'),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 prefixIcon: const Icon(Icons.account_balance_wallet_outlined),
-                suffixText: 'ر.س',
+                suffixText: isAr ? 'ر.س' : 'SAR',
               ),
             ),
           ],
@@ -106,7 +110,7 @@ class _StartShiftDialogState extends ConsumerState<StartShiftDialog> {
               ),
               onPressed: _startShift,
               icon: const Icon(Icons.play_arrow),
-              label: Text('بدء الوردية والبيع الآن', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 15)),
+              label: Text(isAr ? 'بدء الوردية والبيع الآن' : 'Start Shift & Sell Now', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 15)),
             ),
       ],
     );

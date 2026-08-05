@@ -67,6 +67,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     final appUser = ref.watch(appUserProvider).value;
     final canViewCost = appUser?.hasPermission('can_view_cost') ?? false;
 
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+
     if (baseReportsService == null) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -87,12 +89,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               if (reportsService == null) return;
               try {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('جاري تجهيز التقرير (إكسل)...', style: TextStyle(fontFamily: 'Tajawal'))),
+                  SnackBar(content: Text(isAr ? 'جاري تجهيز التقرير (إكسل)...' : 'Preparing Excel report...', style: const TextStyle(fontFamily: 'Tajawal'))),
                 );
                 await ExcelService.exportToExcel(reportsService, currentCurrency.code);
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('حدث خطأ أثناء تصدير إكسل: $e', style: TextStyle(fontFamily: 'Tajawal'))),
+                  SnackBar(content: Text(isAr ? 'حدث خطأ أثناء تصدير إكسل: $e' : 'Error exporting to Excel: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
                 );
               }
             },
@@ -151,9 +153,21 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 DropdownButton<String>(
                   value: _selectedFilter,
                   items: ['اليوم', 'أمس', 'قبل يومين', 'أسبوع', 'شهر', 'نصف سنوي', 'سنة'].map((String value) {
+                    String displayValue = value;
+                    if (!isAr) {
+                      switch (value) {
+                        case 'اليوم': displayValue = 'Today'; break;
+                        case 'أمس': displayValue = 'Yesterday'; break;
+                        case 'قبل يومين': displayValue = '2 days ago'; break;
+                        case 'أسبوع': displayValue = 'Week'; break;
+                        case 'شهر': displayValue = 'Month'; break;
+                        case 'نصف سنوي': displayValue = 'Half year'; break;
+                        case 'سنة': displayValue = 'Year'; break;
+                      }
+                    }
                     return DropdownMenuItem<String>(
                       value: value,
-                      child: Text(value, style: TextStyle(fontFamily: 'Tajawal')),
+                      child: Text(displayValue, style: const TextStyle(fontFamily: 'Tajawal')),
                     );
                   }).toList(),
                   onChanged: (newValue) {
@@ -309,8 +323,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
             // Expenses Pie Chart
             Text(
-              'توزيع المصروفات',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+              isAr ? 'توزيع المصروفات' : 'Expenses Distribution',
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
             ),
             SizedBox(height: 16),
             Builder(
@@ -321,7 +335,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     padding: EdgeInsets.all(16),
                     child: SizedBox(
                       height: 200,
-                      child: Center(child: Text('لا توجد مصروفات في هذه الفترة', style: TextStyle(fontFamily: 'Tajawal'))),
+                      child: Center(child: Text(isAr ? 'لا توجد مصروفات في هذه الفترة' : 'No expenses in this period', style: const TextStyle(fontFamily: 'Tajawal'))),
                     ),
                   );
                 }
@@ -404,7 +418,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         child: Text('${index + 1}', style: TextStyle(color: Theme.of(context).colorScheme.secondary, fontWeight: FontWeight.bold)),
                       ),
                       title: Text(item.product.name, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                      subtitle: Text('${item.quantitySold} وحدة مباعة', style: TextStyle(fontFamily: 'Tajawal')),
+                      subtitle: Text(isAr ? '${item.quantitySold} وحدة مباعة' : '${item.quantitySold} units sold', style: const TextStyle(fontFamily: 'Tajawal')),
                       trailing: Text(
                         '${item.totalRevenue} ${currentCurrency.code}',
                         style: TextStyle(color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.bold),
