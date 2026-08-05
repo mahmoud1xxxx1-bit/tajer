@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -138,6 +139,70 @@ class SettingsScreen extends ConsumerWidget {
             context: context,
             title: l10n.settingsSupportRating,
             children: [
+              _buildSettingsTile(
+                context: context,
+                icon: Icons.computer_rounded,
+                iconColor: Colors.blueAccent,
+                title: isAr ? 'العمل من الكمبيوتر (نسخة الويب)' : 'Work from PC (Web Version)',
+                subtitle: isAr ? 'أدر متجرك براحة من شاشة أكبر' : 'Manage your store comfortably from a bigger screen',
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: Row(
+                        children: [
+                          const Icon(Icons.computer, color: Colors.blueAccent),
+                          const SizedBox(width: 8),
+                          Expanded(child: Text(isAr ? 'نسخة الويب' : 'Web Version', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold))),
+                        ],
+                      ),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            isAr 
+                              ? 'هل تعلم أنه يمكنك إدارة متجرك، إضافة المنتجات، ومتابعة التقارير بكل راحة من جهاز الكمبيوتر الخاص بك؟\n\nقم بزيارة الرابط التالي من متصفح الكمبيوتر لتسجيل الدخول:' 
+                              : 'Did you know you can manage your store, add products, and track reports comfortably from your PC?\n\nVisit the following link from your computer browser to log in:',
+                            style: const TextStyle(fontFamily: 'Tajawal', height: 1.5),
+                          ),
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                            ),
+                            child: const SelectableText(
+                              'https://alldown.uk/taj',
+                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.blueAccent, fontSize: 16),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: Text(isAr ? 'إغلاق' : 'Close', style: const TextStyle(fontFamily: 'Tajawal')),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Clipboard.setData(const ClipboardData(text: 'https://alldown.uk/taj'));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(isAr ? 'تم نسخ الرابط بنجاح' : 'Link copied successfully', style: const TextStyle(fontFamily: 'Tajawal'))),
+                            );
+                            Navigator.pop(ctx);
+                          },
+                          icon: const Icon(Icons.copy, size: 18),
+                          label: Text(isAr ? 'نسخ الرابط' : 'Copy Link', style: const TextStyle(fontFamily: 'Tajawal')),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              const _CustomDivider(),
               _buildSettingsTile(
                 context: context,
                 icon: Icons.menu_book_rounded,
