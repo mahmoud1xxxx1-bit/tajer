@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/shift.dart';
@@ -111,13 +112,12 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                         Text('معلومات الوردية', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 18)),
                         const SizedBox(height: 16),
                         _buildRow('تاريخ فتح الوردية:', DateFormat('yyyy-MM-dd HH:mm').format(shift.startTime)),
-                        _buildRow('الوردية فُتحت بواسطة:', shift.openedByName),
+                        _buildRow('الوردية فُتحت بواسطة:', shift.employeeName),
                         const Divider(height: 32),
-                        _buildRow('رصيد الصندوق الافتتاحي:', '${shift.openingCash} ر.س'),
-                        _buildRow('إجمالي مبيعات الكاش:', '${shift.cashSales} ر.س', color: Colors.green),
-                        _buildRow('إجمالي مبيعات مدى:', '${shift.madaSales} ر.س', color: Colors.blue),
-                        _buildRow('إجمالي التحويل البنكي:', '${shift.transferSales} ر.س', color: Colors.purple),
-                        _buildRow('إجمالي مبيعات الآجل:', '${shift.creditSales} ر.س', color: Colors.orange),
+                        _buildRow('رصيد الصندوق الافتتاحي:', '${shift.startCash} ر.س'),
+                        _buildRow('إجمالي مبيعات الكاش:', '${shift.cashSales ?? 0.0} ر.س', color: Colors.green),
+                        _buildRow('إجمالي مبيعات مدى:', '${shift.cardTotal ?? 0.0} ر.س', color: Colors.blue),
+                        _buildRow('إجمالي التحويل البنكي:', '${shift.transferTotal ?? 0.0} ر.س', color: Colors.purple),
                         const Divider(height: 32),
                         _buildRow('الكاش المتوقع في الدرج الآن:', '${expectedCash.toStringAsFixed(2)} ر.س', isBold: true, color: Colors.blue.shade800),
                       ],

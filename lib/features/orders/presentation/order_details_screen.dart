@@ -24,6 +24,17 @@ class OrderDetailsScreen extends ConsumerStatefulWidget {
 }
 
 class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
+
+  String _getPaymentMethodName(BuildContext context, String method) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (method) {
+      case 'cash': return l10n.cash;
+      case 'card': return l10n.card;
+      case 'transfer': return l10n.transfer;
+      default: return l10n.unknown;
+    }
+  }
+
   late AppOrder currentOrder;
 
   @override

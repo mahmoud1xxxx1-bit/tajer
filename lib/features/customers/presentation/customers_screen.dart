@@ -29,6 +29,7 @@ class CustomersScreen extends ConsumerStatefulWidget {
 }
 
 class _CustomersScreenState extends ConsumerState<CustomersScreen> {
+  AppLocalizations get l10n => AppLocalizations.of(context)!;
   String _searchQuery = '';
   bool _filterHasDebt = false;
   String _sortOption = 'newest';
@@ -40,7 +41,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    
     if (!_isInitialized) {
       _expandedFolders.add(l10n.generalCustomers);
       _isInitialized = true;
@@ -653,7 +654,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
   }
 
   Future<void> _exportToExcel(List<Customer> customers) async {
-    final l10n = AppLocalizations.of(context)!;
+    
     try {
       if (customers.isEmpty) {
         if (mounted) {
