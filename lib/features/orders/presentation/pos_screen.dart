@@ -238,8 +238,11 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                 final shift = Shift(
                   id: const Uuid().v4(),
                   merchantId: merchantId,
+                  employeeId: appUser?.id ?? '',
+                  employeeName: appUser?.name ?? 'Unknown',
                   startTime: DateTime.now(),
-                  openingAmount: openingAmount,
+                  startCash: openingAmount,
+                  status: 'open',
                 );
                 await ref.read(shiftRepositoryProvider).openShift(shift);
                 
