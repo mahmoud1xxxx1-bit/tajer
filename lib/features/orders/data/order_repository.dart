@@ -450,7 +450,11 @@ class OrderRepository {
         .get();
         
     var orders = allCreditOrdersSnapshot.docs
-        .map((d) => AppOrder.fromJson(d.data()))
+        .map((d) {
+        final data = d.data();
+        data['id'] = d.id;
+        return AppOrder.fromJson(data);
+      })
         .where((o) => o.status != 'cancelled' && (o.total - o.paidAmount) > 0)
         .toList();
     

@@ -269,14 +269,14 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.person, size: 18), const SizedBox(width: 4), Text(currentOrder.customerName ?? (isAr ? \'عميل غير معروف\' : \'Unknown Customer\'), style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold)),
+                        const Icon(Icons.person, size: 18), const SizedBox(width: 4), Text(currentOrder.customerName ?? (isAr ? 'عميل غير معروف' : 'Unknown Customer'), style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold)),
                       ],
                     ),
                     if (currentOrder.creatorName != null && currentOrder.creatorName!.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(Icons.badge_outlined, size: 18), const SizedBox(width: 4), Text(currentOrder.creatorName ?? \'\', style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold)),
+                          Icon(Icons.badge_outlined, size: 18), const SizedBox(width: 4), Text(currentOrder.creatorName ?? '', style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ],

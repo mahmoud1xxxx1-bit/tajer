@@ -545,6 +545,7 @@ class _PinSettingsTileState extends State<_PinSettingsTile> {
   }
 
   void _showSetPinDialog() {
+    final l10n = AppLocalizations.of(context)!;
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final TextEditingController pinController = TextEditingController();
     showDialog(

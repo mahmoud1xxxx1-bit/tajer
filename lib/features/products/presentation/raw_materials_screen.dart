@@ -111,7 +111,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                 final qty = double.tryParse(quantityController.text) ?? 0;
 
                 if (name.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(l10n.pleaseEnterRawMaterialName, style: TextStyle(fontFamily: 'Tajawal'))));
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.pleaseEnterRawMaterialName, style: TextStyle(fontFamily: 'Tajawal'))));
                   return;
                 }
 
@@ -246,7 +246,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                               ),
                               IconButton(
                                 icon: const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => ref.read(rawMaterialsProvider.notifier).deleteRawMaterial(item.id),
+                                onPressed: () => ref.read(rawMaterialRepositoryProvider).deleteRawMaterial(item.id),
                               ),
                             ],
                           ) : null,

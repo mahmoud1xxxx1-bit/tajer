@@ -301,8 +301,9 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(fontWeight: FontWeight.bold, fontSize: 13),
+                                    border: Border.all(color: Colors.grey),
                                   ),
+                                  child: Text('  ', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold)),
                                 ),
                             ],
                           ),

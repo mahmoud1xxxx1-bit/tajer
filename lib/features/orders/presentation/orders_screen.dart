@@ -131,7 +131,7 @@ class OrdersScreen extends ConsumerWidget {
                         onLongPress: () {
                           showDialog(
                             context: context,
-                            builder: (context) => AlertDialog(
+                            builder: (dialogCtx) => AlertDialog(
                               title: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'حذف الفاتورة' : 'Delete Order', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                               content: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'هل أنت متأكد من مسح هذه الفاتورة؟ (سيعود المخزون للمنتجات)' : 'Are you sure you want to delete this order? (Inventory will be restored)', style: const TextStyle(fontFamily: 'Tajawal')),
                               actions: [
@@ -167,8 +167,8 @@ class OrdersScreen extends ConsumerWidget {
                                         user: user,
                                         actionType: Localizations.localeOf(context).languageCode == 'ar' ? 'حذف فاتورة' : 'Order Deleted',
                                         description: Localizations.localeOf(context).languageCode == 'ar' 
-                                            ? l10n.invoicePermanentlyDeleted(order.queueNumber ?? order.id.substring(0, 6), user?.name ?? "التاجر") 
-                                            : 'Permanently deleted order #${order.queueNumber ?? order.id.substring(0, 6)} by ${user?.name ?? "Owner"}',
+                                            ? l10n.invoicePermanentlyDeleted((order.queueNumber?.toString() ?? order.id.substring(0, 6)), user?.name ?? "التاجر") 
+                                            : 'Permanently deleted order #${(order.queueNumber?.toString() ?? order.id.substring(0, 6))} by ${user?.name ?? "Owner"}',
                                         amount: order.total,
                                       );
                                       if (context.mounted) {
@@ -308,7 +308,7 @@ class OrdersScreen extends ConsumerWidget {
                                                   borderRadius: BorderRadius.circular(8),
                                                 ),
                                                 child: Text(
-                                                  l10n.byCreatorIcon(order.creatorName),
+                                                  l10n.byCreatorIcon(order.creatorName!),
                                                   style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 12),
                                                 ),
                                               ),

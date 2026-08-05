@@ -113,7 +113,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => EmployeeDialog(
-        merchantEmail: _merchantEmail,
+        _merchantEmail: _merchantEmail,
         ref: ref,
       ),
     );
@@ -124,7 +124,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => EmployeeDialog(
-        merchantEmail: _merchantEmail,
+        _merchantEmail: _merchantEmail,
         ref: ref,
         employeeUid: id,
         initialData: data,
@@ -226,7 +226,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(color: Colors.grey.withOpacity(0.5)),
                               ),
-                              child: Text(merchantEmail, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                              child: Text(_merchantEmail, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                             ),
                           ],
                         ),
@@ -335,14 +335,14 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
 }
 
 class EmployeeDialog extends StatefulWidget {
-  final String merchantEmail;
+  final String _merchantEmail;
   final WidgetRef ref;
   final Map<String, dynamic>? initialData;
   final String? employeeUid;
 
   const EmployeeDialog({
     super.key,
-    required this.merchantEmail,
+    required this._merchantEmail,
     required this.ref,
     this.initialData,
     this.employeeUid,
@@ -495,7 +495,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
                 if (mounted) Navigator.of(context).pop();
                 _showSuccess("تم تحديث الصلاحيات بنجاح");
               } else {
-                await widget.ref.read(authRepositoryProvider).createEmployee(widget.merchantEmail, name, pin, permissions: permissions);
+                await widget.ref.read(authRepositoryProvider).createEmployee(widget._merchantEmail, name, pin, permissions: permissions);
                 if (mounted) Navigator.of(context).pop();
                 _showSuccess("تم إضافة الموظف بنجاح");
               }
