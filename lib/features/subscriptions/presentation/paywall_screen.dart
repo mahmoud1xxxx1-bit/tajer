@@ -65,12 +65,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
     
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('?? ???????? ?????! ?????? ?? ?? ???? ???? ???.', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)), backgroundColor: Colors.green),
+        const SnackBar(content: Text('تم الاشتراك بنجاح! مرحباً بك في عالم تاجر برو.', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)), backgroundColor: Colors.green),
       );
       context.go('/dashboard');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('???? ????? ???????? ?? ?? ???????.', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.redAccent),
+        const SnackBar(content: Text('فشلت عملية الاشتراك أو تم إلغاؤها.', style: TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.redAccent),
       );
     }
   }
@@ -85,12 +85,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
     
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('?? ??????? ??????? ?????!', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)), backgroundColor: Colors.green),
+        const SnackBar(content: Text('تم استعادة اشتراكك بنجاح!', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)), backgroundColor: Colors.green),
       );
       context.go('/dashboard');
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('?? ??? ?????? ??? ???????? ????? ????.', style: TextStyle(fontFamily: 'Tajawal', color: Colors.amber.shade900)), backgroundColor: Colors.amber.shade100),
+        SnackBar(content: Text('لم يتم العثور على اشتراكات سابقة نشطة.', style: TextStyle(fontFamily: 'Tajawal', color: Colors.amber.shade900)), backgroundColor: Colors.amber.shade100),
       );
     }
   }
@@ -112,7 +112,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
           TextButton.icon(
             onPressed: _restorePurchases,
             icon: Icon(Icons.restore_rounded, size: 18, color: isDark ? Colors.white70 : Colors.black54),
-            label: Text('???????', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black54)),
+            label: Text('استعادة', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: isDark ? Colors.white70 : Colors.black54)),
           ),
         ],
       ),
@@ -161,7 +161,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
                       
                       // Titles
                       Text(
-                        '???? ??? (Premium)',
+                        'تاجر برو (Premium)',
                         style: TextStyle(
                           fontFamily: 'Tajawal',
                           fontSize: 28,
@@ -174,7 +174,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 40),
                         child: Text(
-                          '????? ??????? ???? ????? ????????? ????? ?? ????? ?????? ??? ????.',
+                          'ارتقِ بتجارتك وأدر متجرك باحترافية كاملة مع أدوات متقدمة بلا حدود.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontFamily: 'Tajawal',
@@ -201,43 +201,43 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
                                   context: context,
                                   icon: Icons.all_inclusive_rounded,
                                   color: Colors.blueAccent,
-                                  title: '?????? ?????? ??? ????',
-                                  subtitle: '??? ?? ???? ?? ???????? ??????? ????? ??? ?????? (?????? ?? 20 ?? ???????).',
+                                  title: 'منتجات وطلبات بلا حدود',
+                                  subtitle: 'أضف ما تشاء من المنتجات واستقبل طلبات غير محدودة.',
                                 ),
                                 _buildFeatureTile(
                                   context: context,
                                   icon: Icons.group_add_rounded,
                                   color: Colors.purpleAccent,
-                                  title: '????? ???????? ??????????',
-                                  subtitle: '??? ??????? ?????????? ???? ????????? ????? ????? ??? ??????? ???????.',
+                                  title: 'إدارة الموظفين والصلاحيات',
+                                  subtitle: 'أضف الكاشير والمحاسبين وحدد صلاحياتهم بدقة، وراقب سجل حركاتهم بالكامل.',
                                 ),
                                 _buildFeatureTile(
                                   context: context,
                                   icon: Icons.inventory_2_rounded,
                                   color: Colors.orangeAccent,
-                                  title: '????? ????? ????? ??? ????',
-                                  subtitle: '???? ????? ?????? ?????? ????? ??????? ?????? ????? ????? ????? ????????.',
+                                  title: 'إدارة مخزون ومواد خام ذكية',
+                                  subtitle: 'تتبع كميات المواد الخام، وتلقَ تنبيهات النقص، واصنع وصفات دقيقة لمنتجاتك.',
                                 ),
                                 _buildFeatureTile(
                                   context: context,
                                   icon: Icons.wifi_off_rounded,
                                   color: Colors.greenAccent.shade400,
-                                  title: '???? ???? ?????? (Offline)',
-                                  subtitle: '?? ??? ?????? ???????? ???? ???????. ???? ?????? ????? ???????? ??????.',
+                                  title: 'يعمل بدون إنترنت (Offline)',
+                                  subtitle: 'لا تدع انقطاع الإنترنت يوقف مبيعاتك. اعمل بكفاءة وستتم المزامنة لاحقاً.',
                                 ),
                                 _buildFeatureTile(
                                   context: context,
                                   icon: Icons.receipt_long_rounded,
                                   color: Colors.indigoAccent,
-                                  title: '???????? ???????? ??????? (ZATCA)',
-                                  subtitle: '???? ?????? ????? ??????? ??????? ?? ???? ?????? ????? ?? QR Code ??????.',
+                                  title: 'الفواتير الضريبية المبسطة (ZATCA)',
+                                  subtitle: 'اطبع فواتير رسمية للعملاء متوافقة مع هيئة الزكاة مزودة بـ QR Code متوافق.',
                                 ),
                                 _buildFeatureTile(
                                   context: context,
                                   icon: Icons.support_agent_rounded,
                                   color: Colors.tealAccent.shade400,
-                                  title: '?????? ?????? ?? ????? ?????',
-                                  subtitle: '???? ??? ?????? ????? ???????? ?????? ????? ??? ????? ??? ????.',
+                                  title: 'أولوية القصوى في الدعم الفني',
+                                  subtitle: 'احصل على مساعدة فورية وتحديثات مستمرة لضمان عمل متجرك دون توقف.',
                                 ),
                               ],
                             ),
@@ -256,48 +256,36 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
                           ],
                         ),
                         child: _packages.isEmpty
-                            ? Center(child: Text('???? ????? ???????...', style: TextStyle(fontFamily: 'Tajawal', color: isDark ? Colors.white54 : Colors.black54)))
+                            ? Center(child: Text('جاري تحميل الباقات...', style: TextStyle(fontFamily: 'Tajawal', color: isDark ? Colors.white54 : Colors.black54)))
                             : Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: _packages.map((pkg) {
-                                  final isAnnual = pkg.packageType == PackageType.annual;
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 12),
                                     child: ElevatedButton(
                                       onPressed: () => _purchasePackage(pkg),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: isDark ? const Color(0xFFFDE047) : const Color(0xFFFACC15), // Elegant gold/amber
+                                        backgroundColor: isDark ? const Color(0xFFFDE047) : const Color(0xFFFACC15),
                                         foregroundColor: Colors.black87,
-                                        elevation: isAnnual ? 8 : 2,
+                                        elevation: 8,
                                         shadowColor: Colors.amber.withOpacity(0.5),
                                         padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(16),
-                                          side: isAnnual ? const BorderSide(color: Colors.amber, width: 2) : BorderSide.none,
+                                          side: const BorderSide(color: Colors.amber, width: 2),
                                         ),
                                       ),
                                       child: Row(
                                         mainAxisAlignment: MainAxisAlignment.center,
                                         children: [
-                                          Text(
-                                            '????????  - ',
-                                            style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold),
+                                          const Text(
+                                            'الاشتراك في تاجر برو - ',
+                                            style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold),
                                           ),
                                           Text(
                                             pkg.storeProduct.priceString,
                                             style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.w900),
                                           ),
-                                          if (isAnnual) ...[
-                                            const SizedBox(width: 8),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                              decoration: BoxDecoration(
-                                                color: Colors.black87,
-                                                borderRadius: BorderRadius.circular(8),
-                                              ),
-                                              child: const Text('??? ??????!', style: TextStyle(color: Colors.white, fontSize: 10, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                                            ),
-                                          ]
                                         ],
                                       ),
                                     ),
