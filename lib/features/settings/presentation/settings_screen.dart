@@ -268,8 +268,7 @@ class SettingsScreen extends ConsumerWidget {
                 Image.asset('assets/images/logo.png', width: 48, height: 48, errorBuilder: (_,__,___) => const SizedBox()),
                 const SizedBox(height: 12),
                 Text(
-                  'Tajer POS v1.0.42
-Made with ??',
+                  'Tajer POS v1.0.42\nMade with 💛',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontFamily: 'Tajawal', color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4), fontSize: 13, letterSpacing: 1.1),
                 ),

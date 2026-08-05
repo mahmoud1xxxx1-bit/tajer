@@ -138,24 +138,38 @@ class OrdersScreen extends ConsumerWidget {
                             ),
                           );
                         },
-                        onLongPress: () async {
-                          final appUser = ref.read(appUserProvider).value;
-                          if (appUser != null) {
-                            final pin = await PinService.getDeletePin(appUser);
-                            if (pin != null) {
-                              if (!context.mounted) return;
-                              final isAr = Localizations.localeOf(context).languageCode == 'ar';
-                              final success = await PinConfirmationDialog.show(
-                                context, 
-                                pin,
-                                title: isAr ? 'تحذير: حذف نهائي للطلب' : 'Warning: Delete Order',
-                                warning: isAr 
-                                    ? 'الحذف النهائي سيمحو هذا الطلب من السجلات تماماً بالإضافة إلى إرجاع الأموال وعكس الديون. لا يمكن استعادة الفاتورة. هل أنت متأكد؟'
-                                    : 'Permanent deletion will erase this order from records completely, refund money, and reverse debt. This cannot be undone.',
-                              );
-                              if (!success) return;
-                            }
-                          }
+                        onLongPress: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'حذف الفاتورة' : 'Delete Order', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                              content: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'هل أنت متأكد من مسح هذه الفاتورة؟ (سيعود المخزون للمنتجات)' : 'Are you sure you want to delete this order? (Inventory will be restored)', style: const TextStyle(fontFamily: 'Tajawal')),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'إلغاء' : 'Cancel', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                                ),
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                                  onPressed: () async {
+                                    Navigator.pop(context);
+                                    final appUser = ref.read(appUserProvider).value;
+                                    if (appUser != null) {
+                                      final pin = await PinService.getDeletePin(appUser);
+                                      if (pin != null) {
+                                        if (!context.mounted) return;
+                                        final isAr = Localizations.localeOf(context).languageCode == 'ar';
+                                        final success = await PinConfirmationDialog.show(
+                                          context, 
+                                          pin,
+                                          title: isAr ? 'تحذير: حذف نهائي للطلب' : 'Warning: Delete Order',
+                                          warning: isAr 
+                                              ? 'الحذف النهائي سيمحو هذا الطلب من السجلات تماماً بالإضافة إلى إرجاع الأموال وعكس الديون. لا يمكن استعادة الفاتورة. هل أنت متأكد؟'
+                                              : 'Permanent deletion will erase this order from records completely, refund money, and reverse debt. This cannot be undone.',
+                                        );
+                                        if (!success) return;
+                                      }
+                                    }
                                     try {
                                       await ref.read(orderRepositoryProvider).deleteOrder(order);
                                       final user = ref.read(appUserProvider).value;
