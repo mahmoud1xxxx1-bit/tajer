@@ -11,6 +11,7 @@ import '../../../core/services/guest_limit_service.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/services/activity_logger.dart';
+import '../../authentication/data/auth_repository.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../categories/data/category_repository.dart';
 import 'package:go_router/go_router.dart';

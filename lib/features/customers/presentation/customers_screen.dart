@@ -673,7 +673,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                 shiftId: null,
                               );
                               ActivityLogger.log(
-                                user: appUser,
+                                user: user,
                                 actionType: 'Receive Payment|استلام دفعة',
                                 description: 'Received payment of $paid from customer (${customer.name}) via Bank Transfer|استلام دفعة بقيمة $paid من العميل (${customer.name}) عبر حوالة بنكية',
                               );
@@ -694,7 +694,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                 shiftId: currentShift.id,
                               );
                               ActivityLogger.log(
-                                user: appUser,
+                                user: user,
                                 actionType: 'Receive Payment|استلام دفعة',
                                 description: 'Received cash payment of $paid from customer (${customer.name})|استلام دفعة نقدية بقيمة $paid من العميل (${customer.name})',
                               );
@@ -714,7 +714,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                     shiftId: null,
                   );
                   ActivityLogger.log(
-                    user: appUser,
+                    user: user,
                     actionType: 'Receive Payment|استلام دفعة',
                     description: 'Received payment of $paid from customer (${customer.name})|استلام دفعة بقيمة $paid من العميل (${customer.name})',
                   );
