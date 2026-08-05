@@ -8,6 +8,7 @@ import '../../products/data/product_repository.dart';
 import '../../shifts/data/shift_repository.dart';
 import '../../orders/data/order_repository.dart';
 import '../../authentication/domain/app_user.dart';
+import '../../authentication/data/auth_repository.dart';
 import 'package:go_router/go_router.dart';
 
 class SetupChecklistCard extends ConsumerWidget {

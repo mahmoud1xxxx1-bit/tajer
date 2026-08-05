@@ -21,6 +21,7 @@ import 'package:flutter/foundation.dart';
 import '../../shifts/data/shift_repository.dart';
 import '../../shifts/presentation/start_shift_dialog.dart';
 import '../../../core/providers/store_profile_provider.dart';
+import '../../shifts/domain/shift.dart';
 
 class PosScreen extends ConsumerStatefulWidget {
   const PosScreen({super.key});
@@ -240,7 +241,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                   startTime: DateTime.now(),
                   openingAmount: openingAmount,
                 );
-                await ref.read(shiftRepositoryProvider)?.startShift(shift);
+                await ref.read(shiftRepositoryProvider).openShift(shift);
                 
                 if (context.mounted) _checkout();
               },
