@@ -386,7 +386,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            '${l10n.byCreator(customer.creatorName)}',
+                            '${l10n.byCreator(customer.creatorName ?? "")}',
                             style: const TextStyle(fontSize: 12, color: Colors.teal, fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -506,7 +506,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                           ),
                         ),
                       if (customer.totalDebt > 0 && canReceivePayments)
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'pay_debt',
                           child: Row(
                             children: [

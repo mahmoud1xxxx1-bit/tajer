@@ -1,3 +1,4 @@
+import 'package:tajer/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -25,7 +26,7 @@ class OrderDetailsScreen extends ConsumerStatefulWidget {
 
 class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
 
-  String _getPaymentMethodName(BuildContext context, String method) {
+  String _getPaymentMethodName(BuildContext context, String? method) {
     final l10n = AppLocalizations.of(context)!;
     switch (method) {
       case 'cash': return l10n.cash;

@@ -44,6 +44,51 @@ class AuditLogScreen extends ConsumerStatefulWidget {
 }
 
 class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
+
+  Widget _buildLogItem(AuditLogItem item, ThemeData theme, String currency, bool isAr) {
+    return GlassCard(
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: item.badgeColor.withOpacity(0.2),
+          child: Icon(
+            item.type == 'order' ? Icons.shopping_cart :
+            item.type == 'expense' ? Icons.money_off :
+            Icons.info,
+            color: item.badgeColor,
+          ),
+        ),
+        title: Text(item.title, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(item.subtitle, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12)),
+            if (item.details.isNotEmpty)
+              Text(item.details, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 11, color: Colors.grey)),
+            Text(item.performedBy, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 10, color: Colors.teal)),
+          ],
+        ),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text('\ ', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: item.badgeColor)),
+            Text('\:', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 10)),
+          ],
+        ),
+        onTap: () {
+          if (item.order != null) {
+             Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => OrderDetailsScreen(order: item.order!),
+              ),
+            );
+          }
+        },
+      ),
+    );
+  }
+
   String _formatTime(DateTime dt, bool isAr) {
     int hour = dt.hour;
     String period = isAr ? (hour >= 12 ? 'م' : 'ص') : (hour >= 12 ? 'PM' : 'AM');
