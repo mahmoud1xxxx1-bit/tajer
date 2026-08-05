@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../authentication/data/auth_repository.dart';
 import '../domain/shift.dart';
 
 part 'shift_repository.g.dart';
@@ -71,4 +72,17 @@ ShiftRepository shiftRepository(ShiftRepositoryRef ref) {
 Stream<Shift?> currentShift(CurrentShiftRef ref, String merchantId) {
   final repository = ref.watch(shiftRepositoryProvider);
   return repository.watchCurrentShift(merchantId);
+}
+
+@riverpod
+Stream<List<Shift>> shiftsStream(ShiftsStreamRef ref) {
+  final appUser = ref.watch(appUserProvider).value;
+  if (appUser == null) return const Stream.empty();
+
+  final repository = ref.watch(shiftRepositoryProvider);
+  return repository._firestore
+      .collection('shifts')
+      .where('merchantId', isEqualTo: appUser.merchantId ?? appUser.id)
+      .snapshots()
+      .map((snapshot) => snapshot.docs.map((doc) => Shift.fromJson(doc.data())).toList());
 }

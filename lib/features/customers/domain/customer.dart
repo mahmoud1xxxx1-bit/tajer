@@ -73,7 +73,6 @@ class Customer {
           : DateTime.now(),
       creatorName: json['creatorName'] as String?,
       folderName: json['folderName'] as String?,
-      isDeleted: json['isDeleted'] as bool? ?? false,
     );
   }
 

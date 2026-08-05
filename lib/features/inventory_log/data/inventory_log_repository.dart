@@ -41,12 +41,12 @@ class InventoryLogRepository {
   Future<void> logChange({
     required String productId,
     required String productName,
-    required int previousQuantity,
-    required int newQuantity,
+    required num previousQuantity,
+    required num newQuantity,
     required String reason,
     String? userEmail,
   }) async {
-    final change = newQuantity - previousQuantity;
+    final change = (newQuantity - previousQuantity).toDouble();
     if (change == 0) return; // No real change
 
     final log = InventoryLog(
@@ -55,8 +55,8 @@ class InventoryLogRepository {
       productId: productId,
       productName: productName,
       changeQuantity: change,
-      previousQuantity: previousQuantity,
-      newQuantity: newQuantity,
+      previousQuantity: previousQuantity.toDouble(),
+      newQuantity: newQuantity.toDouble(),
       reason: reason,
       userEmail: userEmail,
       date: DateTime.now(),
