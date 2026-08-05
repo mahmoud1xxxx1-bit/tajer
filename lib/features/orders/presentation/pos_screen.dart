@@ -22,6 +22,7 @@ import '../../shifts/data/shift_repository.dart';
 import '../../shifts/presentation/start_shift_dialog.dart';
 import '../../../core/providers/store_profile_provider.dart';
 import '../../shifts/domain/shift.dart';
+import '../../categories/data/category_repository.dart';
 
 class PosScreen extends ConsumerStatefulWidget {
   const PosScreen({super.key});
@@ -35,6 +36,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   final List<List<CartItem>> _heldOrders = [];
   bool _isLoading = false;
   String _searchQuery = '';
+  String? _selectedCategoryId;
 
   void _addToCart(Product product, {List<String> selectedModifiers = const []}) {
     setState(() {
@@ -352,6 +354,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     final shiftAsync = ref.watch(currentShiftProvider(merchantId ?? ''));
     
     final productsAsync = ref.watch(productsStreamProvider);
+    final categoriesAsync = ref.watch(categoriesStreamProvider);
     final isTablet = MediaQuery.of(context).size.width > 600;
 
     return shiftAsync.when(
@@ -438,10 +441,50 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                       ],
                     ),
                   ),
+                  categoriesAsync.when(
+                    data: (categories) {
+                      if (categories.isEmpty) return const SizedBox.shrink();
+                      return Container(
+                        height: 50,
+                        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: ChoiceChip(
+                                label: Text(isAr ? 'الكل' : 'All', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                selected: _selectedCategoryId == null,
+                                onSelected: (selected) {
+                                  if (selected) setState(() => _selectedCategoryId = null);
+                                },
+                              ),
+                            ),
+                            ...categories.map((category) => Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: ChoiceChip(
+                                label: Text(category.name, style: const TextStyle(fontFamily: 'Tajawal')),
+                                selected: _selectedCategoryId == category.id,
+                                onSelected: (selected) {
+                                  setState(() => _selectedCategoryId = selected ? category.id : null);
+                                },
+                              ),
+                            )),
+                          ],
+                        ),
+                      );
+                    },
+                    loading: () => const SizedBox(height: 50, child: Center(child: CircularProgressIndicator())),
+                    error: (_, __) => const SizedBox.shrink(),
+                  ),
                   Expanded(
                     child: productsAsync.when(
                       data: (products) {
-                        final filtered = products.where((p) => p.name.toLowerCase().contains(_searchQuery)).toList();
+                        final filtered = products.where((p) {
+                          final matchesSearch = p.name.toLowerCase().contains(_searchQuery);
+                          final matchesCategory = _selectedCategoryId == null || p.categoryId == _selectedCategoryId;
+                          return matchesSearch && matchesCategory;
+                        }).toList();
                         if (filtered.isEmpty) return const Center(child: Text('لا توجد منتجات', style: TextStyle(fontFamily: 'Tajawal')));
                   
                   return GridView.builder(
