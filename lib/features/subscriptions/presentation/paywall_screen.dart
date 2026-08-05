@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tajer/l10n/app_localizations.dart';
 import '../../core/services/revenue_cat_service.dart';
 import '../../core/theme/glass_card.dart';
 

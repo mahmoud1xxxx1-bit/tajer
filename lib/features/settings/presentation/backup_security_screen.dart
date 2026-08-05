@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tajer/l10n/app_localizations.dart';
 import 'package:tajer/features/authentication/data/auth_repository.dart';
 import 'package:tajer/core/services/backup_service.dart';
 import '../../authentication/domain/app_user.dart';

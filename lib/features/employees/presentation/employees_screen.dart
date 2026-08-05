@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tajer/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:tajer/l10n/app_localizations.dart';
+
 import 'package:go_router/go_router.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../orders/data/order_repository.dart';

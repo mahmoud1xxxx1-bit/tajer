@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:tajer/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../domain/raw_material.dart';
@@ -8,7 +8,7 @@ import '../../authentication/data/auth_repository.dart';
 import '../../authentication/domain/app_user.dart';
 import '../../../core/services/pin_service.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
-import 'package:tajer/l10n/app_localizations.dart';
+
 import '../../../../../../../../core/theme/glass_card.dart';
 
 class RawMaterialsScreen extends ConsumerStatefulWidget {

@@ -1,28 +1,29 @@
-# -*- coding: utf-8 -*-
 import urllib.request
+import zipfile
+import io
 import re
 
+repo = 'mahmoud1xxxx1-bit/tajer'
+run_id = '30979640628'
+url = f'https://api.github.com/repos/{repo}/actions/runs/{run_id}/logs'
+
 try:
-    url = 'https://ptsv3.com/t/tajerlogs/'
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    req = urllib.request.Request(url)
     with urllib.request.urlopen(req) as response:
-        html = response.read().decode('utf-8')
-        match = re.search(r'href="(.*?/d/.*?)"', html)
-        if match:
-            post_url = 'https://ptsv3.com' + match.group(1)
-            print("Found post:", post_url)
-            req2 = urllib.request.Request(post_url, headers={'User-Agent': 'Mozilla/5.0'})
-            with urllib.request.urlopen(req2) as res2:
-                html2 = res2.read().decode('utf-8')
-                m2 = re.search(r'<pre.*?>(.*?)</pre>', html2, re.DOTALL)
-                if m2:
-                    text = m2.group(1)
-                    for line in text.split('\n'):
-                        if 'error' in line.lower() or 'warning' in line.lower() or 'Exception' in line:
-                            print(line.strip())
-                else:
-                    print("No pre block")
-        else:
-            print("No posts found")
+        zip_data = response.read()
+    
+    with zipfile.ZipFile(io.BytesIO(zip_data)) as z:
+        for filename in z.namelist():
+            if 'Build' in filename or 'build' in filename.lower():
+                content = z.read(filename).decode('utf-8', errors='replace')
+                # Find compilation errors
+                lines = content.split('\n')
+                for i, line in enumerate(lines):
+                    if 'Error: ' in line or 'Exception: ' in line or 'compiler message:' in line:
+                        print(f"[{filename}] Line {i}: {line.strip()}")
+                        # Print context
+                        for j in range(max(0, i-5), min(len(lines), i+6)):
+                            print(f"  {lines[j].strip()}")
+                        print("-" * 50)
 except Exception as e:
-    print(f"Error: {e}")
+    print('Failed to fetch logs:', e)
