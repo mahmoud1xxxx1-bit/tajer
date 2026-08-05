@@ -182,6 +182,7 @@ class SuppliersScreen extends ConsumerWidget {
         error: (e, st) => Center(child: Text('خطأ: $e')),
       ),
       floatingActionButton: canManageInventory ? FloatingActionButton(
+        heroTag: null,
         onPressed: () async {
           final canAdd = await GuestLimitService.canAddSupplier(context, ref);
           if (!canAdd) return;

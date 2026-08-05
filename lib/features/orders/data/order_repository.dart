@@ -148,14 +148,37 @@ class OrderRepository {
     
     final orderWithQueue = order.copyWith(queueNumber: nextQueueNumber);
 
+    // PRE-FETCH all needed products concurrently
+    final productIds = order.items.map((i) => i.productId).where((id) => id.isNotEmpty).toSet().toList();
+    final productFutures = productIds.map((id) => _firestore.collection('products').doc(id).get(const GetOptions(source: Source.serverAndCache)));
+    final productSnaps = await Future.wait(productFutures);
+    final Map<String, DocumentSnapshot> productsCache = { for (var snap in productSnaps) if (snap.exists) snap.id: snap };
+    
+    // PRE-FETCH all raw materials concurrently based on recipes
+    final Set<String> rawMaterialIds = {};
+    for (final item in order.items) {
+      if (item.productId.isEmpty) continue;
+      final productSnap = productsCache[item.productId];
+      if (productSnap != null) {
+        final data = productSnap.data() as Map<String, dynamic>;
+        final recipeList = data['recipe'] as List<dynamic>? ?? [];
+        for (final recipeItem in recipeList) {
+          rawMaterialIds.add(recipeItem['rawMaterialId'] as String);
+        }
+      }
+    }
+    
+    final rmFutures = rawMaterialIds.map((id) => _firestore.collection('raw_materials').doc(id).get(const GetOptions(source: Source.serverAndCache)));
+    final rmSnaps = await Future.wait(rmFutures);
+    final Map<String, DocumentSnapshot> rawMaterialsCache = { for (var snap in rmSnaps) if (snap.exists) snap.id: snap };
+
     for (final item in order.items) {
       if (item.productId.isEmpty) continue;
       final productRef = _firestore.collection('products').doc(item.productId);
       
-      // Fetch product to get its recipe
-      final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
-      if (productDoc.exists) {
-        final data = productDoc.data()!;
+      final productDoc = productsCache[item.productId];
+      if (productDoc != null) {
+        final data = productDoc.data() as Map<String, dynamic>;
         final recipeList = data['recipe'] as List<dynamic>? ?? [];
         
         // ALWAYS deduct product quantity
@@ -184,10 +207,10 @@ class OrderRepository {
             final rawMaterialId = recipeItem['rawMaterialId'] as String;
             final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
             
-            final rawMaterialRef = _firestore.collection('raw_materials').doc(rawMaterialId);
-            final rmDoc = await rawMaterialRef.get(const GetOptions(source: Source.serverAndCache));
-            if (rmDoc.exists) {
-              final rmData = rmDoc.data()!;
+            final rmDoc = rawMaterialsCache[rawMaterialId];
+            if (rmDoc != null) {
+              final rawMaterialRef = _firestore.collection('raw_materials').doc(rawMaterialId);
+              final rmData = rmDoc.data() as Map<String, dynamic>;
               final deducted = amountRequired * item.quantity;
               batch.update(rawMaterialRef, {
                 'quantity': FieldValue.increment(-deducted),

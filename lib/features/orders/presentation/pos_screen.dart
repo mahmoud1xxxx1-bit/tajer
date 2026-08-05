@@ -322,13 +322,13 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           backgroundColor: Colors.green,
         ));
       }
-      
       final storeProfile = ref.read(storeProfileProvider).value;
       double? tax = storeProfile?.defaultTaxPercentage;
       
-      if (mounted) {
-        Navigator.pop(context, true);
-      }
+      // Do not pop the POS screen! Just stay on it for the next customer.
+      // if (mounted) {
+      //   Navigator.pop(context, true);
+      // }
 
       // Attempt to print receipt asynchronously in background with a 5-second timeout
       PrinterService.printReceipt(

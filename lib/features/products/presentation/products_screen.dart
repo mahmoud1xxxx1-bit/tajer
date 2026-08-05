@@ -355,6 +355,7 @@ class ProductsScreen extends ConsumerWidget {
   ],
 ),
 floatingActionButton: canManageProducts ? FloatingActionButton.extended(
+        heroTag: null,
         onPressed: () async {
           final categories = ref.read(categoriesStreamProvider).value;
           if (categories == null || categories.isEmpty) {

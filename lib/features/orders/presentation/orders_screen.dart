@@ -416,6 +416,7 @@ class OrdersScreen extends ConsumerWidget {
         ),
       ),
       floatingActionButton: canCreateOrders ? FloatingActionButton.extended(
+        heroTag: null,
         onPressed: () async {
           final canAdd = await GuestLimitService.canAddOrder(context, ref);
           if (!canAdd) return;

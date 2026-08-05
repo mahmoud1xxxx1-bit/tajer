@@ -236,6 +236,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
         ),
       ),
       floatingActionButton: canManageCustomers && !_isSelectionMode ? FloatingActionButton.extended(
+        heroTag: null,
         onPressed: () async {
           final canAdd = await GuestLimitService.canAddCustomer(context, ref);
           if (!canAdd) return;

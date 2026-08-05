@@ -156,6 +156,7 @@ class CategoriesScreen extends ConsumerWidget {
         error: (e, st) => Center(child: Text('خطأ: $e')),
       ),
       floatingActionButton: canManageProducts ? FloatingActionButton(
+        heroTag: null,
         onPressed: () async {
           final canAdd = await GuestLimitService.canAddCategory(context, ref);
           if (!canAdd) return;

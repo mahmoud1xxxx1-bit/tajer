@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:json_annotation/json_annotation.dart';
 import 'raw_material.dart';
 
 class Product {
@@ -113,23 +114,26 @@ class Product {
   }
 }
 
-class TimestampConverter {
+class TimestampConverter implements JsonConverter<DateTime, dynamic> {
   const TimestampConverter();
 
+  @override
   DateTime fromJson(dynamic json) {
     if (json is Timestamp) return json.toDate();
     if (json is String) return DateTime.parse(json);
     return DateTime.now();
   }
 
+  @override
   dynamic toJson(DateTime object) {
     return Timestamp.fromDate(object);
   }
 }
 
-class NullableTimestampConverter {
+class NullableTimestampConverter implements JsonConverter<DateTime?, dynamic> {
   const NullableTimestampConverter();
 
+  @override
   DateTime? fromJson(dynamic json) {
     if (json == null) return null;
     if (json is Timestamp) return json.toDate();
@@ -137,6 +141,7 @@ class NullableTimestampConverter {
     return DateTime.now();
   }
 
+  @override
   dynamic toJson(DateTime? object) {
     if (object == null) return null;
     return Timestamp.fromDate(object);

@@ -171,6 +171,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
         title: Text(l10n.rawMaterialsWarehouse, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
       ),
       floatingActionButton: canManageInventory ? FloatingActionButton.extended(
+        heroTag: null,
         onPressed: () => _showAddEditDialog(),
         icon: const Icon(Icons.add),
         label: Text(l10n.addRawMaterial, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),

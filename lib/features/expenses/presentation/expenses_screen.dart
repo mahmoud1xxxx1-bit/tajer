@@ -130,6 +130,7 @@ class ExpensesScreen extends ConsumerWidget {
         error: (e, st) => Center(child: Text('خطأ: $e')),
       ),
       floatingActionButton: canManageExpenses ? FloatingActionButton(
+        heroTag: null,
         onPressed: () async {
           final canAdd = await GuestLimitService.canAddExpense(context, ref);
           if (!canAdd) return;
