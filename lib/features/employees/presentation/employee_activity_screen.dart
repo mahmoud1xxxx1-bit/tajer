@@ -321,7 +321,7 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
     );
   }
 
-  Widget _buildLogItem(dynamic item, ThemeData theme, String currency, bool isAr) {
+  Widget _buildLogItem(dynamic item, ThemeData theme, AppCurrency currency, bool isAr) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),

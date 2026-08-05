@@ -147,19 +147,18 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                       Row(
                         children: [
                           FilterChip(
-                            label: const Text(l10n.hasDebts, style: TextStyle(fontFamily: 'Tajawal')),
+                            label: Text(l10n.hasDebts, style: TextStyle(fontFamily: 'Tajawal')),
                             selected: _filterHasDebt,
                             onSelected: (val) => setState(() => _filterHasDebt = val),
                             selectedColor: Colors.red.withOpacity(0.2),
                             checkmarkColor: Colors.red,
                           ),
                           const Spacer(),
-                          const Text(l10n.sortBy, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 12)),
+                          Text(l10n.sortBy, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 12)),
                           DropdownButton<String>(
                             value: _sortOption,
                             underline: const SizedBox(),
-                            items: const [
-                              DropdownMenuItem(value: 'newest', child: Text('الأحدث', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
+                            items: [DropdownMenuItem(value: 'newest', child: Text('الأحدث', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
                               DropdownMenuItem(value: 'debt', child: Text(l10n.highestDebt, style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
                               DropdownMenuItem(value: 'alpha', child: Text(l10n.sortAlphabetical, style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
                             ],
@@ -355,7 +354,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                               children: [
                                 const Icon(Icons.chat_bubble_outline, size: 14, color: Colors.green),
                                 const SizedBox(width: 4),
-                                const Text(l10n.whatsapp, style: TextStyle(color: Colors.green, fontSize: 10, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                Text(l10n.whatsapp, style: TextStyle(color: Colors.green, fontSize: 10, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                               ],
                             ),
                           ),
@@ -552,7 +551,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text(l10n.moveToFolder, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        title: Text(l10n.moveToFolder, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -567,7 +566,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(l10n.leaveEmptyToRemoveFromFolder, style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey)),
+            Text(l10n.leaveEmptyToRemoveFromFolder, style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey)),
           ],
         ),
         actions: [
@@ -593,7 +592,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                 });
               }
             },
-            child: const Text(l10n.move, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+            child: Text(l10n.move, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -605,7 +604,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text(l10n.payDebt, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        title: Text(l10n.payDebt, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -658,7 +657,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
       if (customers.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text(l10n.noCustomersToExport, style: TextStyle(fontFamily: 'Tajawal'))),
+            SnackBar(content: Text(l10n.noCustomersToExport, style: TextStyle(fontFamily: 'Tajawal'))),
           );
         }
         return;

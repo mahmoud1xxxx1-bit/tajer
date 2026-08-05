@@ -58,7 +58,7 @@ class SettingsScreen extends ConsumerWidget {
                     context: context,
                     icon: Icons.people_rounded,
                     iconColor: Colors.purpleAccent,
-                    title: isAr ? '????? ???????? ??????????' : 'Employees & Permissions',
+                    title: isAr ? l10n.aboutApp : 'Employees & Permissions',
                     onTap: () => context.push('/employees'),
                   ),
                   const _CustomDivider(),
@@ -142,7 +142,7 @@ class SettingsScreen extends ConsumerWidget {
                 context: context,
                 icon: Icons.menu_book_rounded,
                 iconColor: Colors.green,
-                title: isAr ? '???? ??????? ??????? (???? ?????)' : 'App User Guide',
+                title: isAr ? l10n.databaseBackupText : 'App User Guide',
                 subtitle: l10n.settingsHowToSetup,
                 onTap: () => context.push('/user_guide'),
               ),
@@ -176,7 +176,7 @@ class SettingsScreen extends ConsumerWidget {
                 subtitle: l10n.settingsTechnicalIssues,
                 trailingIcon: Icons.open_in_new_rounded,
                 onTap: () async {
-                  final url = Uri.parse('mailto:dotkxxx1@gmail.com?subject=????? ???? - ??? ???');
+                  final url = Uri.parse('mailto:dotkxxx1@gmail.com?subject=Tajer Support');
                   try {
                     await launchUrl(url);
                   } catch (e) {
@@ -221,7 +221,7 @@ class SettingsScreen extends ConsumerWidget {
                 context: context,
                 icon: isAnonymous ? Icons.delete_forever_rounded : Icons.logout_rounded,
                 iconColor: Colors.redAccent,
-                title: isAnonymous ? (isAr ? '????? ?????? ????????? (???? ????????)' : 'End Trial Session (Delete Data)') : l10n.logout,
+                title: isAnonymous ? (isAr ? l10n.thermalPrinterText : 'End Trial Session (Delete Data)') : l10n.logout,
                 titleColor: Colors.redAccent,
                 onTap: () async {
                   if (isAnonymous) {
