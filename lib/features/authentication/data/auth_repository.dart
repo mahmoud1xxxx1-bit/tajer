@@ -294,7 +294,11 @@ class AuthRepository {
               if (data.containsKey('name')) {
                 empName = data['name']?.toString() ?? 'موظف';
               }
+            } else {
+              throw Exception('تم إيقاف هذا الحساب أو حذفه من قبل التاجر.');
             }
+          } else {
+            throw Exception('لم يتم العثور على متجر التاجر.');
           }
           
           await _firestore.collection('users').doc(uid).set({

@@ -1,4 +1,4 @@
-rules_version = '2';
+﻿rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
@@ -7,20 +7,30 @@ service cloud.firestore {
       return request.auth != null;
     }
     
-    // Safely get user's merchantId, default to empty string if missing
-    function getUserMerchantId() {
+    function getUserData() {
       let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
-      return userDoc != null ? userDoc.data.get('merchantId', '') : '';
+      return userDoc != null ? userDoc.data : null;
     }
     
     function isAdmin() {
       return isAuthenticated() && request.auth.token.email == 'dotkxxx1@gmail.com';
     }
 
+    // Basic access (read-only for employees usually, full access for merchants)
     function hasAccess(merchantId) {
-      return isAdmin() || (isAuthenticated() && (
+      let data = getUserData();
+      return isAdmin() || (isAuthenticated() && data != null && data.get('isRevoked', false) == false && (
         request.auth.uid == merchantId || 
-        getUserMerchantId() == merchantId
+        data.get('merchantId', '') == merchantId
+      ));
+    }
+    
+    // Permission based access for employees
+    function hasPermission(merchantId, permission) {
+      let data = getUserData();
+      return isAdmin() || (isAuthenticated() && data != null && data.get('isRevoked', false) == false && (
+        (data.get('role', '') == 'merchant' && request.auth.uid == merchantId) ||
+        (data.get('role', '') == 'employee' && data.get('merchantId', '') == merchantId && data.get('permissions', {}).get(permission, false) == true)
       ));
     }
     
@@ -45,53 +55,59 @@ service cloud.firestore {
 
     // Device Registry (Anti-abuse)
     match /device_registry/{deviceId} {
-      allow read, write: if isAuthenticated();
-      allow delete: if false;
+      allow get, write: if isAuthenticated();
+      allow list, delete: if false;
     }
 
     // --- ROOT COLLECTIONS ---
     match /products/{productId} {
+      allow read: if resource == null || hasAccess(resource.data.get('merchantId', ''));
+      allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_manage_products');
+      allow update, delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_products');
+    }
+    match /customers/{customerId} {
+      allow read: if resource == null || hasAccess(resource.data.get('merchantId', ''));
+      allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_manage_customers');
+      allow update, delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_customers');
+    }
+    match /orders/{orderId} {
+      allow read: if resource == null || hasAccess(resource.data.get('merchantId', '')) || resource.data.get('creatorId', '') == request.auth.uid;
+      allow update: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_create_orders');
+      allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_create_orders');
+      allow delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_cancel_orders');
+    }
+    match /shifts/{shiftId} {
       allow read, update, delete: if resource == null || hasAccess(resource.data.get('merchantId', ''));
       allow create: if hasAccess(request.resource.data.get('merchantId', ''));
     }
-    match /customers/{customerId} {
-      allow read, update, delete: if hasAccess(resource.data.get('merchantId', ''));
-      allow create: if hasAccess(request.resource.data.get('merchantId', ''));
-    }
-    match /orders/{orderId} {
-      allow read, update, delete: if hasAccess(resource.data.get('merchantId', '')) || resource.data.get('creatorId', '') == request.auth.uid || resource.data.get('merchantId', '') == '';
-      allow create: if hasAccess(request.resource.data.get('merchantId', ''));
-    }
-    match /shifts/{shiftId} {
-      allow read, update, delete: if hasAccess(resource.data.get('merchantId', ''));
-      allow create: if hasAccess(request.resource.data.get('merchantId', ''));
-    }
     match /raw_materials/{materialId} {
-      allow read, update, delete: if hasAccess(resource.data.get('merchantId', ''));
-      allow create: if hasAccess(request.resource.data.get('merchantId', ''));
+      allow read: if resource == null || hasAccess(resource.data.get('merchantId', ''));
+      allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_manage_products');
+      allow update, delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_products');
     }
 
     // --- MERCHANT SUB-COLLECTIONS ---
     match /merchants/{merchantId} {
       match /categories/{categoryId} {
-        allow read, update, delete: if hasAccess(merchantId);
-        allow create: if hasAccess(merchantId);
+        allow read: if hasAccess(merchantId);
+        allow create, update, delete: if hasPermission(merchantId, 'can_manage_products');
       }
       match /expenses/{expenseId} {
-        allow read, update, delete: if hasAccess(merchantId);
-        allow create: if hasAccess(merchantId);
+        allow read: if hasAccess(merchantId);
+        allow create, update, delete: if hasPermission(merchantId, 'can_manage_expenses');
       }
       match /suppliers/{supplierId} {
-        allow read, update, delete: if hasAccess(merchantId);
-        allow create: if hasAccess(merchantId);
+        allow read: if hasAccess(merchantId);
+        allow create, update, delete: if hasPermission(merchantId, 'can_manage_inventory');
         
         match /transactions/{transactionId} {
-          allow read, write: if hasAccess(merchantId);
+          allow read: if hasAccess(merchantId);
+          allow write: if hasPermission(merchantId, 'can_manage_inventory');
         }
       }
       match /inventory_logs/{logId} {
-        allow read, update, delete: if hasAccess(merchantId);
-        allow create: if hasAccess(merchantId);
+        allow read: if hasAccess(merchantId);
+        allow create, update, delete: if hasPermission(merchantId, 'can_manage_inventory');
       }
       match /counters/{counterId} {
         allow read, write: if hasAccess(merchantId);
