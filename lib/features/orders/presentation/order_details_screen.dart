@@ -77,6 +77,22 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
 
     if (confirmed == true) {
       try {
+        final appUser = ref.read(appUserProvider).value;
+        if (appUser != null) {
+          final pin = await PinService.getDeletePin(appUser);
+          if (pin != null) {
+            if (!mounted) return;
+            final success = await PinConfirmationDialog.show(
+              context, 
+              pin,
+              title: isAr ? 'تحذير: إلغاء الطلب' : 'Warning: Cancel Order',
+              warning: isAr 
+                  ? 'إلغاء الطلب سيؤدي إلى إرجاع المنتجات للمخزون، وخصم الأموال المدفوعة من الوردية الحالية، وعكس ديون العميل. هل أنت متأكد؟'
+                  : 'Cancelling this order will restore inventory, refund paid amount from current shift, and reverse customer debt. Are you sure?',
+            );
+            if (!success) return;
+          }
+        }
         await ref.read(orderRepositoryProvider).updateOrderStatus(currentOrder, 'cancelled');
         final user = ref.read(appUserProvider).value;
         await ActivityLogger.log(
@@ -152,7 +168,14 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
           final pin = await PinService.getDeletePin(appUser);
           if (pin != null) {
             if (!mounted) return;
-            final success = await PinConfirmationDialog.show(context, pin);
+            final success = await PinConfirmationDialog.show(
+              context, 
+              pin,
+              title: isAr ? 'تحذير: حذف نهائي للطلب' : 'Warning: Delete Order',
+              warning: isAr 
+                  ? 'الحذف النهائي سيمحو هذا الطلب من السجلات تماماً بالإضافة إلى إرجاع الأموال وعكس الديون. لا يمكن استعادة الفاتورة. هل أنت متأكد؟'
+                  : 'Permanent deletion will erase this order from records completely, refund money, and reverse debt. This cannot be undone.',
+            );
             if (!success) return;
           }
         }

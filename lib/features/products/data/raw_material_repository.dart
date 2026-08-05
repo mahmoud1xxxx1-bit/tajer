@@ -13,7 +13,8 @@ class RawMaterialRepository {
         .where('merchantId', isEqualTo: merchantId)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => RawMaterial.fromJson(doc.data())).toList();
+      final items = snapshot.docs.map((doc) => RawMaterial.fromJson(doc.data())).toList();
+      return items.where((item) => !item.isArchived).toList();
     });
   }
 
@@ -32,7 +33,9 @@ class RawMaterialRepository {
   }
 
   Future<void> deleteRawMaterial(String id) async {
-    await _firestore.collection('raw_materials').doc(id).delete();
+    await _firestore.collection('raw_materials').doc(id).update({
+      'isArchived': true,
+    });
   }
 }
 

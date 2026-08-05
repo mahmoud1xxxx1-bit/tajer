@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../core/providers/store_profile_provider.dart';
+import '../../../core/theme/glass_card.dart';
 
 class StoreBrandingScreen extends ConsumerStatefulWidget {
   const StoreBrandingScreen({super.key});
@@ -46,14 +47,15 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
         final path = result.files.first.path;
         if (path != null) {
           final bytes = await File(path).readAsBytes();
-          // Optional: resize image if it's too large, but for now just encode
           setState(() {
             _logoBase64 = base64Encode(bytes);
           });
         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ في اختيار الصورة', style: TextStyle(fontFamily: 'Tajawal'))));
+      if(mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('??? ?? ?????? ??????', style: TextStyle(fontFamily: 'Tajawal'))));
+      }
     }
   }
 
@@ -69,8 +71,42 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
       logoBase64: _logoBase64,
     );
     ref.read(storeProfileProvider.notifier).updateProfile(profile);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم الحفظ بنجاح', style: TextStyle(fontFamily: 'Tajawal'))));
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('?? ????? ?????', style: TextStyle(fontFamily: 'Tajawal'))));
     Navigator.pop(context);
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType? keyboardType,
+    int maxLines = 1,
+    String? helperText,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        maxLines: maxLines,
+        style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(fontFamily: 'Tajawal'),
+          prefixIcon: Icon(icon, size: 20),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1)),
+          ),
+          filled: true,
+          fillColor: Theme.of(context).colorScheme.surface,
+          helperText: helperText,
+          helperMaxLines: 3,
+          helperStyle: const TextStyle(fontFamily: 'Tajawal', fontSize: 11),
+        ),
+      ),
+    );
   }
 
   @override
@@ -79,9 +115,22 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('هوية المتجر', style: TextStyle(fontFamily: 'Tajawal')),
+        title: const Text('???? ??????', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        elevation: 0,
+        centerTitle: true,
         actions: [
-          IconButton(icon: const Icon(Icons.check), onPressed: _save),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+            child: ElevatedButton.icon(
+              onPressed: _save,
+              icon: const Icon(Icons.check_rounded, size: 18),
+              label: const Text('???', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
+            ),
+          ),
         ],
       ),
       body: state.when(
@@ -108,153 +157,182 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
           }
 
           return ListView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            physics: const BouncingScrollPhysics(),
             children: [
-              Center(
-                child: GestureDetector(
-                  onTap: _pickImage,
-                  child: Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.grey[400]!),
-                    ),
-                    child: imageBytes != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(16),
-                            child: Image.memory(imageBytes, fit: BoxFit.cover),
-                          )
-                        : Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: const [
-                              Icon(Icons.add_a_photo, size: 40, color: Colors.grey),
-                              SizedBox(height: 8),
-                              Text('شعار المتجر', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-                            ],
+              GlassCard(
+                borderRadius: 20,
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      Center(
+                        child: GestureDetector(
+                          onTap: _pickImage,
+                          child: Container(
+                            width: 120,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3), width: 2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 5),
+                                )
+                              ],
+                            ),
+                            child: imageBytes != null
+                                ? ClipRRect(
+                                    borderRadius: BorderRadius.circular(22),
+                                    child: Image.memory(imageBytes, fit: BoxFit.cover),
+                                  )
+                                : Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.add_a_photo_rounded, size: 36, color: Theme.of(context).colorScheme.primary.withOpacity(0.6)),
+                                      const SizedBox(height: 8),
+                                      Text('???? ??????', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Theme.of(context).colorScheme.primary.withOpacity(0.8))),
+                                    ],
+                                  ),
                           ),
+                        ),
+                      ),
+                      if (_logoBase64.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: TextButton.icon(
+                            onPressed: () => setState(() => _logoBase64 = ''),
+                            icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                            label: const Text('????? ??????', style: TextStyle(fontFamily: 'Tajawal')),
+                            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+                          ),
+                        ),
+                      const SizedBox(height: 24),
+                      _buildTextField(
+                        controller: _nameController,
+                        label: '??? ??????',
+                        icon: Icons.store_rounded,
+                      ),
+                      _buildTextField(
+                        controller: _phoneController,
+                        label: '??? ???? ??????',
+                        icon: Icons.phone_rounded,
+                        keyboardType: TextInputType.phone,
+                      ),
+                      _buildTextField(
+                        controller: _addressController,
+                        label: '???????',
+                        icon: Icons.location_on_rounded,
+                        maxLines: 2,
+                      ),
+                    ],
                   ),
                 ),
               ),
-              if (_logoBase64.isNotEmpty)
-                TextButton(
-                  onPressed: () => setState(() => _logoBase64 = ''),
-                  child: const Text('إزالة الشعار', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
-                ),
               const SizedBox(height: 24),
-              TextField(
-                controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'اسم المتجر',
-                  prefixIcon: Icon(Icons.store),
-                  border: OutlineInputBorder(),
+              
+              Padding(
+                padding: const EdgeInsets.only(right: 12, left: 12, bottom: 12),
+                child: Text(
+                  '??????? ??????? ?????????',
+                  style: TextStyle(
+                    fontFamily: 'Tajawal',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    letterSpacing: 0.5,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: 'رقم هاتف المتجر',
-                  prefixIcon: Icon(Icons.phone),
-                  border: OutlineInputBorder(),
+              GlassCard(
+                borderRadius: 20,
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    children: [
+                      _buildTextField(
+                        controller: _taxController,
+                        label: '???? ??????? ?????????? (%)',
+                        icon: Icons.percent_rounded,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        helperText: '??? ??? ?????? ???? ???? ???? ??????? ???????? ??? ?? ???????? ????????. ???? ????? ?????? ??? ??? ???? ????? ?????? ?????? ?? ?? ???.',
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1)),
+                        ),
+                        child: SwitchListTile(
+                          title: const Text('??????? ????? ??????? (?????????)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
+                          subtitle: const Text('????? ??? ?????? ???? ?? ??????? ?? ??? ????? ??? ??? ??????? ?????? ??? ??????.', style: TextStyle(fontFamily: 'Tajawal', fontSize: 11)),
+                          value: _defaultIsTaxInclusive,
+                          onChanged: (val) => setState(() => _defaultIsTaxInclusive = val),
+                          activeColor: Theme.of(context).colorScheme.primary,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _addressController,
-                decoration: const InputDecoration(
-                  labelText: 'العنوان',
-                  prefixIcon: Icon(Icons.location_on),
-                  border: OutlineInputBorder(),
-                ),
-                maxLines: 2,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: _taxController,
-                decoration: const InputDecoration(
-                  labelText: 'نسبة الضريبة الافتراضية (%)',
-                  prefixIcon: Icon(Icons.percent),
-                  border: OutlineInputBorder(),
-                  helperText: 'إذا قمت بتعيين نسبة هنا، سيتم تطبيقها تلقائياً على كل الفواتير المطبوعة. اترك الحقل فارغاً إذا كنت تريد إدخال النسبة يدوياً في كل مرة.',
-                  helperMaxLines: 3,
-                ),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-              ),
-              const SizedBox(height: 12),
-              SwitchListTile(
-                title: const Text('الأسعار شاملة الضريبة (افتراضياً)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                subtitle: const Text('تفعيل هذا الخيار يعني أن الضريبة من ضمن السعر ولن تتم إضافتها كزيادة على العميل.', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12)),
-                value: _defaultIsTaxInclusive,
-                onChanged: (val) {
-                  setState(() {
-                    _defaultIsTaxInclusive = val;
-                  });
-                },
-                activeColor: Theme.of(context).colorScheme.primary,
               ),
               const SizedBox(height: 24),
               
               // ZATCA Section
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue),
+                  color: Colors.blueAccent.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.verified, color: Colors.blue.shade700),
-                        const SizedBox(width: 8),
+                        Icon(Icons.verified_rounded, color: Colors.blue.shade700, size: 28),
+                        const SizedBox(width: 12),
                         const Expanded(
                           child: Text(
-                            'تفعيل الفاتورة الضريبية المبسطة (الرسمية)',
-                            style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.blue),
+                            '????? ???????? ???????? ??????? (ZATCA)',
+                            style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.blueAccent, fontSize: 14),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'بإدخالك "الرقم الضريبي"، سيتم تحويل الفواتير تلقائياً إلى "فواتير ضريبية" رسمية.\n(ملاحظة: للتجار في السعودية، الفاتورة ستكون متوافقة كلياً مع متطلبات هيئة الزكاة والضريبة ZATCA ومزودة بالـ QR Code المشفر).',
-                      style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.5),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _vatNumberController,
-                      decoration: const InputDecoration(
-                        labelText: 'الرقم الضريبي (VAT Number)',
-                        prefixIcon: Icon(Icons.confirmation_number),
-                        border: OutlineInputBorder(),
-                        helperText: 'للتجار في السعودية: 15 رقماً. في الدول الأخرى: أدخل الرقم المعتمد لديكم (يقبل حروف وأرقام).',
-                      ),
-                      keyboardType: TextInputType.text,
-                    ),
                     const SizedBox(height: 12),
-                    TextField(
+                    Text(
+                      '??????? "????? ???????"? ???? ????? ???????? ???????? ??? "?????? ??????" ????? ??????? ????? ?? ??????? ???? ?????? ???????? ???????? (ZATCA) ?????? ???? QR Code ??????.',
+                      style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, height: 1.6, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                    ),
+                    const SizedBox(height: 20),
+                    _buildTextField(
+                      controller: _vatNumberController,
+                      label: '????? ??????? (VAT Number)',
+                      icon: Icons.confirmation_number_rounded,
+                      keyboardType: TextInputType.text,
+                      helperText: '?????? ?? ????????: 15 ?????. ?? ????? ??????: ???? ????? ??????? ?????.',
+                    ),
+                    _buildTextField(
                       controller: _crNumberController,
-                      decoration: const InputDecoration(
-                        labelText: 'رقم السجل التجاري (CR Number) - اختياري',
-                        prefixIcon: Icon(Icons.assignment),
-                        border: OutlineInputBorder(),
-                      ),
+                      label: '??? ????? ??????? (CR Number)',
+                      icon: Icons.assignment_rounded,
                       keyboardType: TextInputType.number,
+                      helperText: '??????? ??????? ?? ?????? ????????.',
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 40),
             ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('خطأ: $e')),
+        error: (e, st) => Center(child: Text('???: ', style: const TextStyle(fontFamily: 'Tajawal'))),
       ),
     );
   }

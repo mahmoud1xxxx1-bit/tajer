@@ -138,32 +138,24 @@ class OrdersScreen extends ConsumerWidget {
                             ),
                           );
                         },
-                        onLongPress: () {
-                          showDialog(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'تأكيد الحذف' : 'Confirm Deletion', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
-                              content: Text(
-                                Localizations.localeOf(context).languageCode == 'ar'
-                                    ? 'هل أنت متأكد من رغبتك في مسح الفاتورة نهائياً؟ لا يمكن التراجع عن هذه الخطوة.'
-                                    : 'Are you sure you want to permanently delete this order? This action cannot be undone.',
-                                style: const TextStyle(fontFamily: 'Tajawal'),
-                              ),
-                              actions: [
-                                TextButton(onPressed: () => Navigator.pop(ctx), child: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'إلغاء' : 'Cancel', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey))),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                                  onPressed: () async {
-                                    Navigator.pop(ctx);
-                                    final appUser = ref.read(appUserProvider).value;
-                                    if (appUser != null) {
-                                      final pin = await PinService.getDeletePin(appUser);
-                                      if (pin != null) {
-                                        if (!context.mounted) return;
-                                        final success = await PinConfirmationDialog.show(context, pin);
-                                        if (!success) return;
-                                      }
-                                    }
+                        onLongPress: () async {
+                          final appUser = ref.read(appUserProvider).value;
+                          if (appUser != null) {
+                            final pin = await PinService.getDeletePin(appUser);
+                            if (pin != null) {
+                              if (!context.mounted) return;
+                              final isAr = Localizations.localeOf(context).languageCode == 'ar';
+                              final success = await PinConfirmationDialog.show(
+                                context, 
+                                pin,
+                                title: isAr ? 'تحذير: حذف نهائي للطلب' : 'Warning: Delete Order',
+                                warning: isAr 
+                                    ? 'الحذف النهائي سيمحو هذا الطلب من السجلات تماماً بالإضافة إلى إرجاع الأموال وعكس الديون. لا يمكن استعادة الفاتورة. هل أنت متأكد؟'
+                                    : 'Permanent deletion will erase this order from records completely, refund money, and reverse debt. This cannot be undone.',
+                              );
+                              if (!success) return;
+                            }
+                          }
                                     try {
                                       await ref.read(orderRepositoryProvider).deleteOrder(order);
                                       final user = ref.read(appUserProvider).value;

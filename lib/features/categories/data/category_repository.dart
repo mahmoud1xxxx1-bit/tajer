@@ -40,7 +40,18 @@ class CategoryRepository {
   }
 
   Future<void> deleteCategory(String categoryId) async {
-    await _categoriesRef.doc(categoryId).delete();
+    final productsSnap = await _firestore
+        .collection('products')
+        .where('merchantId', isEqualTo: _merchantId)
+        .where('categoryId', isEqualTo: categoryId)
+        .get();
+        
+    final batch = _firestore.batch();
+    for (var doc in productsSnap.docs) {
+      batch.update(doc.reference, {'categoryId': ''});
+    }
+    batch.delete(_categoriesRef.doc(categoryId));
+    await batch.commit();
   }
 
   Future<void> seedDefaultCategories() async {

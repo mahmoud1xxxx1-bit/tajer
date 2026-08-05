@@ -110,66 +110,41 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
     );
   }
 
-  void _confirmDelete(BuildContext context, InventoryLog log, bool isAr) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          isAr ? 'حذف سجل المخزون' : 'Delete Inventory Log',
-          style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.redAccent),
-        ),
-        content: Text(
-          isAr 
-              ? 'هل أنت متأكد من رغبتك في حذف هذا السجل للمنتج (${log.productName})؟ سيتم إعادة تسوية المخزون بناءً على ذلك.' 
-              : 'Are you sure you want to delete this log for (${log.productName})? Inventory will be reconciled accordingly.',
-          style: const TextStyle(fontFamily: 'Tajawal'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(isAr ? 'إلغاء' : 'Cancel', style: const TextStyle(fontFamily: 'Tajawal')),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              final appUser = ref.read(appUserProvider).value;
-              if (appUser != null) {
-                final pin = await PinService.getDeletePin(appUser);
-                if (pin != null) {
-                  if (!mounted) return;
-                  final success = await PinConfirmationDialog.show(context, pin);
-                  if (!success) return;
-                }
-              }
-              final repo = ref.read(inventoryLogRepositoryProvider);
-              if (repo != null) {
-                await repo.deleteLog(log, adjustInventory: true);
-                final appUser = ref.read(appUserProvider).value;
-                await ActivityLogger.log(
-                  user: appUser,
-                  actionType: isAr ? 'حذف سجل مخزون' : 'Inventory Log Deleted',
-                  description: isAr 
-                      ? 'تم حذف سجل المخزون للمنتج (${log.productName}) بكمية (${log.changeQuantity}) بواسطة التاجر' 
-                      : 'Deleted inventory log for (${log.productName}) quantity (${log.changeQuantity}) by merchant',
-                );
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(isAr ? 'تم حذف السجل وتسوية المخزون بنجاح' : 'Log deleted & inventory reconciled successfully', style: const TextStyle(fontFamily: 'Tajawal'))),
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-            child: Text(isAr ? 'حذف' : 'Delete', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
+  void _confirmDelete(BuildContext context, InventoryLog log, bool isAr) async {
+    final appUser = ref.read(appUserProvider).value;
+    if (appUser != null) {
+      final pin = await PinService.getDeletePin(appUser);
+      if (pin != null) {
+        if (!context.mounted) return;
+        final success = await PinConfirmationDialog.show(
+          context, 
+          pin,
+          title: isAr ? 'تحذير: مسح سجل جرد' : 'Warning: Delete Inventory Log',
+          warning: isAr 
+              ? 'مسح هذا السجل لمنتج (${log.productName}) سيؤدي إلى تلاعب في تسوية المخزون وإرجاع الكميات. هل أنت متأكد؟'
+              : 'Deleting this log for (${log.productName}) will manipulate inventory reconciliation and restore quantities. Are you sure?',
+        );
+        if (!success) return;
+      }
+    }
+    
+    final repo = ref.read(inventoryLogRepositoryProvider);
+    if (repo != null) {
+      await repo.deleteLog(log, adjustInventory: true);
+      final appUser = ref.read(appUserProvider).value;
+      await ActivityLogger.log(
+        user: appUser,
+        actionType: isAr ? 'حذف سجل مخزون' : 'Inventory Log Deleted',
+        description: isAr 
+            ? 'تم حذف سجل المخزون للمنتج (${log.productName}) بكمية (${log.changeQuantity}) بواسطة التاجر' 
+            : 'Deleted inventory log for (${log.productName}) quantity (${log.changeQuantity}) by merchant',
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(isAr ? 'تم حذف السجل وتسوية المخزون بنجاح' : 'Log deleted & inventory reconciled successfully', style: const TextStyle(fontFamily: 'Tajawal'))),
+        );
+      }
+    }
   }
 
   @override

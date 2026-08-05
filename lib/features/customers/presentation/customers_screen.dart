@@ -457,7 +457,12 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                     final pin = await PinService.getDeletePin(appUser);
                                     if (pin != null) {
                                       if (!context.mounted) return;
-                                      final success = await PinConfirmationDialog.show(context, pin);
+                                      final success = await PinConfirmationDialog.show(
+                                        context, 
+                                        pin,
+                                        title: 'تحذير: حذف ملف عميل',
+                                        warning: 'حذف العميل سيؤدي إلى مسح سجله المالي وديونه من النظام نهائياً. لا يمكن التراجع عن هذا الإجراء.',
+                                      );
                                       if (!success) return;
                                     }
                                   }

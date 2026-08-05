@@ -8,6 +8,7 @@ import '../../../core/providers/settings_provider.dart';
 import '../../authentication/domain/app_user.dart';
 import '../../../core/services/app_review_service.dart';
 import '../../../core/services/pin_service.dart';
+import '../../../core/theme/glass_card.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -17,44 +18,56 @@ class SettingsScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final appUser = ref.watch(appUserProvider).value;
     final isAnonymous = appUser?.isAnonymous ?? true;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.settings, style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(l10n.settings, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        elevation: 0,
+        centerTitle: true,
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        physics: const BouncingScrollPhysics(),
         children: [
-          // القسم الأول: الحساب والموظفين
+          // Section 1: Account & Employees
           _buildSettingsGroup(
             context: context,
-            title: Localizations.localeOf(context).languageCode == 'ar' ? 'الحساب والموظفين' : 'Account & Employees',
+            title: isAr ? '?????? ?????????' : 'Account & Employees',
             children: [
               if (isAnonymous)
-                ListTile(
-                  leading: const Icon(Icons.verified_user, color: Colors.blue),
-                  title: Text(l10n.upgradeAccount, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                _buildSettingsTile(
+                  context: context,
+                  icon: Icons.verified_user_rounded,
+                  iconColor: Colors.blueAccent,
+                  title: l10n.upgradeAccount,
                   onTap: () => context.push('/upgrade'),
                 )
               else ...[
-                ListTile(
-                  leading: const Icon(Icons.person, color: Colors.blue),
-                  title: const Text('الحساب شخصي لتاجر', style: TextStyle(fontFamily: 'Tajawal')),
-                  subtitle: Text(appUser?.name ?? 'غير معروف', style: const TextStyle(color: Colors.grey)),
+                _buildSettingsTile(
+                  context: context,
+                  icon: Icons.person_rounded,
+                  iconColor: Colors.blueAccent,
+                  title: isAr ? '?????? ???? ?????' : 'Personal Merchant Account',
+                  subtitle: appUser?.name ?? (isAr ? '??? ?????' : 'Unknown'),
                   onTap: () => context.push('/profile'),
                 ),
                 if (appUser?.role == 'merchant' || appUser?.role == 'admin') ...[
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.people, color: Colors.purple),
-                    title: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'إدارة الموظفين والصلاحيات' : 'Employees & Permissions', style: const TextStyle(fontFamily: 'Tajawal')),
+                  const _CustomDivider(),
+                  _buildSettingsTile(
+                    context: context,
+                    icon: Icons.people_rounded,
+                    iconColor: Colors.purpleAccent,
+                    title: isAr ? '????? ???????? ??????????' : 'Employees & Permissions',
                     onTap: () => context.push('/employees'),
                   ),
-                  const Divider(height: 1),
-                  ListTile(
-                    leading: const Icon(Icons.history_edu_outlined, color: Colors.teal),
-                    title: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'سجل الحركة الشامل (المراجعة)' : 'Centralized Audit Log', style: const TextStyle(fontFamily: 'Tajawal')),
-                    subtitle: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'مراقبة كافة عمليات الموظفين والمخزون' : 'Monitor all employee & store actions', style: TextStyle(color: Colors.grey[600], fontSize: 12, fontFamily: 'Tajawal')),
+                  const _CustomDivider(),
+                  _buildSettingsTile(
+                    context: context,
+                    icon: Icons.history_edu_rounded,
+                    iconColor: Colors.teal,
+                    title: isAr ? '??? ?????? ?????? (????????)' : 'Centralized Audit Log',
+                    subtitle: isAr ? '?????? ???? ?????? ???????? ????????' : 'Monitor all employee & store actions',
                     onTap: () => context.push('/audit_log'),
                   ),
                 ],
@@ -62,85 +75,85 @@ class SettingsScreen extends ConsumerWidget {
             ],
           ),
 
-          // القسم الثاني: إعدادات المتجر والأمان
+          // Section 2: Store Settings
           _buildSettingsGroup(
             context: context,
-            title: Localizations.localeOf(context).languageCode == 'ar' ? 'إعدادات المتجر' : 'Store Settings',
+            title: isAr ? '??????? ??????' : 'Store Settings',
             children: [
               if (appUser?.role == 'merchant' || appUser?.role == 'admin') ...[
-                ListTile(
-                  leading: const Icon(Icons.workspace_premium, color: Colors.amber),
-                  title: Text(l10n.subscriptions, style: const TextStyle(fontFamily: 'Tajawal')),
+                _buildSettingsTile(
+                  context: context,
+                  icon: Icons.workspace_premium_rounded,
+                  iconColor: Colors.amber.shade600,
+                  title: l10n.subscriptions,
                   onTap: () => context.push('/paywall'),
                 ),
-                const Divider(height: 1),
+                const _CustomDivider(),
               ],
-              ListTile(
-                leading: const Icon(Icons.security, color: Colors.blueGrey),
-                title: const Text('النسخ الاحتياطي والأمان', style: TextStyle(fontFamily: 'Tajawal')),
+              _buildSettingsTile(
+                context: context,
+                icon: Icons.security_rounded,
+                iconColor: Colors.blueGrey,
+                title: isAr ? '????? ????????? ???????' : 'Backup & Security',
                 onTap: () => context.push('/backup_security'),
               ),
-              const Divider(height: 1),
+              const _CustomDivider(),
               if (appUser != null && (appUser.role == 'merchant' || appUser.role == 'admin')) ...[
                 _PinSettingsTile(appUser: appUser),
-                const Divider(height: 1),
+                const _CustomDivider(),
               ],
-              ListTile(
-                leading: const Icon(Icons.print, color: Colors.indigo),
-                title: const Text('إعدادات الطابعة الحرارية', style: TextStyle(fontFamily: 'Tajawal')),
+              _buildSettingsTile(
+                context: context,
+                icon: Icons.print_rounded,
+                iconColor: Colors.indigoAccent,
+                title: isAr ? '??????? ??????? ????????' : 'Thermal Printer Settings',
                 onTap: () => context.push('/printer_settings'),
               ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.storefront, color: Colors.deepOrange),
-                title: const Text('هوية المتجر (الشعار والفاتورة)', style: TextStyle(fontFamily: 'Tajawal')),
+              const _CustomDivider(),
+              _buildSettingsTile(
+                context: context,
+                icon: Icons.storefront_rounded,
+                iconColor: Colors.deepOrangeAccent,
+                title: isAr ? '???? ?????? (?????? ?????????)' : 'Store Branding (Logo & Receipt)',
                 onTap: () => context.push('/store_branding'),
               ),
             ],
           ),
 
-          // القسم الثالث: التفضيلات والنظام
+          // Section 3: System Preferences
           _buildSettingsGroup(
             context: context,
-            title: Localizations.localeOf(context).languageCode == 'ar' ? 'التفضيلات والنظام' : 'System Preferences',
+            title: isAr ? '????????? ???????' : 'System Preferences',
             children: [
               _LanguageSelector(),
-              const Divider(height: 1),
+              const _CustomDivider(),
               _CurrencySelector(),
-              const Divider(height: 1),
+              const _CustomDivider(),
               _ThemeSelector(),
             ],
           ),
 
-          // القسم الرابع: الدعم وحول التطبيق
+          // Section 4: Support & Rating
           _buildSettingsGroup(
             context: context,
-            title: Localizations.localeOf(context).languageCode == 'ar' ? 'دعم وتقييم' : 'Support & Rating',
+            title: isAr ? '??? ??????' : 'Support & Rating',
             children: [
-              ListTile(
-                leading: const Icon(Icons.menu_book, color: Colors.green, size: 28),
-                title: Text(
-                  Localizations.localeOf(context).languageCode == 'ar' ? 'دليل استخدام التطبيق (خطوة بخطوة) 📖' : 'App User Guide 📖',
-                  style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(
-                  Localizations.localeOf(context).languageCode == 'ar' ? 'كيفية إعداد المتجر والمنتجات والمستودع' : 'How to setup your store and products',
-                  style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12),
-                ),
+              _buildSettingsTile(
+                context: context,
+                icon: Icons.menu_book_rounded,
+                iconColor: Colors.green,
+                title: isAr ? '???? ??????? ??????? (???? ?????)' : 'App User Guide',
+                subtitle: isAr ? '????? ????? ?????? ????????? ?????????' : 'How to setup your store and products',
                 onTap: () => context.push('/user_guide'),
               ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.music_note_rounded, color: Colors.black, size: 28),
-                title: Text(
-                  Localizations.localeOf(context).languageCode == 'ar' ? 'تابعنا على تيك توك 🎵' : 'Follow us on TikTok 🎵',
-                  style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(
-                  Localizations.localeOf(context).languageCode == 'ar' ? 'اقتراحات، ومتابعة جديد التطبيق' : 'Suggestions and updates',
-                  style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12),
-                ),
-                trailing: const Icon(Icons.open_in_new, size: 16, color: Colors.grey),
+              const _CustomDivider(),
+              _buildSettingsTile(
+                context: context,
+                icon: Icons.music_note_rounded,
+                iconColor: Colors.black87,
+                title: isAr ? '?????? ??? ??? ???' : 'Follow us on TikTok',
+                subtitle: isAr ? '????????? ??????? ???? ???????' : 'Suggestions and updates',
+                trailingIcon: Icons.open_in_new_rounded,
                 onTap: () async {
                   final url = Uri.parse('https://www.tiktok.com/@tajer_ap?_r=1&_t=ZS-98YixiC56sH');
                   try {
@@ -148,54 +161,48 @@ class SettingsScreen extends ConsumerWidget {
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('تعذر فتح الرابط', style: TextStyle(fontFamily: 'Tajawal'))),
+                        SnackBar(content: Text(isAr ? '???? ??? ??????' : 'Could not open link', style: const TextStyle(fontFamily: 'Tajawal'))),
                       );
                     }
                   }
                 },
               ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.email_outlined, color: Colors.blueAccent, size: 28),
-                title: Text(
-                  Localizations.localeOf(context).languageCode == 'ar' ? 'الدعم الفني عبر البريد الإلكتروني ✉️' : 'Email Support ✉️',
-                  style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
-                ),
-                subtitle: Text(
-                  Localizations.localeOf(context).languageCode == 'ar' ? 'لحل المشاكل والاستفسارات المتقدمة' : 'For technical issues and inquiries',
-                  style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12),
-                ),
-                trailing: const Icon(Icons.open_in_new, size: 16, color: Colors.grey),
+              const _CustomDivider(),
+              _buildSettingsTile(
+                context: context,
+                icon: Icons.email_rounded,
+                iconColor: Colors.blueAccent,
+                title: isAr ? '????? ????? ??? ?????? ??????????' : 'Email Support',
+                subtitle: isAr ? '??? ??????? ???????????? ????????' : 'For technical issues and inquiries',
+                trailingIcon: Icons.open_in_new_rounded,
                 onTap: () async {
-                  final url = Uri.parse('mailto:dotkxxx1@gmail.com?subject=تطبيق تاجر - دعم فني');
+                  final url = Uri.parse('mailto:dotkxxx1@gmail.com?subject=????? ???? - ??? ???');
                   try {
                     await launchUrl(url);
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('تعذر فتح تطبيق البريد الإلكتروني', style: TextStyle(fontFamily: 'Tajawal'))),
+                        SnackBar(content: Text(isAr ? '???? ??? ????? ?????? ??????????' : 'Could not open email app', style: const TextStyle(fontFamily: 'Tajawal'))),
                       );
                     }
                   }
                 },
               ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.star_rounded, color: Colors.amber, size: 28),
-                title: Text(
-                  Localizations.localeOf(context).languageCode == 'ar' ? 'تقييم التطبيق على متجر جوجل ⭐' : 'Rate on Google Play Store ⭐',
-                  style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
-                ),
+              const _CustomDivider(),
+              _buildSettingsTile(
+                context: context,
+                icon: Icons.star_rounded,
+                iconColor: Colors.amber.shade500,
+                title: isAr ? '????? ??????? ??? ???? ????' : 'Rate on Google Play Store',
                 onTap: () => AppReviewService.instance.showReviewDialog(context, fromSettings: true),
               ),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.privacy_tip_outlined, color: Colors.blue),
-                title: Text(
-                  Localizations.localeOf(context).languageCode == 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy',
-                  style: const TextStyle(fontFamily: 'Tajawal'),
-                ),
-                trailing: const Icon(Icons.open_in_new, size: 16, color: Colors.grey),
+              const _CustomDivider(),
+              _buildSettingsTile(
+                context: context,
+                icon: Icons.privacy_tip_rounded,
+                iconColor: Colors.blue,
+                title: isAr ? '????? ????????' : 'Privacy Policy',
+                trailingIcon: Icons.open_in_new_rounded,
                 onTap: () async {
                   final url = Uri.parse('https://alldown.uk/privacy.html');
                   try {
@@ -203,35 +210,41 @@ class SettingsScreen extends ConsumerWidget {
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('تعذر فتح المتصفح. تأكد من وجود متصفح في هاتفك.', style: TextStyle(fontFamily: 'Tajawal'))),
+                        SnackBar(content: Text(isAr ? '???? ??? ???????. ???? ?? ???? ????? ?? ?????.' : 'Could not open browser.', style: const TextStyle(fontFamily: 'Tajawal'))),
                       );
                     }
                   }
                 },
               ),
-              const Divider(height: 1),
-              ListTile(
-                leading: Icon(isAnonymous ? Icons.delete_forever : Icons.logout, color: Colors.red),
-                title: Text(
-                  isAnonymous ? 'إنهاء الجلسة التجريبية (وحذف البيانات)' : l10n.logout, 
-                  style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontWeight: FontWeight.bold)
-                ),
+              const _CustomDivider(),
+              _buildSettingsTile(
+                context: context,
+                icon: isAnonymous ? Icons.delete_forever_rounded : Icons.logout_rounded,
+                iconColor: Colors.redAccent,
+                title: isAnonymous ? (isAr ? '????? ?????? ????????? (???? ????????)' : 'End Trial Session (Delete Data)') : l10n.logout,
+                titleColor: Colors.redAccent,
                 onTap: () async {
                   if (isAnonymous) {
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: const Text("تحذير", style: TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontWeight: FontWeight.bold)),
-                        content: const Text("أنت تستخدم التطبيق كزائر. تسجيل الخروج الآن سيؤدي إلى فقدان جميع بياناتك التجريبية بشكل نهائي ولن تتمكن من استعادتها. هل أنت متأكد؟", style: TextStyle(fontFamily: 'Tajawal')),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                        title: Text(isAr ? "?????" : "Warning", style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontWeight: FontWeight.bold)),
+                        content: Text(
+                          isAr 
+                            ? "??? ?????? ??????? ?????. ????? ?????? ???? ????? ??? ????? ???? ??????? ????????? ???? ????? ??? ????? ?? ?????????. ?? ??? ??????"
+                            : "You are using the app as a guest. Logging out now will permanently delete all your trial data. Are you sure?", 
+                          style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)
+                        ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: const Text("تراجع", style: TextStyle(fontFamily: 'Tajawal')),
+                            child: Text(isAr ? "?????" : "Cancel", style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
                           ),
                           ElevatedButton(
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                             onPressed: () => Navigator.pop(context, true),
-                            child: const Text("نعم، احذف البيانات واخرج", style: TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
+                            child: Text(isAr ? "???? ???? ???????? ?????" : "Yes, Delete & Exit", style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
@@ -248,15 +261,22 @@ class SettingsScreen extends ConsumerWidget {
             ],
           ),
           
-          const SizedBox(height: 32),
+          const SizedBox(height: 40),
           Center(
-            child: Text(
-              'Tajer POS v1.0.1+7\nMade with ❤️',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey.shade400, fontSize: 12),
+            child: Column(
+              children: [
+                Image.asset('assets/images/logo.png', width: 48, height: 48, errorBuilder: (_,__,___) => const SizedBox()),
+                const SizedBox(height: 12),
+                Text(
+                  'Tajer POS v1.0.42
+Made with ??',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontFamily: 'Tajawal', color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4), fontSize: 13, letterSpacing: 1.1),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 40),
         ],
       ),
     );
@@ -264,43 +284,94 @@ class SettingsScreen extends ConsumerWidget {
 
   Widget _buildSettingsGroup({required BuildContext context, required String title, required List<Widget> children}) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.only(bottom: 28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.only(right: 8, left: 8, bottom: 8),
+            padding: const EdgeInsets.only(right: 12, left: 12, bottom: 12),
             child: Text(
               title,
               style: TextStyle(
                 fontFamily: 'Tajawal',
                 fontWeight: FontWeight.bold,
-                fontSize: 16,
+                fontSize: 15,
+                letterSpacing: 0.5,
                 color: Theme.of(context).colorScheme.primary,
               ),
             ),
           ),
-          Container(
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(16),
-              child: Column(
-                children: children,
-              ),
+          GlassCard(
+            borderRadius: 20,
+            child: Column(
+              children: children,
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildSettingsTile({
+    required BuildContext context,
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    String? subtitle,
+    Color? titleColor,
+    IconData trailingIcon = Icons.arrow_forward_ios_rounded,
+    required VoidCallback onTap,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: iconColor.withOpacity(isDark ? 0.15 : 0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(icon, color: isDark ? iconColor.withOpacity(0.9) : iconColor, size: 22),
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontFamily: 'Tajawal',
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+          color: titleColor ?? Theme.of(context).colorScheme.onSurface,
+        ),
+      ),
+      subtitle: subtitle != null
+          ? Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                subtitle,
+                style: TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                ),
+              ),
+            )
+          : null,
+      trailing: Icon(trailingIcon, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
+      onTap: onTap,
+    );
+  }
+}
+
+class _CustomDivider extends StatelessWidget {
+  const _CustomDivider();
+  @override
+  Widget build(BuildContext context) {
+    return Divider(
+      height: 1,
+      thickness: 1,
+      indent: 64,
+      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
     );
   }
 }
@@ -310,21 +381,42 @@ class _LanguageSelector extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final locale = ref.watch(localeProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ListTile(
-      leading: Icon(Icons.language),
-      title: Text(l10n.language, style: TextStyle(fontFamily: 'Tajawal')),
-      trailing: DropdownButton<String>(
-        value: locale.languageCode,
-        onChanged: (String? newValue) {
-          if (newValue != null) {
-            ref.read(localeProvider.notifier).setLocale(Locale(newValue));
-          }
-        },
-        items: [
-          DropdownMenuItem(value: 'ar', child: Text(AppLocalizations.of(context)!.text111, style: TextStyle(fontFamily: 'Tajawal'))),
-          DropdownMenuItem(value: 'en', child: Text('English')),
-        ],
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.lightBlue.withOpacity(isDark ? 0.15 : 0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(Icons.language_rounded, color: isDark ? Colors.lightBlue.withOpacity(0.9) : Colors.lightBlue, size: 22),
+      ),
+      title: Text(l10n.language, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600, fontSize: 14)),
+      trailing: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1)),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: locale.languageCode,
+            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
+            style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Theme.of(context).colorScheme.onSurface),
+            onChanged: (String? newValue) {
+              if (newValue != null) {
+                ref.read(localeProvider.notifier).setLocale(Locale(newValue));
+              }
+            },
+            items: [
+              DropdownMenuItem(value: 'ar', child: Text(AppLocalizations.of(context)!.text111)),
+              DropdownMenuItem(value: 'en', child: const Text('English')),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -335,23 +427,44 @@ class _CurrencySelector extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final currency = ref.watch(currencyProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ListTile(
-      leading: Icon(Icons.attach_money),
-      title: Text(l10n.currency, style: TextStyle(fontFamily: 'Tajawal')),
-      trailing: DropdownButton<AppCurrency>(
-        value: currency,
-        onChanged: (AppCurrency? newValue) {
-          if (newValue != null) {
-            ref.read(currencyProvider.notifier).setCurrency(newValue);
-          }
-        },
-        items: AppCurrency.values.map((AppCurrency curr) {
-          return DropdownMenuItem<AppCurrency>(
-            value: curr,
-            child: Text(curr.code, style: TextStyle(fontFamily: 'Tajawal')),
-          );
-        }).toList(),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.greenAccent.withOpacity(isDark ? 0.15 : 0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(Icons.attach_money_rounded, color: isDark ? Colors.greenAccent.shade400 : Colors.green.shade600, size: 22),
+      ),
+      title: Text(l10n.currency, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600, fontSize: 14)),
+      trailing: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1)),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<AppCurrency>(
+            value: currency,
+            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
+            style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Theme.of(context).colorScheme.onSurface),
+            onChanged: (AppCurrency? newValue) {
+              if (newValue != null) {
+                ref.read(currencyProvider.notifier).setCurrency(newValue);
+              }
+            },
+            items: AppCurrency.values.map((AppCurrency curr) {
+              return DropdownMenuItem<AppCurrency>(
+                value: curr,
+                child: Text(curr.code),
+              );
+            }).toList(),
+          ),
+        ),
       ),
     );
   }
@@ -362,22 +475,43 @@ class _ThemeSelector extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final themeMode = ref.watch(themeProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ListTile(
-      leading: Icon(Icons.brightness_6),
-      title: Text(l10n.theme, style: TextStyle(fontFamily: 'Tajawal')),
-      trailing: DropdownButton<ThemeMode>(
-        value: themeMode,
-        onChanged: (ThemeMode? newValue) {
-          if (newValue != null) {
-            ref.read(themeProvider.notifier).setThemeMode(newValue);
-          }
-        },
-        items: [
-          DropdownMenuItem(value: ThemeMode.system, child: Text(l10n.themeSystem, style: TextStyle(fontFamily: 'Tajawal'))),
-          DropdownMenuItem(value: ThemeMode.light, child: Text(l10n.themeLight, style: TextStyle(fontFamily: 'Tajawal'))),
-          DropdownMenuItem(value: ThemeMode.dark, child: Text(l10n.themeDark, style: TextStyle(fontFamily: 'Tajawal'))),
-        ],
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.deepPurpleAccent.withOpacity(isDark ? 0.15 : 0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(Icons.brightness_6_rounded, color: isDark ? Colors.deepPurpleAccent.shade100 : Colors.deepPurpleAccent, size: 22),
+      ),
+      title: Text(l10n.theme, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600, fontSize: 14)),
+      trailing: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1)),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<ThemeMode>(
+            value: themeMode,
+            icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
+            style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Theme.of(context).colorScheme.onSurface),
+            onChanged: (ThemeMode? newValue) {
+              if (newValue != null) {
+                ref.read(themeProvider.notifier).setThemeMode(newValue);
+              }
+            },
+            items: [
+              DropdownMenuItem(value: ThemeMode.system, child: Text(l10n.themeSystem)),
+              DropdownMenuItem(value: ThemeMode.light, child: Text(l10n.themeLight)),
+              DropdownMenuItem(value: ThemeMode.dark, child: Text(l10n.themeDark)),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -412,25 +546,34 @@ class _PinSettingsTileState extends State<_PinSettingsTile> {
   }
 
   void _showSetPinDialog() {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final TextEditingController pinController = TextEditingController();
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text(_currentPin == null ? 'إعداد الرقم السري' : 'تغيير الرقم السري', style: const TextStyle(fontFamily: 'Tajawal')),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(_currentPin == null ? (isAr ? '????? ????? ?????' : 'Set PIN') : (isAr ? '????? ????? ?????' : 'Change PIN'), style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),
         content: TextField(
           controller: pinController,
           keyboardType: TextInputType.number,
           maxLength: 4,
           obscureText: true,
-          decoration: const InputDecoration(hintText: 'أدخل 4 أرقام'),
+          style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, letterSpacing: 4),
+          textAlign: TextAlign.center,
+          decoration: InputDecoration(
+            hintText: isAr ? '???? 4 ?????' : 'Enter 4 digits',
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            filled: true,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
+            child: Text(isAr ? '?????' : 'Cancel', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
           ),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
             onPressed: () async {
               if (pinController.text.length == 4) {
                 Navigator.pop(context);
@@ -439,7 +582,7 @@ class _PinSettingsTileState extends State<_PinSettingsTile> {
                 _loadPin();
               }
             },
-            child: const Text('حفظ', style: TextStyle(fontFamily: 'Tajawal')),
+            child: Text(isAr ? '???' : 'Save', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -454,28 +597,57 @@ class _PinSettingsTileState extends State<_PinSettingsTile> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const ListTile(title: Center(child: CircularProgressIndicator()));
+    if (_isLoading) return const ListTile(title: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))));
 
-    return Column(
-      children: [
-        ListTile(
-          leading: const Icon(Icons.password, color: Colors.red),
-          title: const Text('الرقم السري للحذف (PIN)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-          subtitle: Text(_currentPin == null ? 'غير مفعل' : 'مفعل', style: TextStyle(color: _currentPin == null ? Colors.grey : Colors.green)),
-          trailing: _currentPin == null 
-              ? ElevatedButton(
-                  onPressed: _showSetPinDialog,
-                  child: const Text('تفعيل'),
-                )
-              : Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextButton(onPressed: _showSetPinDialog, child: const Text('تغيير')),
-                    TextButton(onPressed: _removePin, child: const Text('إلغاء', style: TextStyle(color: Colors.red))),
-                  ],
-                ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final isActive = _currentPin != null;
+
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.redAccent.withOpacity(isDark ? 0.15 : 0.1),
+          borderRadius: BorderRadius.circular(12),
         ),
-      ],
+        child: Icon(Icons.password_rounded, color: isDark ? Colors.redAccent.shade100 : Colors.redAccent, size: 22),
+      ),
+      title: Text(isAr ? '????? ????? ????? (PIN)' : 'Deletion PIN', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600, fontSize: 14)),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Text(
+          isActive ? (isAr ? '???? ?????' : 'Active & Protected') : (isAr ? '??? ????' : 'Inactive'), 
+          style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: isActive ? Colors.green : Colors.grey)
+        ),
+      ),
+      trailing: !isActive 
+          ? ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                foregroundColor: Theme.of(context).colorScheme.primary,
+                elevation: 0,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+              ),
+              onPressed: _showSetPinDialog,
+              child: Text(isAr ? '?????' : 'Enable', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold)),
+            )
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextButton(
+                  onPressed: _showSetPinDialog, 
+                  style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8)),
+                  child: Text(isAr ? '?????' : 'Change', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13))
+                ),
+                TextButton(
+                  onPressed: _removePin, 
+                  style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8), foregroundColor: Colors.red),
+                  child: Text(isAr ? '?????' : 'Disable', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13))
+                ),
+              ],
+            ),
     );
   }
 }

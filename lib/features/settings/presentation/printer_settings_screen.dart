@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 import '../../../core/services/printer_service.dart';
-import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/theme/glass_card.dart';
 
 class PrinterSettingsScreen extends StatefulWidget {
   const PrinterSettingsScreen({super.key});
@@ -15,8 +15,9 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
   List<BluetoothInfo> _devices = [];
   BluetoothInfo? _device;
   bool _connected = false;
-  String _message = 'لم يتم الاتصال بأي طابعة';
+  String _message = '?? ??? ??????? ??? ?????';
   String _paperSize = '58mm';
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -25,35 +26,37 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
   }
 
   Future<void> _initBluetooth() async {
+    setState(() => _isLoading = true);
     bool isConnected = await PrintBluetoothThermal.connectionStatus;
     List<BluetoothInfo> devices = [];
     try {
       devices = await PrintBluetoothThermal.pairedBluetooths;
     } catch (e) {
-      _message = "خطأ في البحث عن الأجهزة: $e";
+      _message = "??? ?? ????? ?? ???????: ";
     }
 
     if (!mounted) return;
-    setState(() {
-      _devices = devices;
-      _connected = isConnected;
-    });
-
+    
     final prefs = await SharedPreferences.getInstance();
     final savedDeviceMac = prefs.getString('default_printer_mac');
     final savedPaperSize = prefs.getString('printer_paper_size') ?? '58mm';
 
-    if (savedDeviceMac != null) {
-      setState(() {
-        _device = _devices.firstWhere(
-          (d) => d.macAdress == savedDeviceMac,
-          orElse: () => _devices.first,
-        );
-      });
-    }
-
     setState(() {
+      _devices = devices;
+      _connected = isConnected;
       _paperSize = savedPaperSize;
+      
+      if (savedDeviceMac != null && _devices.isNotEmpty) {
+        try {
+          _device = _devices.firstWhere((d) => d.macAdress == savedDeviceMac);
+        } catch (_) {
+          _device = _devices.first;
+        }
+      } else if (_devices.isNotEmpty) {
+        _device = _devices.first;
+      }
+      
+      _isLoading = false;
     });
   }
 
@@ -66,112 +69,193 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
 
   Future<void> _connect() async {
     if (_device != null) {
-      setState(() => _message = "جاري الاتصال...");
+      setState(() => _message = "???? ???????...");
       bool connected = await PrinterService.connect(_device!.macAdress);
       if (connected) {
         setState(() {
           _connected = true;
-          _message = "تم الاتصال وحفظ الطابعة كافتراضية";
+          _message = "?? ??????? ???? ??????? ????????? ?????";
         });
       } else {
-        setState(() => _message = "فشل الاتصال");
+        setState(() => _message = "??? ??????? ????????");
       }
     } else {
-      setState(() => _message = "يرجى تحديد طابعة");
+      setState(() => _message = "???? ????? ????? ?????");
     }
   }
 
   Future<void> _disconnect() async {
     await PrinterService.disconnect();
-    setState(() => _connected = false);
+    setState(() {
+      _connected = false;
+      _message = "?? ??? ??????? ????????";
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('إعدادات الطابعة الحرارية', style: TextStyle(fontFamily: 'Tajawal')),
+        title: const Text('??????? ??????? ????????', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        elevation: 0,
+        centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('الأجهزة المقترنة (بلوتوث)', style: TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-            SizedBox(height: 16),
-            DropdownButton<BluetoothInfo>(
-              items: _devices.map((device) => DropdownMenuItem(
-                child: Text(device.name),
-                value: device,
-              )).toList(),
-              onChanged: (value) => setState(() => _device = value),
-              value: _device,
-              hint: const Text('اختر الطابعة', style: TextStyle(fontFamily: 'Tajawal')),
-              isExpanded: true,
-            ),
-            const SizedBox(height: 24),
-            const Text('مقاس الورق (Paper Size)', style: TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            DropdownButton<String>(
-              items: const [
-                DropdownMenuItem(value: '58mm', child: Text('58 مليمتراً (58mm)')),
-                DropdownMenuItem(value: '80mm', child: Text('80 مليمتراً (80mm)')),
-              ],
-              onChanged: _updatePaperSize,
-              value: _paperSize,
-              isExpanded: true,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton(
-                  onPressed: _connected ? _disconnect : _connect,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: _connected ? Colors.red : Colors.green,
-                    foregroundColor: Colors.white,
+      body: _isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+            physics: const BouncingScrollPhysics(),
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: 12, left: 12, bottom: 12),
+                child: Text(
+                  '??????? ??????? ??????',
+                  style: TextStyle(
+                    fontFamily: 'Tajawal',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    letterSpacing: 0.5,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
-                  child: Text(_connected ? 'قطع الاتصال' : 'اتصال', style: const TextStyle(fontFamily: 'Tajawal')),
                 ),
-                ElevatedButton(
-                  onPressed: _initBluetooth,
-                  child: const Text('تحديث الأجهزة', style: TextStyle(fontFamily: 'Tajawal')),
+              ),
+              GlassCard(
+                borderRadius: 20,
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.blueAccent.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.bluetooth_connected_rounded, color: Colors.blueAccent, size: 24),
+                          ),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Text('??????? ???????? (??????)', style: TextStyle(fontSize: 14, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1)),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<BluetoothInfo>(
+                            isExpanded: true,
+                            items: _devices.map((device) => DropdownMenuItem(
+                              value: device,
+                              child: Text(device.name, style: const TextStyle(fontFamily: 'Tajawal')),
+                            )).toList(),
+                            onChanged: (value) => setState(() => _device = value),
+                            value: _device,
+                            hint: const Text('???? ???????...', style: TextStyle(fontFamily: 'Tajawal')),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.orangeAccent.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.receipt_long_rounded, color: Colors.orangeAccent, size: 24),
+                          ),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Text('???? ????? (Paper Size)', style: TextStyle(fontSize: 14, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1)),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            isExpanded: true,
+                            items: const [
+                              DropdownMenuItem(value: '58mm', child: Text('58 ???????? (????)', style: TextStyle(fontFamily: 'Tajawal'))),
+                              DropdownMenuItem(value: '80mm', child: Text('80 ???????? (????)', style: TextStyle(fontFamily: 'Tajawal'))),
+                            ],
+                            onChanged: _updatePaperSize,
+                            value: _paperSize,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: _initBluetooth,
+                              style: OutlinedButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              child: const Text('????? ???????', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: _connected ? _disconnect : _connect,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: _connected ? Colors.redAccent : Colors.green.shade600,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                              child: Text(_connected ? '??? ???????' : '????? ????', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.white)),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ],
-            ),
-            SizedBox(height: 32),
-            Container(
-              padding: EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8),
               ),
-              child: Text(
-                _message,
-                textAlign: TextAlign.center,
-                style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: _connected ? Colors.green : Colors.black87),
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: _connected ? Colors.green.withOpacity(0.1) : Colors.amber.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: _connected ? Colors.green.withOpacity(0.3) : Colors.amber.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(_connected ? Icons.check_circle_rounded : Icons.info_rounded, color: _connected ? Colors.green : Colors.amber.shade700),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _message,
+                        style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: _connected ? Colors.green.shade800 : Colors.amber.shade800, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            SizedBox(height: 16),
-            if (_connected)
-              ElevatedButton.icon(
-                onPressed: () async {
-                  try {
-                    List<int> bytes = [];
-                    // Using basic test string for PrintBluetoothThermal requires generating bytes
-                    bytes.addAll([0x1B, 0x40]); // Init
-                    bytes.addAll(utf8.encode("Test Print Successful\n\n\n"));
-                    await PrintBluetoothThermal.writeBytes(bytes);
-                  } catch (e) {
-                    setState(() => _message = "خطأ في طباعة الاختبار: $e");
-                  }
-                },
-                icon: const Icon(Icons.print),
-                label: const Text('طباعة اختبار', style: TextStyle(fontFamily: 'Tajawal')),
-              ),
-          ],
-        ),
-      ),
+            ],
+          ),
     );
   }
 }

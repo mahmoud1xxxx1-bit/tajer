@@ -110,7 +110,12 @@ class CategoriesScreen extends ConsumerWidget {
                                         final pin = await PinService.getDeletePin(appUser);
                                         if (pin != null) {
                                           if (!context.mounted) return;
-                                          final success = await PinConfirmationDialog.show(context, pin);
+                                          final success = await PinConfirmationDialog.show(
+                                            context, 
+                                            pin,
+                                            title: 'تحذير: حذف قسم رئيسي',
+                                            warning: 'حذف هذا القسم سيؤدي إلى جعل المنتجات التابعة له "بدون تصنيف".\nهل أنت متأكد من الحذف؟',
+                                          );
                                           if (!success) return;
                                         }
                                       }

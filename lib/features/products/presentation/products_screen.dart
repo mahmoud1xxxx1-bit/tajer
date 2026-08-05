@@ -267,7 +267,12 @@ class ProductsScreen extends ConsumerWidget {
                                               final pin = await PinService.getDeletePin(appUser);
                                               if (pin != null) {
                                                 if (!context.mounted) return;
-                                                final success = await PinConfirmationDialog.show(context, pin);
+                                                final success = await PinConfirmationDialog.show(
+                                                  context, 
+                                                  pin,
+                                                  title: 'تحذير: إخفاء المنتج',
+                                                  warning: 'سيتم إيقاف بيع هذا المنتج وإخفاؤه من شاشة الكاشير.\nلن تتأثر فواتيرك وتقاريرك القديمة بهذا الإجراء.',
+                                                );
                                                 if (!success) return;
                                               }
                                             }

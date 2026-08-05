@@ -41,13 +41,16 @@ class ProductRepository {
   }
 
   Future<void> deleteProduct(String productId) async {
-    await _firestore.collection('products').doc(productId).delete();
+    await _firestore.collection('products').doc(productId).update({
+      'isArchived': true,
+    });
   }
 
   Future<int> getProductCount(String merchantId) async {
     final snapshot = await _firestore
         .collection('products')
         .where('merchantId', isEqualTo: merchantId)
+        .where('isArchived', isEqualTo: false)
         .count()
         .get();
     return snapshot.count ?? 0;
@@ -67,10 +70,11 @@ Stream<List<Product>> productsStream(ProductsStreamRef ref) {
   final repository = ref.watch(productRepositoryProvider);
   return repository.queryProducts(appUser.merchantId ?? appUser.id).snapshots().map(
         (snapshot) {
-          final products = snapshot.docs.map((doc) => doc.data()).toList();
+          var products = snapshot.docs.map((doc) => doc.data()).toList();
+          // Client-side filtering to avoid composite index requirements for existing datasets
+          products = products.where((p) => !p.isArchived).toList();
           products.sort((a, b) => b.createdAt.compareTo(a.createdAt));
           return products;
         },
       );
 }
-

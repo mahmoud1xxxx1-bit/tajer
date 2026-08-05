@@ -345,36 +345,22 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                     if (canManageExpenses) ...[
                       const SizedBox(height: 8),
                       InkWell(
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text('حذف المصروف', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                              content: Text('هل أنت متأكد من حذف هذا المصروف؟', style: TextStyle(fontFamily: 'Tajawal')),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-                                ),
-                                TextButton(
-                                  onPressed: () async {
-                                    Navigator.pop(context);
-                                    final appUser = ref.read(appUserProvider).value;
-                                    if (appUser != null) {
-                                      final pin = await PinService.getDeletePin(appUser);
-                                      if (pin != null) {
-                                        if (!context.mounted) return;
-                                        final success = await PinConfirmationDialog.show(context, pin);
-                                        if (!success) return;
-                                      }
-                                    }
-                                    ref.read(expenseRepositoryProvider)?.deleteExpense(expense.id);
-                                  },
-                                  child: Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                                ),
-                              ],
-                            ),
-                          );
+                        onTap: () async {
+                          final appUser = ref.read(appUserProvider).value;
+                          if (appUser != null) {
+                            final pin = await PinService.getDeletePin(appUser);
+                            if (pin != null) {
+                              if (!context.mounted) return;
+                              final success = await PinConfirmationDialog.show(
+                                context, 
+                                pin,
+                                title: 'تحذير: حذف مصروف',
+                                warning: 'إلغاء المصروف سيؤدي إلى مسحه من التقارير المالية. هل أنت متأكد من الحذف؟',
+                              );
+                              if (!success) return;
+                            }
+                          }
+                          ref.read(expenseRepositoryProvider)?.deleteExpense(expense.id);
                         },
                         child: Container(
                           padding: const EdgeInsets.all(4),

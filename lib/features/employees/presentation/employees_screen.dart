@@ -131,41 +131,32 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
   }
 
   void _deleteEmployee(String id) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("حذف موظف", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
-        content: const Text("هل أنت متأكد من حذف هذا الموظف؟ لن يتمكن من تسجيل الدخول بعد الآن.", style: TextStyle(fontFamily: 'Tajawal')),
-        actions: [
-          TextButton(onPressed: () => Navigator.of(context).pop(false), child: const Text("إلغاء", style: TextStyle(fontFamily: 'Tajawal'))),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: const Text("حذف نهائياً", style: TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
-          ),
-        ],
-      )
-    );
-
-    if (confirm == true) {
-      final appUser = ref.read(appUserProvider).value;
-      if (appUser != null) {
-        final pin = await PinService.getDeletePin(appUser);
-        if (pin != null) {
-          if (!mounted) return;
-          final success = await PinConfirmationDialog.show(context, pin);
-          if (!success) return;
-        }
+    final appUser = ref.read(appUserProvider).value;
+    if (appUser != null) {
+      final pin = await PinService.getDeletePin(appUser);
+      if (pin != null) {
+        if (!mounted) return;
+        final success = await PinConfirmationDialog.show(
+          context, 
+          pin,
+          title: 'تحذير: طرد موظف',
+          warning: 'حذف الموظف سيمنعه فوراً من الدخول للنظام. لا يمكن التراجع عن هذا الإجراء.',
+        );
+        if (!success) return;
       }
-      setState(() => _isLoading = true);
-      try {
-        await ref.read(authRepositoryProvider).deleteEmployee(id);
-        _showSuccess("تم حذف الموظف");
-      } catch (e) {
-        _showError(e.toString().replaceAll("Exception: ", ""));
-      } finally {
-        if (mounted) setState(() => _isLoading = false);
+    }
+    setState(() => _isLoading = true);
+    try {
+      await ref.read(authRepositoryProvider).deleteEmployee(id);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("تم حذف الموظف", style: TextStyle(fontFamily: 'Tajawal'))));
       }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceAll("Exception: ", ""), style: const TextStyle(fontFamily: 'Tajawal'))));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 

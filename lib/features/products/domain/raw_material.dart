@@ -8,6 +8,7 @@ class RawMaterial {
   final double quantity; // in smallest unit (e.g., grams, ml)
   final double initialQuantity; // total registered initially
   final String unit; // 'g', 'ml', 'piece'
+  final bool isArchived;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -18,6 +19,7 @@ class RawMaterial {
     required this.quantity,
     required this.initialQuantity,
     required this.unit,
+    this.isArchived = false,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -30,6 +32,7 @@ class RawMaterial {
       quantity: (json['quantity'] as num).toDouble(),
       initialQuantity: (json['initialQuantity'] as num?)?.toDouble() ?? (json['quantity'] as num).toDouble(),
       unit: json['unit'] as String,
+      isArchived: json['isArchived'] as bool? ?? false,
       createdAt: (json['createdAt'] as Timestamp).toDate(),
       updatedAt: (json['updatedAt'] as Timestamp).toDate(),
     );
@@ -43,6 +46,7 @@ class RawMaterial {
       'quantity': quantity,
       'initialQuantity': initialQuantity,
       'unit': unit,
+      'isArchived': isArchived,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
     };
@@ -55,6 +59,7 @@ class RawMaterial {
     double? quantity,
     double? initialQuantity,
     String? unit,
+    bool? isArchived,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -65,6 +70,7 @@ class RawMaterial {
       quantity: quantity ?? this.quantity,
       initialQuantity: initialQuantity ?? this.initialQuantity,
       unit: unit ?? this.unit,
+      isArchived: isArchived ?? this.isArchived,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

@@ -250,29 +250,21 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                               icon: const Icon(Icons.delete, color: Colors.red),
                               tooltip: 'حذف',
                               onPressed: () async {
-                                final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: Text('تأكيد الحذف', style: TextStyle(fontFamily: 'Tajawal')),
-                                    content: Text('هل أنت متأكد من حذف مادة "${item.name}" من المستودع؟', style: const TextStyle(fontFamily: 'Tajawal')),
-                                    actions: [
-                                      TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal'))),
-                                      TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold))),
-                                    ],
-                                  ),
-                                );
-                                if (confirm == true) {
-                                  final appUser = ref.read(appUserProvider).value;
-                                  if (appUser != null) {
-                                    final pin = await PinService.getDeletePin(appUser);
-                                    if (pin != null) {
-                                      if (!context.mounted) return;
-                                      final success = await PinConfirmationDialog.show(context, pin);
-                                      if (!success) return;
-                                    }
+                                final appUser = ref.read(appUserProvider).value;
+                                if (appUser != null) {
+                                  final pin = await PinService.getDeletePin(appUser);
+                                  if (pin != null) {
+                                    if (!context.mounted) return;
+                                    final success = await PinConfirmationDialog.show(
+                                      context, 
+                                      pin,
+                                      title: 'تحذير: إخفاء مادة خام',
+                                      warning: 'إخفاء المادة "${item.name}" سيمنع استخدامها في المنتجات مستقبلاً.\nلن تتأثر الفواتير والمنتجات القديمة.',
+                                    );
+                                    if (!success) return;
                                   }
-                                  await ref.read(rawMaterialRepositoryProvider).deleteRawMaterial(item.id);
                                 }
+                                await ref.read(rawMaterialRepositoryProvider).deleteRawMaterial(item.id);
                               },
                             ),
                           ],
