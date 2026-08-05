@@ -257,29 +257,26 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                         ),
                         Text(
                           '#${currentOrder.queueNumber ?? currentOrder.id.substring(0, 6)}',
-                          style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 18, fontSize: 14)),
+                          style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 18)),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.payment, size: 18, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.w600),
-                        ),
+                        const Icon(Icons.payment, size: 18), const SizedBox(width: 4), Text(_getPaymentMethodName(context, currentOrder.paymentMethod), style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.w600)),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.person, size: 18, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
+                        const Icon(Icons.person, size: 18), const SizedBox(width: 4), Text(currentOrder.customerName ?? (isAr ? \'عميل غير معروف\' : \'Unknown Customer\'), style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold)),
                       ],
                     ),
                     if (currentOrder.creatorName != null && currentOrder.creatorName!.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(Icons.badge_outlined, size: 18, style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold),
-                          ),
+                          Icon(Icons.badge_outlined, size: 18), const SizedBox(width: 4), Text(currentOrder.creatorName ?? \'\', style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ],

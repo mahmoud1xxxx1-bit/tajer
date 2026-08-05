@@ -298,7 +298,7 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(fontWeight: FontWeight.bold, fontSize: 13),
+                                    border: Border.all(color: Colors.grey),
                                   ),
                                 ),
                             ],
@@ -318,6 +318,34 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
                 );
               },
             ),
+    );
+  }
+
+  Widget _buildLogItem(dynamic item, ThemeData theme, String currency, bool isAr) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.history, color: theme.colorScheme.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item['action'] ?? '', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                Text(item['details'] ?? '', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey)),
+              ],
+            ),
+          ),
+          Text(item['time'] ?? '', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12)),
+        ],
+      ),
     );
   }
 }

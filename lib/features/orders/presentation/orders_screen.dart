@@ -296,7 +296,7 @@ class OrdersScreen extends ConsumerWidget {
                                                 borderRadius: BorderRadius.circular(8),
                                               ),
                                               child: Text(
-                                                _getPaymentMethodName(order.paymentMethod),
+                                                _getPaymentMethodName(context, order.paymentMethod),
                                                 style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 12),
                                               ),
                                             ),
@@ -461,13 +461,13 @@ class OrdersScreen extends ConsumerWidget {
     }
   }
 
-  String _getPaymentMethodName(String? method) {
+  String _getPaymentMethodName(BuildContext context, String? method) {
     switch (method) {
-      case 'cash': return l10n.cashMethod;
-      case 'mada': return l10n.madaMethod;
-      case 'transfer': return l10n.bankTransferMethod;
+      case 'cash': return AppLocalizations.of(context)!.cashMethod;
+      case 'mada': return AppLocalizations.of(context)!.madaMethod;
+      case 'transfer': return AppLocalizations.of(context)!.bankTransferMethod;
       case 'apple_pay': return 'Apple Pay 🍏';
-      default: return l10n.cashMethod;
+      default: return AppLocalizations.of(context)!.cashMethod;
     }
   }
 }
