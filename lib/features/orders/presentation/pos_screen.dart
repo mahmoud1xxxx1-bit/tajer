@@ -273,7 +273,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
             ),
           ],
         ),
-      );
+      ).then((_) {
+        amountController.dispose();
+      });
       return;
     }
 
@@ -752,7 +754,10 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
           ),
         ],
       ),
-    );
+    ).then((_) {
+      nameController.dispose();
+      phoneController.dispose();
+    });
   }
 
   @override

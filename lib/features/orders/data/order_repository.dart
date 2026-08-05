@@ -605,13 +605,21 @@ OrderRepository orderRepository(OrderRepositoryRef ref) {
   return OrderRepository(FirebaseFirestore.instance);
 }
 
+final orderLimitProvider = StateProvider<int>((ref) => 30);
+
 @riverpod
 Stream<List<AppOrder>> ordersStream(OrdersStreamRef ref) {
   final appUser = ref.watch(appUserProvider).value;
   if (appUser == null) return const Stream.empty();
 
+  final limit = ref.watch(orderLimitProvider);
   final repository = ref.watch(orderRepositoryProvider);
-  return repository.queryOrders(appUser.merchantId ?? appUser.id).snapshots().map(
+  
+  return repository.queryOrders(appUser.merchantId ?? appUser.id)
+      .orderBy('createdAt', descending: true)
+      .limit(limit)
+      .snapshots()
+      .map(
         (snapshot) {
           var orders = snapshot.docs.map((doc) => doc.data()).toList();
           
