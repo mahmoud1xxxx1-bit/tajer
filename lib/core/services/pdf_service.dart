@@ -289,7 +289,7 @@ class PdfService {
                         String paymentMethodText = '';
                         if (order.paymentMethod == 'cash') {
                           paymentMethodText = isAr ? 'دفع نقدي 💵' : 'Cash 💵';
-                        } else if (order.paymentMethod == 'card') {
+                        } else if (order.paymentMethod == 'card' || order.paymentMethod == 'mada' || order.paymentMethod == 'apple_pay') {
                           paymentMethodText = isAr ? 'دفع شبكة 💳' : 'Card 💳';
                         } else if (order.paymentMethod == 'transfer') {
                           paymentMethodText = isAr ? 'تحويل بنكي 🏦' : 'Bank Transfer 🏦';

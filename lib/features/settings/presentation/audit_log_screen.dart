@@ -101,7 +101,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
 
   String _getPaymentName(String? method, bool isAr) {
     if (method == 'cash') return isAr ? 'نقداً (كاش)' : 'Cash';
-    if (method == 'card') return isAr ? 'بطاقة شبكة' : 'Card';
+    if (method == 'card' || method == 'mada' || method == 'apple_pay') return isAr ? 'بطاقة شبكة' : 'Card';
     if (method == 'debt') return isAr ? 'آجل / ذمم على العميل' : 'Credit / Debt';
     return method ?? (isAr ? 'نقدي' : 'Cash');
   }

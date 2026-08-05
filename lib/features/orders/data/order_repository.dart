@@ -263,7 +263,7 @@ class OrderRepository {
 
       if (order.paymentMethod == 'cash') {
         updates['cashSales'] = FieldValue.increment(order.paidAmount);
-      } else if (order.paymentMethod == 'card') {
+      } else if (order.paymentMethod == 'card' || order.paymentMethod == 'mada' || order.paymentMethod == 'apple_pay') {
         updates['cardTotal'] = FieldValue.increment(order.paidAmount);
       } else if (order.paymentMethod == 'transfer') {
         updates['transferTotal'] = FieldValue.increment(order.paidAmount);
@@ -355,7 +355,7 @@ class OrderRepository {
           final shiftRef = openShiftsSnap.docs.first.reference;
           if (order.paymentMethod == 'cash') {
             batch.update(shiftRef, {'cashSales': FieldValue.increment(-order.paidAmount)});
-          } else if (order.paymentMethod == 'card') {
+          } else if (order.paymentMethod == 'card' || order.paymentMethod == 'mada' || order.paymentMethod == 'apple_pay') {
             batch.update(shiftRef, {'cardTotal': FieldValue.increment(-order.paidAmount)});
           } else if (order.paymentMethod == 'transfer') {
             batch.update(shiftRef, {'transferTotal': FieldValue.increment(-order.paidAmount)});
@@ -469,7 +469,7 @@ class OrderRepository {
           final shiftRef = openShiftsSnap.docs.first.reference;
           if (order.paymentMethod == 'cash') {
             batch.update(shiftRef, {'cashSales': FieldValue.increment(-order.paidAmount)});
-          } else if (order.paymentMethod == 'card') {
+          } else if (order.paymentMethod == 'card' || order.paymentMethod == 'mada' || order.paymentMethod == 'apple_pay') {
             batch.update(shiftRef, {'cardTotal': FieldValue.increment(-order.paidAmount)});
           } else if (order.paymentMethod == 'transfer') {
             batch.update(shiftRef, {'transferTotal': FieldValue.increment(-order.paidAmount)});
