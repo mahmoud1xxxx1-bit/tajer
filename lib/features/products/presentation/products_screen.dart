@@ -46,7 +46,9 @@ class ProductsScreen extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    '💡 دليل المنتجات: أضف أصناف وجباتك أو بضائعك هنا. يمكنك ربط المنتج بالمواد الخام (المكونات) ليتم الخصم التلقائي من المستودع عند البيع في شاشة الـ POS.',
+                    l10n.localeName == 'ar' 
+                      ? '💡 دليل المنتجات: أضف أصناف وجباتك أو بضائعك هنا. يمكنك ربط المنتج بالمواد الخام (المكونات) ليتم الخصم التلقائي من المستودع عند البيع في شاشة الـ POS.' 
+                      : '💡 Products Guide: Add your inventory items or meals here. You can link a product to raw materials for automatic deduction from inventory when sold via POS.',
                     style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.4, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                   ),
                 ),

@@ -263,8 +263,8 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             TextFormField(
               controller: _modifiersController,
               decoration: InputDecoration(
-                labelText: 'أزرار سريعة (اختياري)',
-                hintText: 'مثال: بدون بصل، سفري، حار',
+                labelText: isAr ? 'أزرار سريعة (اختياري)' : 'Fast Buttons (Optional)',
+                hintText: isAr ? 'مثال: بدون بصل، سفري، حار' : 'e.g. No onion, Spicy, To-go',
                 border: const OutlineInputBorder(),
               ),
               onFieldSubmitted: (_) => _submit(),
@@ -281,12 +281,14 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'إعدادات الضريبة (اختياري)',
+                    isAr ? 'إعدادات الضريبة (اختياري)' : 'Tax Settings (Optional)',
                     style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange.shade800),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'تحديد الإعدادات هنا سيلغي إعدادات المتجر العامة لهذا المنتج، وسيؤثر مباشرة على الحساب النهائي.',
+                    isAr 
+                      ? 'تحديد الإعدادات هنا سيلغي إعدادات المتجر العامة لهذا المنتج، وسيؤثر مباشرة على الحساب النهائي.' 
+                      : 'Setting these will override the global store tax settings for this product.',
                     style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.orange.shade900),
                   ),
                   const SizedBox(height: 16),
@@ -294,13 +296,13 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                     controller: _taxPercentageController,
                     keyboardType: TextInputType.numberWithOptions(decimal: true),
                     decoration: InputDecoration(
-                      labelText: 'نسبة الضريبة الخاصة بالمنتج (%)',
+                      labelText: isAr ? 'نسبة الضريبة الخاصة بالمنتج (%)' : 'Product Tax Percentage (%)',
                       border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
                   SwitchListTile(
-                    title: const Text('السعر المحدد يشمل الضريبة', style: TextStyle(fontFamily: 'Tajawal')),
+                    title: Text(isAr ? 'السعر المحدد يشمل الضريبة' : 'Price is Tax Inclusive', style: const TextStyle(fontFamily: 'Tajawal')),
                     value: _isTaxInclusive ?? false,
                     onChanged: (val) => setState(() => _isTaxInclusive = val),
                     contentPadding: EdgeInsets.zero,

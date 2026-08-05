@@ -58,7 +58,7 @@ class SettingsScreen extends ConsumerWidget {
                     context: context,
                     icon: Icons.people_rounded,
                     iconColor: Colors.purpleAccent,
-                    title: isAr ? l10n.aboutApp : 'Employees & Permissions',
+                    title: isAr ? 'الموظفين والصلاحيات' : 'Employees & Permissions',
                     onTap: () => context.push('/employees'),
                   ),
                   const _CustomDivider(),
@@ -142,7 +142,7 @@ class SettingsScreen extends ConsumerWidget {
                 context: context,
                 icon: Icons.menu_book_rounded,
                 iconColor: Colors.green,
-                title: isAr ? l10n.databaseBackupText : 'App User Guide',
+                title: isAr ? 'دليل استخدام التطبيق' : 'App User Guide',
                 subtitle: l10n.settingsHowToSetup,
                 onTap: () => context.push('/user_guide'),
               ),
@@ -221,7 +221,7 @@ class SettingsScreen extends ConsumerWidget {
                 context: context,
                 icon: isAnonymous ? Icons.delete_forever_rounded : Icons.logout_rounded,
                 iconColor: Colors.redAccent,
-                title: isAnonymous ? (isAr ? l10n.thermalPrinterText : 'End Trial Session (Delete Data)') : l10n.logout,
+                title: isAnonymous ? (isAr ? 'إنهاء الجلسة التجريبية (حذف البيانات)' : 'End Trial Session (Delete Data)') : l10n.logout,
                 titleColor: Colors.redAccent,
                 onTap: () async {
                   if (isAnonymous) {

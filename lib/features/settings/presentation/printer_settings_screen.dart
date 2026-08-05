@@ -28,10 +28,11 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
 
   Future<void> _initBluetooth() async {
     setState(() => _isLoading = true);
-    bool isConnected = await PrintBluetoothThermal.connectionStatus;
+    bool isConnected = false;
     List<BluetoothInfo> devices = [];
     try {
-      devices = await PrintBluetoothThermal.pairedBluetooths;
+      isConnected = await PrintBluetoothThermal.connectionStatus.timeout(const Duration(seconds: 3));
+      devices = await PrintBluetoothThermal.pairedBluetooths.timeout(const Duration(seconds: 3));
     } catch (e) {
       if (mounted) {
         _message = AppLocalizations.of(context)!.printerErrorConnecting;

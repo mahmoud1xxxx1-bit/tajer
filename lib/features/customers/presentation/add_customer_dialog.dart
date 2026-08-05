@@ -97,6 +97,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.customerToEdit != null;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     return Padding(
       padding: EdgeInsets.all(24.0),
       child: Form(
@@ -107,15 +108,15 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
           children: [
             Text(
               isEditing ? AppLocalizations.of(context)!.text48 : AppLocalizations.of(context)!.text49,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             TextFormField(
               controller: _nameController,
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.text50,
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
               validator: (value) => value!.isEmpty ? AppLocalizations.of(context)!.text51 : null,
             ),
@@ -125,7 +126,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
               keyboardType: TextInputType.phone,
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context)!.text52,
-                helperText: 'مفتاح الدولة الافتراضي هو السعودية (+966). للعملاء من دول أخرى الرجاء كتابة مفتاح الدولة.',
+                helperText: isAr ? 'مفتاح الدولة الافتراضي هو السعودية (+966). للعملاء من دول أخرى الرجاء كتابة مفتاح الدولة.' : 'Default country code is SA (+966). For other countries, include the country code.',
                 helperMaxLines: 2,
                 border: OutlineInputBorder(),
               ),
@@ -135,10 +136,10 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
             TextFormField(
               controller: _debtController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'الرصيد الافتتاحي (ديون سابقة)',
-                border: OutlineInputBorder(),
-                labelStyle: TextStyle(fontFamily: 'Tajawal'),
+              decoration: InputDecoration(
+                labelText: isAr ? 'الرصيد الافتتاحي (ديون سابقة)' : 'Opening Balance (Previous Debts)',
+                border: const OutlineInputBorder(),
+                labelStyle: const TextStyle(fontFamily: 'Tajawal'),
               ),
             ),
             SizedBox(height: 24),

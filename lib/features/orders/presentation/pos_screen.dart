@@ -688,6 +688,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
@@ -701,7 +702,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('إنهاء الطلب', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'), textAlign: TextAlign.center),
+            Text(isAr ? 'إنهاء الطلب' : 'Checkout', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'), textAlign: TextAlign.center),
             const SizedBox(height: 24),
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
@@ -744,7 +745,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                               controller: textEditingController,
                               focusNode: focusNode,
                               decoration: InputDecoration(
-                                labelText: 'ابحث عن اسم أو رقم العميل',
+                                labelText: isAr ? 'ابحث عن اسم أو رقم العميل' : 'Search customer name or phone',
                                 border: const OutlineInputBorder(),
                                 labelStyle: TextStyle(fontFamily: 'Tajawal', color: _highlightCustomer ? Colors.red : null),
                                 suffixIcon: IconButton(
@@ -805,7 +806,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                   ),
                   child: IconButton(
                     icon: Icon(Icons.person_add, color: _highlightCustomer ? Colors.red : Theme.of(context).colorScheme.primary),
-                    tooltip: 'إضافة عميل جديد',
+                    tooltip: isAr ? 'إضافة عميل جديد' : 'Add New Customer',
                     onPressed: _showQuickAddCustomerDialog,
                   ),
                 ),
@@ -814,7 +815,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
           ),
           const SizedBox(height: 16),
           SwitchListTile(
-              title: Text('طلب مجدول 🗓', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              title: Text(isAr ? 'طلب مجدول 🗓' : 'Scheduled Order 🗓', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
               subtitle: _isScheduled && _scheduledDate != null && _scheduledTime != null
                   ? Text('${_scheduledDate!.toString().split(' ')[0]} - ${_scheduledTime!.format(context)}', style: TextStyle(color: Colors.blue))
                   : null,
@@ -827,7 +828,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
               },
             ),
             const SizedBox(height: 16),
-            Text('طريقة الدفع', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+            Text(isAr ? 'طريقة الدفع' : 'Payment Method', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -835,17 +836,17 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
               alignment: WrapAlignment.center,
               children: [
                 ChoiceChip(
-                  label: Text('كاش 💵'),
+                  label: Text(isAr ? 'كاش 💵' : 'Cash 💵'),
                   selected: _paymentMethod == 'cash',
                   onSelected: (val) => setState(() => _paymentMethod = 'cash'),
                 ),
                 ChoiceChip(
-                  label: Text('مدى 💳'),
+                  label: Text(isAr ? 'مدى 💳' : 'Mada/Card 💳'),
                   selected: _paymentMethod == 'mada',
                   onSelected: (val) => setState(() => _paymentMethod = 'mada'),
                 ),
                 ChoiceChip(
-                  label: Text('تحويل بنكي 🏦'),
+                  label: Text(isAr ? 'تحويل بنكي 🏦' : 'Bank Transfer 🏦'),
                   selected: _paymentMethod == 'transfer',
                   onSelected: (val) => setState(() => _paymentMethod = 'transfer'),
                 ),
@@ -858,7 +859,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
             ),
             const SizedBox(height: 16),
             SwitchListTile(
-              title: Text('دفع آجل؟ (دين)', style: TextStyle(fontFamily: 'Tajawal')),
+              title: Text(isAr ? 'دفع آجل؟ (دين)' : 'Pay Later? (Credit)', style: TextStyle(fontFamily: 'Tajawal')),
               value: _isCredit,
               onChanged: (val) => setState(() => _isCredit = val),
             ),
@@ -866,7 +867,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
               TextField(
                 controller: _paidController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'المبلغ المدفوع الان', border: OutlineInputBorder()),
+                decoration: InputDecoration(labelText: isAr ? 'المبلغ المدفوع الان' : 'Amount Paid Now', border: OutlineInputBorder()),
                 onChanged: (val) => setState(() {}),
               )
             ],
@@ -875,7 +876,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
               TextField(
                 controller: _tenderedController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'المبلغ المستلم من العميل (للكاش فقط)', border: OutlineInputBorder(), prefixIcon: Icon(Icons.payments_outlined)),
+                decoration: InputDecoration(labelText: isAr ? 'المبلغ المستلم من العميل (للكاش فقط)' : 'Tendered Amount (Cash only)', border: OutlineInputBorder(), prefixIcon: Icon(Icons.payments_outlined)),
                 onChanged: (val) => setState(() {}),
               ),
               if (_tenderedController.text.isNotEmpty) ...[
@@ -997,7 +998,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                   changeAmount: _paymentMethod == 'cash' && _tenderedController.text.isNotEmpty ? (double.tryParse(_tenderedController.text) ?? 0) - grandTotal : null,
                 ));
               },
-              child: Text('تأكيد وإصدار الفاتورة', style: TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              child: Text(isAr ? 'تأكيد وإصدار الفاتورة' : 'Confirm & Issue Invoice', style: TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
             ),
           ],
         ),

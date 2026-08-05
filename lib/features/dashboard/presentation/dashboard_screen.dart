@@ -411,7 +411,6 @@ class DashboardHome extends ConsumerWidget {
             padding: EdgeInsets.all(16.0),
             child: ListView(
               children: [
-                SetupChecklistCard(onNavigateToTab: onNavigateToTab),
                 if (storeProfile?.storeName.isEmpty ?? true) ...[
                   Container(
                     margin: EdgeInsets.only(bottom: 16),
@@ -441,6 +440,7 @@ class DashboardHome extends ConsumerWidget {
                     ),
                   ),
                 ],
+                SetupChecklistCard(onNavigateToTab: onNavigateToTab),
                 if (lowStockWidget != null) lowStockWidget,
                 Text(
                   l10n.reports,
