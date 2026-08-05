@@ -168,6 +168,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
       return const Scaffold(body: Center(child: Text("يجب تسجيل الدخول كتاجر")));
     }
 
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final ordersAsync = ref.watch(ordersStreamProvider);
     final currentCurrency = ref.watch(currencyProvider);

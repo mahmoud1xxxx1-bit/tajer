@@ -35,11 +35,16 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
   
   bool _isSelectionMode = false;
   Set<String> _selectedCustomerIds = {};
-  Set<String> _expandedFolders = {l10n.generalCustomers};
+  Set<String> _expandedFolders = {};
+  bool _isInitialized = false;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    if (!_isInitialized) {
+      _expandedFolders.add(l10n.generalCustomers);
+      _isInitialized = true;
+    }
     final customersAsyncValue = ref.watch(customersStreamProvider);
     final currency = ref.watch(currencyProvider).code;
     final appUser = ref.watch(appUserProvider).value;
