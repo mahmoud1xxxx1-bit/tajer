@@ -12,6 +12,8 @@ import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../../core/utils/date_formatter.dart';
+import '../../categories/data/category_repository.dart';
+import 'package:go_router/go_router.dart';
 
 class ProductsScreen extends ConsumerWidget {
   const ProductsScreen({super.key});
@@ -55,11 +57,29 @@ class ProductsScreen extends ConsumerWidget {
             child: productsAsyncValue.when(
               data: (products) {
                 if (products.isEmpty) {
+                  final isAr = l10n.localeName == 'ar';
                   return Center(
-                    child: Text(
-                      AppLocalizations.of(context)!.text102,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontFamily: 'Tajawal', fontSize: 16),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.inventory_2_outlined, size: 80, color: Colors.indigo.withOpacity(0.3)),
+                        const SizedBox(height: 16),
+                        Text(
+                          isAr ? "متجرك فارغ!" : "Your store is empty!",
+                          style: TextStyle(fontFamily: 'Tajawal', fontSize: 22, fontWeight: FontWeight.bold, color: Colors.indigo.shade900),
+                        ),
+                        const SizedBox(height: 8),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 32),
+                          child: Text(
+                            isAr 
+                                ? "لا يوجد منتجات بعد! أضف بضاعتك للرفوف لتبدأ البيع فوراً." 
+                                : "No products yet! Add your inventory to the shelves to start selling immediately.",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, color: Colors.grey.shade600, height: 1.5),
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 }
@@ -328,6 +348,49 @@ class ProductsScreen extends ConsumerWidget {
 ),
 floatingActionButton: canManageProducts ? FloatingActionButton.extended(
         onPressed: () async {
+          final categories = ref.read(categoriesStreamProvider).value;
+          if (categories == null || categories.isEmpty) {
+            final isAr = Localizations.localeOf(context).languageCode == 'ar';
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                title: Row(
+                  children: [
+                    const Text("✋ "),
+                    Text(isAr ? "خطوة للوراء!" : "Hold on!", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange.shade800)),
+                  ],
+                ),
+                content: Text(
+                  isAr 
+                    ? "ليكون متجرك مرتباً واحترافياً، يجب أن تنشئ (تصنيفاً) أولاً تضع تحته هذا المنتج (مثال: عصائر، حلى). دعنا ننشئ أول تصنيف الآن!"
+                    : "To keep your store organized, you must create a (Category) first. Let's create one now!",
+                  style: const TextStyle(fontFamily: 'Tajawal', fontSize: 15, height: 1.5),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(isAr ? "إلغاء" : "Cancel", style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                  ),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.indigo,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      context.push('/categories');
+                    },
+                    icon: const Icon(Icons.create_new_folder),
+                    label: Text(isAr ? "إنشاء تصنيف" : "Create Category", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            );
+            return;
+          }
+
           final canAdd = await GuestLimitService.canAddProduct(context, ref);
           if (!canAdd) return;
 

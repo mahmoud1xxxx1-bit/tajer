@@ -229,22 +229,22 @@ class SettingsScreen extends ConsumerWidget {
                       context: context,
                       builder: (context) => AlertDialog(
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                        title: Text(isAr ? "?????" : "Warning", style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontWeight: FontWeight.bold)),
+                        title: Text(isAr ? "تحذير" : "Warning", style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontWeight: FontWeight.bold)),
                         content: Text(
                           isAr 
-                            ? "??? ?????? ??????? ?????. ????? ?????? ???? ????? ??? ????? ???? ??????? ????????? ???? ????? ??? ????? ?? ?????????. ?? ??? ??????"
+                            ? "أنت تستخدم التطبيق كزائر. تسجيل الخروج الآن سيؤدي إلى حذف جميع بياناتك التجريبية نهائياً. هل أنت متأكد؟"
                             : "You are using the app as a guest. Logging out now will permanently delete all your trial data. Are you sure?", 
                           style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)
                         ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: Text(isAr ? "?????" : "Cancel", style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                            child: Text(isAr ? "إلغاء" : "Cancel", style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
                           ),
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
                             onPressed: () => Navigator.pop(context, true),
-                            child: Text(isAr ? "???? ???? ???????? ?????" : "Yes, Delete & Exit", style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontWeight: FontWeight.bold)),
+                            child: Text(isAr ? "نعم، احذف واخرج" : "Yes, Delete & Exit", style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
@@ -553,7 +553,7 @@ class _PinSettingsTileState extends State<_PinSettingsTile> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(_currentPin == null ? (isAr ? '????? ????? ?????' : 'Set PIN') : (isAr ? '????? ????? ?????' : 'Change PIN'), style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),
+        title: Text(_currentPin == null ? (isAr ? 'تعيين رقم سري' : 'Set PIN') : (isAr ? 'تغيير الرقم السري' : 'Change PIN'), style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),
         content: TextField(
           controller: pinController,
           keyboardType: TextInputType.number,
@@ -562,7 +562,7 @@ class _PinSettingsTileState extends State<_PinSettingsTile> {
           style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, letterSpacing: 4),
           textAlign: TextAlign.center,
           decoration: InputDecoration(
-            hintText: isAr ? '???? 4 ?????' : 'Enter 4 digits',
+            hintText: isAr ? 'أدخل 4 أرقام' : 'Enter 4 digits',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             filled: true,
           ),
@@ -613,11 +613,11 @@ class _PinSettingsTileState extends State<_PinSettingsTile> {
         ),
         child: Icon(Icons.password_rounded, color: isDark ? Colors.redAccent.shade100 : Colors.redAccent, size: 22),
       ),
-      title: Text(isAr ? '????? ????? ????? (PIN)' : 'Deletion PIN', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600, fontSize: 14)),
+      title: Text(isAr ? 'رقم حماية الحذف (PIN)' : 'Deletion PIN', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600, fontSize: 14)),
       subtitle: Padding(
         padding: const EdgeInsets.only(top: 4),
         child: Text(
-          isActive ? (isAr ? '???? ?????' : 'Active & Protected') : (isAr ? '??? ????' : 'Inactive'), 
+          isActive ? (isAr ? 'مفعل ومحمي' : 'Active & Protected') : (isAr ? 'غير مفعل' : 'Inactive'), 
           style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: isActive ? Colors.green : Colors.grey)
         ),
       ),
@@ -631,7 +631,7 @@ class _PinSettingsTileState extends State<_PinSettingsTile> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
               ),
               onPressed: _showSetPinDialog,
-              child: Text(isAr ? '?????' : 'Enable', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold)),
+              child: Text(isAr ? 'تفعيل' : 'Enable', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold)),
             )
           : Row(
               mainAxisSize: MainAxisSize.min,
@@ -639,12 +639,12 @@ class _PinSettingsTileState extends State<_PinSettingsTile> {
                 TextButton(
                   onPressed: _showSetPinDialog, 
                   style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8)),
-                  child: Text(isAr ? '?????' : 'Change', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13))
+                  child: Text(isAr ? 'تغيير' : 'Change', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13))
                 ),
                 TextButton(
                   onPressed: _removePin, 
                   style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 8), foregroundColor: Colors.red),
-                  child: Text(isAr ? '?????' : 'Disable', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13))
+                  child: Text(isAr ? 'إلغاء التفعيل' : 'Disable', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13))
                 ),
               ],
             ),

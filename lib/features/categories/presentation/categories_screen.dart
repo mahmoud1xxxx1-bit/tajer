@@ -27,11 +27,28 @@ class CategoriesScreen extends ConsumerWidget {
       body: categoriesAsync.when(
         data: (categories) {
           if (categories.isEmpty) {
+            final isAr = Localizations.localeOf(context).languageCode == 'ar';
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(AppLocalizations.of(context)!.text40, style: TextStyle(fontFamily: 'Tajawal')),
+                  Icon(Icons.category_outlined, size: 80, color: Colors.blue.withOpacity(0.3)),
+                  const SizedBox(height: 16),
+                  Text(
+                    isAr ? "نظم متجرك!" : "Organize your store!",
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blue.shade900),
+                  ),
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Text(
+                      isAr 
+                          ? "التصنيفات تساعدك في ترتيب منتجاتك (مثال: عصائر، حلى، طازج). أضف أول تصنيف الآن." 
+                          : "Categories help you organize your products (e.g. Juices, Sweets, Fresh). Add your first category now.",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, color: Colors.grey.shade600, height: 1.5),
+                    ),
+                  ),
                 ],
               ),
             );

@@ -18,7 +18,7 @@ import 'package:go_router/go_router.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../authentication/domain/app_user.dart';
 import '../../../core/services/app_review_service.dart';
-
+import 'setup_checklist_card.dart';
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
@@ -411,6 +411,7 @@ class DashboardHome extends ConsumerWidget {
             padding: EdgeInsets.all(16.0),
             child: ListView(
               children: [
+                SetupChecklistCard(onNavigateToTab: onNavigateToTab),
                 if (storeProfile?.storeName.isEmpty ?? true) ...[
                   Container(
                     margin: EdgeInsets.only(bottom: 16),

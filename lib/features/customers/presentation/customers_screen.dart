@@ -604,52 +604,111 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
     final amountController = TextEditingController(text: customer.totalDebt.toString());
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.payDebt, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.totalCustomerDebtText(customer.totalDebt.toString()), style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600)),
-            const SizedBox(height: 16),
-            TextField(
-              controller: amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'المبلغ المسدد من الدين',
-                labelStyle: TextStyle(fontFamily: 'Tajawal'),
-                border: OutlineInputBorder(),
+      builder: (context) {
+        final isAr = Localizations.localeOf(context).languageCode == 'ar';
+        return AlertDialog(
+          title: Text(l10n.payDebt, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.totalCustomerDebtText(customer.totalDebt.toString()), style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600)),
+              const SizedBox(height: 16),
+              TextField(
+                controller: amountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'المبلغ المسدد من الدين',
+                  labelStyle: TextStyle(fontFamily: 'Tajawal'),
+                  border: OutlineInputBorder(),
+                ),
               ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(AppLocalizations.of(context)!.text43, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final paid = double.tryParse(amountController.text.trim()) ?? 0.0;
+                if (paid <= 0) return;
+                
+                final user = ref.read(appUserProvider).value;
+                final merchantId = user?.merchantId ?? user?.id ?? '';
+                final currentShift = ref.read(currentShiftProvider(merchantId)).value;
+
+                if (context.mounted) Navigator.pop(context); // close first dialog
+
+                if (currentShift != null) {
+                  // Proactive prompt
+                  if (context.mounted) {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        title: Row(
+                          children: [
+                            const Icon(Icons.account_balance_wallet, color: Colors.green),
+                            const SizedBox(width: 8),
+                            Expanded(child: Text(isAr ? "إيداع في درج الكاشير؟" : "Deposit to Cash Drawer?", style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold))),
+                          ],
+                        ),
+                        content: Text(
+                          isAr 
+                            ? "تم تسديد الدين! هل استلمت هذا المبلغ نقداً ووضعه في درج الكاشير الآن؟\n(هذا سيضيفه كإيراد في وردية اليوم)"
+                            : "Debt paid! Did you receive this in cash and put it in the drawer now?",
+                          style: const TextStyle(fontFamily: 'Tajawal', height: 1.5, fontSize: 15),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () async {
+                              Navigator.pop(ctx);
+                              await ref.read(orderRepositoryProvider).payCustomerDebt(
+                                merchantId: merchantId,
+                                customerId: customer.id,
+                                amountPaid: paid,
+                                shiftId: null,
+                              );
+                            },
+                            child: Text(isAr ? "لا، حوالة بنكية" : "No, Bank Transfer", style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                          ),
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              foregroundColor: Colors.white,
+                            ),
+                            onPressed: () async {
+                              Navigator.pop(ctx);
+                              await ref.read(orderRepositoryProvider).payCustomerDebt(
+                                merchantId: merchantId,
+                                customerId: customer.id,
+                                amountPaid: paid,
+                                shiftId: currentShift.id,
+                              );
+                            },
+                            icon: const Icon(Icons.payments),
+                            label: Text(isAr ? "نعم، إيداع نقدي" : "Yes, Cash Deposit", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                } else {
+                  await ref.read(orderRepositoryProvider).payCustomerDebt(
+                    merchantId: merchantId,
+                    customerId: customer.id,
+                    amountPaid: paid,
+                    shiftId: null,
+                  );
+                }
+              },
+              child: const Text('تأكيد السداد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
             ),
           ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(AppLocalizations.of(context)!.text43, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final paid = double.tryParse(amountController.text.trim()) ?? 0.0;
-              if (paid <= 0) return;
-              
-              final user = ref.read(appUserProvider).value;
-              final merchantId = user?.merchantId ?? user?.id ?? '';
-              final currentShift = ref.read(currentShiftProvider(merchantId)).value;
-              
-              await ref.read(orderRepositoryProvider).payCustomerDebt(
-                merchantId: merchantId,
-                customerId: customer.id,
-                amountPaid: paid,
-                shiftId: currentShift?.id,
-              );
-              
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('تأكيد السداد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

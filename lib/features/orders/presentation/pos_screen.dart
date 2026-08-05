@@ -178,6 +178,81 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   void _checkout() {
     if (_cart.isEmpty) return;
     
+    final appUser = ref.read(appUserProvider).value;
+    final merchantId = appUser?.merchantId ?? appUser?.id ?? '';
+    final currentShift = ref.read(currentShiftProvider(merchantId)).value;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+
+    if (currentShift == null) {
+      final amountController = TextEditingController();
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              const Icon(Icons.point_of_sale, color: Colors.orange),
+              const SizedBox(width: 8),
+              Expanded(child: Text(isAr ? "درج الكاشير مغلق!" : "Drawer Closed!", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange.shade800))),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                isAr 
+                  ? "يجب فتح وردية لاستلام هذه المبيعة. كم يوجد في الدرج الآن لبدء البيع؟"
+                  : "You must open a shift to process this sale. How much is in the drawer now?",
+                style: const TextStyle(fontFamily: 'Tajawal', fontSize: 15, height: 1.5),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: amountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: isAr ? 'المبلغ الافتتاحي' : 'Opening Amount',
+                  labelStyle: const TextStyle(fontFamily: 'Tajawal'),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  prefixIcon: const Icon(Icons.money),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(isAr ? "إلغاء" : "Cancel", style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+            ),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.indigo,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () async {
+                final openingAmount = double.tryParse(amountController.text.trim()) ?? 0.0;
+                Navigator.pop(ctx);
+                
+                final shift = Shift(
+                  id: const Uuid().v4(),
+                  merchantId: merchantId,
+                  startTime: DateTime.now(),
+                  openingAmount: openingAmount,
+                );
+                await ref.read(shiftRepositoryProvider)?.startShift(shift);
+                
+                if (context.mounted) _checkout();
+              },
+              icon: const Icon(Icons.lock_open),
+              label: Text(isAr ? "افتح الدرج وأكمل البيع" : "Open Drawer & Continue", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     final customers = ref.read(customersStreamProvider).value ?? [];
     
     showModalBottomSheet(

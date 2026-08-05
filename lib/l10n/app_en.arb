@@ -634,5 +634,11 @@
   "unknown": "unknown",
   "aboutApp": "About App",
   "databaseBackupText": "Database Backup",
-  "thermalPrinterText": "Thermal Printer"
+  "thermalPrinterText": "Thermal Printer",
+  "setupChecklistTitle": "Get Your Store Ready",
+  "setupStep1": "Setup Store (Add Category)",
+  "setupStep2": "Stock Shelves (Add Product)",
+  "setupStep3": "Take Shift (Open Shift)",
+  "setupStep4": "First Sale (Make Sale)",
+  "setupCompleted": "You are fully ready to sell! 🎉"
 }

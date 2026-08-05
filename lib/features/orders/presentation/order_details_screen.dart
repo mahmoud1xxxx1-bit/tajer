@@ -231,6 +231,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
     final isCancelled = currentOrder.status == 'cancelled';
     final dateStr = DateFormat('yyyy-MM-dd | hh:mm a').format(currentOrder.createdAt);
     final storeProfile = ref.watch(storeProfileProvider).value;
+    final isEmployee = ref.watch(appUserProvider).value?.role == 'employee';
 
     return Scaffold(
       appBar: AppBar(
@@ -352,6 +353,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                     Consumer(
                       builder: (context, ref, child) {
                         final storeProfile = ref.watch(storeProfileProvider).value;
+    final isEmployee = ref.watch(appUserProvider).value?.role == 'employee';
                         final defaultTaxPercentage = storeProfile?.defaultTaxPercentage ?? 0.0;
                         final defaultIsTaxInclusive = storeProfile?.defaultIsTaxInclusive ?? false;
                         
@@ -484,18 +486,19 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                   ),
                   const SizedBox(width: 12),
                 ],
-                Expanded(
-                  child: OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Colors.red),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                if (!isEmployee)
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.red),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      label: Text(isAr ? 'حذف نهائي' : 'Delete', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
+                      onPressed: () => _deleteOrder(isAr),
                     ),
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    label: Text(isAr ? 'حذف نهائي' : 'Delete', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
-                    onPressed: () => _deleteOrder(isAr),
                   ),
-                ),
               ],
             ),
             const SizedBox(height: 32),

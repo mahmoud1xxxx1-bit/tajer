@@ -1,6 +1,7 @@
 import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../authentication/data/auth_repository.dart';
@@ -163,6 +164,20 @@ class OrderRepository {
           'updatedAt': FieldValue.serverTimestamp(),
         });
         
+        final logRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+        batch.set(logRef, {
+          'id': logRef.id,
+          'merchantId': order.merchantId,
+          'productId': item.productId,
+          'productName': data['name'] ?? item.productName,
+          'changeQuantity': -item.quantity,
+          'previousQuantity': data['quantity'] ?? 0,
+          'newQuantity': (data['quantity'] as num? ?? 0) - item.quantity,
+          'reason': 'فاتورة مبيعات #${nextQueueNumber}',
+          'date': FieldValue.serverTimestamp(),
+          'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+        });
+        
         if (recipeList.isNotEmpty) {
           // Has recipe -> ALSO deduct raw materials
           for (final recipeItem in recipeList) {
@@ -172,9 +187,24 @@ class OrderRepository {
             final rawMaterialRef = _firestore.collection('raw_materials').doc(rawMaterialId);
             final rmDoc = await rawMaterialRef.get(const GetOptions(source: Source.serverAndCache));
             if (rmDoc.exists) {
+              final rmData = rmDoc.data()!;
+              final deducted = amountRequired * item.quantity;
               batch.update(rawMaterialRef, {
-                'quantity': FieldValue.increment(-(amountRequired * item.quantity)),
+                'quantity': FieldValue.increment(-deducted),
                 'updatedAt': FieldValue.serverTimestamp(),
+              });
+              final rmLogRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+              batch.set(rmLogRef, {
+                'id': rmLogRef.id,
+                'merchantId': order.merchantId,
+                'productId': rawMaterialId,
+                'productName': rmData['name'] ?? 'مادة خام',
+                'changeQuantity': -deducted,
+                'previousQuantity': rmData['quantity'] ?? 0,
+                'newQuantity': (rmData['quantity'] as num? ?? 0) - deducted,
+                'reason': 'مباع ضمن: ${data['name'] ?? item.productName} (فاتورة #${nextQueueNumber})',
+                'date': FieldValue.serverTimestamp(),
+                'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
               });
             }
           }
@@ -212,6 +242,14 @@ class OrderRepository {
   }
 
   Future<void> deleteOrder(AppOrder order) async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      final userDoc = await _firestore.collection('users').doc(uid).get();
+      if (userDoc.data()?['role'] == 'employee') {
+        throw Exception('غير مصرح لك بالحذف النهائي، يمكنك الإلغاء فقط');
+      }
+    }
+
     final batch = _firestore.batch();
     final orderRef = _firestore.collection('orders').doc(order.id);
 
@@ -315,6 +353,20 @@ class OrderRepository {
             'quantity': FieldValue.increment(item.quantity),
             'updatedAt': FieldValue.serverTimestamp(),
           });
+          
+          final logRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+          batch.set(logRef, {
+            'id': logRef.id,
+            'merchantId': order.merchantId,
+            'productId': item.productId,
+            'productName': data['name'] ?? item.productName,
+            'changeQuantity': item.quantity,
+            'previousQuantity': data['quantity'] ?? 0,
+            'newQuantity': (data['quantity'] as num? ?? 0) + item.quantity,
+            'reason': 'استرجاع مخزون بسبب إلغاء فاتورة #${order.queueNumber ?? order.id}',
+            'date': FieldValue.serverTimestamp(),
+            'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+          });
 
           if (recipeList.isNotEmpty) {
             for (final recipeItem in recipeList) {
@@ -323,9 +375,25 @@ class OrderRepository {
               final rawMaterialRef = _firestore.collection('raw_materials').doc(rawMaterialId);
               final rmDoc = await rawMaterialRef.get(const GetOptions(source: Source.serverAndCache));
               if (rmDoc.exists) {
+                final rmData = rmDoc.data()!;
+                final added = amountRequired * item.quantity;
                 batch.update(rawMaterialRef, {
-                  'quantity': FieldValue.increment(amountRequired * item.quantity),
+                  'quantity': FieldValue.increment(added),
                   'updatedAt': FieldValue.serverTimestamp(),
+                });
+                
+                final rmLogRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+                batch.set(rmLogRef, {
+                  'id': rmLogRef.id,
+                  'merchantId': order.merchantId,
+                  'productId': rawMaterialId,
+                  'productName': rmData['name'] ?? 'مادة خام',
+                  'changeQuantity': added,
+                  'previousQuantity': rmData['quantity'] ?? 0,
+                  'newQuantity': (rmData['quantity'] as num? ?? 0) + added,
+                  'reason': 'استرجاع مادة لمنتج: ${data['name'] ?? item.productName} (إلغاء فاتورة #${order.queueNumber ?? order.id})',
+                  'date': FieldValue.serverTimestamp(),
+                  'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
                 });
               }
             }

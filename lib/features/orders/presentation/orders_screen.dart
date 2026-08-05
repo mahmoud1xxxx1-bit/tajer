@@ -128,7 +128,7 @@ class OrdersScreen extends ConsumerWidget {
                             ),
                           );
                         },
-                        onLongPress: () {
+                        onLongPress: appUser?.role == 'employee' ? null : () {
                           showDialog(
                             context: context,
                             builder: (dialogCtx) => AlertDialog(
