@@ -179,6 +179,23 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
   double get _cartTotal => _cart.fold(0.0, (sum, item) => sum + item.total);
 
+  double get _grandTotal {
+    final storeProfile = ref.read(storeProfileProvider).value;
+    final defaultTaxPercentage = storeProfile?.defaultTaxPercentage ?? 0.0;
+    final defaultIsTaxInclusive = storeProfile?.defaultIsTaxInclusive ?? false;
+    double gt = 0.0;
+    for (var item in _cart) {
+      final itemTax = item.taxPercentage ?? defaultTaxPercentage;
+      final itemInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
+      if (itemInclusive) {
+        gt += item.total;
+      } else {
+        gt += item.total + (item.total * (itemTax / 100));
+      }
+    }
+    return gt;
+  }
+
   void _checkout() {
     if (_cart.isEmpty) return;
     
@@ -268,7 +285,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       backgroundColor: Colors.transparent,
       builder: (ctx) => _CheckoutSheet(
         cart: _cart,
-        total: _cartTotal,
+        total: _grandTotal,
         customers: customers,
         onCheckoutComplete: (OrderDetails details) async {
           Navigator.pop(ctx);
@@ -291,7 +308,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         customerId: details.customerId,
         customerName: details.customerName,
         items: List.from(_cart),
-        total: _cartTotal,
+        total: _grandTotal,
         paidAmount: details.paidAmount,
         isCredit: details.isCredit,
         notes: details.notes,
@@ -577,7 +594,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
                         onPressed: _checkout,
-                        child: Text(isAr ? 'دفع الإجمالي: $_cartTotal' : 'Pay Total: $_cartTotal', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
+                        child: Text(isAr ? 'دفع الإجمالي: ${_grandTotal.toStringAsFixed(2)}' : 'Pay Total: ${_grandTotal.toStringAsFixed(2)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
                       ),
                     )
                   ],
