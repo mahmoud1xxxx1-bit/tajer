@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../domain/raw_material.dart';
@@ -153,6 +154,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final user = ref.watch(appUserProvider).value;
     final merchantId = user?.merchantId ?? user?.id;
     final canManageInventory = user?.hasPermission('can_manage_inventory') ?? false;
