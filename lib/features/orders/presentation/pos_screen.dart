@@ -356,6 +356,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     final productsAsync = ref.watch(productsStreamProvider);
     final categoriesAsync = ref.watch(categoriesStreamProvider);
     final isTablet = MediaQuery.of(context).size.width > 600;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     return shiftAsync.when(
       loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
