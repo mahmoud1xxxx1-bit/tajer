@@ -60,6 +60,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
         ),
         title: Text(item.title, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         subtitle: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(item.subtitle, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12)),
@@ -69,6 +70,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
           ],
         ),
         trailing: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [

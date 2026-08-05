@@ -307,9 +307,17 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                   TextFormField(
                     controller: _taxPercentageController,
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontFamily: 'Tajawal'),
                     decoration: InputDecoration(
                       labelText: isAr ? 'نسبة الضريبة الخاصة بالمنتج (%)' : 'Product Tax Percentage (%)',
-                      border: const OutlineInputBorder(),
+                      labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: Colors.orange.shade300),
+                      ),
+                      filled: true,
+                      fillColor: Theme.of(context).colorScheme.surface,
                     ),
                   ),
                   const SizedBox(height: 12),

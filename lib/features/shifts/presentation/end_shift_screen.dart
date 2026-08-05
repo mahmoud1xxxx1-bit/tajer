@@ -120,7 +120,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
 
           // Expected Cash = Start Cash + Cash Sales + Debts Collected - Expenses
           final expectedCash = shift.startCash + (shift.cashSales ?? 0.0) + totalDebtsCollected - totalCashExpenses;
-          return Padding(
+          return SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -188,7 +188,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                     prefixIcon: const Icon(Icons.account_balance),
                   ),
                 ),
-                const Spacer(),
+                const SizedBox(height: 32),
                 SizedBox(
                   width: double.infinity,
                   height: 54,
