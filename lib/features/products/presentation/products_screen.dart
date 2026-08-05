@@ -10,7 +10,7 @@ import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
-import '../../authentication/data/auth_repository.dart';
+import '../../../core/services/activity_logger.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../categories/data/category_repository.dart';
 import 'package:go_router/go_router.dart';
@@ -299,6 +299,11 @@ class ProductsScreen extends ConsumerWidget {
                                               }
                                             }
                                             ref.read(productRepositoryProvider).deleteProduct(product.id);
+                                            ActivityLogger.log(
+                                              user: appUser,
+                                              actionType: 'Archive Product|أرشفة منتج',
+                                              description: 'Archived product "${product.name}"|تم أرشفة وإخفاء المنتج "${product.name}"',
+                                            );
                                           },
                                           child: Text(l10n.delete, style: const TextStyle(color: Colors.white, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                                         ),

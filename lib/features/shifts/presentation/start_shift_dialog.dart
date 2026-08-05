@@ -5,6 +5,7 @@ import '../domain/shift.dart';
 import '../data/shift_repository.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../authentication/domain/app_user.dart';
+import '../../../core/services/activity_logger.dart';
 
 class StartShiftDialog extends ConsumerStatefulWidget {
   const StartShiftDialog({super.key});
@@ -40,6 +41,11 @@ class _StartShiftDialogState extends ConsumerState<StartShiftDialog> {
         status: 'open',
       );
       await ref.read(shiftRepositoryProvider).openShift(shift);
+      ActivityLogger.log(
+        user: user,
+        actionType: 'Start Shift|بدء وردية',
+        description: 'Started a new shift with cash $cash|بدأ وردية جديدة بعهدة $cash',
+      );
     } catch (e) {
       if (mounted) {
         final isAr = Localizations.localeOf(context).languageCode == 'ar';

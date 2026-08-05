@@ -11,6 +11,7 @@ import '../domain/order.dart';
 import '../domain/cart_item.dart';
 import '../../customers/domain/customer.dart';
 import '../../customers/data/customer_repository.dart';
+import '../../../core/services/activity_logger.dart';
 import '../../../core/services/pdf_service.dart';
 import '../../../core/services/whatsapp_service.dart';
 import '../../../core/services/printer_service.dart';
@@ -305,6 +306,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
       final merchantId = appUser.merchantId ?? appUser.id;
       final shift = await ref.read(currentShiftProvider(merchantId).future);
+      final currency = ref.read(currencyProvider).code;
 
       final savedOrder = await ref.read(orderRepositoryProvider).createOrder(newOrder, shiftId: shift?.id);
 
@@ -323,7 +325,6 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       
       final storeProfile = ref.read(storeProfileProvider).value;
       double? tax = storeProfile?.defaultTaxPercentage;
-      final currency = ref.read(currencyProvider).code;
       
       if (mounted) {
         Navigator.pop(context, true);
@@ -713,6 +714,11 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
               );
               
               await ref.read(customerRepositoryProvider).addCustomer(newCustomer);
+              await ActivityLogger.log(
+                user: user,
+                actionType: 'Quick Customer Added|إضافة عميل سريع',
+                description: 'Added customer (${newCustomer.name}) from POS|تم إضافة العميل (${newCustomer.name}) من الكاشير',
+              );
               
               if (mounted) {
                 Navigator.pop(ctx);
@@ -735,6 +741,9 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
   @override
   Widget build(BuildContext context) {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final appUser = ref.watch(appUserProvider).value;
+    final canManageCustomers = appUser?.hasPermission('can_manage_customers') ?? true;
+    final canSellOnCredit = appUser?.hasPermission('can_sell_on_credit') ?? true;
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
@@ -844,19 +853,20 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  decoration: BoxDecoration(
-                    color: _highlightCustomer ? Colors.red.withOpacity(0.2) : Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    icon: Icon(Icons.person_add, color: _highlightCustomer ? Colors.red : Theme.of(context).colorScheme.primary),
-                    tooltip: isAr ? 'إضافة عميل جديد' : 'Add New Customer',
-                    onPressed: _showQuickAddCustomerDialog,
-                  ),
-                ),
-              ],
+                  if (canManageCustomers)
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      decoration: BoxDecoration(
+                        color: _highlightCustomer ? Colors.red.withOpacity(0.2) : Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.person_add, color: _highlightCustomer ? Colors.red : Theme.of(context).colorScheme.primary),
+                        tooltip: isAr ? 'إضافة عميل جديد' : 'Add New Customer',
+                        onPressed: _showQuickAddCustomerDialog,
+                      ),
+                    ),
+                ],
             ),
           ),
           const SizedBox(height: 16),
@@ -904,11 +914,12 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
               ],
             ),
             const SizedBox(height: 16),
-            SwitchListTile(
-              title: Text(isAr ? 'دفع آجل؟ (دين)' : 'Pay Later? (Credit)', style: TextStyle(fontFamily: 'Tajawal')),
-              value: _isCredit,
-              onChanged: (val) => setState(() => _isCredit = val),
-            ),
+            if (canSellOnCredit)
+              SwitchListTile(
+                title: Text(isAr ? 'دفع آجل؟ (دين)' : 'Pay Later? (Credit)', style: TextStyle(fontFamily: 'Tajawal')),
+                value: _isCredit,
+                onChanged: (val) => setState(() => _isCredit = val),
+              ),
             if (_isCredit) ...[
               TextField(
                 controller: _paidController,

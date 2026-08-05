@@ -186,17 +186,22 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
                         if (empId == widget.employeeId || (empName == widget.employeeName && widget.employeeName.isNotEmpty)) {
                           final ts = (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
                           final amount = (data['amount'] as num? ?? 0.0).toDouble();
-                          final action = data['actionType']?.toString() ?? (isAr ? 'عملية نظام' : 'System Action');
                           
+                          final actionRaw = data['actionType']?.toString() ?? (isAr ? 'عملية نظام' : 'System Action');
+                          final action = actionRaw.contains('|') ? (isAr ? actionRaw.split('|')[1] : actionRaw.split('|')[0]) : actionRaw;
+                          
+                          final descRaw = data['description']?.toString() ?? '';
+                          final subtitle = descRaw.contains('|') ? (isAr ? descRaw.split('|')[1] : descRaw.split('|')[0]) : descRaw;
+
                           items.add(
                             EmployeeActivityItem(
                               title: '⚙️ $action',
-                              subtitle: data['description']?.toString() ?? '',
+                              subtitle: subtitle,
                               timestamp: ts,
                               amount: amount,
                               isSale: false,
                               actionType: action,
-                              badgeColor: action.contains('حذف') || action.contains('إلغاء') ? Colors.redAccent : Colors.blueAccent,
+                              badgeColor: action.contains('حذف') || action.contains('Delete') || action.contains('إلغاء') || action.contains('Cancel') ? Colors.redAccent : Colors.blueAccent,
                             ),
                           );
                         }

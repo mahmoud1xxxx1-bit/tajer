@@ -9,6 +9,7 @@ import '../../../core/services/printer_service.dart';
 import '../../../core/providers/store_profile_provider.dart';
 import '../../expenses/data/expense_repository.dart';
 import '../../../../../../../../core/theme/glass_card.dart';
+import '../../../core/services/activity_logger.dart';
 
 class EndShiftScreen extends ConsumerStatefulWidget {
   const EndShiftScreen({super.key});
@@ -44,6 +45,12 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
       );
       
       await ref.read(shiftRepositoryProvider).closeShift(updatedShift);
+      final user = ref.read(appUserProvider).value;
+      ActivityLogger.log(
+        user: user,
+        actionType: 'End Shift|إنهاء وردية',
+        description: 'Ended shift with expected cash ${updatedShift.expectedCash} and actual cash $actualCash|تم إنهاء الوردية بمبلغ متوقع ${updatedShift.expectedCash} ومبلغ فعلي $actualCash',
+      );
       
       // Print Z-Report
       final storeProfile = ref.read(storeProfileProvider).value;

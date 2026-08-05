@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:tajer/l10n/app_localizations.dart';
+import '../../../core/services/activity_logger.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../authentication/domain/app_user.dart';
 import '../data/product_repository.dart';
@@ -124,6 +125,11 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
 
       if (isEditing) {
         await productRepo.updateProduct(newProduct);
+        ActivityLogger.log(
+          user: appUser,
+          actionType: 'Edit Product|تعديل منتج',
+          description: 'Updated product "${newProduct.name}"|تم تعديل بيانات المنتج "${newProduct.name}"',
+        );
         if (newQuantity != previousQuantity) {
           await logRepo?.logChange(
             productId: newProduct.id,
@@ -136,6 +142,11 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
         }
       } else {
         await productRepo.addProduct(newProduct);
+        ActivityLogger.log(
+          user: appUser,
+          actionType: 'Add Product|إضافة منتج',
+          description: 'Added new product "${newProduct.name}"|تم إضافة منتج جديد "${newProduct.name}"',
+        );
         if (newQuantity > 0) {
           await logRepo?.logChange(
             productId: newProduct.id,

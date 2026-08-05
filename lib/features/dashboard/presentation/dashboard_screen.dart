@@ -45,11 +45,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     
     final bool canManageCustomers = appUser?.hasPermission('can_manage_customers') ?? true;
     final bool canViewReports = appUser?.hasPermission('can_view_reports') ?? true;
+    final bool canCreateOrders = appUser?.hasPermission('can_create_orders') ?? true;
 
     final List<Widget> screens = [
       DashboardHome(
         canManageCustomers: canManageCustomers,
         canViewReports: canViewReports,
+        canCreateOrders: canCreateOrders,
         onNavigateToTab: (index) {
         setState(() {
           _currentIndex = index;
@@ -140,7 +142,8 @@ class DashboardHome extends ConsumerWidget {
   final void Function(int) onNavigateToTab;
   final bool canManageCustomers;
   final bool canViewReports;
-  const DashboardHome({super.key, required this.onNavigateToTab, required this.canManageCustomers, required this.canViewReports});
+  final bool canCreateOrders;
+  const DashboardHome({super.key, required this.onNavigateToTab, required this.canManageCustomers, required this.canViewReports, required this.canCreateOrders});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -479,20 +482,21 @@ class DashboardHome extends ConsumerWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    _QuickAction(
-                      icon: Icons.point_of_sale,
-                      label: l10n.posCashier,
-                      color: Colors.green,
-                      onTap: () async {
-                        final shouldGoToOrders = await Navigator.push<bool>(
-                          context,
-                          MaterialPageRoute(builder: (context) => const PosScreen()),
-                        );
-                        if (shouldGoToOrders == true) {
-                          onNavigateToTab(1); // 1 is the index of Orders tab
-                        }
-                      },
-                    ),
+                    if (canCreateOrders)
+                      _QuickAction(
+                        icon: Icons.point_of_sale,
+                        label: l10n.posCashier,
+                        color: Colors.green,
+                        onTap: () async {
+                          final shouldGoToOrders = await Navigator.push<bool>(
+                            context,
+                            MaterialPageRoute(builder: (context) => const PosScreen()),
+                          );
+                          if (shouldGoToOrders == true) {
+                            onNavigateToTab(1); // 1 is the index of Orders tab
+                          }
+                        },
+                      ),
                     _QuickAction(
                       icon: Icons.add_shopping_cart,
                       label: l10n.orders,

@@ -14,6 +14,7 @@ import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../../../core/services/pdf_service.dart';
 import '../../orders/data/order_repository.dart';
 import '../../shifts/data/shift_repository.dart';
+import '../../../core/services/activity_logger.dart';
 import '../../../core/providers/settings_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
@@ -671,6 +672,11 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                 amountPaid: paid,
                                 shiftId: null,
                               );
+                              ActivityLogger.log(
+                                user: appUser,
+                                actionType: 'Receive Payment|استلام دفعة',
+                                description: 'Received payment of $paid from customer (${customer.name}) via Bank Transfer|استلام دفعة بقيمة $paid من العميل (${customer.name}) عبر حوالة بنكية',
+                              );
                             },
                             child: Text(isAr ? "لا، حوالة بنكية" : "No, Bank Transfer", style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
                           ),
@@ -687,6 +693,11 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                 amountPaid: paid,
                                 shiftId: currentShift.id,
                               );
+                              ActivityLogger.log(
+                                user: appUser,
+                                actionType: 'Receive Payment|استلام دفعة',
+                                description: 'Received cash payment of $paid from customer (${customer.name})|استلام دفعة نقدية بقيمة $paid من العميل (${customer.name})',
+                              );
                             },
                             icon: const Icon(Icons.payments),
                             label: Text(isAr ? "نعم، إيداع نقدي" : "Yes, Cash Deposit", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
@@ -701,6 +712,11 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                     customerId: customer.id,
                     amountPaid: paid,
                     shiftId: null,
+                  );
+                  ActivityLogger.log(
+                    user: appUser,
+                    actionType: 'Receive Payment|استلام دفعة',
+                    description: 'Received payment of $paid from customer (${customer.name})|استلام دفعة بقيمة $paid من العميل (${customer.name})',
                   );
                 }
               },

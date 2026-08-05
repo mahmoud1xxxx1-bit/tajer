@@ -7,6 +7,7 @@ import '../../../core/services/guest_limit_service.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/expense_repository.dart';
 import '../../../core/services/pin_service.dart';
+import '../../../core/services/activity_logger.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../domain/expense.dart';
 import 'package:intl/intl.dart';
@@ -361,6 +362,11 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                             }
                           }
                           ref.read(expenseRepositoryProvider)?.deleteExpense(expense.id);
+                          ActivityLogger.log(
+                            user: appUser,
+                            actionType: 'Delete Expense|حذف مصروف',
+                            description: 'Deleted expense "${expense.title}" for ${expense.amount}|تم حذف المصروف "${expense.title}" بقيمة ${expense.amount}',
+                          );
                         },
                         child: Container(
                           padding: const EdgeInsets.all(4),
