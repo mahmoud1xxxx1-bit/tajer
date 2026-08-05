@@ -227,12 +227,28 @@ class OrderRepository {
 
     if (shiftId != null) {
       final shiftRef = _firestore.collection('shifts').doc(shiftId);
+      
+      double orderTax = 0.0;
+      for (final item in order.items) {
+        if (item.taxPercentage != null && item.taxPercentage! > 0) {
+          orderTax += item.total - (item.total / (1 + (item.taxPercentage! / 100)));
+        }
+      }
+
+      final updates = <String, dynamic>{
+        if (orderTax > 0) 'totalTax': FieldValue.increment(orderTax),
+      };
+
       if (order.paymentMethod == 'cash') {
-        batch.update(shiftRef, {'cashSales': FieldValue.increment(order.paidAmount)});
+        updates['cashSales'] = FieldValue.increment(order.paidAmount);
       } else if (order.paymentMethod == 'card') {
-        batch.update(shiftRef, {'cardTotal': FieldValue.increment(order.paidAmount)});
+        updates['cardTotal'] = FieldValue.increment(order.paidAmount);
       } else if (order.paymentMethod == 'transfer') {
-        batch.update(shiftRef, {'transferTotal': FieldValue.increment(order.paidAmount)});
+        updates['transferTotal'] = FieldValue.increment(order.paidAmount);
+      }
+      
+      if (updates.isNotEmpty) {
+        batch.update(shiftRef, updates);
       }
     }
 
@@ -541,12 +557,11 @@ class OrderRepository {
       }
     }
 
-    // 3. Add to shift cash sales
+    // 3. Add to shift debt collections cash
     if (shiftId != null && shiftId.isNotEmpty) {
       final shiftRef = _firestore.collection('shifts').doc(shiftId);
       batch.update(shiftRef, {
-        'cashSales': FieldValue.increment(amountPaid),
-        // expectedCash will be calculated at closing based on startCash + cashSales - expenses
+        'debtCollectionsCash': FieldValue.increment(amountPaid),
       });
     }
 

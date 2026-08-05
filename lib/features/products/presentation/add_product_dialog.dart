@@ -281,21 +281,22 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
               onFieldSubmitted: (_) => _submit(),
             ),
             SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.05),
+            Card(
+              elevation: 0,
+              color: Colors.orange.withOpacity(0.05),
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.orange.shade200),
+                side: BorderSide(color: Colors.orange.shade200),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: ExpansionTile(
+                title: Text(
+                  isAr ? 'إعدادات متقدمة للضريبة (اختياري)' : 'Advanced Tax Settings (Optional)',
+                  style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange.shade800),
+                ),
+                iconColor: Colors.orange.shade800,
+                collapsedIconColor: Colors.orange.shade800,
+                childrenPadding: const EdgeInsets.all(16.0),
                 children: [
-                  Text(
-                    isAr ? 'إعدادات الضريبة (اختياري)' : 'Tax Settings (Optional)',
-                    style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange.shade800),
-                  ),
-                  const SizedBox(height: 8),
                   Text(
                     isAr 
                       ? 'تحديد الإعدادات هنا سيلغي إعدادات المتجر العامة لهذا المنتج، وسيؤثر مباشرة على الحساب النهائي.' 
@@ -305,10 +306,12 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _taxPercentageController,
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     decoration: InputDecoration(
                       labelText: isAr ? 'نسبة الضريبة الخاصة بالمنتج (%)' : 'Product Tax Percentage (%)',
                       border: const OutlineInputBorder(),
+                      filled: true,
+                      fillColor: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 12),

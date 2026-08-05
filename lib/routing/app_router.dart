@@ -21,6 +21,7 @@ import '../features/settings/presentation/profile_screen.dart';
 import '../features/settings/presentation/audit_log_screen.dart';
 import '../features/settings/presentation/user_guide_screen.dart';
 import '../features/shifts/presentation/end_shift_screen.dart';
+import '../features/shifts/presentation/shifts_archive_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateChangesProvider);
@@ -110,6 +111,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/end_shift',
         builder: (context, state) => const EndShiftScreen(),
+      ),
+      GoRoute(
+        path: '/shifts_archive',
+        builder: (context, state) => const ShiftsArchiveScreen(),
       ),
       GoRoute(
         path: '/raw_materials',

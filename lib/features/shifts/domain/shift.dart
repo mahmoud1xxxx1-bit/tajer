@@ -13,6 +13,8 @@ class Shift {
   final double? cardTotal; // إجمالي مبيعات مدى وغيرها
   final double? transferTotal; // إجمالي مبيعات التحويل
   final double? cashSales; // المبيعات النقدية فقط خلال الوردية
+  final double? debtCollectionsCash; // الديون المحصلة كاش خلال الوردية
+  final double? totalTax; // إجمالي الضريبة المحصلة
   final String status; // 'open', 'closed'
 
   Shift({
@@ -28,6 +30,8 @@ class Shift {
     this.cardTotal,
     this.transferTotal,
     this.cashSales,
+    this.debtCollectionsCash,
+    this.totalTax,
     required this.status,
   });
 
@@ -45,6 +49,8 @@ class Shift {
       'cardTotal': cardTotal,
       'transferTotal': transferTotal,
       'cashSales': cashSales,
+      'debtCollectionsCash': debtCollectionsCash,
+      'totalTax': totalTax,
       'status': status,
     };
   }
@@ -63,6 +69,8 @@ class Shift {
       cardTotal: json['cardTotal']?.toDouble(),
       transferTotal: json['transferTotal']?.toDouble(),
       cashSales: json['cashSales']?.toDouble(),
+      debtCollectionsCash: json['debtCollectionsCash']?.toDouble(),
+      totalTax: json['totalTax']?.toDouble(),
       status: json['status'] ?? 'open',
     );
   }
@@ -80,6 +88,8 @@ class Shift {
     double? cardTotal,
     double? transferTotal,
     double? cashSales,
+    double? debtCollectionsCash,
+    double? totalTax,
     String? status,
   }) {
     return Shift(
@@ -95,6 +105,8 @@ class Shift {
       cardTotal: cardTotal ?? this.cardTotal,
       transferTotal: transferTotal ?? this.transferTotal,
       cashSales: cashSales ?? this.cashSales,
+      debtCollectionsCash: debtCollectionsCash ?? this.debtCollectionsCash,
+      totalTax: totalTax ?? this.totalTax,
       status: status ?? this.status,
     );
   }

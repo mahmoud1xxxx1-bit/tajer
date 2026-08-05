@@ -566,6 +566,26 @@ class DashboardHome extends ConsumerWidget {
                     ),
                   ],
                 ),
+                if (appUser?.role != 'employee') ...[
+                  SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _QuickAction(
+                        icon: Icons.archive,
+                        label: Localizations.localeOf(context).languageCode == 'ar' ? 'أرشيف الورديات' : 'Shifts Archive',
+                        color: Colors.brown,
+                        onTap: () {
+                          context.push('/shifts_archive');
+                        },
+                      ),
+                      // Add invisible placeholders to keep alignment if needed, or just let it center.
+                      const Spacer(),
+                      const Spacer(),
+                      const Spacer(),
+                    ],
+                  ),
+                ],
               ],
             ),
           );

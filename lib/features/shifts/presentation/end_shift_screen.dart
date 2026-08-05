@@ -105,9 +105,13 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
               .where((e) => e.category == 'سداد ديون موردين')
               .fold(0.0, (sum, e) => sum + e.amount);
 
-          // Expected Cash = Start Cash + Cash Sales - Operating Expenses - Supplier Payments
-          final expectedCash = shift.startCash + (shift.cashSales ?? 0.0) - operatingExpenses - supplierPayments;
+          // Calculate cash expenses
+          final totalCashExpenses = operatingExpenses + supplierPayments;
+          final totalDebtsCollected = shift.debtCollectionsCash ?? 0.0;
+          final totalTax = shift.totalTax ?? 0.0;
 
+          // Expected Cash = Start Cash + Cash Sales + Debts Collected - Expenses
+          final expectedCash = shift.startCash + (shift.cashSales ?? 0.0) + totalDebtsCollected - totalCashExpenses;
           return Padding(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -125,11 +129,15 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                         _buildRow(isAr ? 'الوردية فُتحت بواسطة:' : 'Opened by:', shift.employeeName),
                         const Divider(height: 32),
                         _buildRow(isAr ? 'رصيد الصندوق الافتتاحي:' : 'Opening Cash:', '${shift.startCash} ${isAr ? 'ر.س' : 'SAR'}'),
-                        _buildRow(isAr ? 'إجمالي مبيعات الكاش:' : 'Total Cash Sales:', '${shift.cashSales ?? 0.0} ${isAr ? 'ر.س' : 'SAR'}', color: Colors.green),
-                        _buildRow(isAr ? 'إجمالي مبيعات مدى:' : 'Total Card Sales:', '${shift.cardTotal ?? 0.0} ${isAr ? 'ر.س' : 'SAR'}', color: Colors.blue),
-                        _buildRow(isAr ? 'إجمالي التحويل البنكي:' : 'Total Bank Transfer:', '${shift.transferTotal ?? 0.0} ${isAr ? 'ر.س' : 'SAR'}', color: Colors.purple),
-                        const Divider(height: 32),
+                        _buildRow(isAr ? 'مبيعات الكاش (صورة فعلية):' : 'Actual Cash Sales:', '${shift.cashSales ?? 0.0} ${isAr ? 'ر.س' : 'SAR'}', color: Colors.green),
+                        _buildRow(isAr ? 'ديون مُحصلة كاش:' : 'Debts Collected (Cash):', '$totalDebtsCollected ${isAr ? 'ر.س' : 'SAR'}', color: Colors.teal),
+                        _buildRow(isAr ? 'إجمالي المصروفات (كاش):' : 'Total Expenses (Cash):', '-$totalCashExpenses ${isAr ? 'ر.س' : 'SAR'}', color: Colors.red),
+                        const Divider(height: 24),
                         _buildRow(isAr ? 'الكاش المتوقع في الدرج الآن:' : 'Expected Cash in Drawer:', '${expectedCash.toStringAsFixed(2)} ${isAr ? 'ر.س' : 'SAR'}', isBold: true, color: Colors.blue.shade800),
+                        const Divider(height: 24),
+                        _buildRow(isAr ? 'إجمالي الضريبة المحصلة (للمعلومة):' : 'Total Collected Tax (Info):', '${totalTax.toStringAsFixed(2)} ${isAr ? 'ر.س' : 'SAR'}', color: Colors.grey.shade700),
+                        _buildRow(isAr ? 'مبيعات مدى:' : 'Card Sales:', '${shift.cardTotal ?? 0.0} ${isAr ? 'ر.س' : 'SAR'}', color: Colors.blueGrey),
+                        _buildRow(isAr ? 'تحويل بنكي:' : 'Bank Transfer:', '${shift.transferTotal ?? 0.0} ${isAr ? 'ر.س' : 'SAR'}', color: Colors.blueGrey),
                       ],
                     ),
                   ),
