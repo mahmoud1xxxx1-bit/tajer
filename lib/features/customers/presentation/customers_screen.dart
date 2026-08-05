@@ -653,6 +653,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
   }
 
   Future<void> _exportToExcel(List<Customer> customers) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       if (customers.isEmpty) {
         if (mounted) {
