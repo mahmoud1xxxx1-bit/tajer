@@ -57,7 +57,7 @@ class PinConfirmationDialog extends StatefulWidget {
             Text(isAr 
                 ? 'أنت على وشك تنفيذ عملية حساسة. لضمان حماية النظام من عبث الموظفين، يرجى إعداد رمز حماية الحذف (PIN) أولاً والذي سيتم طلبه في أي عملية مسح مستقبلاً.'
                 : 'You are about to perform a sensitive operation. To secure the system, please setup a deletion PIN first which will be required for any future deletions.',
-                style: TextStyle(fontFamily: 'Tajawal', color: Colors.orange.shade800, height: 1.5, fontSize: 13)),
+                style: TextStyle(fontFamily: 'Tajawal', color: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent : Colors.orange.shade800, height: 1.5, fontSize: 13)),
             const SizedBox(height: 16),
             TextField(
               controller: pinController,

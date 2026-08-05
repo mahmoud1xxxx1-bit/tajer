@@ -197,7 +197,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
             children: [
               const Icon(Icons.point_of_sale, color: Colors.orange),
               const SizedBox(width: 8),
-              Expanded(child: Text(isAr ? "درج الكاشير مغلق!" : "Drawer Closed!", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange.shade800))),
+              Expanded(child: Text(isAr ? "درج الكاشير مغلق!" : "Drawer Closed!", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent : Colors.orange.shade800))),
             ],
           ),
           content: Column(

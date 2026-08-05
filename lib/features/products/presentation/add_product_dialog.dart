@@ -283,25 +283,25 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             SizedBox(height: 24),
             Card(
               elevation: 0,
-              color: Colors.orange.withOpacity(0.05),
+              color: Theme.of(context).brightness == Brightness.dark ? Colors.orange.withOpacity(0.1) : Colors.orange.withOpacity(0.05),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: Colors.orange.shade200),
+                side: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent.withOpacity(0.5) : Colors.orange.shade200),
               ),
               child: ExpansionTile(
                 title: Text(
                   isAr ? 'إعدادات متقدمة للضريبة (اختياري)' : 'Advanced Tax Settings (Optional)',
-                  style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange.shade800),
+                  style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent : Colors.orange.shade800),
                 ),
-                iconColor: Colors.orange.shade800,
-                collapsedIconColor: Colors.orange.shade800,
+                iconColor: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent : Colors.orange.shade800,
+                collapsedIconColor: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent : Colors.orange.shade800,
                 childrenPadding: const EdgeInsets.all(16.0),
                 children: [
                   Text(
                     isAr 
                       ? 'تحديد الإعدادات هنا سيلغي إعدادات المتجر العامة لهذا المنتج، وسيؤثر مباشرة على الحساب النهائي.' 
                       : 'Setting these will override the global store tax settings for this product.',
-                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.orange.shade900),
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Theme.of(context).brightness == Brightness.dark ? Colors.orange.shade300 : Colors.orange.shade900),
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
@@ -314,7 +314,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.orange.shade300),
+                        borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent.withOpacity(0.5) : Colors.orange.shade300),
                       ),
                       filled: true,
                       fillColor: Theme.of(context).colorScheme.surface,

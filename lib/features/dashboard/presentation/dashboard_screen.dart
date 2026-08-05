@@ -479,8 +479,10 @@ class DashboardHome extends ConsumerWidget {
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
                 ),
                 SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                Wrap(
+                  alignment: WrapAlignment.spaceEvenly,
+                  spacing: 8,
+                  runSpacing: 16,
                   children: [
                     if (canCreateOrders)
                       _QuickAction(
@@ -529,8 +531,10 @@ class DashboardHome extends ConsumerWidget {
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
                 ),
                 SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                Wrap(
+                  alignment: WrapAlignment.spaceEvenly,
+                  spacing: 8,
+                  runSpacing: 16,
                   children: [
                     _QuickAction(
                       icon: Icons.money_off,
@@ -568,8 +572,10 @@ class DashboardHome extends ConsumerWidget {
                 ),
                 if (appUser?.role != 'employee') ...[
                   SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  Wrap(
+                    alignment: WrapAlignment.spaceEvenly,
+                    spacing: 8,
+                    runSpacing: 16,
                     children: [
                       _QuickAction(
                         icon: Icons.archive,
@@ -579,10 +585,7 @@ class DashboardHome extends ConsumerWidget {
                           context.push('/shifts_archive');
                         },
                       ),
-                      // Add invisible placeholders to keep alignment if needed, or just let it center.
-                      const Spacer(),
-                      const Spacer(),
-                      const Spacer(),
+
                     ],
                   ),
                 ],

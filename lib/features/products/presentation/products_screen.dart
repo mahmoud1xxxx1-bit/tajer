@@ -367,7 +367,7 @@ floatingActionButton: canManageProducts ? FloatingActionButton.extended(
                 title: Row(
                   children: [
                     const Text("✋ "),
-                    Text(isAr ? "خطوة للوراء!" : "Hold on!", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange.shade800)),
+                    Text(isAr ? "خطوة للوراء!" : "Hold on!", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent : Colors.orange.shade800)),
                   ],
                 ),
                 content: Text(
