@@ -73,18 +73,40 @@ class LimitsService {
     // Products and Raw Materials support Soft Delete (isArchived).
     // We cannot use `.where('isArchived', isEqualTo: false)` because old products without the field would be ignored and NOT counted.
     // So we fetch the documents and filter locally.
-    if (collectionName == 'products' || collectionName == 'raw_materials') {
-      final snapshot = await query.get();
-      int activeCount = 0;
-      for (var doc in snapshot.docs) {
-        final data = doc.data() as Map<String, dynamic>;
-        final isArchived = data['isArchived'] == true;
-        if (!isArchived) activeCount++;
+    try {
+      if (collectionName == 'products' || collectionName == 'raw_materials') {
+        final snapshot = await query.get();
+        int activeCount = 0;
+        for (var doc in snapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          final isArchived = data['isArchived'] == true;
+          if (!isArchived) activeCount++;
+        }
+        return activeCount < maxLimit;
+      } else {
+        final snapshot = await query.count().get();
+        return (snapshot.count ?? 0) < maxLimit;
       }
-      return activeCount < maxLimit;
-    } else {
-      final snapshot = await query.count().get();
-      return (snapshot.count ?? 0) < maxLimit;
+    } catch (e) {
+      if (e.toString().contains('UNAVAILABLE') || e.toString().contains('offline') || e.toString().contains('failed-precondition')) {
+        try {
+          final snapshot = await query.get(const GetOptions(source: Source.cache));
+          if (collectionName == 'products' || collectionName == 'raw_materials') {
+            int activeCount = 0;
+            for (var doc in snapshot.docs) {
+              final data = doc.data() as Map<String, dynamic>;
+              final isArchived = data['isArchived'] == true;
+              if (!isArchived) activeCount++;
+            }
+            return activeCount < maxLimit;
+          } else {
+            return snapshot.docs.length < maxLimit;
+          }
+        } catch (cacheError) {
+          return true; // Safe fallback to avoid blocking offline usage
+        }
+      }
+      rethrow;
     }
   }
 }
