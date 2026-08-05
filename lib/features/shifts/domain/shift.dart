@@ -11,6 +11,8 @@ class Shift {
   final double startCash; // العهدة الافتتاحية
   final double? expectedCash; // الكاش المتوقع عند الإغلاق
   final double? actualCash; // الكاش الفعلي المدخل من قبل الموظف
+  final double? actualCard; // مبيعات مدى الفعلية
+  final double? actualTransfer; // مبيعات التحويل الفعلية
   final double? cardTotal; // إجمالي مبيعات مدى وغيرها
   final double? transferTotal; // إجمالي مبيعات التحويل
   final double? cashSales; // المبيعات النقدية فقط خلال الوردية
@@ -28,6 +30,8 @@ class Shift {
     required this.startCash,
     this.expectedCash,
     this.actualCash,
+    this.actualCard,
+    this.actualTransfer,
     this.cardTotal,
     this.transferTotal,
     this.cashSales,
@@ -47,6 +51,8 @@ class Shift {
       'startCash': startCash,
       'expectedCash': expectedCash,
       'actualCash': actualCash,
+      'actualCard': actualCard,
+      'actualTransfer': actualTransfer,
       'cardTotal': cardTotal,
       'transferTotal': transferTotal,
       'cashSales': cashSales,
@@ -67,6 +73,8 @@ class Shift {
       startCash: (json['startCash'] ?? 0.0).toDouble(),
       expectedCash: json['expectedCash']?.toDouble(),
       actualCash: json['actualCash']?.toDouble(),
+      actualCard: json['actualCard']?.toDouble(),
+      actualTransfer: json['actualTransfer']?.toDouble(),
       cardTotal: json['cardTotal']?.toDouble(),
       transferTotal: json['transferTotal']?.toDouble(),
       cashSales: json['cashSales']?.toDouble(),

@@ -8,7 +8,7 @@ import '../../authentication/domain/app_user.dart';
 import '../../../core/services/printer_service.dart';
 import '../../../core/providers/store_profile_provider.dart';
 import '../../expenses/data/expense_repository.dart';
-import '../../../../../../../../core/theme/glass_card.dart';
+import '../../../core/theme/glass_card.dart';
 import '../../../core/services/activity_logger.dart';
 
 class EndShiftScreen extends ConsumerStatefulWidget {
@@ -20,16 +20,22 @@ class EndShiftScreen extends ConsumerStatefulWidget {
 
 class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
   final _actualCashController = TextEditingController();
+  final _actualCardController = TextEditingController();
+  final _actualTransferController = TextEditingController();
   bool _isLoading = false;
 
   @override
   void dispose() {
     _actualCashController.dispose();
+    _actualCardController.dispose();
+    _actualTransferController.dispose();
     super.dispose();
   }
 
   Future<void> _closeShift(Shift shift) async {
     final actualCash = double.tryParse(_actualCashController.text);
+    final actualCard = double.tryParse(_actualCardController.text) ?? 0.0;
+    final actualTransfer = double.tryParse(_actualTransferController.text) ?? 0.0;
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     if (actualCash == null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isAr ? 'الرجاء إدخال مبلغ صحيح' : 'Please enter a valid amount', style: const TextStyle(fontFamily: 'Tajawal'))));
@@ -41,6 +47,8 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
       final updatedShift = shift.copyWith(
         endTime: DateTime.now(),
         actualCash: actualCash,
+        actualCard: actualCard,
+        actualTransfer: actualTransfer,
         status: 'closed',
       );
       
@@ -143,7 +151,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                Text(isAr ? 'قم بعدّ الكاش الموجود في الدرج الآن وأدخله أدناه:' : 'Count the cash in the drawer now and enter it below:', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16)),
+                Text(isAr ? 'قم بإدخال المبالغ الفعلية (الجرد):' : 'Enter the actual counted amounts:', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16)),
                 const SizedBox(height: 16),
                 TextField(
                   controller: _actualCashController,
@@ -154,6 +162,30 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                     border: const OutlineInputBorder(),
                     suffixText: isAr ? 'ر.س' : 'SAR',
                     prefixIcon: const Icon(Icons.money),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _actualCardController,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  decoration: InputDecoration(
+                    labelText: isAr ? 'مبيعات مدى/الشبكة الفعلية (حسب إيصال الجهاز)' : 'Actual Card Sales (from Terminal)',
+                    border: const OutlineInputBorder(),
+                    suffixText: isAr ? 'ر.س' : 'SAR',
+                    prefixIcon: const Icon(Icons.credit_card),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _actualTransferController,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  decoration: InputDecoration(
+                    labelText: isAr ? 'التحويلات البنكية الفعلية' : 'Actual Bank Transfers',
+                    border: const OutlineInputBorder(),
+                    suffixText: isAr ? 'ر.س' : 'SAR',
+                    prefixIcon: const Icon(Icons.account_balance),
                   ),
                 ),
                 const Spacer(),

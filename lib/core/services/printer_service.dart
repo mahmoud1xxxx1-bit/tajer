@@ -481,8 +481,19 @@ class PrinterService {
                   pw.Text('${(shift.actualCash ?? 0.0).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 14)),
                 ]),
                 pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
-                  pw.Text('الفرق:', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
+                  pw.Text('الفرق في الكاش:', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
                   pw.Text(diffText, style: pw.TextStyle(font: ttfBold, fontSize: 12)),
+                ]),
+                pw.SizedBox(height: 5),
+                pw.Divider(thickness: 1, borderStyle: pw.BorderStyle.dashed),
+                pw.SizedBox(height: 5),
+                pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
+                  pw.Text('مبيعات شبكة/مدى الفعلية:', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
+                  pw.Text('${(shift.actualCard ?? 0.0).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
+                ]),
+                pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
+                  pw.Text('مبيعات التحويل الفعلية:', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
+                  pw.Text('${(shift.actualTransfer ?? 0.0).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
                 ]),
                 
                 pw.SizedBox(height: 20),
