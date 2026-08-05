@@ -266,6 +266,22 @@ class OrderRepository {
           });
         }
       }
+
+      // Refund the paid amount from the current shift to prevent shortages
+      if (order.paidAmount > 0) {
+        final prefs = await SharedPreferences.getInstance();
+        final shiftId = prefs.getString('current_shift_id');
+        if (shiftId != null) {
+          final shiftRef = _firestore.collection('shifts').doc(shiftId);
+          if (order.paymentMethod == 'cash') {
+            batch.update(shiftRef, {'cashSales': FieldValue.increment(-order.paidAmount)});
+          } else if (order.paymentMethod == 'card') {
+            batch.update(shiftRef, {'cardTotal': FieldValue.increment(-order.paidAmount)});
+          } else if (order.paymentMethod == 'transfer') {
+            batch.update(shiftRef, {'transferTotal': FieldValue.increment(-order.paidAmount)});
+          }
+        }
+      }
     }
 
     batch.delete(orderRef);
@@ -328,6 +344,22 @@ class OrderRepository {
             'totalDebt': FieldValue.increment(-actualDecrease),
             'updatedAt': FieldValue.serverTimestamp(),
           });
+        }
+      }
+
+      // Refund the paid amount from the current shift to prevent shortages
+      if (order.paidAmount > 0) {
+        final prefs = await SharedPreferences.getInstance();
+        final shiftId = prefs.getString('current_shift_id');
+        if (shiftId != null) {
+          final shiftRef = _firestore.collection('shifts').doc(shiftId);
+          if (order.paymentMethod == 'cash') {
+            batch.update(shiftRef, {'cashSales': FieldValue.increment(-order.paidAmount)});
+          } else if (order.paymentMethod == 'card') {
+            batch.update(shiftRef, {'cardTotal': FieldValue.increment(-order.paidAmount)});
+          } else if (order.paymentMethod == 'transfer') {
+            batch.update(shiftRef, {'transferTotal': FieldValue.increment(-order.paidAmount)});
+          }
         }
       }
     } else if (order.status == 'cancelled' && newStatus != 'cancelled') {
