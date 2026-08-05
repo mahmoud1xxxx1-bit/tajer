@@ -33,7 +33,7 @@ class SettingsScreen extends ConsumerWidget {
           // Section 1: Account & Employees
           _buildSettingsGroup(
             context: context,
-            title: isAr ? '?????? ?????????' : 'Account & Employees',
+            title: l10n.settingsAccountEmployees,
             children: [
               if (isAnonymous)
                 _buildSettingsTile(
@@ -48,8 +48,8 @@ class SettingsScreen extends ConsumerWidget {
                   context: context,
                   icon: Icons.person_rounded,
                   iconColor: Colors.blueAccent,
-                  title: isAr ? '?????? ???? ?????' : 'Personal Merchant Account',
-                  subtitle: appUser?.name ?? (isAr ? '??? ?????' : 'Unknown'),
+                  title: l10n.settingsPersonalMerchantAccount,
+                  subtitle: appUser?.name ?? (l10n.settingsUnknown),
                   onTap: () => context.push('/profile'),
                 ),
                 if (appUser?.role == 'merchant' || appUser?.role == 'admin') ...[
@@ -66,8 +66,8 @@ class SettingsScreen extends ConsumerWidget {
                     context: context,
                     icon: Icons.history_edu_rounded,
                     iconColor: Colors.teal,
-                    title: isAr ? '??? ?????? ?????? (????????)' : 'Centralized Audit Log',
-                    subtitle: isAr ? '?????? ???? ?????? ???????? ????????' : 'Monitor all employee & store actions',
+                    title: l10n.settingsCentralizedAuditLog,
+                    subtitle: l10n.settingsMonitorActions,
                     onTap: () => context.push('/audit_log'),
                   ),
                 ],
@@ -78,7 +78,7 @@ class SettingsScreen extends ConsumerWidget {
           // Section 2: Store Settings
           _buildSettingsGroup(
             context: context,
-            title: isAr ? '??????? ??????' : 'Store Settings',
+            title: l10n.settingsStoreSettings,
             children: [
               if (appUser?.role == 'merchant' || appUser?.role == 'admin') ...[
                 _buildSettingsTile(
@@ -94,7 +94,7 @@ class SettingsScreen extends ConsumerWidget {
                 context: context,
                 icon: Icons.security_rounded,
                 iconColor: Colors.blueGrey,
-                title: isAr ? '????? ????????? ???????' : 'Backup & Security',
+                title: l10n.settingsBackupSecurity,
                 onTap: () => context.push('/backup_security'),
               ),
               const _CustomDivider(),
@@ -106,7 +106,7 @@ class SettingsScreen extends ConsumerWidget {
                 context: context,
                 icon: Icons.print_rounded,
                 iconColor: Colors.indigoAccent,
-                title: isAr ? '??????? ??????? ????????' : 'Thermal Printer Settings',
+                title: l10n.settingsThermalPrinter,
                 onTap: () => context.push('/printer_settings'),
               ),
               const _CustomDivider(),
@@ -114,7 +114,7 @@ class SettingsScreen extends ConsumerWidget {
                 context: context,
                 icon: Icons.storefront_rounded,
                 iconColor: Colors.deepOrangeAccent,
-                title: isAr ? '???? ?????? (?????? ?????????)' : 'Store Branding (Logo & Receipt)',
+                title: l10n.settingsStoreBranding,
                 onTap: () => context.push('/store_branding'),
               ),
             ],
@@ -123,7 +123,7 @@ class SettingsScreen extends ConsumerWidget {
           // Section 3: System Preferences
           _buildSettingsGroup(
             context: context,
-            title: isAr ? '????????? ???????' : 'System Preferences',
+            title: l10n.settingsSystemPreferences,
             children: [
               _LanguageSelector(),
               const _CustomDivider(),
@@ -136,14 +136,14 @@ class SettingsScreen extends ConsumerWidget {
           // Section 4: Support & Rating
           _buildSettingsGroup(
             context: context,
-            title: isAr ? '??? ??????' : 'Support & Rating',
+            title: l10n.settingsSupportRating,
             children: [
               _buildSettingsTile(
                 context: context,
                 icon: Icons.menu_book_rounded,
                 iconColor: Colors.green,
                 title: isAr ? '???? ??????? ??????? (???? ?????)' : 'App User Guide',
-                subtitle: isAr ? '????? ????? ?????? ????????? ?????????' : 'How to setup your store and products',
+                subtitle: l10n.settingsHowToSetup,
                 onTap: () => context.push('/user_guide'),
               ),
               const _CustomDivider(),
@@ -151,8 +151,8 @@ class SettingsScreen extends ConsumerWidget {
                 context: context,
                 icon: Icons.music_note_rounded,
                 iconColor: Colors.black87,
-                title: isAr ? '?????? ??? ??? ???' : 'Follow us on TikTok',
-                subtitle: isAr ? '????????? ??????? ???? ???????' : 'Suggestions and updates',
+                title: l10n.settingsFollowTikTok,
+                subtitle: l10n.settingsSuggestionsUpdates,
                 trailingIcon: Icons.open_in_new_rounded,
                 onTap: () async {
                   final url = Uri.parse('https://www.tiktok.com/@tajer_ap?_r=1&_t=ZS-98YixiC56sH');
@@ -161,7 +161,7 @@ class SettingsScreen extends ConsumerWidget {
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(isAr ? '???? ??? ??????' : 'Could not open link', style: const TextStyle(fontFamily: 'Tajawal'))),
+                        SnackBar(content: Text(l10n.settingsCouldNotOpenLink, style: const TextStyle(fontFamily: 'Tajawal'))),
                       );
                     }
                   }
@@ -172,8 +172,8 @@ class SettingsScreen extends ConsumerWidget {
                 context: context,
                 icon: Icons.email_rounded,
                 iconColor: Colors.blueAccent,
-                title: isAr ? '????? ????? ??? ?????? ??????????' : 'Email Support',
-                subtitle: isAr ? '??? ??????? ???????????? ????????' : 'For technical issues and inquiries',
+                title: l10n.settingsEmailSupport,
+                subtitle: l10n.settingsTechnicalIssues,
                 trailingIcon: Icons.open_in_new_rounded,
                 onTap: () async {
                   final url = Uri.parse('mailto:dotkxxx1@gmail.com?subject=????? ???? - ??? ???');
@@ -182,7 +182,7 @@ class SettingsScreen extends ConsumerWidget {
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(isAr ? '???? ??? ????? ?????? ??????????' : 'Could not open email app', style: const TextStyle(fontFamily: 'Tajawal'))),
+                        SnackBar(content: Text(l10n.settingsCouldNotOpenEmail, style: const TextStyle(fontFamily: 'Tajawal'))),
                       );
                     }
                   }
@@ -193,7 +193,7 @@ class SettingsScreen extends ConsumerWidget {
                 context: context,
                 icon: Icons.star_rounded,
                 iconColor: Colors.amber.shade500,
-                title: isAr ? '????? ??????? ??? ???? ????' : 'Rate on Google Play Store',
+                title: l10n.settingsRatePlayStore,
                 onTap: () => AppReviewService.instance.showReviewDialog(context, fromSettings: true),
               ),
               const _CustomDivider(),
@@ -201,7 +201,7 @@ class SettingsScreen extends ConsumerWidget {
                 context: context,
                 icon: Icons.privacy_tip_rounded,
                 iconColor: Colors.blue,
-                title: isAr ? '????? ????????' : 'Privacy Policy',
+                title: l10n.settingsPrivacyPolicy,
                 trailingIcon: Icons.open_in_new_rounded,
                 onTap: () async {
                   final url = Uri.parse('https://alldown.uk/privacy.html');
@@ -210,7 +210,7 @@ class SettingsScreen extends ConsumerWidget {
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(isAr ? '???? ??? ???????. ???? ?? ???? ????? ?? ?????.' : 'Could not open browser.', style: const TextStyle(fontFamily: 'Tajawal'))),
+                        SnackBar(content: Text(l10n.settingsCouldNotOpenBrowser, style: const TextStyle(fontFamily: 'Tajawal'))),
                       );
                     }
                   }
@@ -569,7 +569,7 @@ class _PinSettingsTileState extends State<_PinSettingsTile> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(isAr ? '?????' : 'Cancel', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+            child: Text(l10n.cancelBtn, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
@@ -581,7 +581,7 @@ class _PinSettingsTileState extends State<_PinSettingsTile> {
                 _loadPin();
               }
             },
-            child: Text(isAr ? '???' : 'Save', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+            child: Text(l10n.text44, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
           ),
         ],
       ),

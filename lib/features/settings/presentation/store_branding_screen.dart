@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../../core/providers/store_profile_provider.dart';
 import '../../../core/theme/glass_card.dart';
 
@@ -37,6 +38,7 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
   }
 
   Future<void> _pickImage() async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.image,
@@ -54,12 +56,13 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
       }
     } catch (e) {
       if(mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('??? ?? ?????? ??????', style: TextStyle(fontFamily: 'Tajawal'))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.brandingErrorPickingImage, style: const TextStyle(fontFamily: 'Tajawal'))));
       }
     }
   }
 
   void _save() {
+    final l10n = AppLocalizations.of(context)!;
     final profile = StoreProfile(
       storeName: _nameController.text.trim(),
       phone: _phoneController.text.trim(),
@@ -71,7 +74,7 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
       logoBase64: _logoBase64,
     );
     ref.read(storeProfileProvider.notifier).updateProfile(profile);
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('?? ????? ?????', style: TextStyle(fontFamily: 'Tajawal'))));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.brandingSavedSuccess, style: const TextStyle(fontFamily: 'Tajawal'))));
     Navigator.pop(context);
   }
 
@@ -112,10 +115,11 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(storeProfileProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('???? ??????', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        title: Text(l10n.settingsStoreBranding, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         elevation: 0,
         centerTitle: true,
         actions: [
@@ -124,7 +128,7 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
             child: ElevatedButton.icon(
               onPressed: _save,
               icon: const Icon(Icons.check_rounded, size: 18),
-              label: const Text('???', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              label: Text(l10n.brandingSave, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -194,7 +198,7 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
                                     children: [
                                       Icon(Icons.add_a_photo_rounded, size: 36, color: Theme.of(context).colorScheme.primary.withOpacity(0.6)),
                                       const SizedBox(height: 8),
-                                      Text('???? ??????', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Theme.of(context).colorScheme.primary.withOpacity(0.8))),
+                                      Text(l10n.brandingSelectLogo, style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Theme.of(context).colorScheme.primary.withOpacity(0.8))),
                                     ],
                                   ),
                           ),
@@ -206,25 +210,25 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
                           child: TextButton.icon(
                             onPressed: () => setState(() => _logoBase64 = ''),
                             icon: const Icon(Icons.delete_outline_rounded, size: 18),
-                            label: const Text('????? ??????', style: TextStyle(fontFamily: 'Tajawal')),
+                            label: Text(l10n.brandingRemoveLogo, style: const TextStyle(fontFamily: 'Tajawal')),
                             style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
                           ),
                         ),
                       const SizedBox(height: 24),
                       _buildTextField(
                         controller: _nameController,
-                        label: '??? ??????',
+                        label: l10n.brandingStoreName,
                         icon: Icons.store_rounded,
                       ),
                       _buildTextField(
                         controller: _phoneController,
-                        label: '??? ???? ??????',
+                        label: l10n.brandingStorePhone,
                         icon: Icons.phone_rounded,
                         keyboardType: TextInputType.phone,
                       ),
                       _buildTextField(
                         controller: _addressController,
-                        label: '???????',
+                        label: l10n.brandingStoreAddress,
                         icon: Icons.location_on_rounded,
                         maxLines: 2,
                       ),
@@ -237,7 +241,7 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
               Padding(
                 padding: const EdgeInsets.only(right: 12, left: 12, bottom: 12),
                 child: Text(
-                  '??????? ??????? ?????????',
+                  l10n.brandingTaxSettings,
                   style: TextStyle(
                     fontFamily: 'Tajawal',
                     fontWeight: FontWeight.bold,
@@ -255,10 +259,10 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
                     children: [
                       _buildTextField(
                         controller: _taxController,
-                        label: '???? ??????? ?????????? (%)',
+                        label: l10n.brandingDefaultTax,
                         icon: Icons.percent_rounded,
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                        helperText: '??? ??? ?????? ???? ???? ???? ??????? ???????? ??? ?? ???????? ????????. ???? ????? ?????? ??? ??? ???? ????? ?????? ?????? ?? ?? ???.',
+                        helperText: l10n.brandingDefaultTaxHelper,
                       ),
                       Container(
                         decoration: BoxDecoration(
@@ -267,8 +271,8 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
                           border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1)),
                         ),
                         child: SwitchListTile(
-                          title: const Text('??????? ????? ??????? (?????????)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
-                          subtitle: const Text('????? ??? ?????? ???? ?? ??????? ?? ??? ????? ??? ??? ??????? ?????? ??? ??????.', style: TextStyle(fontFamily: 'Tajawal', fontSize: 11)),
+                          title: Text(l10n.brandingTaxInclusive, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
+                          subtitle: Text(l10n.brandingTaxInclusiveHelper, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 11)),
                           value: _defaultIsTaxInclusive,
                           onChanged: (val) => setState(() => _defaultIsTaxInclusive = val),
                           activeColor: Theme.of(context).colorScheme.primary,
@@ -296,33 +300,33 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
                       children: [
                         Icon(Icons.verified_rounded, color: Colors.blue.shade700, size: 28),
                         const SizedBox(width: 12),
-                        const Expanded(
+                        Expanded(
                           child: Text(
-                            '????? ???????? ???????? ??????? (ZATCA)',
-                            style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.blueAccent, fontSize: 14),
+                            l10n.brandingZatcaTitle,
+                            style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.blueAccent, fontSize: 14),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      '??????? "????? ???????"? ???? ????? ???????? ???????? ??? "?????? ??????" ????? ??????? ????? ?? ??????? ???? ?????? ???????? ???????? (ZATCA) ?????? ???? QR Code ??????.',
+                      l10n.brandingZatcaDesc,
                       style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, height: 1.6, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                     ),
                     const SizedBox(height: 20),
                     _buildTextField(
                       controller: _vatNumberController,
-                      label: '????? ??????? (VAT Number)',
+                      label: l10n.brandingVatNumber,
                       icon: Icons.confirmation_number_rounded,
                       keyboardType: TextInputType.text,
-                      helperText: '?????? ?? ????????: 15 ?????. ?? ????? ??????: ???? ????? ??????? ?????.',
+                      helperText: l10n.brandingVatHelper,
                     ),
                     _buildTextField(
                       controller: _crNumberController,
-                      label: '??? ????? ??????? (CR Number)',
+                      label: l10n.brandingCrNumber,
                       icon: Icons.assignment_rounded,
                       keyboardType: TextInputType.number,
-                      helperText: '??????? ??????? ?? ?????? ????????.',
+                      helperText: l10n.brandingCrHelper,
                     ),
                   ],
                 ),
@@ -332,7 +336,7 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('???: ', style: const TextStyle(fontFamily: 'Tajawal'))),
+        error: (e, st) => Center(child: Text('${l10n.error}: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
       ),
     );
   }

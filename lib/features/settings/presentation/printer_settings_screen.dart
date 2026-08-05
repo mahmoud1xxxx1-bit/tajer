@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import '../../../core/services/printer_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/glass_card.dart';
@@ -15,7 +16,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
   List<BluetoothInfo> _devices = [];
   BluetoothInfo? _device;
   bool _connected = false;
-  String _message = '?? ??? ??????? ??? ?????';
+  String? _message;
   String _paperSize = '58mm';
   bool _isLoading = true;
 
@@ -32,7 +33,9 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
     try {
       devices = await PrintBluetoothThermal.pairedBluetooths;
     } catch (e) {
-      _message = "??? ?? ????? ?? ???????: ";
+      if (mounted) {
+        _message = AppLocalizations.of(context)!.printerErrorConnecting;
+      }
     }
 
     if (!mounted) return;
@@ -68,35 +71,38 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
   }
 
   Future<void> _connect() async {
+    final l10n = AppLocalizations.of(context)!;
     if (_device != null) {
-      setState(() => _message = "???? ???????...");
+      setState(() => _message = l10n.printerConnecting);
       bool connected = await PrinterService.connect(_device!.macAdress);
       if (connected) {
         setState(() {
           _connected = true;
-          _message = "?? ??????? ???? ??????? ????????? ?????";
+          _message = l10n.printerConnectedSuccess;
         });
       } else {
-        setState(() => _message = "??? ??????? ????????");
+        setState(() => _message = l10n.printerConnectionFailed);
       }
     } else {
-      setState(() => _message = "???? ????? ????? ?????");
+      setState(() => _message = l10n.printerSelectFirst);
     }
   }
 
   Future<void> _disconnect() async {
     await PrinterService.disconnect();
+    final l10n = AppLocalizations.of(context)!;
     setState(() {
       _connected = false;
-      _message = "?? ??? ??????? ????????";
+      _message = l10n.printerDisconnected;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('??????? ??????? ????????', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        title: Text(l10n.settingsThermalPrinter, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         elevation: 0,
         centerTitle: true,
       ),
@@ -109,7 +115,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
               Padding(
                 padding: const EdgeInsets.only(right: 12, left: 12, bottom: 12),
                 child: Text(
-                  '??????? ??????? ??????',
+                  l10n.printerConnectionSettings,
                   style: TextStyle(
                     fontFamily: 'Tajawal',
                     fontWeight: FontWeight.bold,
@@ -137,8 +143,8 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                             child: const Icon(Icons.bluetooth_connected_rounded, color: Colors.blueAccent, size: 24),
                           ),
                           const SizedBox(width: 12),
-                          const Expanded(
-                            child: Text('??????? ???????? (??????)', style: TextStyle(fontSize: 14, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                          Expanded(
+                            child: Text(l10n.printerSelectDevice, style: const TextStyle(fontSize: 14, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
@@ -159,7 +165,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                             )).toList(),
                             onChanged: (value) => setState(() => _device = value),
                             value: _device,
-                            hint: const Text('???? ???????...', style: TextStyle(fontFamily: 'Tajawal')),
+                            hint: Text(l10n.printerSelectHint, style: const TextStyle(fontFamily: 'Tajawal')),
                           ),
                         ),
                       ),
@@ -176,8 +182,8 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                             child: const Icon(Icons.receipt_long_rounded, color: Colors.orangeAccent, size: 24),
                           ),
                           const SizedBox(width: 12),
-                          const Expanded(
-                            child: Text('???? ????? (Paper Size)', style: TextStyle(fontSize: 14, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                          Expanded(
+                            child: Text(l10n.printerPaperSize, style: const TextStyle(fontSize: 14, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                           ),
                         ],
                       ),
@@ -192,9 +198,9 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             isExpanded: true,
-                            items: const [
-                              DropdownMenuItem(value: '58mm', child: Text('58 ???????? (????)', style: TextStyle(fontFamily: 'Tajawal'))),
-                              DropdownMenuItem(value: '80mm', child: Text('80 ???????? (????)', style: TextStyle(fontFamily: 'Tajawal'))),
+                            items: [
+                              DropdownMenuItem(value: '58mm', child: Text(l10n.printerSize58, style: const TextStyle(fontFamily: 'Tajawal'))),
+                              DropdownMenuItem(value: '80mm', child: Text(l10n.printerSize80, style: const TextStyle(fontFamily: 'Tajawal'))),
                             ],
                             onChanged: _updatePaperSize,
                             value: _paperSize,
@@ -212,7 +218,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                                 padding: const EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
-                              child: const Text('????? ???????', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                              child: Text(l10n.printerRefresh, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -224,7 +230,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                                 padding: const EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                               ),
-                              child: Text(_connected ? '??? ???????' : '????? ????', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.white)),
+                              child: Text(_connected ? l10n.printerDisconnect : l10n.printerConnect, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.white)),
                             ),
                           ),
                         ],
@@ -247,7 +253,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        _message,
+                        _message ?? l10n.printerNotConnected,
                         style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: _connected ? Colors.green.shade800 : Colors.amber.shade800, fontWeight: FontWeight.bold),
                       ),
                     ),

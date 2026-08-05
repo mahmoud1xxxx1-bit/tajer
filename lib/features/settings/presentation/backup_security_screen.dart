@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:tajer/features/authentication/data/auth_repository.dart';
 import 'package:tajer/core/services/backup_service.dart';
 import '../../authentication/domain/app_user.dart';
@@ -18,19 +19,20 @@ class _BackupSecurityScreenState extends ConsumerState<BackupSecurityScreen> {
   Future<void> _handleLocalExport() async {
     final user = ref.read(appUserProvider).value;
     if (user == null) return;
+    final l10n = AppLocalizations.of(context)!;
 
     setState(() => _isLoading = true);
     try {
       await ref.read(backupServiceProvider).exportToLocalDevice(user.id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('?? ????? ?????? ?????????? ?????', style: TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(content: Text(l10n.backupExportSuccess, style: const TextStyle(fontFamily: 'Tajawal'))),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('??? ????? ???????: ', style: const TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(content: Text('${l10n.backupExportError}: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
         );
       }
     }
@@ -40,6 +42,7 @@ class _BackupSecurityScreenState extends ConsumerState<BackupSecurityScreen> {
   Future<void> _handleLocalImport() async {
     final user = ref.read(appUserProvider).value;
     if (user == null) return;
+    final l10n = AppLocalizations.of(context)!;
 
     setState(() => _isLoading = true);
     try {
@@ -47,14 +50,14 @@ class _BackupSecurityScreenState extends ConsumerState<BackupSecurityScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(success ? '?? ??????? ?????? ?????!' : '?? ???????', style: const TextStyle(fontFamily: 'Tajawal')),
+            content: Text(success ? l10n.backupImportSuccess : l10n.backupImportError, style: const TextStyle(fontFamily: 'Tajawal')),
           ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('??? ????? ?????????: ', style: const TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(content: Text('${l10n.backupImportError}: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
         );
       }
     }
@@ -63,9 +66,10 @@ class _BackupSecurityScreenState extends ConsumerState<BackupSecurityScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('????? ????????? ???????', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        title: Text(l10n.settingsBackupSecurity, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         elevation: 0,
         centerTitle: true,
       ),
@@ -78,7 +82,7 @@ class _BackupSecurityScreenState extends ConsumerState<BackupSecurityScreen> {
                 Padding(
                   padding: const EdgeInsets.only(right: 12, left: 12, bottom: 12),
                   child: Text(
-                    '????? ????? ??????????',
+                    l10n.backupSecurityTitle,
                     style: TextStyle(
                       fontFamily: 'Tajawal',
                       fontWeight: FontWeight.bold,
@@ -97,14 +101,14 @@ class _BackupSecurityScreenState extends ConsumerState<BackupSecurityScreen> {
                       children: [
                         const Icon(Icons.cloud_sync_rounded, size: 64, color: Colors.blueAccent),
                         const SizedBox(height: 16),
-                        const Text(
-                          '????? ????????? ??????',
+                        Text(
+                          l10n.localBackupRestore,
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '?? ???? ???? ?? ??????? (??????? ??????? ?????) ??? ????? ?????? ????? ?? ?? ??? ?? ????? ????? ??? ??? ????? ?????.',
+                          l10n.localBackupDesc,
                           textAlign: TextAlign.center,
                           style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontFamily: 'Tajawal', fontSize: 13, height: 1.5),
                         ),
@@ -112,7 +116,7 @@ class _BackupSecurityScreenState extends ConsumerState<BackupSecurityScreen> {
                         ElevatedButton.icon(
                           onPressed: _handleLocalExport,
                           icon: const Icon(Icons.download_rounded),
-                          label: const Text('??? ???? ???????? ??? ??????', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                          label: Text(l10n.exportBackupToDevice, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -122,7 +126,7 @@ class _BackupSecurityScreenState extends ConsumerState<BackupSecurityScreen> {
                         OutlinedButton.icon(
                           onPressed: _handleLocalImport,
                           icon: const Icon(Icons.upload_file_rounded),
-                          label: const Text('??????? ???????? ?? ??? ????', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                          label: Text(l10n.importBackupFromDevice, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
