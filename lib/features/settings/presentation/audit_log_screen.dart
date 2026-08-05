@@ -9,7 +9,7 @@ import '../../orders/presentation/order_details_screen.dart';
 import '../../expenses/data/expense_repository.dart';
 import '../../expenses/domain/expense.dart';
 import '../../../core/providers/settings_provider.dart';
-import '../../../../../../../../core/theme/glass_card.dart';
+import '../../../core/theme/glass_card.dart';
 
 class AuditLogItem {
   final String id;

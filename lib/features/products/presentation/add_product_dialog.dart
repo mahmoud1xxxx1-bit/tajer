@@ -310,8 +310,6 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                     decoration: InputDecoration(
                       labelText: isAr ? 'نسبة الضريبة الخاصة بالمنتج (%)' : 'Product Tax Percentage (%)',
                       border: const OutlineInputBorder(),
-                      filled: true,
-                      fillColor: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 12),
