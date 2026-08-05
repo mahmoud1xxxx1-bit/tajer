@@ -78,7 +78,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                       prefixIcon: const Icon(Icons.scale),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    items: const [
+                    items: [
                       DropdownMenuItem(value: 'g', child: Text(l10n.gUnitDesc, style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
                       DropdownMenuItem(value: 'ml', child: Text(l10n.mlUnitDesc, style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
                       DropdownMenuItem(value: 'piece', child: Text(l10n.pieceUnitDesc, style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),

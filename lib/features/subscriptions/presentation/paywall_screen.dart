@@ -1,11 +1,11 @@
 import '../../../core/theme/glass_card.dart';
-import '../../../core/services/revenuecat_service.dart';
+import '../../../core/services/subscription_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:tajer/l10n/app_localizations.dart';
-import '../../core/services/revenue_cat_service.dart';
-import '../../core/theme/glass_card.dart';
+
+
 
 class PaywallScreen extends ConsumerStatefulWidget {
   const PaywallScreen({super.key});
@@ -45,7 +45,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _isLoading = true);
     try {
-      final isSuccess = await RevenueCatService.purchasePackage(package);
+      final isSuccess = await ref.read(subscriptionServiceProvider).purchasePackage(package);
       if (isSuccess && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
            SnackBar(content: Text(l10n.purchaseSuccess, style: const TextStyle(fontFamily: 'Tajawal'))),
@@ -68,7 +68,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _isLoading = true);
     try {
-      final isSuccess = await RevenueCatService.restorePurchases();
+      final isSuccess = await ref.read(subscriptionServiceProvider).restorePurchases();
       if (isSuccess && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
            SnackBar(content: Text(l10n.restoreSuccess, style: const TextStyle(fontFamily: 'Tajawal'))),

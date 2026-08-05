@@ -45,7 +45,7 @@ class AuditLogScreen extends ConsumerStatefulWidget {
 
 class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
 
-  Widget _buildLogItem(AuditLogItem item, ThemeData theme, String currency, bool isAr) {
+  Widget _buildLogItem(AuditLogItem item, ThemeData theme, dynamic currency, bool isAr) {
     return GlassCard(
       child: ListTile(
         leading: CircleAvatar(
@@ -71,8 +71,8 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text('\ ', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: item.badgeColor)),
-            Text('\:', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 10)),
+            Text('${item.amount.toStringAsFixed(2)} ${currency.name}', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: item.badgeColor)),
+            Text('${item.timestamp.hour}:${item.timestamp.minute.toString().padLeft(2, "0")}', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 10)),
           ],
         ),
         onTap: () {
