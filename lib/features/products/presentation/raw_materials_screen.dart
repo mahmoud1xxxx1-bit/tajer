@@ -32,7 +32,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
             children: [
               Icon(rawMaterial == null ? Icons.add_circle : Icons.edit, color: Colors.amber),
               const SizedBox(width: 10),
-              Text(rawMaterial == null ? 'إضافة مادة خام جديدة' : 'تعديل مادة خام', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              Text(rawMaterial == null ? l10n.addNewRawMaterial : 'تعديل مادة خام', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
             ],
           ),
           content: SingleChildScrollView(
@@ -43,7 +43,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '💡 ستستخدم هذه المادة لربطها بوجبات ومنتجات البيع ليتم الخصم التلقائي عند إصدار الفواتير.',
+                    l10n.rawMaterialsUsageHint,
                     style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.amber),
                   ),
                   const SizedBox(height: 16),
@@ -68,7 +68,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   ),
                   const SizedBox(height: 16),
-                  Text('وحدة القياس:', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                  Text(l10n.measuringUnit, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
                     value: selectedUnit,
@@ -77,9 +77,9 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     items: const [
-                      DropdownMenuItem(value: 'g', child: Text('جرام (g) - للوزن مثل اللحوم والقهوة', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
-                      DropdownMenuItem(value: 'ml', child: Text('مللي (ml) - للسوائل والصلصات', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
-                      DropdownMenuItem(value: 'piece', child: Text('قطعة / حبة (piece) - للأكواب والخبز والعبوات', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
+                      DropdownMenuItem(value: 'g', child: Text(l10n.gUnitDesc, style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
+                      DropdownMenuItem(value: 'ml', child: Text(l10n.mlUnitDesc, style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
+                      DropdownMenuItem(value: 'piece', child: Text(l10n.pieceUnitDesc, style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
                     ],
                     onChanged: (val) {
                       if (val != null) {
@@ -98,7 +98,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
             ),
             ElevatedButton.icon(
               icon: const Icon(Icons.save, size: 18),
-              label: Text('حفظ في المستودع', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              label: Text(l10n.saveInWarehouse, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.amber,
                 foregroundColor: Colors.black,
@@ -110,7 +110,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                 final qty = double.tryParse(quantityController.text) ?? 0;
 
                 if (name.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('يرجى إدخال اسم المادة الخام أولاً', style: TextStyle(fontFamily: 'Tajawal'))));
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text(l10n.pleaseEnterRawMaterialName, style: TextStyle(fontFamily: 'Tajawal'))));
                   return;
                 }
 
@@ -163,12 +163,12 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('المواد الخام (مستودع المكونات)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        title: Text(l10n.rawMaterialsWarehouse, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
       ),
       floatingActionButton: canManageInventory ? FloatingActionButton.extended(
         onPressed: () => _showAddEditDialog(),
         icon: const Icon(Icons.add),
-        label: Text('إضافة مادة خام', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        label: Text(l10n.addRawMaterial, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         backgroundColor: Colors.amber,
         foregroundColor: Colors.black,
       ) : null,
@@ -188,7 +188,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    '💡 دليل المواد الخام: هنا يمكنك إضافة مكونات مستودعك (مثل: لحم برجر، جبن، أكواب، بن قهوة). عند ربط هذه المكونات بوصفات المنتجات في شاشة المنتجات، سيقوم النظام بخصم كمياتها تلقائياً عند كل عملية بيع لحماية مشروعك من الهدر ومعرفة التكلفة الحقيقية لأرباحك.',
+                    l10n.rawMaterialsGuide,
                     style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.5, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                   ),
                 ),
@@ -207,7 +207,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                       children: [
                         Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey.shade600),
                         const SizedBox(height: 16),
-                        Text('لا توجد مواد خام في المستودع بعد.\nاضغط على زر "إضافة مادة خام" بالأسفل للبدء!', textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, color: Colors.grey)),
+                        Text(l10n.noRawMaterialsFound, textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, color: Colors.grey)),
                       ],
                     ),
                   );
@@ -217,7 +217,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                   itemCount: materials.length,
                   itemBuilder: (ctx, index) {
                     final item = materials[index];
-                    String unitLabel = item.unit == 'g' ? 'جرام (g)' : item.unit == 'ml' ? 'مللي (ml)' : 'قطعة / حبة';
+                    String unitLabel = item.unit == 'g' ? l10n.gLabel : item.unit == 'ml' ? l10n.mlLabel : l10n.pieceUnit;
                     bool isLowStock = item.initialQuantity > 0 && item.quantity <= (item.initialQuantity * 0.10);
                     return GlassCard(
                       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -228,9 +228,9 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('الرصيد المتوفر: ${item.quantity}  ($unitLabel)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: isLowStock ? FontWeight.bold : FontWeight.normal)),
+                            Text(l10n.availableBalance(item.quantity.toString(), unitLabel), style: TextStyle(fontFamily: 'Tajawal', fontWeight: isLowStock ? FontWeight.bold : FontWeight.normal)),
                             if (isLowStock)
-                              Text('تنبيه: المورد قارب على الانتهاء', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12, fontWeight: FontWeight.bold)),
+                              Text(l10n.resourceRunningOut, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12, fontWeight: FontWeight.bold)),
                           ],
                         ),
                         trailing: canManageInventory ? Row(

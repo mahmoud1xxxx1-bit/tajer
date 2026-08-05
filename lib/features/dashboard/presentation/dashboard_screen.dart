@@ -68,17 +68,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         final shouldPop = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('تأكيد الخروج', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.indigo.shade900)),
-            content: Text('هل أنت متأكد أنك تريد الخروج من التطبيق؟', style: TextStyle(fontFamily: 'Tajawal')),
+            title: Text(l10n.confirmExit, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.indigo.shade900)),
+            content: Text(l10n.confirmExitMessage, style: TextStyle(fontFamily: 'Tajawal')),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
+                child: Text(l10n.cancel, style: TextStyle(fontFamily: 'Tajawal')),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade600, foregroundColor: Colors.white),
-                child: Text('خروج', style: TextStyle(fontFamily: 'Tajawal')),
+                child: Text(l10n.exit, style: TextStyle(fontFamily: 'Tajawal')),
               ),
             ],
           ),
@@ -245,8 +245,8 @@ class DashboardHome extends ConsumerWidget {
                           Flexible(
                             child: Text(
                               appUser?.role == 'employee'
-                                  ? 'موظف: ${appUser?.name ?? ""}'
-                                  : 'حساب التاجر (الإدارة)',
+                                  ? l10n.employeePrefix(appUser?.name ?? "")
+                                  : l10n.merchantAccount,
                               style: TextStyle(
                                 color: appUser?.role == 'employee' ? Colors.amberAccent : Colors.greenAccent,
                                 fontSize: 13,
@@ -282,7 +282,7 @@ class DashboardHome extends ConsumerWidget {
             if (appUser?.hasPermission('can_manage_inventory') ?? false)
             ListTile(
               leading: Icon(Icons.inventory_2),
-              title: Text('المواد الخام', style: TextStyle(fontFamily: 'Tajawal')),
+              title: Text(l10n.rawMaterials, style: TextStyle(fontFamily: 'Tajawal')),
               onTap: () {
                 Navigator.pop(context);
                 context.push('/raw_materials');
@@ -318,7 +318,7 @@ class DashboardHome extends ConsumerWidget {
               if (appUser?.role != 'employee')
               ListTile(
                 leading: Icon(Icons.manage_accounts),
-                title: Text('الموظفين والصلاحيات (Pro)', style: TextStyle(fontFamily: 'Tajawal', color: Colors.orange)),
+                title: Text(l10n.employeesPermissionsPro, style: TextStyle(fontFamily: 'Tajawal', color: Colors.orange)),
                 onTap: () {
                   Navigator.pop(context);
                   context.push('/employees');
@@ -327,7 +327,7 @@ class DashboardHome extends ConsumerWidget {
               Divider(),
               ListTile(
                 leading: Icon(Icons.lock_clock),
-                title: Text('إغلاق الوردية (Z-Report)', style: TextStyle(fontFamily: 'Tajawal')),
+                title: Text(l10n.closeShiftZReport, style: TextStyle(fontFamily: 'Tajawal')),
                 onTap: () {
                   Navigator.pop(context);
                   context.push('/end_shift');
@@ -369,7 +369,7 @@ class DashboardHome extends ConsumerWidget {
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'تعذر جلب بيانات المخزون. يرجى التحقق من اتصالك بالإنترنت.',
+                      l10n.errorFetchingInventory,
                       style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
                     ),
                   ),
@@ -393,7 +393,7 @@ class DashboardHome extends ConsumerWidget {
                     SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        'تنبيه: يوجد ${lowStockProducts.length} منتج يوشك على النفاذ من المخزون!',
+                        l10n.lowStockAlert(lowStockProducts.length.toString()),
                         style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
                       ),
                     ),
@@ -426,7 +426,7 @@ class DashboardHome extends ConsumerWidget {
                         SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            '⚠️ يرجى إكمال إعدادات هوية المتجر (الاسم، الضريبة) لضمان طباعة الفواتير بشكل صحيح ومطابق للمواصفات.',
+                            l10n.completeStoreBrandingAlert,
                             style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
                           ),
                         ),
@@ -434,7 +434,7 @@ class DashboardHome extends ConsumerWidget {
                           onPressed: () {
                             context.push('/store_branding');
                           },
-                          child: Text('أكمل الآن', style: TextStyle(color: Colors.orange, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                          child: Text(l10n.completeNow, style: TextStyle(color: Colors.orange, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
@@ -480,7 +480,7 @@ class DashboardHome extends ConsumerWidget {
                   children: [
                     _QuickAction(
                       icon: Icons.point_of_sale,
-                      label: 'كاشير (POS)',
+                      label: l10n.posCashier,
                       color: Colors.green,
                       onTap: () async {
                         final shouldGoToOrders = await Navigator.push<bool>(
@@ -566,7 +566,7 @@ class DashboardHome extends ConsumerWidget {
           );
         },
         loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('خطأ: $e')),
+        error: (e, st) => Center(child: Text(l10n.errorPrefix(e.toString()))),
       ),
     );
   }

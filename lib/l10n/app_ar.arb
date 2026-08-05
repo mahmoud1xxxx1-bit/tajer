@@ -336,5 +336,296 @@
         "example": "$15.00"
       }
     }
-  }
+  },
+  "confirmExit": "تأكيد الخروج",
+  "confirmExitMessage": "هل أنت متأكد أنك تريد الخروج من التطبيق؟",
+  "exit": "خروج",
+  "employeePrefix": "موظف: {name}",
+  "@employeePrefix": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "merchantAccount": "حساب التاجر (الإدارة)",
+  "rawMaterials": "المواد الخام",
+  "employeesPermissionsPro": "الموظفين والصلاحيات (Pro)",
+  "closeShiftZReport": "إغلاق الوردية (Z-Report)",
+  "errorFetchingInventory": "تعذر جلب بيانات المخزون. يرجى التحقق من اتصالك بالإنترنت.",
+  "lowStockAlert": "تنبيه: يوجد {count} منتج يوشك على النفاذ من المخزون!",
+  "@lowStockAlert": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "completeStoreBrandingAlert": "⚠️ يرجى إكمال إعدادات هوية المتجر (الاسم، الضريبة) لضمان طباعة الفواتير بشكل صحيح ومطابق للمواصفات.",
+  "completeNow": "أكمل الآن",
+  "posCashier": "كاشير (POS)",
+  "errorPrefix": "خطأ: {error}",
+  "@errorPrefix": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "folder": "المجلد",
+  "totalDebts": "إجمالي الديون",
+  "warningDeleteCustomer": "تحذير: حذف ملف عميل",
+  "sortAlphabetical": "أبجدي",
+  "totalCustomerDebtText": "إجمالي دين العميل: {debt}",
+  "@totalCustomerDebtText": {
+    "placeholders": {
+      "debt": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteCustomerWarningText": "حذف العميل سيؤدي إلى مسح سجله المالي وديونه من النظام نهائياً. لا يمكن التراجع عن هذا الإجراء.",
+  "leaveEmptyToRemoveFromFolder": "اترك الحقل فارغاً لإزالة العملاء من أي مجلد.",
+  "multiSelect": "تحديد متعدد",
+  "noCustomersToExport": "لا يوجد عملاء للتصدير",
+  "hasDebts": "عليهم ديون",
+  "totalPurchases": "إجمالي المشتريات",
+  "selectedCount": "{count} محدد",
+  "@selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "general": "عام",
+  "whatsapp": "واتساب",
+  "moveToFolder": "نقل إلى مجلد",
+  "dateAdded": "تاريخ الإضافة",
+  "payDebt": "تسديد دفعة / تصفية دين",
+  "customersList": "قائمة العملاء",
+  "searchNamePhone": "بحث بالاسم أو رقم الهاتف",
+  "customerName": "اسم العميل",
+  "generalCustomers": "عملاء عامون",
+  "sortBy": "ترتيب: ",
+  "noCustomersMatch": "لا يوجد عملاء يطابقون البحث",
+  "move": "نقل",
+  "debtAmount": "دين: {debt} {currency}",
+  "@debtAmount": {
+    "placeholders": {
+      "debt": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "printError": "حدث خطأ في الطباعة: {error}",
+  "@printError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "phoneNumber": "رقم الهاتف",
+  "exportExcel": "تصدير لإكسل",
+  "byCreator": "بواسطة: {creator}",
+  "@byCreator": {
+    "placeholders": {
+      "creator": {
+        "type": "String"
+      }
+    }
+  },
+  "exportError": "حدث خطأ أثناء التصدير: {error}",
+  "@exportError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "highestDebt": "الأعلى ديناً",
+  "paidAmount": "المبلغ المسدد من الدين",
+  "rawMaterialsGuide": "💡 دليل المواد الخام: هنا يمكنك إضافة مكونات مستودعك (مثل: لحم برجر، جبن، أكواب، بن قهوة). عند ربط هذه المكونات بوصفات المنتجات في شاشة المنتجات، سيقوم النظام بخصم كمياتها تلقائياً عند كل عملية بيع لحماية مشروعك من الهدر ومعرفة التكلفة الحقيقية لأرباحك.",
+  "mlLabel": "مللي (ml)",
+  "rawMaterialsUsageHint": "💡 ستستخدم هذه المادة لربطها بوجبات ومنتجات البيع ليتم الخصم التلقائي عند إصدار الفواتير.",
+  "gLabel": "جرام (g)",
+  "editRawMaterial": "تعديل مادة خام",
+  "measuringUnit": "وحدة القياس:",
+  "noRawMaterialsFound": "لا توجد مواد خام في المستودع بعد.\nاضغط على زر \"إضافة مادة خام\" بالأسفل للبدء!",
+  "availableBalance": "الرصيد المتوفر: {quantity}  ({unit})",
+  "@availableBalance": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "saveInWarehouse": "حفظ في المستودع",
+  "addRawMaterial": "إضافة مادة خام",
+  "addNewRawMaterial": "إضافة مادة خام جديدة",
+  "pieceUnit": "قطعة / حبة",
+  "pieceUnitDesc": "قطعة / حبة (piece) - للأكواب والخبز والعبوات",
+  "pleaseEnterRawMaterialName": "يرجى إدخال اسم المادة الخام أولاً",
+  "currentAvailableQuantity": "الكمية المتوفرة حالياً في المستودع",
+  "gUnitDesc": "جرام (g) - للوزن مثل اللحوم والقهوة",
+  "mlUnitDesc": "مللي (ml) - للسوائل والصلصات",
+  "resourceRunningOut": "تنبيه: المورد قارب على الانتهاء",
+  "rawMaterialNameExample": "اسم المادة الخام (مثال: لحم برجر، جبن، قهوة بن)",
+  "rawMaterialsWarehouse": "المواد الخام (مستودع المكونات)",
+  "orderNumberLabel": "طلب #{number}",
+  "@orderNumberLabel": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "thisWeekFromTo": "هذا الأسبوع (من {start} إلى {end})",
+  "@thisWeekFromTo": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "thermalPrint": "طباعة حرارية",
+  "invoicePermanentlyDeleted": "تم حذف الفاتورة رقم #{number} نهائياً من قبل {user}",
+  "@invoicePermanentlyDeleted": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      },
+      "user": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduledOrders": "طلبات مجدولة 🗓",
+  "totalIncome": "إجمالي الدخل: ",
+  "monthPrefix": "شهر ",
+  "deleteInvoice": "حذف الفاتورة",
+  "confirmDeleteInvoiceMsg": "هل أنت متأكد من مسح هذه الفاتورة؟ (سيعود المخزون للمنتجات)",
+  "bankTransferMethod": "تحويل بنكي 🏦",
+  "cashMethod": "دفع كاش 💵",
+  "agoPrefix": "قبل ",
+  "deleteBtn": "حذف",
+  "madaMethod": "دفع مدى 💳",
+  "warningFinalDelete": "تحذير: حذف نهائي للطلب",
+  "hideBtn": "إخفاء",
+  "weekFromTo": " أسبوع (من {start} إلى {end})",
+  "@weekFromTo": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfInvoice": "فاتورة PDF",
+  "finalDeleteWarningMsg": "الحذف النهائي سيمحو هذا الطلب من السجلات تماماً بالإضافة إلى إرجاع الأموال وعكس الديون. لا يمكن استعادة الفاتورة. هل أنت متأكد؟",
+  "failDeleteInvoiceNoPermission": "فشل مسح الفاتورة نهائياً لعدم وجود صلاحية أو لا توجد فاتورة.",
+  "todayPrefix": "اليوم - ",
+  "posTitle": "نقطة البيع (POS)",
+  "byCreatorIcon": "👤 بواسطة: {creator}",
+  "@byCreatorIcon": {
+    "placeholders": {
+      "creator": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteInvoiceAction": "حذف فاتورة",
+  "invoiceDeletedSuccessfully": "تم حذف الفاتورة بنجاح",
+  "yearPrefix": "سنة ",
+  "deliveryDate": "موعد التسليم: ",
+  "yesterdayPrefix": "أمس - ",
+  "paymentMethod": " (الدفع: ",
+  "invoiceCancelledMsg": "تم إلغاء الفاتورة رقم #{number} بقيمة {value}",
+  "@invoiceCancelledMsg": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmFinalDeleteMsg": "هل أنت متأكد من رغبتك في مسح الفاتورة نهائياً؟ لا يمكن التراجع عن هذه الخطوة.",
+  "errorOccurred": "حدث خطأ: {error}",
+  "@errorOccurred": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invoiceDeletedPermanently": "تم حذف الفاتورة نهائياً",
+  "cancelOrder": "إلغاء الطلب",
+  "orderDetailsTitle": "تفاصيل الطلب #{number}",
+  "@orderDetailsTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "orderConfirmed": "✅ طلب مؤكد / مكتمل",
+  "invoiceOptions": "⚙️ خيارات الفاتورة",
+  "creditMethod": "آجل / ذمم (Credit)",
+  "warningCancelOrder": "تحذير: إلغاء الطلب",
+  "confirmFinalDelete": "تأكيد الحذف النهائي",
+  "subtotalBeforeTax": "الإجمالي (قبل الضريبة)",
+  "cancelOrderWarningMsg": "إلغاء الطلب سيؤدي إلى إرجاع المنتجات للمخزون، وخصم الأموال المدفوعة من الوردية الحالية، وعكس ديون العميل. هل أنت متأكد؟",
+  "unitPricePrefix": "سعر الوحدة: ",
+  "finalDeleteBtn": "حذف نهائي",
+  "itemsList": "🛍️ قائمة الأصناف والمنتجات",
+  "confirmCancelInvoiceMsg": "هل أنت متأكد من رغبتك في إلغاء هذه الفاتورة؟ سيتم إرجاع كميات الأصناف للمخزون تلقائياً.",
+  "orderCancelledStatus": "❌ طلب ملغي",
+  "cancelInvoiceBtn": "إلغاء فاتورة",
+  "invoiceGrandTotal": "المجموع النهائي للفاتورة",
+  "invoiceCancelledSuccessfully": "تم إلغاء الفاتورة بنجاح وإرجاع المواد للمخزون",
+  "totalTax": "إجمالي الضريبة",
+  "confirmCancelBtn": "تأكيد الإلغاء",
+  "goBackBtn": "تراجع",
+  "yesterday": "أمس",
+  "expensesDistribution": "توزيع المصروفات",
+  "preparingExcelReport": "جاري تجهيز التقرير (إكسل)...",
+  "unitsSold": "{quantity} وحدة مباعة",
+  "@unitsSold": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      }
+    }
+  },
+  "oneWeek": "أسبوع",
+  "excelExportError": "حدث خطأ أثناء تصدير إكسل: {error}",
+  "@excelExportError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "reportExtractionError": "حدث خطأ أثناء استخراج التقرير",
+  "oneMonth": "شهر",
+  "semiAnnual": "نصف سنوي",
+  "oneYear": "سنة",
+  "today": "اليوم",
+  "preparingPdfReport": "جاري تجهيز التقرير (PDF)...",
+  "twoDaysAgo": "قبل يومين",
+  "noExpensesInPeriod": "لا توجد مصروفات في هذه الفترة"
 }

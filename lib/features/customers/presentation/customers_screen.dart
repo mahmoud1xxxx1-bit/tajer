@@ -34,7 +34,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
   
   bool _isSelectionMode = false;
   Set<String> _selectedCustomerIds = {};
-  Set<String> _expandedFolders = {'عملاء عامون'};
+  Set<String> _expandedFolders = {l10n.generalCustomers};
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +47,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
     return Scaffold(
       appBar: AppBar(
         title: _isSelectionMode 
-            ? Text('${_selectedCustomerIds.length} محدد', style: const TextStyle(fontFamily: 'Tajawal'))
+            ? Text(l10n.selectedCount(_selectedCustomerIds.length.toString()), style: const TextStyle(fontFamily: 'Tajawal'))
             : Text(AppLocalizations.of(context)!.text55, style: const TextStyle(fontFamily: 'Tajawal')),
         leading: _isSelectionMode ? IconButton(
           icon: const Icon(Icons.close),
@@ -113,8 +113,8 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
             }
           }
           if (uncategorized.isNotEmpty) {
-            flattenedList.add('عملاء عامون');
-            if (_expandedFolders.contains('عملاء عامون')) {
+            flattenedList.add(l10n.generalCustomers);
+            if (_expandedFolders.contains(l10n.generalCustomers)) {
               flattenedList.addAll(uncategorized);
             }
           }
@@ -128,7 +128,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                     children: [
                       TextField(
                         decoration: InputDecoration(
-                          labelText: 'بحث بالاسم أو رقم الهاتف',
+                          labelText: l10n.searchNamePhone,
                           labelStyle: const TextStyle(fontFamily: 'Tajawal'),
                           prefixIcon: const Icon(Icons.search),
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
@@ -140,21 +140,21 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                       Row(
                         children: [
                           FilterChip(
-                            label: const Text('عليهم ديون', style: TextStyle(fontFamily: 'Tajawal')),
+                            label: const Text(l10n.hasDebts, style: TextStyle(fontFamily: 'Tajawal')),
                             selected: _filterHasDebt,
                             onSelected: (val) => setState(() => _filterHasDebt = val),
                             selectedColor: Colors.red.withOpacity(0.2),
                             checkmarkColor: Colors.red,
                           ),
                           const Spacer(),
-                          const Text('ترتيب: ', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 12)),
+                          const Text(l10n.sortBy, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 12)),
                           DropdownButton<String>(
                             value: _sortOption,
                             underline: const SizedBox(),
                             items: const [
                               DropdownMenuItem(value: 'newest', child: Text('الأحدث', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
-                              DropdownMenuItem(value: 'debt', child: Text('الأعلى ديناً', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
-                              DropdownMenuItem(value: 'alpha', child: Text('أبجدي', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
+                              DropdownMenuItem(value: 'debt', child: Text(l10n.highestDebt, style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
+                              DropdownMenuItem(value: 'alpha', child: Text(l10n.sortAlphabetical, style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
                             ],
                             onChanged: (val) {
                               if (val != null) setState(() => _sortOption = val);
@@ -182,7 +182,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                           
                           if (item is String) {
                             final isExpanded = _expandedFolders.contains(item);
-                            final isGeneral = item == 'عملاء عامون';
+                            final isGeneral = item == l10n.generalCustomers;
                             return InkWell(
                               onTap: () {
                                 setState(() {
@@ -348,7 +348,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                               children: [
                                 const Icon(Icons.chat_bubble_outline, size: 14, color: Colors.green),
                                 const SizedBox(width: 4),
-                                const Text('واتساب', style: TextStyle(color: Colors.green, fontSize: 10, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                const Text(l10n.whatsapp, style: TextStyle(color: Colors.green, fontSize: 10, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                               ],
                             ),
                           ),
@@ -379,7 +379,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
-                            '${Localizations.localeOf(context).languageCode == "ar" ? "بواسطة:" : "By:"} ${customer.creatorName}',
+                            '${l10n.byCreator(customer.creatorName)}',
                             style: const TextStyle(fontSize: 12, color: Colors.teal, fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
                           ),
                         ),
@@ -409,7 +409,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(
-                      'دين: ${customer.totalDebt} $currency',
+                      l10n.debtAmount(customer.totalDebt.toString(), currency),
                       style: const TextStyle(
                         color: Colors.red,
                         fontWeight: FontWeight.bold,
@@ -460,8 +460,8 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                       final success = await PinConfirmationDialog.show(
                                         context, 
                                         pin,
-                                        title: 'تحذير: حذف ملف عميل',
-                                        warning: 'حذف العميل سيؤدي إلى مسح سجله المالي وديونه من النظام نهائياً. لا يمكن التراجع عن هذا الإجراء.',
+                                        title: l10n.warningDeleteCustomer,
+                                        warning: l10n.deleteCustomerWarningText,
                                       );
                                       if (!success) return;
                                     }
@@ -480,7 +480,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                         } catch (e) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('حدث خطأ في الطباعة: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
+                              SnackBar(content: Text(l10n.printError(e.toString()), style: const TextStyle(fontFamily: 'Tajawal'))),
                             );
                           }
                         }
@@ -505,7 +505,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                             children: [
                               Icon(Icons.payments, size: 20, color: Colors.green),
                               SizedBox(width: 8),
-                              Text('تسديد دفعة / تصفية دين', style: TextStyle(fontFamily: 'Tajawal', color: Colors.green, fontWeight: FontWeight.bold)),
+                              Text(l10n.payDebt, style: TextStyle(fontFamily: 'Tajawal', color: Colors.green, fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
@@ -545,7 +545,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('نقل إلى مجلد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        title: const Text(l10n.moveToFolder, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -560,7 +560,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text('اترك الحقل فارغاً لإزالة العملاء من أي مجلد.', style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey)),
+            const Text(l10n.leaveEmptyToRemoveFromFolder, style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey)),
           ],
         ),
         actions: [
@@ -586,7 +586,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                 });
               }
             },
-            child: const Text('نقل', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+            child: const Text(l10n.move, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -598,12 +598,12 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('تسديد دفعة / تصفية دين', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        title: const Text(l10n.payDebt, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('إجمالي دين العميل: ${customer.totalDebt}', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600)),
+            Text(l10n.totalCustomerDebtText(customer.totalDebt.toString()), style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600)),
             const SizedBox(height: 16),
             TextField(
               controller: amountController,
@@ -651,7 +651,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
       if (customers.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('لا يوجد عملاء للتصدير', style: TextStyle(fontFamily: 'Tajawal'))),
+            const SnackBar(content: Text(l10n.noCustomersToExport, style: TextStyle(fontFamily: 'Tajawal'))),
           );
         }
         return;
@@ -665,7 +665,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
       sheetObject.appendRow([
         TextCellValue('اسم العميل'),
         TextCellValue('رقم الهاتف'),
-        TextCellValue('المجلد'),
+        TextCellValue(l10n.folder),
         TextCellValue('إجمالي المشتريات'),
         TextCellValue('إجمالي الديون'),
         TextCellValue('تاريخ الإضافة'),
@@ -676,7 +676,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
         sheetObject.appendRow([
           TextCellValue(c.name),
           TextCellValue(c.phone),
-          TextCellValue(c.folderName ?? 'عام'),
+          TextCellValue(c.folderName ?? l10n.general),
           TextCellValue(c.totalPurchases.toString()),
           TextCellValue(c.totalDebt.toString()),
           TextCellValue(c.createdAt.toString().split(' ')[0]),
@@ -698,7 +698,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('حدث خطأ أثناء التصدير: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(content: Text(l10n.exportError(e.toString()), style: const TextStyle(fontFamily: 'Tajawal'))),
         );
       }
     }

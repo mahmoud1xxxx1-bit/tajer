@@ -336,5 +336,296 @@
         "example": "$15.00"
       }
     }
-  }
+  },
+  "confirmExit": "Confirm Exit",
+  "confirmExitMessage": "Are you sure you want to exit the app?",
+  "exit": "Exit",
+  "employeePrefix": "Employee: {name}",
+  "@employeePrefix": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "merchantAccount": "Merchant Account (Admin)",
+  "rawMaterials": "Raw Materials",
+  "employeesPermissionsPro": "Employees & Permissions (Pro)",
+  "closeShiftZReport": "Close Shift (Z-Report)",
+  "errorFetchingInventory": "Could not fetch inventory data. Please check your internet connection.",
+  "lowStockAlert": "Alert: {count} product(s) are running out of stock!",
+  "@lowStockAlert": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "completeStoreBrandingAlert": "⚠️ Please complete your store identity settings (Name, Tax) to ensure receipts are printed correctly.",
+  "completeNow": "Complete Now",
+  "posCashier": "POS Cashier",
+  "errorPrefix": "Error: {error}",
+  "@errorPrefix": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "folder": "Folder",
+  "totalDebts": "Total Debts",
+  "warningDeleteCustomer": "Warning: Delete Customer",
+  "sortAlphabetical": "Alphabetical",
+  "totalCustomerDebtText": "Total Customer Debt: {debt}",
+  "@totalCustomerDebtText": {
+    "placeholders": {
+      "debt": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteCustomerWarningText": "Deleting the customer will permanently erase their financial record and debts from the system. This action cannot be undone.",
+  "leaveEmptyToRemoveFromFolder": "Leave empty to remove customers from any folder.",
+  "multiSelect": "Multi Select",
+  "noCustomersToExport": "No customers to export",
+  "hasDebts": "Has Debts",
+  "totalPurchases": "Total Purchases",
+  "selectedCount": "{count} selected",
+  "@selectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "general": "General",
+  "whatsapp": "WhatsApp",
+  "moveToFolder": "Move to Folder",
+  "dateAdded": "Date Added",
+  "payDebt": "Pay Debt / Settle",
+  "customersList": "Customers List",
+  "searchNamePhone": "Search by name or phone",
+  "customerName": "Customer Name",
+  "generalCustomers": "General Customers",
+  "sortBy": "Sort by: ",
+  "noCustomersMatch": "No customers match the search",
+  "move": "Move",
+  "debtAmount": "Debt: {debt} {currency}",
+  "@debtAmount": {
+    "placeholders": {
+      "debt": {
+        "type": "String"
+      },
+      "currency": {
+        "type": "String"
+      }
+    }
+  },
+  "printError": "Print Error: {error}",
+  "@printError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "phoneNumber": "Phone Number",
+  "exportExcel": "Export to Excel",
+  "byCreator": "By: {creator}",
+  "@byCreator": {
+    "placeholders": {
+      "creator": {
+        "type": "String"
+      }
+    }
+  },
+  "exportError": "Export Error: {error}",
+  "@exportError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "highestDebt": "Highest Debt",
+  "paidAmount": "Paid Amount",
+  "rawMaterialsGuide": "💡 Raw Materials Guide: Here you can add your warehouse components (e.g., burger meat, cheese, cups, coffee beans). When linking these components to product recipes in the Products screen, the system will automatically deduct their quantities on each sale to protect your business from waste and know the true cost of your profits.",
+  "mlLabel": "ml",
+  "rawMaterialsUsageHint": "💡 This material will be used to link to meals and sale products for automatic deduction upon invoice issuance.",
+  "gLabel": "g",
+  "editRawMaterial": "Edit Raw Material",
+  "measuringUnit": "Measuring Unit:",
+  "noRawMaterialsFound": "No raw materials in the warehouse yet.\nPress 'Add Raw Material' below to start!",
+  "availableBalance": "Available Balance: {quantity} ({unit})",
+  "@availableBalance": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "saveInWarehouse": "Save in Warehouse",
+  "addRawMaterial": "Add Raw Material",
+  "addNewRawMaterial": "Add New Raw Material",
+  "pieceUnit": "Piece",
+  "pieceUnitDesc": "Piece (piece) - for cups, bread, and packages",
+  "pleaseEnterRawMaterialName": "Please enter raw material name first",
+  "currentAvailableQuantity": "Currently available quantity in warehouse",
+  "gUnitDesc": "Gram (g) - for weight like meat and coffee",
+  "mlUnitDesc": "Milliliter (ml) - for liquids and sauces",
+  "resourceRunningOut": "Alert: Resource is running out",
+  "rawMaterialNameExample": "Raw material name (e.g., burger meat, cheese, coffee beans)",
+  "rawMaterialsWarehouse": "Raw Materials (Warehouse Components)",
+  "orderNumberLabel": "Order #{number}",
+  "@orderNumberLabel": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "thisWeekFromTo": "This Week (From {start} To {end})",
+  "@thisWeekFromTo": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "thermalPrint": "Thermal Print",
+  "invoicePermanentlyDeleted": "Invoice #{number} was permanently deleted by {user}",
+  "@invoicePermanentlyDeleted": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      },
+      "user": {
+        "type": "String"
+      }
+    }
+  },
+  "scheduledOrders": "Scheduled Orders 🗓",
+  "totalIncome": "Total Income: ",
+  "monthPrefix": "Month ",
+  "deleteInvoice": "Delete Invoice",
+  "confirmDeleteInvoiceMsg": "Are you sure you want to delete this invoice? (Stock will be returned)",
+  "bankTransferMethod": "Bank Transfer 🏦",
+  "cashMethod": "Cash 💵",
+  "agoPrefix": "Ago ",
+  "deleteBtn": "Delete",
+  "madaMethod": "Mada 💳",
+  "warningFinalDelete": "Warning: Final Delete",
+  "hideBtn": "Hide",
+  "weekFromTo": " Week (From {start} To {end})",
+  "@weekFromTo": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "end": {
+        "type": "String"
+      }
+    }
+  },
+  "pdfInvoice": "PDF Invoice",
+  "finalDeleteWarningMsg": "Final deletion will completely wipe this order from the records, refund the money, and reverse any debts. The invoice cannot be restored. Are you sure?",
+  "failDeleteInvoiceNoPermission": "Failed to permanently delete invoice due to lack of permission or missing invoice.",
+  "todayPrefix": "Today - ",
+  "posTitle": "POS",
+  "byCreatorIcon": "👤 By: {creator}",
+  "@byCreatorIcon": {
+    "placeholders": {
+      "creator": {
+        "type": "String"
+      }
+    }
+  },
+  "deleteInvoiceAction": "Delete Invoice",
+  "invoiceDeletedSuccessfully": "Invoice deleted successfully",
+  "yearPrefix": "Year ",
+  "deliveryDate": "Delivery Date: ",
+  "yesterdayPrefix": "Yesterday - ",
+  "paymentMethod": " (Payment: ",
+  "invoiceCancelledMsg": "Invoice #{number} with value {value} was cancelled",
+  "@invoiceCancelledMsg": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "confirmFinalDeleteMsg": "Are you sure you want to permanently delete the invoice? This cannot be undone.",
+  "errorOccurred": "An error occurred: {error}",
+  "@errorOccurred": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "invoiceDeletedPermanently": "Invoice deleted permanently",
+  "cancelOrder": "Cancel Order",
+  "orderDetailsTitle": "Order Details #{number}",
+  "@orderDetailsTitle": {
+    "placeholders": {
+      "number": {
+        "type": "String"
+      }
+    }
+  },
+  "orderConfirmed": "✅ Confirmed / Completed Order",
+  "invoiceOptions": "⚙️ Invoice Options",
+  "creditMethod": "Credit / Deferred",
+  "warningCancelOrder": "Warning: Cancel Order",
+  "confirmFinalDelete": "Confirm Final Delete",
+  "subtotalBeforeTax": "Subtotal (Before Tax)",
+  "cancelOrderWarningMsg": "Canceling the order will return products to stock, deduct paid money from current shift, and reverse customer debts. Are you sure?",
+  "unitPricePrefix": "Unit Price: ",
+  "finalDeleteBtn": "Final Delete",
+  "itemsList": "🛍️ Items & Products List",
+  "confirmCancelInvoiceMsg": "Are you sure you want to cancel this invoice? Item quantities will be automatically returned to stock.",
+  "orderCancelledStatus": "❌ Cancelled Order",
+  "cancelInvoiceBtn": "Cancel Invoice",
+  "invoiceGrandTotal": "Invoice Grand Total",
+  "invoiceCancelledSuccessfully": "Invoice cancelled successfully and materials returned to stock",
+  "totalTax": "Total Tax",
+  "confirmCancelBtn": "Confirm Cancel",
+  "goBackBtn": "Go Back",
+  "yesterday": "Yesterday",
+  "expensesDistribution": "Expenses Distribution",
+  "preparingExcelReport": "Preparing report (Excel)...",
+  "unitsSold": "{quantity} units sold",
+  "@unitsSold": {
+    "placeholders": {
+      "quantity": {
+        "type": "String"
+      }
+    }
+  },
+  "oneWeek": "1 Week",
+  "excelExportError": "Error exporting Excel: {error}",
+  "@excelExportError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "reportExtractionError": "Error extracting report",
+  "oneMonth": "1 Month",
+  "semiAnnual": "Semi-Annual",
+  "oneYear": "1 Year",
+  "today": "Today",
+  "preparingPdfReport": "Preparing report (PDF)...",
+  "twoDaysAgo": "2 Days Ago",
+  "noExpensesInPeriod": "No expenses in this period"
 }

@@ -14,6 +14,13 @@ class LocaleNotifier extends Notifier<Locale> {
     if (localeString != null && localeString.isNotEmpty) {
       return Locale(localeString);
     }
+    
+    // Auto-detect device language on first launch
+    final deviceLang = WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+    if (deviceLang == 'en') {
+      return const Locale('en');
+    }
+    
     return const Locale('ar');
   }
 

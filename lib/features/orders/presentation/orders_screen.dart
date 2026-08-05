@@ -66,24 +66,24 @@ class OrdersScreen extends ConsumerWidget {
               
               String groupKey;
               if (order.scheduledDate != null) {
-                groupKey = '00_طلبات مجدولة 🗓';
+                groupKey = l10n.scheduledOrders;
               } else if (orderDate == today) {
-                groupKey = '01_اليوم - ' + DateFormat('yyyy/MM/dd').format(orderDate);
+                groupKey = l10n.todayPrefix + DateFormat('yyyy/MM/dd').format(orderDate);
               } else if (orderDate == yesterday) {
-                groupKey = '02_أمس - ' + DateFormat('yyyy/MM/dd').format(orderDate);
+                groupKey = l10n.yesterdayPrefix + DateFormat('yyyy/MM/dd').format(orderDate);
               } else if (orderDate.isAfter(startOfWeek.subtract(const Duration(days: 1)))) {
                 final endOfWeek = startOfWeek.add(const Duration(days: 6));
-                groupKey = '03_هذا الأسبوع (من ' + DateFormat('MM/dd').format(startOfWeek) + ' إلى ' + DateFormat('MM/dd').format(endOfWeek) + ')';
+                groupKey = l10n.thisWeekFromTo( + DateFormat('MM/dd').format(startOfWeek), DateFormat('MM/dd').format(endOfWeek));
               } else if (orderDate.isAfter(today.subtract(const Duration(days: 30)))) {
                 final diffDays = startOfWeek.difference(orderDate).inDays;
                 final weeksAgo = (diffDays / 7).floor() + 1;
                 final wStart = startOfWeek.subtract(Duration(days: weeksAgo * 7));
                 final wEnd = wStart.add(const Duration(days: 6));
-                groupKey = '04_قبل ' + weeksAgo.toString() + ' أسبوع (من ' + DateFormat('MM/dd').format(wStart) + ' إلى ' + DateFormat('MM/dd').format(wEnd) + ')';
+                groupKey = l10n.agoPrefix + weeksAgo.toString() + l10n.weekFromTo(DateFormat('MM/dd').format(wStart), DateFormat('MM/dd').format(wEnd));
               } else if (orderDate.year == today.year) {
-                groupKey = '05_شهر ' + DateFormat('MMMM').format(orderDate);
+                groupKey = l10n.monthPrefix + DateFormat('MMMM').format(orderDate);
               } else {
-                groupKey = '06_سنة ' + DateFormat('yyyy').format(orderDate);
+                groupKey = l10n.yearPrefix + DateFormat('yyyy').format(orderDate);
               }
               
               groupedOrders.putIfAbsent(groupKey, () => []).add(order);
@@ -152,9 +152,9 @@ class OrdersScreen extends ConsumerWidget {
                                         final success = await PinConfirmationDialog.show(
                                           context, 
                                           pin,
-                                          title: isAr ? 'تحذير: حذف نهائي للطلب' : 'Warning: Delete Order',
+                                          title: isAr ? l10n.warningFinalDelete : 'Warning: Delete Order',
                                           warning: isAr 
-                                              ? 'الحذف النهائي سيمحو هذا الطلب من السجلات تماماً بالإضافة إلى إرجاع الأموال وعكس الديون. لا يمكن استعادة الفاتورة. هل أنت متأكد؟'
+                                              ? l10n.finalDeleteWarningMsg
                                               : 'Permanent deletion will erase this order from records completely, refund money, and reverse debt. This cannot be undone.',
                                         );
                                         if (!success) return;
@@ -167,7 +167,7 @@ class OrdersScreen extends ConsumerWidget {
                                         user: user,
                                         actionType: Localizations.localeOf(context).languageCode == 'ar' ? 'حذف فاتورة' : 'Order Deleted',
                                         description: Localizations.localeOf(context).languageCode == 'ar' 
-                                            ? 'تم حذف الفاتورة رقم #${order.queueNumber ?? order.id.substring(0, 6)} نهائياً من قبل ${user?.name ?? "التاجر"}' 
+                                            ? l10n.invoicePermanentlyDeleted(order.queueNumber ?? order.id.substring(0, 6), user?.name ?? "التاجر") 
                                             : 'Permanently deleted order #${order.queueNumber ?? order.id.substring(0, 6)} by ${user?.name ?? "Owner"}',
                                         amount: order.total,
                                       );
@@ -221,7 +221,7 @@ class OrdersScreen extends ConsumerWidget {
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
                                             Text(
-                                              'طلب #${order.queueNumber ?? (order.id.length >= 5 ? order.id.substring(0, 5).toUpperCase() : order.id.toUpperCase())}',
+                                              l10n.orderNumberLabel(order.queueNumber ?? (order.id.length >= 5 ? order.id.substring(0, 5).toUpperCase() : order.id.toUpperCase())),
                                               style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16),
                                             ),
                                             Text(
@@ -265,7 +265,7 @@ class OrdersScreen extends ConsumerWidget {
                                               borderRadius: BorderRadius.circular(8),
                                             ),
                                             child: Text(
-                                              l10n.credit + ' (الدفع: ' + order.paidAmount.toString() + ' ' + currency + ')',
+                                              l10n.credit + l10n.paymentMethod + order.paidAmount.toString() + ' ' + currency + ')',
                                               style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 12),
                                             ),
                                           ),
@@ -308,7 +308,7 @@ class OrdersScreen extends ConsumerWidget {
                                                   borderRadius: BorderRadius.circular(8),
                                                 ),
                                                 child: Text(
-                                                  '👤 بواسطة: ${order.creatorName}',
+                                                  l10n.byCreatorIcon(order.creatorName),
                                                   style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 12),
                                                 ),
                                               ),
@@ -431,7 +431,7 @@ class OrdersScreen extends ConsumerWidget {
             );
           }
         },
-        label: Text('نقطة البيع (POS)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        label: Text(l10n.posTitle, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         icon: Icon(Icons.point_of_sale),
       ) : null,
     );
@@ -463,11 +463,11 @@ class OrdersScreen extends ConsumerWidget {
 
   String _getPaymentMethodName(String? method) {
     switch (method) {
-      case 'cash': return 'دفع كاش 💵';
-      case 'mada': return 'دفع مدى 💳';
-      case 'transfer': return 'تحويل بنكي 🏦';
+      case 'cash': return l10n.cashMethod;
+      case 'mada': return l10n.madaMethod;
+      case 'transfer': return l10n.bankTransferMethod;
       case 'apple_pay': return 'Apple Pay 🍏';
-      default: return 'دفع كاش 💵';
+      default: return l10n.cashMethod;
     }
   }
 }
