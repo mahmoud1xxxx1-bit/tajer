@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,6 +12,8 @@ const String _googleApiKey = 'goog_aHEwHuppHHWdppTTPZJizeCDEGr';
 
 class SubscriptionService {
   Future<void> initPlatformState() async {
+    if (kIsWeb) return; // RevenueCat is not supported on web
+
     await Purchases.setLogLevel(LogLevel.debug);
 
     PurchasesConfiguration? configuration;

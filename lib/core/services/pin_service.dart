@@ -17,6 +17,8 @@ class PinService {
       }
     } catch (e) {
       print('Error fetching delete PIN: $e');
+      // الثغرة الأمنية: إرجاع قيمة خطأ لتفعيل مربع الحماية، بدلاً من إرجاع null الذي كان يتجاوز الحماية!
+      return 'ERROR_DB_CRASH';
     }
     return null;
   }
