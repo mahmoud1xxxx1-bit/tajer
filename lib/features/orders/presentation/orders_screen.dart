@@ -12,6 +12,8 @@ import '../../../core/services/guest_limit_service.dart';
 import '../../../core/services/pdf_service.dart';
 import '../../../core/services/whatsapp_service.dart';
 import '../../../core/services/printer_service.dart';
+import '../../../core/services/pin_service.dart';
+import '../../../core/widgets/pin_confirmation_dialog.dart';
 
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/providers/store_profile_provider.dart';
@@ -153,6 +155,15 @@ class OrdersScreen extends ConsumerWidget {
                                   style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                                   onPressed: () async {
                                     Navigator.pop(ctx);
+                                    final appUser = ref.read(appUserProvider).value;
+                                    if (appUser != null) {
+                                      final pin = await PinService.getDeletePin(appUser);
+                                      if (pin != null) {
+                                        if (!context.mounted) return;
+                                        final success = await PinConfirmationDialog.show(context, pin);
+                                        if (!success) return;
+                                      }
+                                    }
                                     try {
                                       await ref.read(orderRepositoryProvider).deleteOrder(order);
                                       final user = ref.read(appUserProvider).value;

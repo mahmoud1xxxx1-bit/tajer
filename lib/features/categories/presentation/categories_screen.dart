@@ -6,6 +6,8 @@ import '../../../core/theme/glass_card.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/category_repository.dart';
+import '../../../core/services/pin_service.dart';
+import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../domain/category.dart';
 import '../../../core/utils/date_formatter.dart';
 
@@ -101,9 +103,18 @@ class CategoriesScreen extends ConsumerWidget {
                                     child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
                                   ),
                                   TextButton(
-                                    onPressed: () {
-                                      ref.read(categoryRepositoryProvider)?.deleteCategory(category.id);
+                                    onPressed: () async {
                                       Navigator.pop(context);
+                                      final appUser = ref.read(appUserProvider).value;
+                                      if (appUser != null) {
+                                        final pin = await PinService.getDeletePin(appUser);
+                                        if (pin != null) {
+                                          if (!context.mounted) return;
+                                          final success = await PinConfirmationDialog.show(context, pin);
+                                          if (!success) return;
+                                        }
+                                      }
+                                      ref.read(categoryRepositoryProvider)?.deleteCategory(category.id);
                                     },
                                     child: const Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                                   ),

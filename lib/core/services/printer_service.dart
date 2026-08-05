@@ -13,9 +13,20 @@ import 'package:tajer/core/providers/store_profile_provider.dart';
 import 'package:tajer/core/utils/date_formatter.dart';
 import 'package:tajer/core/utils/zatca_qr_generator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class PrinterService {
+  static Future<void> _requestBluetoothPermissions() async {
+    await [
+      Permission.bluetooth,
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect,
+      Permission.location,
+    ].request();
+  }
+
   static Future<List<BluetoothInfo>> getDevices() async {
+    await _requestBluetoothPermissions();
     return await PrintBluetoothThermal.pairedBluetooths;
   }
 
@@ -25,6 +36,7 @@ class PrinterService {
       // It might be connected to another, but if it is, let's assume it's good or disconnect first
     }
     try {
+      await _requestBluetoothPermissions();
       bool result = await PrintBluetoothThermal.connect(macPrinterAddress: macAddress);
       
       if (result) {
@@ -99,7 +111,9 @@ class PrinterService {
     
     final isOfficial = !isKitchen && storeProfile != null && storeProfile.vatNumber != null && storeProfile.vatNumber!.isNotEmpty;
 
-    final double pageWidth = 58.0 * PdfPageFormat.mm;
+    final prefs = await SharedPreferences.getInstance();
+    final savedPaperSize = prefs.getString('printer_paper_size') ?? '58mm';
+    final double pageWidth = (savedPaperSize == '80mm' ? 80.0 : 58.0) * PdfPageFormat.mm;
 
     double totalTaxAmount = 0.0;
     double grandTotal = 0.0;
@@ -382,7 +396,9 @@ class PrinterService {
     final ttf = pw.Font.ttf(fontData);
     final ttfBold = pw.Font.ttf(fontBoldData);
 
-    final double pageWidth = 58.0 * PdfPageFormat.mm;
+    final prefs = await SharedPreferences.getInstance();
+    final savedPaperSize = prefs.getString('printer_paper_size') ?? '58mm';
+    final double pageWidth = (savedPaperSize == '80mm' ? 80.0 : 58.0) * PdfPageFormat.mm;
 
     pw.MemoryImage? logoImage;
     if (storeProfile != null && storeProfile.logoBase64.isNotEmpty) {

@@ -7,6 +7,7 @@ import '../../authentication/data/auth_repository.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../authentication/domain/app_user.dart';
 import '../../../core/services/app_review_service.dart';
+import '../../../core/services/pin_service.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -80,6 +81,10 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () => context.push('/backup_security'),
               ),
               const Divider(height: 1),
+              if (appUser != null && (appUser.role == 'merchant' || appUser.role == 'admin')) ...[
+                _PinSettingsTile(appUser: appUser),
+                const Divider(height: 1),
+              ],
               ListTile(
                 leading: const Icon(Icons.print, color: Colors.indigo),
                 title: const Text('إعدادات الطابعة الحرارية', style: TextStyle(fontFamily: 'Tajawal')),
@@ -374,6 +379,103 @@ class _ThemeSelector extends ConsumerWidget {
           DropdownMenuItem(value: ThemeMode.dark, child: Text(l10n.themeDark, style: TextStyle(fontFamily: 'Tajawal'))),
         ],
       ),
+    );
+  }
+}
+
+class _PinSettingsTile extends StatefulWidget {
+  final AppUser appUser;
+  const _PinSettingsTile({required this.appUser});
+
+  @override
+  State<_PinSettingsTile> createState() => _PinSettingsTileState();
+}
+
+class _PinSettingsTileState extends State<_PinSettingsTile> {
+  bool _isLoading = true;
+  String? _currentPin;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPin();
+  }
+
+  Future<void> _loadPin() async {
+    final pin = await PinService.getDeletePin(widget.appUser);
+    if (mounted) {
+      setState(() {
+        _currentPin = pin;
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _showSetPinDialog() {
+    final TextEditingController pinController = TextEditingController();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text(_currentPin == null ? 'إعداد الرقم السري' : 'تغيير الرقم السري', style: const TextStyle(fontFamily: 'Tajawal')),
+        content: TextField(
+          controller: pinController,
+          keyboardType: TextInputType.number,
+          maxLength: 4,
+          obscureText: true,
+          decoration: const InputDecoration(hintText: 'أدخل 4 أرقام'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal')),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (pinController.text.length == 4) {
+                Navigator.pop(context);
+                setState(() => _isLoading = true);
+                await PinService.setDeletePin(widget.appUser, pinController.text);
+                _loadPin();
+              }
+            },
+            child: const Text('حفظ', style: TextStyle(fontFamily: 'Tajawal')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _removePin() async {
+    setState(() => _isLoading = true);
+    await PinService.setDeletePin(widget.appUser, null);
+    _loadPin();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) return const ListTile(title: Center(child: CircularProgressIndicator()));
+
+    return Column(
+      children: [
+        ListTile(
+          leading: const Icon(Icons.password, color: Colors.red),
+          title: const Text('الرقم السري للحذف (PIN)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+          subtitle: Text(_currentPin == null ? 'غير مفعل' : 'مفعل', style: TextStyle(color: _currentPin == null ? Colors.grey : Colors.green)),
+          trailing: _currentPin == null 
+              ? ElevatedButton(
+                  onPressed: _showSetPinDialog,
+                  child: const Text('تفعيل'),
+                )
+              : Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextButton(onPressed: _showSetPinDialog, child: const Text('تغيير')),
+                    TextButton(onPressed: _removePin, child: const Text('إلغاء', style: TextStyle(color: Colors.red))),
+                  ],
+                ),
+        ),
+      ],
     );
   }
 }

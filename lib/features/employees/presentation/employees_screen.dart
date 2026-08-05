@@ -7,6 +7,9 @@ import 'package:tajer/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../orders/data/order_repository.dart';
+import '../../../core/utils/app_logger.dart';
+import '../../../core/services/pin_service.dart';
+import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../../../core/providers/settings_provider.dart';
 import 'employee_activity_screen.dart';
 
@@ -145,6 +148,15 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
     );
 
     if (confirm == true) {
+      final appUser = ref.read(appUserProvider).value;
+      if (appUser != null) {
+        final pin = await PinService.getDeletePin(appUser);
+        if (pin != null) {
+          if (!mounted) return;
+          final success = await PinConfirmationDialog.show(context, pin);
+          if (!success) return;
+        }
+      }
       setState(() => _isLoading = true);
       try {
         await ref.read(authRepositoryProvider).deleteEmployee(id);

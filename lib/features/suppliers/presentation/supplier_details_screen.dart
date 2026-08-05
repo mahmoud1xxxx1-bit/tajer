@@ -4,6 +4,9 @@ import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
+import '../../../core/services/pin_service.dart';
+import '../../../core/widgets/pin_confirmation_dialog.dart';
+import '../../authentication/domain/app_user.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/supplier_repository.dart';
 import '../data/supplier_transaction_repository.dart';
@@ -356,10 +359,19 @@ class SupplierDetailsScreen extends ConsumerWidget {
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                ref.read(supplierRepositoryProvider)?.deleteSupplier(currentSupplier.id);
+              onPressed: () async {
                 Navigator.pop(context);
-                Navigator.pop(context); // Close details screen too
+                final appUser = ref.read(appUserProvider).value;
+                if (appUser != null) {
+                  final pin = await PinService.getDeletePin(appUser);
+                  if (pin != null) {
+                    if (!context.mounted) return;
+                    final success = await PinConfirmationDialog.show(context, pin);
+                    if (!success) return;
+                  }
+                }
+                ref.read(supplierRepositoryProvider)?.deleteSupplier(currentSupplier.id);
+                if (context.mounted) Navigator.pop(context); // Close details screen too
               },
               child: const Text('حذف', style: TextStyle(color: Colors.red)),
             ),

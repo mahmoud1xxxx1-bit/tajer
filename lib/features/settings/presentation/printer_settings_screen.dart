@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 import '../../../core/services/printer_service.dart';
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PrinterSettingsScreen extends StatefulWidget {
   const PrinterSettingsScreen({super.key});
@@ -15,6 +16,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
   BluetoothInfo? _device;
   bool _connected = false;
   String _message = 'لم يتم الاتصال بأي طابعة';
+  String _paperSize = '58mm';
 
   @override
   void initState() {
@@ -37,15 +39,29 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
       _connected = isConnected;
     });
 
-    final savedDevice = await PrinterService.getSavedDevice();
-    if (savedDevice != null) {
+    final prefs = await SharedPreferences.getInstance();
+    final savedDeviceMac = prefs.getString('default_printer_mac');
+    final savedPaperSize = prefs.getString('printer_paper_size') ?? '58mm';
+
+    if (savedDeviceMac != null) {
       setState(() {
         _device = _devices.firstWhere(
-          (d) => d.macAdress == savedDevice.macAdress,
+          (d) => d.macAdress == savedDeviceMac,
           orElse: () => _devices.first,
         );
       });
     }
+
+    setState(() {
+      _paperSize = savedPaperSize;
+    });
+  }
+
+  Future<void> _updatePaperSize(String? size) async {
+    if (size == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('printer_paper_size', size);
+    setState(() => _paperSize = size);
   }
 
   Future<void> _connect() async {
@@ -90,24 +106,36 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
               )).toList(),
               onChanged: (value) => setState(() => _device = value),
               value: _device,
-              hint: Text('اختر الطابعة', style: TextStyle(fontFamily: 'Tajawal')),
+              hint: const Text('اختر الطابعة', style: TextStyle(fontFamily: 'Tajawal')),
               isExpanded: true,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 24),
+            const Text('مقاس الورق (Paper Size)', style: TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            DropdownButton<String>(
+              items: const [
+                DropdownMenuItem(value: '58mm', child: Text('58 مليمتراً (58mm)')),
+                DropdownMenuItem(value: '80mm', child: Text('80 مليمتراً (80mm)')),
+              ],
+              onChanged: _updatePaperSize,
+              value: _paperSize,
+              isExpanded: true,
+            ),
+            const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton(
                   onPressed: _connected ? _disconnect : _connect,
-                  child: Text(_connected ? 'قطع الاتصال' : 'اتصال', style: TextStyle(fontFamily: 'Tajawal')),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _connected ? Colors.red : Colors.green,
                     foregroundColor: Colors.white,
                   ),
+                  child: Text(_connected ? 'قطع الاتصال' : 'اتصال', style: const TextStyle(fontFamily: 'Tajawal')),
                 ),
                 ElevatedButton(
                   onPressed: _initBluetooth,
-                  child: Text('تحديث الأجهزة', style: TextStyle(fontFamily: 'Tajawal')),
+                  child: const Text('تحديث الأجهزة', style: TextStyle(fontFamily: 'Tajawal')),
                 ),
               ],
             ),
@@ -138,8 +166,8 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                     setState(() => _message = "خطأ في طباعة الاختبار: $e");
                   }
                 },
-                icon: Icon(Icons.print),
-                label: Text('طباعة اختبار', style: TextStyle(fontFamily: 'Tajawal')),
+                icon: const Icon(Icons.print),
+                label: const Text('طباعة اختبار', style: TextStyle(fontFamily: 'Tajawal')),
               ),
           ],
         ),

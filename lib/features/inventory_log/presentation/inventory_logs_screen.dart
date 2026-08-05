@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/inventory_log_repository.dart';
+import '../../../core/services/pin_service.dart';
+import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../domain/inventory_log.dart';
 import '../../../core/services/activity_logger.dart';
 
@@ -131,6 +133,15 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
+              final appUser = ref.read(appUserProvider).value;
+              if (appUser != null) {
+                final pin = await PinService.getDeletePin(appUser);
+                if (pin != null) {
+                  if (!mounted) return;
+                  final success = await PinConfirmationDialog.show(context, pin);
+                  if (!success) return;
+                }
+              }
               final repo = ref.read(inventoryLogRepositoryProvider);
               if (repo != null) {
                 await repo.deleteLog(log, adjustInventory: true);

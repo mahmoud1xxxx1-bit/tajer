@@ -5,6 +5,8 @@ import '../domain/raw_material.dart';
 import '../data/raw_material_repository.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../authentication/domain/app_user.dart';
+import '../../../core/services/pin_service.dart';
+import '../../../core/widgets/pin_confirmation_dialog.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 
 class RawMaterialsScreen extends ConsumerStatefulWidget {
@@ -260,6 +262,15 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                                   ),
                                 );
                                 if (confirm == true) {
+                                  final appUser = ref.read(appUserProvider).value;
+                                  if (appUser != null) {
+                                    final pin = await PinService.getDeletePin(appUser);
+                                    if (pin != null) {
+                                      if (!context.mounted) return;
+                                      final success = await PinConfirmationDialog.show(context, pin);
+                                      if (!success) return;
+                                    }
+                                  }
                                   await ref.read(rawMaterialRepositoryProvider).deleteRawMaterial(item.id);
                                 }
                               },

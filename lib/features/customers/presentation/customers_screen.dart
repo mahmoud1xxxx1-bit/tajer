@@ -7,6 +7,9 @@ import '../../authentication/data/auth_repository.dart';
 import 'add_customer_dialog.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../../core/theme/glass_card.dart';
+import '../../../core/services/printer_service.dart';
+import '../../../core/services/pin_service.dart';
+import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../../../core/services/pdf_service.dart';
 import '../../orders/data/order_repository.dart';
 import '../../shifts/data/shift_repository.dart';
@@ -447,9 +450,18 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                 child: Text(AppLocalizations.of(context)!.text43, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
                               ),
                               TextButton(
-                                onPressed: () {
-                                  ref.read(customerRepositoryProvider).deleteCustomer(customer.id);
+                                onPressed: () async {
                                   Navigator.pop(context);
+                                  final appUser = ref.read(appUserProvider).value;
+                                  if (appUser != null) {
+                                    final pin = await PinService.getDeletePin(appUser);
+                                    if (pin != null) {
+                                      if (!context.mounted) return;
+                                      final success = await PinConfirmationDialog.show(context, pin);
+                                      if (!success) return;
+                                    }
+                                  }
+                                  ref.read(customerRepositoryProvider).deleteCustomer(customer.id);
                                 },
                                 child: Text(AppLocalizations.of(context)!.text59, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                               ),

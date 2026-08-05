@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import '../../../core/services/pin_service.dart';
+import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../domain/order.dart';
 import '../data/order_repository.dart';
 import '../../../core/providers/settings_provider.dart';
@@ -144,6 +147,15 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
 
     if (confirmed == true) {
       try {
+        final appUser = ref.read(appUserProvider).value;
+        if (appUser != null) {
+          final pin = await PinService.getDeletePin(appUser);
+          if (pin != null) {
+            if (!mounted) return;
+            final success = await PinConfirmationDialog.show(context, pin);
+            if (!success) return;
+          }
+        }
         await ref.read(orderRepositoryProvider).deleteOrder(currentOrder);
         final user = ref.read(appUserProvider).value;
         await ActivityLogger.log(

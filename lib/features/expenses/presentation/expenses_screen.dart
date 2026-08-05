@@ -6,6 +6,8 @@ import '../../../core/theme/glass_card.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/expense_repository.dart';
+import '../../../core/services/pin_service.dart';
+import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../domain/expense.dart';
 import 'package:intl/intl.dart';
 import '../../authentication/domain/app_user.dart';
@@ -355,9 +357,18 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                                   child: Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
                                 ),
                                 TextButton(
-                                  onPressed: () {
-                                    ref.read(expenseRepositoryProvider)?.deleteExpense(expense.id);
+                                  onPressed: () async {
                                     Navigator.pop(context);
+                                    final appUser = ref.read(appUserProvider).value;
+                                    if (appUser != null) {
+                                      final pin = await PinService.getDeletePin(appUser);
+                                      if (pin != null) {
+                                        if (!context.mounted) return;
+                                        final success = await PinConfirmationDialog.show(context, pin);
+                                        if (!success) return;
+                                      }
+                                    }
+                                    ref.read(expenseRepositoryProvider)?.deleteExpense(expense.id);
                                   },
                                   child: Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                                 ),

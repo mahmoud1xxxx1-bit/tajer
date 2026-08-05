@@ -4,6 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../data/product_repository.dart';
 import 'add_product_dialog.dart';
+import '../../../core/services/printer_service.dart';
+import '../../../core/services/pin_service.dart';
+import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
@@ -257,9 +260,18 @@ class ProductsScreen extends ConsumerWidget {
                                         ),
                                         ElevatedButton(
                                           style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                                          onPressed: () {
-                                            ref.read(productRepositoryProvider).deleteProduct(product.id);
+                                          onPressed: () async {
                                             Navigator.pop(context);
+                                            final appUser = ref.read(appUserProvider).value;
+                                            if (appUser != null) {
+                                              final pin = await PinService.getDeletePin(appUser);
+                                              if (pin != null) {
+                                                if (!context.mounted) return;
+                                                final success = await PinConfirmationDialog.show(context, pin);
+                                                if (!success) return;
+                                              }
+                                            }
+                                            ref.read(productRepositoryProvider).deleteProduct(product.id);
                                           },
                                           child: Text(l10n.delete, style: const TextStyle(color: Colors.white, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                                         ),
