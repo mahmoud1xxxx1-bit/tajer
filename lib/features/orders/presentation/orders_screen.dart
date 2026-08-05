@@ -145,20 +145,16 @@ class OrdersScreen extends ConsumerWidget {
                                     Navigator.pop(context);
                                     final appUser = ref.read(appUserProvider).value;
                                     if (appUser != null) {
-                                      final pin = await PinService.getDeletePin(appUser);
-                                      if (pin != null) {
-                                        if (!context.mounted) return;
-                                        final isAr = Localizations.localeOf(context).languageCode == 'ar';
-                                        final success = await PinConfirmationDialog.show(
-                                          context, 
-                                          pin,
-                                          title: isAr ? l10n.warningFinalDelete : 'Warning: Delete Order',
-                                          warning: isAr 
-                                              ? l10n.finalDeleteWarningMsg
-                                              : 'Permanent deletion will erase this order from records completely, refund money, and reverse debt. This cannot be undone.',
-                                        );
-                                        if (!success) return;
-                                      }
+                                      final isAr = Localizations.localeOf(context).languageCode == 'ar';
+                                      final success = await PinConfirmationDialog.requirePinOrSetup(
+                                        context, 
+                                        appUser,
+                                        title: isAr ? l10n.warningFinalDelete : 'Warning: Delete Order',
+                                        warning: isAr 
+                                            ? l10n.finalDeleteWarningMsg
+                                            : 'Permanent deletion will erase this order from records completely, refund money, and reverse debt. This cannot be undone.',
+                                      );
+                                      if (!success) return;
                                     }
                                     try {
                                       await ref.read(orderRepositoryProvider).deleteOrder(order);

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../features/authentication/domain/app_user.dart';
+import '../services/pin_service.dart';
 
 class PinConfirmationDialog extends StatefulWidget {
   final String correctPin;
@@ -23,6 +25,73 @@ class PinConfirmationDialog extends StatefulWidget {
       ),
     );
     return result ?? false;
+  }
+
+  static Future<bool> requirePinOrSetup(BuildContext context, AppUser appUser, {String? title, String? warning}) async {
+    String? pin = await PinService.getDeletePin(appUser);
+    if (pin == null || pin.isEmpty) {
+      // Force setup
+      final setupSuccess = await _showSetupPinDialog(context, appUser);
+      if (!setupSuccess) return false;
+      pin = await PinService.getDeletePin(appUser);
+      if (pin == null || pin.isEmpty) return false;
+    }
+    
+    if (!context.mounted) return false;
+    return await show(context, pin, title: title, warning: warning);
+  }
+
+  static Future<bool> _showSetupPinDialog(BuildContext context, AppUser appUser) async {
+    final TextEditingController pinController = TextEditingController();
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    
+    return await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(isAr ? 'إعداد رمز حماية الحذف' : 'Setup Deletion PIN', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(isAr 
+                ? 'أنت على وشك تنفيذ عملية حساسة. لضمان حماية النظام من عبث الموظفين، يرجى إعداد رمز حماية الحذف (PIN) أولاً والذي سيتم طلبه في أي عملية مسح مستقبلاً.'
+                : 'You are about to perform a sensitive operation. To secure the system, please setup a deletion PIN first which will be required for any future deletions.',
+                style: TextStyle(fontFamily: 'Tajawal', color: Colors.orange.shade800, height: 1.5, fontSize: 13)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: pinController,
+              keyboardType: TextInputType.number,
+              maxLength: 4,
+              obscureText: true,
+              style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, letterSpacing: 4),
+              textAlign: TextAlign.center,
+              decoration: InputDecoration(
+                hintText: isAr ? 'أدخل 4 أرقام' : 'Enter 4 digits',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                filled: true,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(isAr ? 'إلغاء' : 'Cancel', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+            onPressed: () async {
+              if (pinController.text.length == 4) {
+                await PinService.setDeletePin(appUser, pinController.text);
+                Navigator.pop(context, true);
+              }
+            },
+            child: Text(isAr ? 'حفظ ومتابعة' : 'Save & Continue', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    ) ?? false;
   }
 
   @override

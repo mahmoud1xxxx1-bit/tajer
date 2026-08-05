@@ -178,19 +178,15 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
       try {
         final appUser = ref.read(appUserProvider).value;
         if (appUser != null) {
-          final pin = await PinService.getDeletePin(appUser);
-          if (pin != null) {
-            if (!mounted) return;
-            final success = await PinConfirmationDialog.show(
-              context, 
-              pin,
-              title: isAr ? 'تحذير: حذف نهائي للطلب' : 'Warning: Delete Order',
-              warning: isAr 
-                  ? 'الحذف النهائي سيمحو هذا الطلب من السجلات تماماً بالإضافة إلى إرجاع الأموال وعكس الديون. لا يمكن استعادة الفاتورة. هل أنت متأكد؟'
-                  : 'Permanent deletion will erase this order from records completely, refund money, and reverse debt. This cannot be undone.',
-            );
-            if (!success) return;
-          }
+          final success = await PinConfirmationDialog.requirePinOrSetup(
+            context, 
+            appUser,
+            title: isAr ? 'تحذير: حذف نهائي للطلب' : 'Warning: Delete Order',
+            warning: isAr 
+                ? 'الحذف النهائي سيمحو هذا الطلب من السجلات تماماً بالإضافة إلى إرجاع الأموال وعكس الديون. لا يمكن استعادة الفاتورة. هل أنت متأكد؟'
+                : 'Permanent deletion will erase this order from records completely, refund money, and reverse debt. This cannot be undone.',
+          );
+          if (!success) return;
         }
         await ref.read(orderRepositoryProvider).deleteOrder(currentOrder);
         final user = ref.read(appUserProvider).value;
