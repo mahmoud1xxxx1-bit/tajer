@@ -12,6 +12,7 @@ import '../../../core/widgets/tax_dialog.dart';
 import '../../../core/services/activity_logger.dart';
 import '../../authentication/data/auth_repository.dart';
 import 'pdf_viewer_screen.dart';
+import '../../../../../../../../core/theme/glass_card.dart';
 
 class OrderDetailsScreen extends ConsumerStatefulWidget {
   final AppOrder order;
@@ -235,10 +236,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Status and Info Card
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 3,
-              color: isCancelled ? Colors.red.withOpacity(0.1) : theme.colorScheme.surface,
+            GlassCard(
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -250,49 +248,29 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: isCancelled ? Colors.red : Colors.green,
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
                             isCancelled ? (isAr ? '❌ طلب ملغي' : '❌ Cancelled') : (isAr ? '✅ طلب مؤكد / مكتمل' : '✅ Completed'),
-                            style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13),
+                            style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13),
                           ),
                         ),
                         Text(
                           '#${currentOrder.queueNumber ?? currentOrder.id.substring(0, 6)}',
-                          style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 18, color: theme.colorScheme.primary),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Divider(color: Colors.grey.withOpacity(0.2)),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        const Icon(Icons.access_time, size: 18, color: Colors.grey),
-                        const SizedBox(width: 8),
-                        Text(dateStr, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
+                          style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 18, fontSize: 14)),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.payment, size: 18, color: Colors.grey),
-                        const SizedBox(width: 8),
-                        Text(
-                          '${isAr ? "طريقة الدفع:" : "Payment:"} ${_getPaymentMethod(currentOrder.paymentMethod ?? "cash", isAr)}',
-                          style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.w600),
+                        const Icon(Icons.payment, size: 18, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(Icons.person, size: 18, color: Colors.grey),
-                        const SizedBox(width: 8),
-                        Text(
-                          '${isAr ? "العميل:" : "Customer:"} ${currentOrder.customerName}',
-                          style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold),
+                        const Icon(Icons.person, size: 18, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold),
                         ),
                       ],
                     ),
@@ -300,11 +278,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(Icons.badge_outlined, size: 18, color: theme.colorScheme.secondary),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${isAr ? "👤 منفذ الفاتورة:" : "👤 Created by:"} ${currentOrder.creatorName}',
-                            style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: theme.colorScheme.secondary, fontWeight: FontWeight.bold),
+                          Icon(Icons.badge_outlined, size: 18, style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -322,41 +296,26 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
             const SizedBox(height: 8),
 
             // Items List Card
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              elevation: 2,
+            GlassCard(
               child: ListView.separated(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: currentOrder.items.length,
-                separatorBuilder: (context, index) => Divider(height: 1, color: Colors.grey.withOpacity(0.2)),
-                itemBuilder: (context, index) {
+                separatorBuilder: (context, index) => Divider(height: 1, index) {
                   final item = currentOrder.items[index];
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundColor: theme.colorScheme.primaryContainer,
-                      child: Text('${item.quantity}x', style: TextStyle(fontWeight: FontWeight.bold, color: theme.colorScheme.primary, fontSize: 13)),
+                      child: Text('${item.quantity}x', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                     ),
                     title: Text(item.productName, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                     subtitle: Text(
                       '${isAr ? "سعر الوحدة:" : "Unit Price:"} ${item.price.toStringAsFixed(2)} ${currency.code}',
-                      style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey[500]),
-                    ),
-                    trailing: Text(
-                      '${item.total.toStringAsFixed(2)} ${currency.code}',
-                      style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 15, color: Colors.green),
-                    ),
-                  );
-                },
-              ),
-            ),
+                      style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, fontWeight: FontWeight.bold, fontSize: 15, ),
 
             const SizedBox(height: 16),
             // Totals Card
-            Card(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              color: theme.colorScheme.surfaceVariant.withOpacity(0.4),
-              elevation: 0,
+            GlassCard(
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -430,95 +389,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                                   Text(isAr ? 'المجموع النهائي للفاتورة' : 'Grand Total', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold)),
                                   Text(
                                     '${grandTotal.toStringAsFixed(2)} ${currency.code}',
-                                    style: const TextStyle(fontFamily: 'Tajawal', fontSize: 20, fontWeight: FontWeight.w900, color: Colors.green),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          );
-                        }
-                        return Column(
-                          children: [
-                            const SizedBox(height: 8),
-                            const Divider(),
-                            const SizedBox(height: 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(isAr ? 'المجموع النهائي للفاتورة' : 'Grand Total', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold)),
-                                Text(
-                                  '${currentOrder.total.toStringAsFixed(2)} ${currency.code}',
-                                  style: const TextStyle(fontFamily: 'Tajawal', fontSize: 20, fontWeight: FontWeight.w900, color: Colors.green),
-                                ),
-                              ],
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                    if (currentOrder.isCredit) ...[
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(isAr ? 'المبلغ المدفوع' : 'Paid Amount', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
-                          Text('${currentOrder.paidAmount.toStringAsFixed(2)} ${currency.code}', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.green)),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Consumer(
-                        builder: (context, ref, child) {
-                          final storeProfile = ref.read(storeProfileProvider).value;
-                          final defaultTaxPercentage = storeProfile?.defaultTaxPercentage ?? 0.0;
-                          final defaultIsTaxInclusive = storeProfile?.defaultIsTaxInclusive ?? false;
-                          
-                          double grandTotal = 0.0;
-                          for (var item in currentOrder.items) {
-                            final taxRate = item.taxPercentage ?? defaultTaxPercentage;
-                            final isInclusive = (item.taxPercentage != null && item.taxPercentage! > 0) ? (item.isTaxInclusive ?? defaultIsTaxInclusive) : defaultIsTaxInclusive;
-                            if (isInclusive) {
-                              grandTotal += item.total;
-                            } else {
-                              grandTotal += item.total + (item.total * (taxRate / 100));
-                            }
-                          }
-
-                          return Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(isAr ? 'المبلغ الآجل (على الحساب)' : 'Remaining Credit', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.bold, color: Colors.red)),
-                              Text('${(grandTotal - currentOrder.paidAmount).toStringAsFixed(2)} ${currency.code}', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontWeight: FontWeight.bold)),
-                            ],
-                          );
-                        }
-                      ),
-                    ],
-                    if (currentOrder.paymentMethod == 'cash' && currentOrder.tenderedAmount != null) ...[
-                      const SizedBox(height: 12),
-                      const Divider(),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(isAr ? 'المبلغ المستلم (كاش)' : 'Tendered Cash', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
-                          Text('${currentOrder.tenderedAmount!.toStringAsFixed(2)} ${currency.code}', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600)),
-                        ],
-                      ),
-                      if (currentOrder.changeAmount != null) ...[
-                        const SizedBox(height: 6),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(isAr ? 'المتبقي للعميل' : 'Change Given', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
-                            Text('${currentOrder.changeAmount!.toStringAsFixed(2)} ${currency.code}', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.green, fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ],
-                ),
-              ),
-            ),
+                                    style: const TextStyle(fontFamily: 'Tajawal', fontSize: 20, fontWeight: FontWeight.w900, ),
 
             const SizedBox(height: 24),
 

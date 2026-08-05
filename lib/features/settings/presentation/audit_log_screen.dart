@@ -8,6 +8,7 @@ import '../../orders/presentation/order_details_screen.dart';
 import '../../expenses/data/expense_repository.dart';
 import '../../expenses/domain/expense.dart';
 import '../../../core/providers/settings_provider.dart';
+import '../../../../../../../../core/theme/glass_card.dart';
 
 class AuditLogItem {
   final String id;
@@ -273,11 +274,8 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                     final dayItems = groupedByDay[day]!;
                     final dailySales = dayItems.where((i) => i.type == 'مبيعات' && i.amount > 0).fold<double>(0.0, (sum, i) => sum + i.amount);
 
-                    return Card(
+                    return GlassCard(
                       margin: const EdgeInsets.only(bottom: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 3,
-                      color: theme.cardColor,
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16),
                         child: ExpansionTile(
@@ -288,10 +286,8 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                           leading: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withOpacity(0.15),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(Icons.calendar_month_outlined, color: theme.colorScheme.primary, size: 24),
+                              ),
+                            child: Icon(Icons.calendar_month_outlined, size: 24),
                           ),
                           title: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -304,13 +300,8 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: Colors.green.withOpacity(0.15),
                                     borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: Colors.green.withOpacity(0.5)),
-                                  ),
-                                  child: Text(
-                                    '${isAr ? "المبيعات:" : "Sales:"} ${dailySales.toStringAsFixed(2)} ${currency.code}',
-                                    style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.green, fontSize: 13),
+                                    border: Border.all(fontWeight: FontWeight.bold, fontSize: 13),
                                   ),
                                 ),
                             ],
@@ -319,123 +310,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                             padding: const EdgeInsets.only(top: 4),
                             child: Text(
                               '${isAr ? "إجمالي الحركات والأنشطة في هذا اليوم:" : "Total activities today:"} ${dayItems.length}',
-                              style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Colors.grey[400]),
-                            ),
-                          ),
-                          children: dayItems.map((item) {
-                            final icon = _getIcon(item.type);
-
-                            return Container(
-                              decoration: BoxDecoration(
-                                border: Border(top: BorderSide(color: Colors.grey.withOpacity(0.15))),
-                              ),
-                              child: InkWell(
-                                onTap: item.order != null
-                                    ? () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => OrderDetailsScreen(order: item.order!),
-                                          ),
-                                        );
-                                      }
-                                    : null,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color: item.badgeColor.withOpacity(0.15),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(icon, color: item.badgeColor, size: 22),
-                                      ),
-                                      const SizedBox(width: 14),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                Expanded(
-                                                  child: Text(
-                                                    item.title,
-                                                    style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 15),
-                                                    maxLines: 2,
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                                if (item.amount != 0.0)
-                                                  Padding(
-                                                    padding: const EdgeInsets.only(left: 8, right: 8),
-                                                    child: Text(
-                                                      '${item.amount.toStringAsFixed(2)} ${currency.code}',
-                                                      style: TextStyle(
-                                                        fontFamily: 'Tajawal',
-                                                        fontWeight: FontWeight.bold,
-                                                        fontSize: 14,
-                                                        color: item.amount > 0 ? Colors.green : Colors.orangeAccent,
-                                                      ),
-                                                    ),
-                                                  ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 6),
-                                            if (item.subtitle.isNotEmpty)
-                                              Text(
-                                                item.subtitle,
-                                                style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8), height: 1.4),
-                                              ),
-                                            if (item.details.isNotEmpty) ...[
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                item.details,
-                                                style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Theme.of(context).colorScheme.primary, fontWeight: FontWeight.w500),
-                                              ),
-                                            ],
-                                            const SizedBox(height: 8),
-                                            Row(
-                                              children: [
-                                                Icon(Icons.access_time, size: 13, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  _formatTime(item.timestamp, isAr),
-                                                  style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
-                                                ),
-                                                const SizedBox(width: 16),
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.blue.withOpacity(0.1),
-                                                    borderRadius: BorderRadius.circular(8),
-                                                  ),
-                                                  child: Text(
-                                                    '👤 ${item.performedBy}',
-                                                    style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.lightBlue, fontWeight: FontWeight.bold),
-                                                  ),
-                                                ),
-                                                if (item.order != null) ...[
-                                                  const Spacer(),
-                                                  Icon(Icons.arrow_forward_ios, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
-                                                ]
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                    );
+                              style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, );
                   },
                 );
               },

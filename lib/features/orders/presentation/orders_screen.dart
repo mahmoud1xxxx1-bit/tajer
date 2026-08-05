@@ -100,19 +100,9 @@ class OrdersScreen extends ConsumerWidget {
                 final totalRevenue = groupOrders.fold(0.0, (sum, o) => sum + o.total);
                 final displayName = key.substring(3);
                 
-                return Container(
+                return GlassCard(
                   margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
+                  padding: EdgeInsets.zero,
                   child: Theme(
                     data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
                     child: ExpansionTile(

@@ -8,6 +8,7 @@ import '../../authentication/domain/app_user.dart';
 import '../../../core/services/pin_service.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
 import 'package:tajer/l10n/app_localizations.dart';
+import '../../../../../../../../core/theme/glass_card.dart';
 
 class RawMaterialsScreen extends ConsumerStatefulWidget {
   const RawMaterialsScreen({super.key});
@@ -218,59 +219,25 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                     final item = materials[index];
                     String unitLabel = item.unit == 'g' ? 'جرام (g)' : item.unit == 'ml' ? 'مللي (ml)' : 'قطعة / حبة';
                     bool isLowStock = item.initialQuantity > 0 && item.quantity <= (item.initialQuantity * 0.10);
-                    return Card(
+                    return GlassCard(
                       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: isLowStock ? BorderSide(color: Colors.red, width: 1.5) : BorderSide.none,
-                      ),
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundColor: isLowStock ? Colors.red.withOpacity(0.2) : Colors.amber.withOpacity(0.2),
-                          child: Icon(isLowStock ? Icons.warning_amber_rounded : Icons.inventory, color: isLowStock ? Colors.red : Colors.amber),
-                        ),
-                        title: Text(item.name, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),
+                          child: Icon(isLowStock ? Icons.warning_amber_rounded : Icons.inventory, fontWeight: FontWeight.bold, fontSize: 16)),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('الرصيد المتوفر: ${item.quantity}  ($unitLabel)', style: TextStyle(fontFamily: 'Tajawal', color: isLowStock ? Colors.red : Colors.amber, fontWeight: isLowStock ? FontWeight.bold : FontWeight.normal)),
+                            Text('الرصيد المتوفر: ${item.quantity}  ($unitLabel)', style: TextStyle(fontFamily: 'Tajawal', fontWeight: isLowStock ? FontWeight.bold : FontWeight.normal)),
                             if (isLowStock)
-                              Text('تنبيه: المورد قارب على الانتهاء', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.red, fontWeight: FontWeight.bold)),
+                              Text('تنبيه: المورد قارب على الانتهاء', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12, fontWeight: FontWeight.bold)),
                           ],
                         ),
                         trailing: canManageInventory ? Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.blue),
-                              onPressed: () => _showAddEditDialog(item),
-                              tooltip: 'تعديل',
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              tooltip: 'حذف',
-                              onPressed: () async {
-                                final appUser = ref.read(appUserProvider).value;
-                                if (appUser != null) {
-                                  final pin = await PinService.getDeletePin(appUser);
-                                  if (pin != null) {
-                                    if (!context.mounted) return;
-                                    final success = await PinConfirmationDialog.show(
-                                      context, 
-                                      pin,
-                                      title: 'تحذير: إخفاء مادة خام',
-                                      warning: 'إخفاء المادة "${item.name}" سيمنع استخدامها في المنتجات مستقبلاً.\nلن تتأثر الفواتير والمنتجات القديمة.',
-                                    );
-                                    if (!success) return;
-                                  }
-                                }
-                                await ref.read(rawMaterialRepositoryProvider).deleteRawMaterial(item.id);
-                              },
-                            ),
-                          ],
-                        ) : null,
-                      ),
-                    );
+                              icon: const Icon(Icons.edit, );
                   },
                 );
               },

@@ -7,6 +7,7 @@ import '../../authentication/domain/app_user.dart';
 import '../../../core/services/printer_service.dart';
 import '../../../core/providers/store_profile_provider.dart';
 import '../../expenses/data/expense_repository.dart';
+import '../../../../../../../../core/theme/glass_card.dart';
 
 class EndShiftScreen extends ConsumerStatefulWidget {
   const EndShiftScreen({super.key});
@@ -101,28 +102,13 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Card(
+                GlassCard(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('معلومات الوردية', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 18, color: Theme.of(context).primaryColor)),
-                        const SizedBox(height: 16),
-                        _buildRow('الموظف:', shift.employeeName),
-                        _buildRow('وقت البدء:', shift.startTime.toString()),
-                        _buildRow('العهدة الافتتاحية:', '${shift.startCash.toStringAsFixed(2)} ر.س'),
-                        _buildRow('مبيعات مدى/تحويل:', '${((shift.cardTotal ?? 0) + (shift.transferTotal ?? 0)).toStringAsFixed(2)} ر.س'),
-                        const Divider(),
-                        _buildRow('المبيعات النقدية:', '${(shift.cashSales ?? 0.0).toStringAsFixed(2)} ر.س'),
-                        _buildRow('إجمالي المصروفات:', '${operatingExpenses.toStringAsFixed(2)} ر.س', color: Colors.red),
-                        if (supplierPayments > 0)
-                          _buildRow('سداد ديون الموردين:', '${supplierPayments.toStringAsFixed(2)} ر.س', color: Colors.orange),
-                        _buildRow('الكاش المتوقع في الدرج:', '${expectedCash.toStringAsFixed(2)} ر.س', isBold: true),
-                      ],
-                    ),
-                  ),
-                ),
+                        Text('معلومات الوردية', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 18, ),
                 const SizedBox(height: 32),
                 const Text('قم بعدّ الكاش الموجود في الدرج الآن وأدخله أدناه:', style: TextStyle(fontFamily: 'Tajawal', fontSize: 16)),
                 const SizedBox(height: 16),

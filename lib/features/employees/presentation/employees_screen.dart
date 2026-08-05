@@ -12,6 +12,7 @@ import '../../../core/services/pin_service.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../../../core/providers/settings_provider.dart';
 import 'employee_activity_screen.dart';
+import '../../../../../../../../core/theme/glass_card.dart';
 
 void showBeautifulUpgradeDialog(BuildContext context) {
   showDialog(
@@ -194,10 +195,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Instructions Card
-                    Card(
-                      elevation: 0,
-                      color: theme.colorScheme.surfaceVariant,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    GlassCard(
                       child: Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
@@ -205,9 +203,7 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.info_outline, color: theme.colorScheme.primary),
-                                const SizedBox(width: 8),
-                                Text("تعليمات هامة للتاجر", style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: theme.colorScheme.primary, fontSize: 16)),
+                                Icon(Icons.info_outline, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),
                               ],
                             ),
                             const SizedBox(height: 12),
@@ -223,16 +219,8 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: Colors.white,
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.grey.shade300)
-                              ),
-                              child: Text(_merchantEmail, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black)),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                                border: Border.all(fontSize: 16, ),
                     const SizedBox(height: 24),
                     
                     // Header

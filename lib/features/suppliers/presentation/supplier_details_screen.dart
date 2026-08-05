@@ -118,7 +118,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
                     final dateStr = sortedDates[index];
                     final dayTransactions = grouped[dateStr]!;
                     
-                    return Card(
+                    return GlassCard(
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                       child: ExpansionTile(
                         initiallyExpanded: index == 0,
@@ -133,7 +133,6 @@ class SupplierDetailsScreen extends ConsumerWidget {
                               backgroundColor: isPayment ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
                               child: Icon(
                                 isPayment ? Icons.arrow_downward : Icons.arrow_upward,
-                                color: isPayment ? Colors.green : Colors.red,
                                 size: 20,
                               ),
                             ),
@@ -142,7 +141,6 @@ class SupplierDetailsScreen extends ConsumerWidget {
                             trailing: Text(
                               '${isPayment ? "-" : "+"}${t.amount} ${currentCurrency.code}',
                               style: TextStyle(
-                                color: isPayment ? Colors.green : Colors.red,
                                 fontWeight: FontWeight.bold,
                                 fontFamily: 'Tajawal'
                               ),
