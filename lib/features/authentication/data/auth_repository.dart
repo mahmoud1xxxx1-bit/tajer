@@ -1,6 +1,7 @@
 import 'package:tajer/l10n/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/utils/date_parser.dart';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -105,8 +106,8 @@ class AuthRepository {
         return appUser;
       } else {
         final data = docSnap.data()!;
-        if (data['createdAt'] is Timestamp) {
-          data['createdAt'] = (data['createdAt'] as Timestamp).toDate().toIso8601String();
+        if (data['createdAt'] != null) {
+          data['createdAt'] = safeParseDate(data['createdAt']).toIso8601String();
         }
         return AppUser.fromJson(data);
       }
@@ -463,8 +464,8 @@ Stream<AppUser?> appUser(AppUserRef ref) {
       .map((snapshot) {
       if (snapshot.exists && snapshot.data() != null) {
         final data = snapshot.data()!;
-        if (data['createdAt'] is Timestamp) {
-          data['createdAt'] = (data['createdAt'] as Timestamp).toDate().toIso8601String();
+        if (data['createdAt'] != null) {
+          data['createdAt'] = safeParseDate(data['createdAt']).toIso8601String();
         }
         if (data['email'] == 'love.dotk@gmail.com') {
           data['plan'] = 'premium';

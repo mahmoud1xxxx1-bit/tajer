@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/utils/date_parser.dart';
 
 class SupplierTransaction {
   final String id;
@@ -29,8 +30,8 @@ class SupplierTransaction {
       amount: (json['amount'] ?? 0.0).toDouble(),
       type: json['type'] ?? 'payment',
       description: json['description'] ?? '',
-      date: (json['date'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      date: safeParseDate(json['date']),
+      createdAt: safeParseDate(json['createdAt']),
     );
   }
 

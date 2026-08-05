@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import '../../../core/utils/date_parser.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../orders/data/order_repository.dart';
@@ -230,7 +231,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                       final data = doc.data() as Map<String, dynamic>? ?? {};
                       
                       if (doc.id.startsWith('act_')) {
-                        final ts = (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
+                        final ts = safeParseDate(data['timestamp']);
                         final action = data['actionType']?.toString() ?? (isAr ? 'عملية' : 'Action');
                         final desc = data['description']?.toString() ?? '';
                         final empName = data['employeeName']?.toString() ?? (isAr ? 'التاجر' : 'Merchant');
@@ -250,7 +251,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                         );
                       } else {
                         // Inventory change log
-                        final ts = (data['date'] as Timestamp?)?.toDate() ?? DateTime.now();
+                        final ts = safeParseDate(data['date']);
                         final pName = data['productName']?.toString() ?? (isAr ? 'صنف/منتج' : 'Product');
                         final change = (data['changeQuantity'] as num? ?? 0).toInt();
                         final prev = (data['previousQuantity'] as num? ?? 0).toInt();

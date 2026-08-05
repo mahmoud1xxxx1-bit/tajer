@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/utils/date_parser.dart';
 import 'product.dart';
 
 class RawMaterial {
@@ -33,8 +34,8 @@ class RawMaterial {
       initialQuantity: (json['initialQuantity'] as num?)?.toDouble() ?? (json['quantity'] as num).toDouble(),
       unit: json['unit'] as String,
       isArchived: json['isArchived'] as bool? ?? false,
-      createdAt: json['createdAt'] != null ? (json['createdAt'] as Timestamp).toDate() : DateTime.now(),
-      updatedAt: json['updatedAt'] != null ? (json['updatedAt'] as Timestamp).toDate() : DateTime.now(),
+      createdAt: safeParseDate(json['createdAt']),
+      updatedAt: safeParseDate(json['updatedAt']),
     );
   }
 

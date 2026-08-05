@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import '../../../core/utils/date_parser.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../orders/data/order_repository.dart';
@@ -184,7 +185,7 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
                         final empName = data['employeeName']?.toString() ?? '';
                         
                         if (empId == widget.employeeId || (empName == widget.employeeName && widget.employeeName.isNotEmpty)) {
-                          final ts = (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now();
+                          final ts = safeParseDate(data['timestamp']);
                           final amount = (data['amount'] as num? ?? 0.0).toDouble();
                           
                           final actionRaw = data['actionType']?.toString() ?? (isAr ? 'عملية نظام' : 'System Action');
@@ -209,7 +210,7 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
                         // Inventory logs by this employee
                         final empEmail = data['userEmail']?.toString() ?? '';
                         if (empEmail == widget.employeeName || empEmail.contains(widget.employeeName)) {
-                          final ts = (data['date'] as Timestamp?)?.toDate() ?? DateTime.now();
+                          final ts = safeParseDate(data['date']);
                           final pName = data['productName']?.toString() ?? (isAr ? 'صنف/منتج' : 'Product');
                           final change = (data['changeQuantity'] as num? ?? 0).toInt();
                           final prev = (data['previousQuantity'] as num? ?? 0).toInt();

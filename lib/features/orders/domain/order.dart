@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/utils/date_parser.dart';
 import '../../products/domain/product.dart'; // For TimestampConverter
 import 'cart_item.dart';
 
@@ -61,11 +62,11 @@ class AppOrder {
       creatorId: json['creatorId'] as String?,
       creatorName: json['creatorName'] as String?,
       paymentMethod: json['paymentMethod'] as String? ?? 'cash',
-      scheduledDate: json['scheduledDate'] != null ? (json['scheduledDate'] as Timestamp).toDate() : null,
+      scheduledDate: safeParseNullableDate(json['scheduledDate']),
       queueNumber: json['queueNumber'] as int?,
       tenderedAmount: (json['tenderedAmount'] as num?)?.toDouble(),
       changeAmount: (json['changeAmount'] as num?)?.toDouble(),
-      createdAt: (json['createdAt'] as Timestamp).toDate(),
+      createdAt: safeParseDate(json['createdAt']),
     );
   }
 

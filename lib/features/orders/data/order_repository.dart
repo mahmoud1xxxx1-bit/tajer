@@ -1,6 +1,7 @@
 import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/utils/date_parser.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -78,9 +79,8 @@ class OrderRepository {
           .catchError((_) => _firestore.collection('orders').where('merchantId', isEqualTo: order.merchantId).get());
       for (final doc in ordersSnap.docs) {
         final data = doc.data();
-        final timestamp = data['createdAt'] as Timestamp?;
-        if (timestamp != null) {
-          final orderDate = timestamp.toDate();
+        final orderDate = safeParseNullableDate(data['createdAt']);
+        if (orderDate != null) {
           if (!orderDate.isBefore(todayStart) && !orderDate.isAfter(todayEnd)) {
             final qNum = (data['queueNumber'] as num? ?? 0).toInt();
             if (qNum > maxQueueToday) maxQueueToday = qNum;
@@ -98,9 +98,8 @@ class OrderRepository {
           .timeout(const Duration(milliseconds: 1500));
       for (final doc in serverSnap.docs) {
         final data = doc.data();
-        final timestamp = data['createdAt'] as Timestamp?;
-        if (timestamp != null) {
-          final orderDate = timestamp.toDate();
+        final orderDate = safeParseNullableDate(data['createdAt']);
+        if (orderDate != null) {
           if (!orderDate.isBefore(todayStart) && !orderDate.isAfter(todayEnd)) {
             final qNum = (data['queueNumber'] as num? ?? 0).toInt();
             if (qNum > maxQueueToday) maxQueueToday = qNum;

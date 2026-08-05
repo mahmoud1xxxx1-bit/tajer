@@ -1,5 +1,6 @@
 import 'package:tajer/l10n/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/utils/date_parser.dart';
 
 class AppNotification {
   final String id;
@@ -21,9 +22,7 @@ class AppNotification {
       id: docId,
       title: json['title'] as String? ?? '',
       message: json['message'] as String? ?? '',
-      createdAt: json['createdAt'] != null
-          ? (json['createdAt'] as Timestamp).toDate()
-          : DateTime.now(),
+      createdAt: safeParseDate(json['createdAt']),
       isRead: json['isRead'] as bool? ?? false,
     );
   }

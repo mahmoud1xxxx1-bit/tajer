@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/utils/date_parser.dart';
 
 class Employee {
   final String id;
@@ -21,9 +22,7 @@ class Employee {
       name: json['name'] as String,
       email: json['email'] as String? ?? '',
       role: json['role'] as String? ?? 'cashier',
-      createdAt: json['createdAt'] != null
-          ? (json['createdAt'] as Timestamp).toDate()
-          : DateTime.now(),
+      createdAt: safeParseDate(json['createdAt']),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/utils/date_parser.dart';
 
 class Customer {
   final String id;
@@ -64,14 +65,15 @@ class Customer {
       totalPurchases: (json['totalPurchases'] as num?)?.toDouble() ?? 0.0,
       orderCount: (json['orderCount'] as num?)?.toInt() ?? 0,
       totalDebt: (json['totalDebt'] as num?)?.toDouble() ?? 0.0,
-      lastPurchaseDate: json['lastPurchaseDate'] != null && json['lastPurchaseDate'] is Timestamp
-          ? (json['lastPurchaseDate'] as Timestamp).toDate()
+      lastPurchaseDate: json['lastPurchaseDate'] != null
+          ? safeParseDate(json['lastPurchaseDate'])
           : null,
-      createdAt: json['createdAt'] != null && json['createdAt'] is Timestamp
-          ? (json['createdAt'] as Timestamp).toDate()
+      createdAt: json['createdAt'] != null
+          ? safeParseDate(json['createdAt'])
           : DateTime.now(),
       creatorName: json['creatorName'] as String?,
       folderName: json['folderName'] as String?,
+      isDeleted: json['isDeleted'] as bool? ?? false,
     );
   }
 

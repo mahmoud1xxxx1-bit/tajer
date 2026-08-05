@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../core/utils/date_parser.dart';
 
 class Shift {
   final String id;
@@ -61,8 +62,8 @@ class Shift {
       merchantId: json['merchantId'] ?? '',
       employeeId: json['employeeId'] ?? '',
       employeeName: json['employeeName'] ?? '',
-      startTime: (json['startTime'] as Timestamp).toDate(),
-      endTime: json['endTime'] != null ? (json['endTime'] as Timestamp).toDate() : null,
+      startTime: safeParseDate(json['startTime']),
+      endTime: safeParseNullableDate(json['endTime']),
       startCash: (json['startCash'] ?? 0.0).toDouble(),
       expectedCash: json['expectedCash']?.toDouble(),
       actualCash: json['actualCash']?.toDouble(),
