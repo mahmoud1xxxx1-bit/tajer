@@ -21,9 +21,11 @@ class RawMaterialsScreen extends ConsumerStatefulWidget {
 class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
   AppLocalizations get l10n => AppLocalizations.of(context)!;
   void _showAddEditDialog([RawMaterial? rawMaterial]) {
-    final nameController = TextEditingController(text: rawMaterial?.name);
-    final quantityController = TextEditingController(text: rawMaterial?.quantity != null ? rawMaterial!.quantity.toString() : '');
+    final nameController = TextEditingController(text: rawMaterial?.name ?? '');
+    final quantityController = TextEditingController(text: rawMaterial?.quantity.toString() ?? '');
     String selectedUnit = rawMaterial?.unit ?? 'g';
+    final l10n = AppLocalizations.of(context)!;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     showDialog(
       context: context,
