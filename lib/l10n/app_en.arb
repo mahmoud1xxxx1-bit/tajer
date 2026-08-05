@@ -627,5 +627,9 @@
   "today": "Today",
   "preparingPdfReport": "Preparing report (PDF)...",
   "twoDaysAgo": "2 Days Ago",
-  "noExpensesInPeriod": "No expenses in this period"
+  "noExpensesInPeriod": "No expenses in this period",
+  "cash": "cash",
+  "card": "card",
+  "transfer": "transfer",
+  "unknown": "unknown"
 }

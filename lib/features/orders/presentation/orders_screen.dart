@@ -221,7 +221,7 @@ class OrdersScreen extends ConsumerWidget {
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
                                             Text(
-                                              l10n.orderNumberLabel(order.queueNumber ?? (order.id.length >= 5 ? order.id.substring(0, 5).toUpperCase() : order.id.toUpperCase())),
+                                              l10n.orderNumberLabel(order.queueNumber?.toString() ?? (order.id.length >= 5 ? order.id.substring(0, 5).toUpperCase() : order.id.toUpperCase())),
                                               style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16),
                                             ),
                                             Text(

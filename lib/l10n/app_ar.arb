@@ -627,5 +627,9 @@
   "today": "اليوم",
   "preparingPdfReport": "جاري تجهيز التقرير (PDF)...",
   "twoDaysAgo": "قبل يومين",
-  "noExpensesInPeriod": "لا توجد مصروفات في هذه الفترة"
+  "noExpensesInPeriod": "لا توجد مصروفات في هذه الفترة",
+  "cash": "cash",
+  "card": "card",
+  "transfer": "transfer",
+  "unknown": "unknown"
 }
