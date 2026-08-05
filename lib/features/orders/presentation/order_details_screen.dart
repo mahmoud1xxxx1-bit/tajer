@@ -301,17 +301,27 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: currentOrder.items.length,
-                separatorBuilder: (context, index) => Divider(height: 1, index) {
+                separatorBuilder: (context, index) => const Divider(height: 1),
+                itemBuilder: (context, index) {
                   final item = currentOrder.items[index];
                   return ListTile(
                     leading: CircleAvatar(
                       backgroundColor: theme.colorScheme.primaryContainer,
-                      child: Text('${item.quantity}x', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                      child: Text('${item.quantity}x', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
                     ),
                     title: Text(item.productName, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                     subtitle: Text(
                       '${isAr ? "سعر الوحدة:" : "Unit Price:"} ${item.price.toStringAsFixed(2)} ${currency.code}',
-                      style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, fontWeight: FontWeight.bold, fontSize: 15, ),
+                      style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12),
+                    ),
+                    trailing: Text(
+                      '${item.total.toStringAsFixed(2)} ${currency.code}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
+                  );
+                },
+              ),
+            ),
 
             const SizedBox(height: 16),
             // Totals Card
@@ -389,8 +399,20 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                                   Text(isAr ? 'المجموع النهائي للفاتورة' : 'Grand Total', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold)),
                                   Text(
                                     '${grandTotal.toStringAsFixed(2)} ${currency.code}',
-                                    style: const TextStyle(fontFamily: 'Tajawal', fontSize: 20, fontWeight: FontWeight.w900, ),
-
+                                    style: const TextStyle(fontFamily: 'Tajawal', fontSize: 20, fontWeight: FontWeight.w900),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 24),
 
             // Actions Section

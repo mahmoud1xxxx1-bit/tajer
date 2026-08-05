@@ -307,7 +307,13 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
                             padding: const EdgeInsets.only(top: 6),
                             child: Text(
                               '${isAr ? "عدد العمليات والحركات المنفذة في هذا اليوم:" : "Actions performed today:"} ${dayItems.length}',
-                              style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, );
+                              style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13),
+                            ),
+                          ),
+                          children: dayItems.map((item) => _buildLogItem(item, theme, currency, isAr)).toList(),
+                        ),
+                      ),
+                    );
                   },
                 );
               },

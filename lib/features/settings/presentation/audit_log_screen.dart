@@ -310,7 +310,13 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                             padding: const EdgeInsets.only(top: 4),
                             child: Text(
                               '${isAr ? "إجمالي الحركات والأنشطة في هذا اليوم:" : "Total activities today:"} ${dayItems.length}',
-                              style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, );
+                              style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13),
+                            ),
+                          ),
+                          children: dayItems.map((item) => _buildLogItem(item, theme, currency, isAr)).toList(),
+                        ),
+                      ),
+                    );
                   },
                 );
               },

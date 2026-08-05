@@ -203,7 +203,9 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                           children: [
                             Row(
                               children: [
-                                Icon(Icons.info_outline, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),
+                                Icon(Icons.info_outline, color: theme.colorScheme.primary),
+                                const SizedBox(width: 8),
+                                const Text('معلومات عن إضافة الموظفين', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),
                               ],
                             ),
                             const SizedBox(height: 12),
@@ -220,7 +222,14 @@ class _EmployeesScreenState extends ConsumerState<EmployeesScreen> {
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(fontSize: 16, ),
+                                border: Border.all(color: Colors.grey.withOpacity(0.5)),
+                              ),
+                              child: Text(merchantEmail, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 24),
                     
                     // Header

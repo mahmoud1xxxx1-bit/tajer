@@ -219,30 +219,42 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                     final item = materials[index];
                     String unitLabel = item.unit == 'g' ? l10n.gLabel : item.unit == 'ml' ? l10n.mlLabel : l10n.pieceUnit;
                     bool isLowStock = item.initialQuantity > 0 && item.quantity <= (item.initialQuantity * 0.10);
-                    return GlassCard(
-                      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: isLowStock ? Colors.red.withOpacity(0.2) : Colors.amber.withOpacity(0.2),
-                          child: Icon(isLowStock ? Icons.warning_amber_rounded : Icons.inventory, fontWeight: FontWeight.bold, fontSize: 16)),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(l10n.availableBalance(item.quantity.toString(), unitLabel), style: TextStyle(fontFamily: 'Tajawal', fontWeight: isLowStock ? FontWeight.bold : FontWeight.normal)),
-                            if (isLowStock)
-                              Text(l10n.resourceRunningOut, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12, fontWeight: FontWeight.bold)),
-                          ],
+                      return GlassCard(
+                        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        child: ListTile(
+                          leading: CircleAvatar(
+                            backgroundColor: isLowStock ? Colors.red.withOpacity(0.2) : Colors.amber.withOpacity(0.2),
+                            child: Icon(isLowStock ? Icons.warning_amber_rounded : Icons.inventory, color: isLowStock ? Colors.red : Colors.amber),
+                          ),
+                          title: Text(item.name, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(l10n.availableBalance(item.quantity.toString(), unitLabel), style: TextStyle(fontFamily: 'Tajawal', fontWeight: isLowStock ? FontWeight.bold : FontWeight.normal)),
+                              if (isLowStock)
+                                Text(l10n.resourceRunningOut, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          trailing: canManageInventory ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit, color: Colors.blue),
+                                onPressed: () => _showAddEditDialog(item),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                                onPressed: () => ref.read(rawMaterialsProvider.notifier).deleteRawMaterial(item.id),
+                              ),
+                            ],
+                          ) : null,
                         ),
-                        trailing: canManageInventory ? Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit, );
-                  },
-                );
-              },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
         ],
       ),
     );

@@ -73,7 +73,7 @@ class OrdersScreen extends ConsumerWidget {
                 groupKey = l10n.yesterdayPrefix + DateFormat('yyyy/MM/dd').format(orderDate);
               } else if (orderDate.isAfter(startOfWeek.subtract(const Duration(days: 1)))) {
                 final endOfWeek = startOfWeek.add(const Duration(days: 6));
-                groupKey = l10n.thisWeekFromTo( + DateFormat('MM/dd').format(startOfWeek), DateFormat('MM/dd').format(endOfWeek));
+                groupKey = l10n.thisWeekFromTo(DateFormat('MM/dd').format(startOfWeek), DateFormat('MM/dd').format(endOfWeek));
               } else if (orderDate.isAfter(today.subtract(const Duration(days: 30)))) {
                 final diffDays = startOfWeek.difference(orderDate).inDays;
                 final weeksAgo = (diffDays / 7).floor() + 1;
