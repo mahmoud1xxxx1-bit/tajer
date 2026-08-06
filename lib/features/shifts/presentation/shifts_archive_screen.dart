@@ -151,6 +151,7 @@ class ShiftsArchiveScreen extends ConsumerWidget {
           ),
         ),
       ),
+      ),
     );
   }
 
