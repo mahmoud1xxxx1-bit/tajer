@@ -382,7 +382,6 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                   child: Text(
                     'حدث خطأ غير متوقع أثناء بناء الواجهة:\n$e\n\n$st',
                     style: const TextStyle(color: Colors.red, fontSize: 14),
-                    textDirection: TextDirection.ltr,
                   ),
                 ),
               ),
