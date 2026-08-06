@@ -47,7 +47,13 @@ class AuditLogScreen extends ConsumerStatefulWidget {
 class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
 
   Widget _buildLogItem(AuditLogItem item, ThemeData theme, dynamic currency, bool isAr) {
-    return GlassCard(
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.05)),
+      ),
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: item.badgeColor.withOpacity(0.2),
@@ -326,8 +332,20 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                     final dayItems = groupedByDay[day]!;
                     final dailySales = dayItems.where((i) => i.type == 'مبيعات' && i.amount > 0).fold<double>(0.0, (sum, i) => sum + i.amount);
 
-                    return GlassCard(
+                    return Container(
                       margin: const EdgeInsets.only(bottom: 16),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.1)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(16),
                         child: ExpansionTile(

@@ -238,9 +238,13 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                       final isPositive = log.changeQuantity > 0;
                       
               
-              return GlassCard(
+              return Container(
                 margin: const EdgeInsets.only(bottom: 12),
-                padding: EdgeInsets.zero,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.05)),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Row(
