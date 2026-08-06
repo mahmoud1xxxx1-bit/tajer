@@ -41,12 +41,12 @@ class AppTheme {
         ),
       ),
       cardColor: surfaceLight,
-      cardTheme: CardTheme(
+      cardTheme: const CardThemeData(
         color: surfaceLight,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Color(0xFFE5E7EB), width: 1),
+          borderRadius: BorderRadius.all(Radius.circular(20)),
+          side: BorderSide(color: Color(0xFFE5E7EB), width: 1),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -106,12 +106,12 @@ class AppTheme {
         ),
       ),
       cardColor: surfaceDark,
-      cardTheme: CardTheme(
+      cardTheme: const CardThemeData(
         color: surfaceDark,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Color(0xFF374151), width: 1), // Gray 700
+          borderRadius: BorderRadius.all(Radius.circular(20)),
+          side: BorderSide(color: Color(0xFF374151), width: 1), // Gray 700
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
