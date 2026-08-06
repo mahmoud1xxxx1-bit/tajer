@@ -142,7 +142,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       final quantity = int.parse(_quantityController.text);
       final total = selectedProduct.price * quantity;
 
-      if (selectedProduct.quantity < quantity) {
+      if (!selectedProduct.isManufacturedOnDemand && selectedProduct.quantity < quantity) {
         throw Exception(AppLocalizations.of(context)!.text80);
       }
 
@@ -172,6 +172,9 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
             quantity: quantity,
             price: selectedProduct.price,
             total: total,
+            isTaxInclusive: selectedProduct.isTaxInclusive,
+            taxPercentage: selectedProduct.taxPercentage,
+            costPrice: selectedProduct.costPrice,
           )
         ],
         total: total,

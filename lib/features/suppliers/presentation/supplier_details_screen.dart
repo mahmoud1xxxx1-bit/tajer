@@ -312,7 +312,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
                 id: const Uuid().v4(),
                 merchantId: merchantId,
                 amount: paid,
-                category: 'سداد ديون موردين',
+                isSupplierPayment: true,
                 date: DateTime.now(),
                 createdAt: DateTime.now(),
                 title: 'دفعة سداد ديون للمورد: ${currentSupplier.name}',

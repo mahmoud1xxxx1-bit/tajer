@@ -217,6 +217,17 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     color: Colors.orange,
                   ),
                 ),
+                if (canViewCost) ...[
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: _SummaryCard(
+                      title: isAr ? 'تكلفة البضاعة المباعة (COGS)' : 'Cost of Goods Sold (COGS)',
+                      value: '${reportsService.totalCOGS} ${currentCurrency.code}',
+                      icon: Icons.inventory_2_outlined,
+                      color: Colors.brown,
+                    ),
+                  ),
+                ],
                 SizedBox(width: 12),
                 Expanded(
                   child: _SummaryCard(

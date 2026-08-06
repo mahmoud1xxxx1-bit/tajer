@@ -44,9 +44,13 @@ class ReportsService {
   
   double get totalDebt => orders.where((o) => o.status != 'cancelled' && o.isCredit).fold(0.0, (sum, order) => sum + (order.total - order.paidAmount));
 
-  double get totalExpenses => expenses.where((e) => e.category != 'سداد ديون موردين').fold(0.0, (sum, expense) => sum + expense.amount);
+  double get totalExpenses => expenses.where((e) => !e.isSupplierPayment).fold(0.0, (sum, expense) => sum + expense.amount);
 
-  double get netProfit => totalRevenue - totalExpenses;
+  double get totalCOGS => orders.where((o) => o.status != 'cancelled' && o.status != 'debt_repayment').fold(0.0, (sum, order) {
+    return sum + order.items.fold(0.0, (itemSum, item) => itemSum + ((item.costPrice ?? 0.0) * item.quantity));
+  });
+
+  double get netProfit => totalRevenue - totalCOGS - totalExpenses;
 
   List<SalesData> getDailySales() {
     final Map<String, double> dailyMap = {};

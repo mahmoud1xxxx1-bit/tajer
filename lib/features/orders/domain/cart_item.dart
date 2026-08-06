@@ -7,6 +7,7 @@ class CartItem {
   final List<String> selectedModifiers;
   final bool? isTaxInclusive;
   final double? taxPercentage;
+  final double? costPrice; // Task 6: Optional COGS value per item at time of sale
 
   const CartItem({
     required this.productId,
@@ -17,6 +18,7 @@ class CartItem {
     this.selectedModifiers = const [],
     this.isTaxInclusive,
     this.taxPercentage,
+    this.costPrice,
   });
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class CartItem {
       selectedModifiers: (json['selectedModifiers'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       isTaxInclusive: json['isTaxInclusive'] as bool?,
       taxPercentage: json['taxPercentage'] != null ? (json['taxPercentage'] as num).toDouble() : null,
+      costPrice: json['costPrice'] != null ? (json['costPrice'] as num).toDouble() : null,
     );
   }
 
@@ -42,6 +45,7 @@ class CartItem {
       'selectedModifiers': selectedModifiers,
       'isTaxInclusive': isTaxInclusive,
       'taxPercentage': taxPercentage,
+      'costPrice': costPrice,
     };
   }
 
@@ -53,6 +57,7 @@ class CartItem {
     double? total,
     bool? isTaxInclusive,
     double? taxPercentage,
+    double? costPrice,
   }) {
     return CartItem(
       productId: productId ?? this.productId,
@@ -62,6 +67,7 @@ class CartItem {
       total: total ?? this.total,
       isTaxInclusive: isTaxInclusive ?? this.isTaxInclusive,
       taxPercentage: taxPercentage ?? this.taxPercentage,
+      costPrice: costPrice ?? this.costPrice,
     );
   }
 }

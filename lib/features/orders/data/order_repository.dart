@@ -181,25 +181,28 @@ class OrderRepository {
         final data = productDoc.data() as Map<String, dynamic>;
         final recipeList = data['recipe'] as List<dynamic>? ?? [];
         
-        // ALWAYS deduct product quantity
-        batch.update(productRef, {
-          'quantity': FieldValue.increment(-item.quantity),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
+        final isManufacturedOnDemand = data['isManufacturedOnDemand'] as bool? ?? false;
         
-        final logRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
-        batch.set(logRef, {
-          'id': logRef.id,
-          'merchantId': order.merchantId,
-          'productId': item.productId,
-          'productName': data['name'] ?? item.productName,
-          'changeQuantity': -item.quantity,
-          'previousQuantity': data['quantity'] ?? 0,
-          'newQuantity': (data['quantity'] as num? ?? 0) - item.quantity,
-          'reason': 'فاتورة مبيعات #${nextQueueNumber}',
-          'date': FieldValue.serverTimestamp(),
-          'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
-        });
+        if (!isManufacturedOnDemand) {
+          batch.update(productRef, {
+            'quantity': FieldValue.increment(-item.quantity),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+          
+          final logRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+          batch.set(logRef, {
+            'id': logRef.id,
+            'merchantId': order.merchantId,
+            'productId': item.productId,
+            'productName': data['name'] ?? item.productName,
+            'changeQuantity': -item.quantity,
+            'previousQuantity': data['quantity'] ?? 0,
+            'newQuantity': (data['quantity'] as num? ?? 0) - item.quantity,
+            'reason': 'فاتورة مبيعات #${nextQueueNumber}',
+            'date': FieldValue.serverTimestamp(),
+            'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+          });
+        }
         
         if (recipeList.isNotEmpty) {
           // Has recipe -> ALSO deduct raw materials
@@ -303,11 +306,14 @@ class OrderRepository {
           final data = productDoc.data()!;
           final recipeList = data['recipe'] as List<dynamic>? ?? [];
 
-          // ALWAYS restore product quantity
-          batch.update(productRef, {
-            'quantity': FieldValue.increment(item.quantity),
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
+          final isManufacturedOnDemand = data['isManufacturedOnDemand'] as bool? ?? false;
+
+          if (!isManufacturedOnDemand) {
+            batch.update(productRef, {
+              'quantity': FieldValue.increment(item.quantity),
+              'updatedAt': FieldValue.serverTimestamp(),
+            });
+          }
 
           if (recipeList.isNotEmpty) {
             for (final recipeItem in recipeList) {
@@ -333,7 +339,8 @@ class OrderRepository {
           final currentDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
           
           final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
-          final actualDecrease = currentDebt >= debtDecrease ? debtDecrease : currentDebt;
+          // TASK 5: Allow debt to go negative (Store Credit) by removing the clamp
+          final actualDecrease = debtDecrease;
 
           batch.update(customerRef, {
             'totalPurchases': FieldValue.increment(-order.total),
@@ -354,12 +361,31 @@ class OrderRepository {
             .get();
         if (openShiftsSnap.docs.isNotEmpty) {
           final shiftRef = openShiftsSnap.docs.first.reference;
+          
+          double orderTax = 0.0;
+          for (final item in order.items) {
+            if (item.taxPercentage != null && item.taxPercentage! > 0) {
+              orderTax += item.total - (item.total / (1 + (item.taxPercentage! / 100)));
+            }
+          }
+
+          final updates = <String, dynamic>{};
+          // TASK 8: Phantom Taxes - subtract tax from shift
+          if (orderTax > 0) {
+            updates['totalTax'] = FieldValue.increment(-orderTax);
+          }
+
+          // TASK 4: Cross-Shift Corruption - Add to refunds instead of subtracting from sales
           if (order.paymentMethod == 'cash') {
-            batch.update(shiftRef, {'cashSales': FieldValue.increment(-order.paidAmount)});
+            updates['refundsCash'] = FieldValue.increment(order.paidAmount);
           } else if (order.paymentMethod == 'card' || order.paymentMethod == 'mada' || order.paymentMethod == 'apple_pay') {
-            batch.update(shiftRef, {'cardTotal': FieldValue.increment(-order.paidAmount)});
+            updates['refundsCard'] = FieldValue.increment(order.paidAmount);
           } else if (order.paymentMethod == 'transfer') {
-            batch.update(shiftRef, {'transferTotal': FieldValue.increment(-order.paidAmount)});
+            updates['refundsTransfer'] = FieldValue.increment(order.paidAmount);
+          }
+          
+          if (updates.isNotEmpty) {
+            batch.update(shiftRef, updates);
           }
         }
       }
@@ -387,25 +413,28 @@ class OrderRepository {
           final data = productDoc.data()!;
           final recipeList = data['recipe'] as List<dynamic>? ?? [];
 
-          // ALWAYS restore product quantity
-          batch.update(productRef, {
-            'quantity': FieldValue.increment(item.quantity),
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
-          
-          final logRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
-          batch.set(logRef, {
-            'id': logRef.id,
-            'merchantId': order.merchantId,
-            'productId': item.productId,
-            'productName': data['name'] ?? item.productName,
-            'changeQuantity': item.quantity,
-            'previousQuantity': data['quantity'] ?? 0,
-            'newQuantity': (data['quantity'] as num? ?? 0) + item.quantity,
-            'reason': 'استرجاع مخزون بسبب إلغاء فاتورة #${order.queueNumber ?? order.id}',
-            'date': FieldValue.serverTimestamp(),
-            'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
-          });
+          final isManufacturedOnDemand = data['isManufacturedOnDemand'] as bool? ?? false;
+
+          if (!isManufacturedOnDemand) {
+            batch.update(productRef, {
+              'quantity': FieldValue.increment(item.quantity),
+              'updatedAt': FieldValue.serverTimestamp(),
+            });
+            
+            final logRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+            batch.set(logRef, {
+              'id': logRef.id,
+              'merchantId': order.merchantId,
+              'productId': item.productId,
+              'productName': data['name'] ?? item.productName,
+              'changeQuantity': item.quantity,
+              'previousQuantity': data['quantity'] ?? 0,
+              'newQuantity': (data['quantity'] as num? ?? 0) + item.quantity,
+              'reason': 'استرجاع مخزون بسبب إلغاء فاتورة #${order.queueNumber ?? order.id}',
+              'date': FieldValue.serverTimestamp(),
+              'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+            });
+          }
 
           if (recipeList.isNotEmpty) {
             for (final recipeItem in recipeList) {
@@ -444,10 +473,9 @@ class OrderRepository {
         final customerRef = _firestore.collection('customers').doc(order.customerId);
         final customerDoc = await customerRef.get();
         if (customerDoc.exists) {
-          final currentDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
-          
           final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
-          final actualDecrease = currentDebt >= debtDecrease ? debtDecrease : currentDebt;
+          // TASK 5: Allow debt to go negative (Store Credit) by removing the clamp
+          final actualDecrease = debtDecrease;
 
           batch.update(customerRef, {
             'totalPurchases': FieldValue.increment(-order.total),
@@ -468,12 +496,31 @@ class OrderRepository {
             .get();
         if (openShiftsSnap.docs.isNotEmpty) {
           final shiftRef = openShiftsSnap.docs.first.reference;
+
+          double orderTax = 0.0;
+          for (final item in order.items) {
+            if (item.taxPercentage != null && item.taxPercentage! > 0) {
+              orderTax += item.total - (item.total / (1 + (item.taxPercentage! / 100)));
+            }
+          }
+
+          final updates = <String, dynamic>{};
+          // TASK 8: Phantom Taxes - subtract tax from shift
+          if (orderTax > 0) {
+            updates['totalTax'] = FieldValue.increment(-orderTax);
+          }
+
+          // TASK 4: Cross-Shift Corruption - Add to refunds instead of subtracting from sales
           if (order.paymentMethod == 'cash') {
-            batch.update(shiftRef, {'cashSales': FieldValue.increment(-order.paidAmount)});
+            updates['refundsCash'] = FieldValue.increment(order.paidAmount);
           } else if (order.paymentMethod == 'card' || order.paymentMethod == 'mada' || order.paymentMethod == 'apple_pay') {
-            batch.update(shiftRef, {'cardTotal': FieldValue.increment(-order.paidAmount)});
+            updates['refundsCard'] = FieldValue.increment(order.paidAmount);
           } else if (order.paymentMethod == 'transfer') {
-            batch.update(shiftRef, {'transferTotal': FieldValue.increment(-order.paidAmount)});
+            updates['refundsTransfer'] = FieldValue.increment(order.paidAmount);
+          }
+          
+          if (updates.isNotEmpty) {
+            batch.update(shiftRef, updates);
           }
         }
       }
@@ -488,11 +535,14 @@ class OrderRepository {
           final data = productDoc.data()!;
           final recipeList = data['recipe'] as List<dynamic>? ?? [];
 
-          // ALWAYS deduct product quantity
-          batch.update(productRef, {
-            'quantity': FieldValue.increment(-item.quantity),
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
+          final isManufacturedOnDemand = data['isManufacturedOnDemand'] as bool? ?? false;
+
+          if (!isManufacturedOnDemand) {
+            batch.update(productRef, {
+              'quantity': FieldValue.increment(-item.quantity),
+              'updatedAt': FieldValue.serverTimestamp(),
+            });
+          }
 
           if (recipeList.isNotEmpty) {
             for (final recipeItem in recipeList) {

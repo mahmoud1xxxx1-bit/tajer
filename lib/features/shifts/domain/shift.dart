@@ -19,6 +19,9 @@ class Shift {
   final double? debtCollectionsCash; // الديون المحصلة كاش خلال الوردية
   final double? debtCollectionsCard; // الديون المحصلة مدى خلال الوردية
   final double? debtCollectionsTransfer; // الديون المحصلة حوالة بنكية خلال الوردية
+  final double? refundsCash; // إجمالي المرتجعات نقداً
+  final double? refundsCard; // إجمالي المرتجعات مدى
+  final double? refundsTransfer; // إجمالي المرتجعات تحويل
   final double? totalTax; // إجمالي الضريبة المحصلة
   final String status; // 'open', 'closed'
 
@@ -40,6 +43,9 @@ class Shift {
     this.debtCollectionsCash,
     this.debtCollectionsCard,
     this.debtCollectionsTransfer,
+    this.refundsCash,
+    this.refundsCard,
+    this.refundsTransfer,
     this.totalTax,
     required this.status,
   });
@@ -63,6 +69,9 @@ class Shift {
       'debtCollectionsCash': debtCollectionsCash,
       'debtCollectionsCard': debtCollectionsCard,
       'debtCollectionsTransfer': debtCollectionsTransfer,
+      'refundsCash': refundsCash,
+      'refundsCard': refundsCard,
+      'refundsTransfer': refundsTransfer,
       'totalTax': totalTax,
       'status': status,
     };
@@ -87,6 +96,9 @@ class Shift {
       debtCollectionsCash: json['debtCollectionsCash']?.toDouble(),
       debtCollectionsCard: json['debtCollectionsCard']?.toDouble(),
       debtCollectionsTransfer: json['debtCollectionsTransfer']?.toDouble(),
+      refundsCash: json['refundsCash']?.toDouble(),
+      refundsCard: json['refundsCard']?.toDouble(),
+      refundsTransfer: json['refundsTransfer']?.toDouble(),
       totalTax: json['totalTax']?.toDouble(),
       status: json['status'] ?? 'open',
     );
@@ -110,6 +122,9 @@ class Shift {
     double? debtCollectionsCash,
     double? debtCollectionsCard,
     double? debtCollectionsTransfer,
+    double? refundsCash,
+    double? refundsCard,
+    double? refundsTransfer,
     double? totalTax,
     String? status,
   }) {
@@ -131,6 +146,9 @@ class Shift {
       debtCollectionsCash: debtCollectionsCash ?? this.debtCollectionsCash,
       debtCollectionsCard: debtCollectionsCard ?? this.debtCollectionsCard,
       debtCollectionsTransfer: debtCollectionsTransfer ?? this.debtCollectionsTransfer,
+      refundsCash: refundsCash ?? this.refundsCash,
+      refundsCard: refundsCard ?? this.refundsCard,
+      refundsTransfer: refundsTransfer ?? this.refundsTransfer,
       totalTax: totalTax ?? this.totalTax,
       status: status ?? this.status,
     );

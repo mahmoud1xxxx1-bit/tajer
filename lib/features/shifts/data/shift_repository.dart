@@ -45,9 +45,15 @@ class ShiftRepository {
       'endTime': shift.endTime,
       'expectedCash': shift.expectedCash,
       'actualCash': shift.actualCash,
+      'actualCard': shift.actualCard,
+      'actualTransfer': shift.actualTransfer,
       'cardTotal': shift.cardTotal,
       'transferTotal': shift.transferTotal,
       'cashSales': shift.cashSales,
+      'refundsCash': shift.refundsCash,
+      'refundsCard': shift.refundsCard,
+      'refundsTransfer': shift.refundsTransfer,
+      'totalTax': shift.totalTax,
       'status': 'closed',
     });
   }

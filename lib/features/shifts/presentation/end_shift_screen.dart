@@ -106,22 +106,27 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           final allShiftExpenses = expenses.where((e) => e.date.isAfter(shift.startTime));
           
           final operatingExpenses = allShiftExpenses
-              .where((e) => e.category != 'سداد ديون موردين')
+              .where((e) => !e.isSupplierPayment)
               .fold(0.0, (sum, e) => sum + e.amount);
               
           final supplierPayments = allShiftExpenses
-              .where((e) => e.category == 'سداد ديون موردين')
+              .where((e) => e.isSupplierPayment)
               .fold(0.0, (sum, e) => sum + e.amount);
 
-          // Calculate cash expenses
-          final totalCashExpenses = operatingExpenses + supplierPayments;
+          // Calculate cash expenses (TASK 1: Only operating expenses are subtracted from drawer)
+          final totalCashExpenses = operatingExpenses;
+          
           final totalDebtsCollectedCash = shift.debtCollectionsCash ?? 0.0;
           final totalDebtsCollectedCard = shift.debtCollectionsCard ?? 0.0;
           final totalDebtsCollectedTransfer = shift.debtCollectionsTransfer ?? 0.0;
           final totalTax = shift.totalTax ?? 0.0;
+          
+          final totalRefundsCash = shift.refundsCash ?? 0.0;
+          final totalRefundsCard = shift.refundsCard ?? 0.0;
+          final totalRefundsTransfer = shift.refundsTransfer ?? 0.0;
 
-          // Expected Cash = Start Cash + Cash Sales + Debts Collected Cash - Expenses
-          final expectedCash = shift.startCash + (shift.cashSales ?? 0.0) + totalDebtsCollectedCash - totalCashExpenses;
+          // Expected Cash = Start Cash + Cash Sales + Debts Collected Cash - Cash Expenses - Cash Refunds
+          final expectedCash = shift.startCash + (shift.cashSales ?? 0.0) + totalDebtsCollectedCash - totalCashExpenses - totalRefundsCash;
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -141,15 +146,22 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                         _buildRow(isAr ? 'رصيد الصندوق الافتتاحي:' : 'Opening Cash:', '${shift.startCash} ${isAr ? 'ر.س' : 'SAR'}'),
                         _buildRow(isAr ? 'مبيعات الكاش (صورة فعلية):' : 'Actual Cash Sales:', '${shift.cashSales ?? 0.0} ${isAr ? 'ر.س' : 'SAR'}', color: Colors.green),
                         _buildRow(isAr ? 'ديون مُحصلة كاش:' : 'Debts Collected (Cash):', '$totalDebtsCollectedCash ${isAr ? 'ر.س' : 'SAR'}', color: Colors.teal),
-                        _buildRow(isAr ? 'إجمالي المصروفات (كاش):' : 'Total Expenses (Cash):', '-$totalCashExpenses ${isAr ? 'ر.س' : 'SAR'}', color: Colors.red),
+                        _buildRow(isAr ? 'إجمالي المرتجعات (كاش):' : 'Total Refunds (Cash):', '-$totalRefundsCash ${isAr ? 'ر.س' : 'SAR'}', color: Colors.red.shade700),
+                        _buildRow(isAr ? 'إجمالي المصروفات التشغيلية (كاش):' : 'Operating Expenses (Cash):', '-$totalCashExpenses ${isAr ? 'ر.س' : 'SAR'}', color: Colors.red),
+                        if (supplierPayments > 0)
+                          _buildRow(isAr ? 'سداد ديون موردين (لا يُخصم من الدرج):' : 'Supplier Payments (Not deducted):', '$supplierPayments ${isAr ? 'ر.س' : 'SAR'}', color: Colors.purple),
                         const Divider(height: 24),
                         _buildRow(isAr ? 'الكاش المتوقع في الدرج الآن:' : 'Expected Cash in Drawer:', '${expectedCash.toStringAsFixed(2)} ${isAr ? 'ر.س' : 'SAR'}', isBold: true, color: Colors.blue.shade800),
                         const Divider(height: 24),
                         _buildRow(isAr ? 'إجمالي الضريبة المحصلة (للمعلومة):' : 'Total Collected Tax (Info):', '${totalTax.toStringAsFixed(2)} ${isAr ? 'ر.س' : 'SAR'}', color: Colors.grey.shade700),
                         _buildRow(isAr ? 'مبيعات مدى:' : 'Card Sales:', '${shift.cardTotal ?? 0.0} ${isAr ? 'ر.س' : 'SAR'}', color: Colors.blueGrey),
                         _buildRow(isAr ? 'ديون مُحصلة مدى:' : 'Debts Collected (Card):', '$totalDebtsCollectedCard ${isAr ? 'ر.س' : 'SAR'}', color: Colors.teal),
+                        if (totalRefundsCard > 0)
+                          _buildRow(isAr ? 'مرتجعات مدى:' : 'Refunds (Card):', '-$totalRefundsCard ${isAr ? 'ر.س' : 'SAR'}', color: Colors.red.shade700),
                         _buildRow(isAr ? 'تحويل بنكي:' : 'Bank Transfer:', '${shift.transferTotal ?? 0.0} ${isAr ? 'ر.س' : 'SAR'}', color: Colors.blueGrey),
                         _buildRow(isAr ? 'ديون مُحصلة حوالة:' : 'Debts Collected (Transfer):', '$totalDebtsCollectedTransfer ${isAr ? 'ر.س' : 'SAR'}', color: Colors.teal),
+                        if (totalRefundsTransfer > 0)
+                          _buildRow(isAr ? 'مرتجعات تحويل:' : 'Refunds (Transfer):', '-$totalRefundsTransfer ${isAr ? 'ر.س' : 'SAR'}', color: Colors.red.shade700),
                       ],
                     ),
                   ),

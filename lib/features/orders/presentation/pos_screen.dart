@@ -44,7 +44,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     setState(() {
       final existingIndex = _cart.indexWhere((item) => item.productId == product.id && listEquals(item.selectedModifiers, selectedModifiers));
       if (existingIndex >= 0) {
-        if (product.quantity > _cart[existingIndex].quantity) {
+        if (product.isManufacturedOnDemand || product.quantity > _cart[existingIndex].quantity) {
            _cart[existingIndex] = _cart[existingIndex].copyWith(
              quantity: _cart[existingIndex].quantity + 1,
              total: (_cart[existingIndex].quantity + 1) * product.price,
@@ -53,7 +53,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('الكمية غير متوفرة في المخزون', style: TextStyle(fontFamily: 'Tajawal'))));
         }
       } else {
-        if (product.quantity > 0) {
+        if (product.isManufacturedOnDemand || product.quantity > 0) {
           _cart.add(CartItem(
             productId: product.id,
             productName: product.name,
@@ -63,6 +63,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
             selectedModifiers: List.from(selectedModifiers),
             isTaxInclusive: product.isTaxInclusive,
             taxPercentage: product.taxPercentage,
+            costPrice: product.costPrice,
           ));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('المنتج نفذ من المخزون', style: TextStyle(fontFamily: 'Tajawal'))));

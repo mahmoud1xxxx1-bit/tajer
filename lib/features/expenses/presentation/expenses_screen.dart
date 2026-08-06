@@ -28,7 +28,7 @@ class ExpensesScreen extends ConsumerWidget {
       ),
       body: expensesAsync.when(
         data: (allExpenses) {
-          final expenses = allExpenses.where((e) => e.category != 'سداد ديون موردين').toList();
+          final expenses = allExpenses.where((e) => !e.isSupplierPayment).toList();
           
           if (expenses.isEmpty) {
             return Center(child: Text(AppLocalizations.of(context)!.text65, style: TextStyle(fontFamily: 'Tajawal')));

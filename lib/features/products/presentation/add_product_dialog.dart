@@ -31,6 +31,8 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
   final _modifiersController = TextEditingController();
   final _rawMaterialQtyController = TextEditingController();
   final _taxPercentageController = TextEditingController();
+  final _costPriceController = TextEditingController();
+  bool _isManufacturedOnDemand = false;
   bool? _isTaxInclusive;
   String? _selectedCategoryId;
   String? _selectedRawMaterialId;
@@ -46,6 +48,8 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       _barcodeController.text = widget.productToEdit!.barcode ?? '';
       _modifiersController.text = widget.productToEdit!.modifiers.join('، ');
       _taxPercentageController.text = widget.productToEdit!.taxPercentage?.toString() ?? '';
+      _costPriceController.text = widget.productToEdit!.costPrice?.toString() ?? '';
+      _isManufacturedOnDemand = widget.productToEdit!.isManufacturedOnDemand;
       _isTaxInclusive = widget.productToEdit!.isTaxInclusive;
       _selectedCategoryId = widget.productToEdit!.categoryId;
       if (widget.productToEdit!.recipe.isNotEmpty) {
@@ -64,6 +68,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     _modifiersController.dispose();
     _rawMaterialQtyController.dispose();
     _taxPercentageController.dispose();
+    _costPriceController.dispose();
     super.dispose();
   }
 
@@ -119,6 +124,8 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
         recipe: updatedRecipe,
         isTaxInclusive: _isTaxInclusive,
         taxPercentage: _taxPercentageController.text.trim().isEmpty ? null : double.tryParse(_taxPercentageController.text.trim()),
+        isManufacturedOnDemand: _isManufacturedOnDemand,
+        costPrice: _costPriceController.text.trim().isEmpty ? null : double.tryParse(_costPriceController.text.trim()),
         createdAt: isEditing ? widget.productToEdit!.createdAt : DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -259,6 +266,17 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                 SizedBox(width: 16),
                 Expanded(
                   child: TextFormField(
+                    controller: _costPriceController,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: isAr ? 'التكلفة (اختياري)' : 'Cost Price (Optional)',
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 16),
+                Expanded(
+                  child: TextFormField(
                     controller: _quantityController,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
@@ -269,6 +287,12 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                   ),
                 ),
               ],
+            ),
+            SizedBox(height: 16),
+            SwitchListTile(
+              title: Text(isAr ? 'يُصنع عند الطلب (لا يُخصم من المخزون كمنتج نهائي)' : 'Made to order (Do not deduct product quantity)'),
+              value: _isManufacturedOnDemand,
+              onChanged: (value) => setState(() => _isManufacturedOnDemand = value),
             ),
             SizedBox(height: 16),
             TextFormField(
