@@ -460,33 +460,35 @@ class _SummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     return SizedBox(
-      height: 120, // Increased fixed height
+      height: 120, // Fixed height as requested
       child: GlassCard(
         padding: EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(icon, color: color, size: 20),
-                SizedBox(width: 8),
+                Icon(icon, color: color, size: 22),
+                SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     title,
-                    style: TextStyle(fontSize: 13, fontFamily: 'Tajawal'),
-                    maxLines: 1,
+                    style: TextStyle(fontSize: 12, fontFamily: 'Tajawal', height: 1.3),
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 12),
-            Expanded(
+            Spacer(),
+            Align(
+              alignment: isAr ? Alignment.centerLeft : Alignment.centerRight,
               child: FittedBox(
                 fit: BoxFit.scaleDown,
-                alignment: Alignment.centerRight,
                 child: Text(
                   value,
                   style: TextStyle(
