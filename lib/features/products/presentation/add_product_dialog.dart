@@ -257,30 +257,31 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                     controller: _priceController,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: l10n.price,
+                      labelText: isAr ? 'السعر' : 'Price',
                       border: const OutlineInputBorder(),
                     ),
                     validator: (value) => value!.isEmpty ? l10n.requiredField : null,
                   ),
                 ),
-                SizedBox(width: 16),
+                SizedBox(width: 8),
                 Expanded(
                   child: TextFormField(
                     controller: _costPriceController,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: isAr ? 'التكلفة (اختياري)' : 'Cost Price (Optional)',
+                      labelText: isAr ? 'التكلفة' : 'Cost',
+                      hintText: isAr ? 'اختياري' : 'Optional',
                       border: const OutlineInputBorder(),
                     ),
                   ),
                 ),
-                SizedBox(width: 16),
+                SizedBox(width: 8),
                 Expanded(
                   child: TextFormField(
                     controller: _quantityController,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: l10n.availableQuantity,
+                      labelText: isAr ? 'الكمية' : 'Quantity',
                       border: const OutlineInputBorder(),
                     ),
                     validator: (value) => value!.isEmpty ? l10n.requiredField : null,
@@ -290,9 +291,20 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             ),
             SizedBox(height: 16),
             SwitchListTile(
-              title: Text(isAr ? 'يُصنع عند الطلب (لا يُخصم من المخزون كمنتج نهائي)' : 'Made to order (Do not deduct product quantity)'),
+              title: Text(
+                isAr ? 'منتج يُحضّر عند الطلب (كالوجبات والقهوة)' : 'Prepared on Demand (e.g. Meals, Coffee)',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                isAr 
+                  ? 'عند التفعيل: سيُخصم مخزون المواد الخام فقط عند البيع. لن تُطالب بتوفير كمية جاهزة من المنتج نفسه.' 
+                  : 'When enabled: Only raw materials are deducted upon sale. Pre-stocked quantity is not required.',
+                style: const TextStyle(fontSize: 12),
+              ),
               value: _isManufacturedOnDemand,
               onChanged: (value) => setState(() => _isManufacturedOnDemand = value),
+              activeColor: Colors.orange,
+              contentPadding: EdgeInsets.zero,
             ),
             SizedBox(height: 16),
             TextFormField(
@@ -383,7 +395,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                         controller: _rawMaterialQtyController,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
-                          labelText: isAr ? 'الكمية المخصومة لكل 1 طلب' : 'Qty Deducted per Order',
+                          labelText: isAr ? 'الكمية' : 'Quantity',
                           border: const OutlineInputBorder(),
                         ),
                       ),
