@@ -56,12 +56,14 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
         border: Border.all(color: theme.colorScheme.primary.withOpacity(0.05)),
       ),
       child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: item.badgeColor.withOpacity(0.2),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: item.badgeColor.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
           child: Icon(
-            item.type == 'order' ? Icons.shopping_cart :
-            item.type == 'expense' ? Icons.money_off :
-            Icons.info,
+            _getIcon(item.type),
             color: item.badgeColor,
           ),
         ),
@@ -81,8 +83,8 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            Text('${item.amount.toStringAsFixed(2)} ${currency.name}', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: item.badgeColor)),
-            Text('${item.timestamp.hour}:${item.timestamp.minute.toString().padLeft(2, "0")}', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 10)),
+            Text('${item.amount.toStringAsFixed(2)} ${currency.code}', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: item.badgeColor)),
+            Text(_formatTime(item.timestamp, isAr), style: const TextStyle(fontFamily: 'Tajawal', fontSize: 10)),
           ],
         ),
         onTap: () {
@@ -183,7 +185,11 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                   .snapshots(),
               builder: (context, snapshot) {
                 try {
-                if (snapshot.connectionState == ConnectionState.waiting && ordersAsync.isLoading) {
+                final isInventoryLoading = snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData;
+                final isOrdersLoading = ordersAsync.isLoading && !ordersAsync.hasValue;
+                final isExpensesLoading = expensesAsync.isLoading && !expensesAsync.hasValue;
+
+                if (isInventoryLoading || isOrdersLoading || isExpensesLoading) {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
