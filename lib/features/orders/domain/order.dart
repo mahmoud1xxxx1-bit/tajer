@@ -21,6 +21,8 @@ class AppOrder {
   final int? queueNumber;
   final double? tenderedAmount;
   final double? changeAmount;
+  final double? splitCashAmount;
+  final double? splitNetworkAmount;
   final DateTime createdAt;
 
   const AppOrder({
@@ -41,6 +43,8 @@ class AppOrder {
     this.queueNumber,
     this.tenderedAmount,
     this.changeAmount,
+    this.splitCashAmount,
+    this.splitNetworkAmount,
     required this.createdAt,
   });
 
@@ -66,6 +70,8 @@ class AppOrder {
       queueNumber: json['queueNumber'] as int?,
       tenderedAmount: (json['tenderedAmount'] as num?)?.toDouble(),
       changeAmount: (json['changeAmount'] as num?)?.toDouble(),
+      splitCashAmount: (json['splitCashAmount'] as num?)?.toDouble(),
+      splitNetworkAmount: (json['splitNetworkAmount'] as num?)?.toDouble(),
       createdAt: safeParseDate(json['createdAt']),
     );
   }
@@ -89,6 +95,8 @@ class AppOrder {
       'queueNumber': queueNumber,
       'tenderedAmount': tenderedAmount,
       'changeAmount': changeAmount,
+      'splitCashAmount': splitCashAmount,
+      'splitNetworkAmount': splitNetworkAmount,
       'createdAt': Timestamp.fromDate(createdAt),
     };
   }
@@ -111,6 +119,8 @@ class AppOrder {
     int? queueNumber,
     double? tenderedAmount,
     double? changeAmount,
+    double? splitCashAmount,
+    double? splitNetworkAmount,
     DateTime? createdAt,
   }) {
     return AppOrder(
@@ -131,6 +141,8 @@ class AppOrder {
       queueNumber: queueNumber ?? this.queueNumber,
       tenderedAmount: tenderedAmount ?? this.tenderedAmount,
       changeAmount: changeAmount ?? this.changeAmount,
+      splitCashAmount: splitCashAmount ?? this.splitCashAmount,
+      splitNetworkAmount: splitNetworkAmount ?? this.splitNetworkAmount,
       createdAt: createdAt ?? this.createdAt,
     );
   }

@@ -7,6 +7,7 @@ class SupplierTransaction {
   final String merchantId;
   final double amount;
   final String type; // 'debt_addition', 'payment'
+  final String? paymentMethod; // 'cash', 'network'
   final String description;
   final DateTime date;
   final DateTime createdAt;
@@ -17,6 +18,7 @@ class SupplierTransaction {
     required this.merchantId,
     required this.amount,
     required this.type,
+    this.paymentMethod = 'cash',
     required this.description,
     required this.date,
     required this.createdAt,
@@ -29,6 +31,7 @@ class SupplierTransaction {
       merchantId: json['merchantId'] ?? '',
       amount: (json['amount'] ?? 0.0).toDouble(),
       type: json['type'] ?? 'payment',
+      paymentMethod: json['paymentMethod'] ?? 'cash',
       description: json['description'] ?? '',
       date: safeParseDate(json['date']),
       createdAt: safeParseDate(json['createdAt']),
@@ -42,6 +45,7 @@ class SupplierTransaction {
       'merchantId': merchantId,
       'amount': amount,
       'type': type,
+      'paymentMethod': paymentMethod,
       'description': description,
       'date': Timestamp.fromDate(date),
       'createdAt': Timestamp.fromDate(createdAt),

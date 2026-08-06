@@ -303,6 +303,23 @@ class PrinterService {
                       ),
                     ]
                   ],
+                  if (order.paymentMethod == 'split') ...[
+                    pw.SizedBox(height: 4),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text('المدفوع نقداً:', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                        pw.Text('${(order.splitCashAmount ?? 0).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                      ]
+                    ),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text('المدفوع شبكة:', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                        pw.Text('${(order.splitNetworkAmount ?? 0).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                      ]
+                    ),
+                  ],
                 ],
 
                 pw.SizedBox(height: 10),
@@ -378,6 +395,8 @@ class PrinterService {
     Shift shift, 
     String currency, {
     StoreProfile? storeProfile,
+    double totalCashExpenses = 0.0,
+    double totalSupplierCash = 0.0,
   }) async {
     bool isConnected = await PrintBluetoothThermal.connectionStatus;
     if (!isConnected) {
@@ -471,6 +490,15 @@ class PrinterService {
                 pw.SizedBox(height: 5),
                 pw.Divider(thickness: 1, borderStyle: pw.BorderStyle.dashed),
                 pw.SizedBox(height: 5),
+
+                if (totalCashExpenses > 0) pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
+                  pw.Text('مصروفات تم دفعها كاش:', style: pw.TextStyle(font: ttf, fontSize: 12)),
+                  pw.Text('-${totalCashExpenses.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 12)),
+                ]),
+                if (totalSupplierCash > 0) pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
+                  pw.Text('ديون موردين تم سدادها كاش:', style: pw.TextStyle(font: ttf, fontSize: 12)),
+                  pw.Text('-${totalSupplierCash.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 12)),
+                ]),
 
                 pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
                   pw.Text('الكاش المتوقع:', style: pw.TextStyle(font: ttfBold, fontSize: 14)),

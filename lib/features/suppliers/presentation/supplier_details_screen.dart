@@ -256,9 +256,12 @@ class SupplierDetailsScreen extends ConsumerWidget {
 
   void _showPaySupplierDebtDialog(BuildContext context, WidgetRef ref, Supplier currentSupplier) {
     final amountController = TextEditingController(text: currentSupplier.totalDebt.toString());
+    String paymentMethod = 'cash';
+    
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
         title: const Text('تسديد ديون المورد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -274,6 +277,32 @@ class SupplierDetailsScreen extends ConsumerWidget {
                 labelStyle: TextStyle(fontFamily: 'Tajawal'),
                 border: OutlineInputBorder(),
               ),
+            ),
+            const SizedBox(height: 16),
+            const Text('طريقة الدفع:', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: ChoiceChip(
+                    label: const Text('كاش', style: TextStyle(fontFamily: 'Tajawal')),
+                    selected: paymentMethod == 'cash',
+                    onSelected: (val) {
+                      if (val) setState(() => paymentMethod = 'cash');
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ChoiceChip(
+                    label: const Text('شبكة/حوالة', style: TextStyle(fontFamily: 'Tajawal')),
+                    selected: paymentMethod == 'network',
+                    onSelected: (val) {
+                      if (val) setState(() => paymentMethod = 'network');
+                    },
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -301,6 +330,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
                 merchantId: merchantId,
                 amount: paid,
                 type: 'payment',
+                paymentMethod: paymentMethod,
                 description: 'دفعة سداد ديون للمورد',
                 date: DateTime.now(),
                 createdAt: DateTime.now(),
@@ -313,6 +343,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
                 merchantId: merchantId,
                 amount: paid,
                 isSupplierPayment: true,
+                paymentMethod: paymentMethod,
                 date: DateTime.now(),
                 createdAt: DateTime.now(),
                 title: 'دفعة سداد ديون للمورد: ${currentSupplier.name}',
@@ -322,10 +353,10 @@ class SupplierDetailsScreen extends ConsumerWidget {
               
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text('تأكيد السداد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+            child: const Text('سداد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
           ),
         ],
-      ),
+      )),
     );
   }
 

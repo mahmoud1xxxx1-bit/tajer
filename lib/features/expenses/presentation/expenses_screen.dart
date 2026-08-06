@@ -145,10 +145,13 @@ class ExpensesScreen extends ConsumerWidget {
     final titleController = TextEditingController();
     final amountController = TextEditingController();
     final categoryController = TextEditingController();
+    String paymentMethod = 'cash';
 
     showDialog(
       context: context,
       builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
         return AlertDialog(
           title: Text(AppLocalizations.of(context)!.text67, style: TextStyle(fontFamily: 'Tajawal')),
           content: SingleChildScrollView(
@@ -169,6 +172,35 @@ class ExpensesScreen extends ConsumerWidget {
                 TextField(
                   controller: categoryController,
                   decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text70),
+                ),
+                SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Text('طريقة الدفع', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                ),
+                SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ChoiceChip(
+                        label: Text('كاش'),
+                        selected: paymentMethod == 'cash',
+                        onSelected: (selected) {
+                          if (selected) setState(() => paymentMethod = 'cash');
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: ChoiceChip(
+                        label: Text('شبكة/حوالة'),
+                        selected: paymentMethod == 'network',
+                        onSelected: (selected) {
+                          if (selected) setState(() => paymentMethod = 'network');
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -204,6 +236,7 @@ class ExpensesScreen extends ConsumerWidget {
                   title: titleController.text.trim(),
                   amount: amount,
                   category: categoryController.text.trim(),
+                  paymentMethod: paymentMethod,
                   date: DateTime.now(),
                   creatorId: appUser?.id,
                   creatorName: appUser?.name ?? 'غير معروف',
@@ -217,6 +250,7 @@ class ExpensesScreen extends ConsumerWidget {
             ),
           ],
         );
+        });
       },
     );
   }

@@ -293,6 +293,8 @@ class PdfService {
                           paymentMethodText = isAr ? 'دفع شبكة 💳' : 'Card 💳';
                         } else if (order.paymentMethod == 'transfer') {
                           paymentMethodText = isAr ? 'تحويل بنكي 🏦' : 'Bank Transfer 🏦';
+                        } else if (order.paymentMethod == 'split') {
+                          paymentMethodText = isAr ? 'دفع متعدد 🔀' : 'Split 🔀';
                         }
                         
                         return pw.Column(
@@ -373,12 +375,31 @@ class PdfService {
                                 pw.Row(
                                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                                   children: [
-                                    pw.Text(isAr ? 'المتبقي للعميل' : 'Change', style: pw.TextStyle(color: PdfColors.green700, fontWeight: pw.FontWeight.bold)),
+                            pw.Text('${isAr ? "المتبقي للعميل" : "Change"}', style: pw.TextStyle(color: PdfColors.green700, fontWeight: pw.FontWeight.bold)),
                                     pw.SizedBox(width: 20),
                                     pw.Text('${order.changeAmount} $currency', style: pw.TextStyle(color: PdfColors.green700, fontWeight: pw.FontWeight.bold)),
                                   ],
                                 ),
                               ],
+                            ] else if (order.paymentMethod == 'split') ...[
+                              pw.SizedBox(height: 8),
+                              pw.Row(
+                                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Text(isAr ? 'المدفوع نقداً' : 'Cash Paid', style: const pw.TextStyle(color: PdfColors.grey700)),
+                                  pw.SizedBox(width: 20),
+                                  pw.Text('${order.splitCashAmount ?? 0} $currency', style: const pw.TextStyle(color: PdfColors.grey700)),
+                                ],
+                              ),
+                              pw.SizedBox(height: 8),
+                              pw.Row(
+                                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                                children: [
+                                  pw.Text(isAr ? 'المدفوع شبكة' : 'Network Paid', style: const pw.TextStyle(color: PdfColors.grey700)),
+                                  pw.SizedBox(width: 20),
+                                  pw.Text('${order.splitNetworkAmount ?? 0} $currency', style: const pw.TextStyle(color: PdfColors.grey700)),
+                                ],
+                              ),
                             ]
                           ],
                         );

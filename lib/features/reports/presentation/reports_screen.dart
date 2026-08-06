@@ -172,9 +172,57 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   }).toList(),
                   onChanged: (newValue) {
                     if (newValue != null) {
-                      setState(() {
-                        _selectedFilter = newValue;
-                      });
+                      if (newValue == 'نصف سنوي' || newValue == 'سنة') {
+                        // Heavy data: warn user and recommend website
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text(isAr ? 'بيانات ضخمة' : 'Large Data', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  isAr 
+                                    ? 'هذه البيانات كبيرة جداً وقد تسبب بطء أو تعليق في الجوال. يرجى التوجه إلى موقع التاجر واستخراجها من جهاز الكمبيوتر لضمان أفضل أداء.'
+                                    : 'This data is very large and might cause lag on your phone. Please use the Tajer website on your computer for better performance.',
+                                  style: const TextStyle(fontFamily: 'Tajawal'),
+                                ),
+                                const SizedBox(height: 16),
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: SelectableText(
+                                    'https://alldown.uk/taj/',
+                                    style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  setState(() {
+                                    _selectedFilter = newValue;
+                                  });
+                                },
+                                child: Text(isAr ? 'متابعة على أي حال' : 'Continue Anyway', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                              ),
+                              ElevatedButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text(isAr ? 'حسناً' : 'OK', style: const TextStyle(fontFamily: 'Tajawal')),
+                              ),
+                            ],
+                          ),
+                        );
+                      } else {
+                        setState(() {
+                          _selectedFilter = newValue;
+                        });
+                      }
                     }
                   },
                 ),

@@ -89,6 +89,8 @@ Stream<List<Shift>> shiftsStream(ShiftsStreamRef ref) {
   return repository._firestore
       .collection('shifts')
       .where('merchantId', isEqualTo: appUser.merchantId ?? appUser.id)
+      .orderBy('startTime', descending: true)
+      .limit(100)
       .snapshots()
       .map((snapshot) => snapshot.docs.map((doc) => Shift.fromJson(doc.data())).toList());
 }

@@ -37,6 +37,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   final List<CartItem> _cart = [];
   final List<List<CartItem>> _heldOrders = [];
   bool _isLoading = false;
+  final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   String? _selectedCategoryId;
 
@@ -320,6 +321,8 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         scheduledDate: details.scheduledDate,
         tenderedAmount: details.tenderedAmount,
         changeAmount: details.changeAmount,
+        splitCashAmount: details.splitCashAmount,
+        splitNetworkAmount: details.splitNetworkAmount,
         creatorId: appUser.id,
         creatorName: appUser.name ?? 'غير معروف',
         createdAt: DateTime.now(),
@@ -428,14 +431,27 @@ class _PosScreenState extends ConsumerState<PosScreen> {
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: TextField(
+                  controller: _searchController,
+                  autofocus: false,
                   decoration: InputDecoration(
-                    hintText: isAr ? 'ابحث عن منتج...' : 'Search for product...',
+                    hintText: isAr ? 'ابحث عن منتج أو امسح الباركود...' : 'Search product or scan barcode...',
                     prefixIcon: const Icon(Icons.search),
                     filled: true,
                     fillColor: Theme.of(context).cardColor,
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                   ),
-                  onChanged: (val) => setState(() => _searchQuery = val.toLowerCase()),
+                  onChanged: (val) => setState(() => _searchQuery = val.toLowerCase().trim()),
+                  onSubmitted: (val) {
+                    final trimmed = val.trim();
+                    if (trimmed.isEmpty) return;
+                    final products = productsAsync.value ?? [];
+                    final matchedProduct = products.where((p) => p.barcode == trimmed).firstOrNull;
+                    if (matchedProduct != null) {
+                      _addToCart(matchedProduct);
+                      _searchController.clear();
+                      setState(() => _searchQuery = '');
+                    }
+                  },
                 ),
               ),
             ),
@@ -507,7 +523,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     child: productsAsync.when(
                       data: (products) {
                         final filtered = products.where((p) {
-                          final matchesSearch = p.name.toLowerCase().contains(_searchQuery);
+                          final matchesSearch = p.name.toLowerCase().contains(_searchQuery) || (p.barcode != null && p.barcode!.toLowerCase().contains(_searchQuery));
                           final matchesCategory = _selectedCategoryId == null || p.categoryId == _selectedCategoryId;
                           return matchesSearch && matchesCategory;
                         }).toList();
@@ -623,8 +639,10 @@ class OrderDetails {
   final DateTime? scheduledDate;
   final double? tenderedAmount;
   final double? changeAmount;
+  final double? splitCashAmount;
+  final double? splitNetworkAmount;
 
-  OrderDetails({required this.customerId, required this.customerName, required this.paidAmount, required this.isCredit, this.notes, this.paymentMethod = 'cash', this.scheduledDate, this.tenderedAmount, this.changeAmount});
+  OrderDetails({required this.customerId, required this.customerName, required this.paidAmount, required this.isCredit, this.notes, this.paymentMethod = 'cash', this.scheduledDate, this.tenderedAmount, this.changeAmount, this.splitCashAmount, this.splitNetworkAmount});
 }
 
 class _CheckoutSheet extends ConsumerStatefulWidget {
@@ -643,6 +661,8 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
   bool _isCredit = false;
   final _paidController = TextEditingController();
   final _tenderedController = TextEditingController();
+  final _splitCashController = TextEditingController();
+  final _splitNetworkController = TextEditingController();
   final _notesController = TextEditingController();
   String _paymentMethod = 'cash';
   bool _isScheduled = false;
@@ -936,8 +956,72 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                   selected: _paymentMethod == 'apple_pay',
                   onSelected: (val) => setState(() => _paymentMethod = 'apple_pay'),
                 ),
+                ChoiceChip(
+                  label: Text(isAr ? 'متعدد 🔀' : 'Split 🔀'),
+                  selected: _paymentMethod == 'split',
+                  onSelected: (val) {
+                    setState(() {
+                      _paymentMethod = 'split';
+                      _splitNetworkController.text = widget.total.toStringAsFixed(2);
+                      _splitCashController.text = '0';
+                    });
+                  },
+                ),
               ],
             ),
+            if (_paymentMethod == 'split') ...[
+               const SizedBox(height: 16),
+               Row(
+                 children: [
+                   Expanded(
+                     child: TextField(
+                       controller: _splitCashController,
+                       keyboardType: TextInputType.number,
+                       decoration: InputDecoration(labelText: isAr ? 'نقدي (كاش)' : 'Cash', border: OutlineInputBorder(), prefixIcon: Icon(Icons.money)),
+                       onChanged: (val) {
+                         final cash = double.tryParse(val) ?? 0.0;
+                         final total = widget.total;
+                         if (cash <= total) {
+                           _splitNetworkController.text = (total - cash).toStringAsFixed(2);
+                         }
+                         setState((){});
+                       },
+                     ),
+                   ),
+                   const SizedBox(width: 16),
+                   Expanded(
+                     child: TextField(
+                       controller: _splitNetworkController,
+                       keyboardType: TextInputType.number,
+                       decoration: InputDecoration(labelText: isAr ? 'شبكة (بطاقة)' : 'Network', border: OutlineInputBorder(), prefixIcon: Icon(Icons.credit_card)),
+                       onChanged: (val) {
+                         final network = double.tryParse(val) ?? 0.0;
+                         final total = widget.total;
+                         if (network <= total) {
+                           _splitCashController.text = (total - network).toStringAsFixed(2);
+                         }
+                         setState((){});
+                       },
+                     ),
+                   ),
+                 ],
+               ),
+               Builder(
+                 builder: (context) {
+                   final cash = double.tryParse(_splitCashController.text) ?? 0.0;
+                   final network = double.tryParse(_splitNetworkController.text) ?? 0.0;
+                   final total = widget.total;
+                   final diff = total - (cash + network);
+                   if (diff.abs() > 0.01) {
+                     return Padding(
+                       padding: const EdgeInsets.only(top: 8.0),
+                       child: Text('المجموع لا يساوي الإجمالي (${total.toStringAsFixed(2)})', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                     );
+                   }
+                   return const SizedBox.shrink();
+                 }
+               )
+            ],
             const SizedBox(height: 16),
             if (canSellOnCredit)
               SwitchListTile(
@@ -1078,6 +1162,8 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                   scheduledDate: finalSchedule,
                   tenderedAmount: _paymentMethod == 'cash' && _tenderedController.text.isNotEmpty ? double.tryParse(_tenderedController.text) : null,
                   changeAmount: _paymentMethod == 'cash' && _tenderedController.text.isNotEmpty ? (double.tryParse(_tenderedController.text) ?? 0) - grandTotal : null,
+                  splitCashAmount: _paymentMethod == 'split' ? (double.tryParse(_splitCashController.text) ?? 0) : null,
+                  splitNetworkAmount: _paymentMethod == 'split' ? (double.tryParse(_splitNetworkController.text) ?? 0) : null,
                 ));
               },
               child: Text(isAr ? 'تأكيد وإصدار الفاتورة' : 'Confirm & Issue Invoice', style: TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),

@@ -11,6 +11,7 @@ class Expense {
   final String? creatorId;
   final String? creatorName;
   final bool isSupplierPayment;
+  final String paymentMethod; // 'cash' or 'network'
   final DateTime date;
   final DateTime createdAt;
 
@@ -24,6 +25,7 @@ class Expense {
     this.creatorId,
     this.creatorName,
     this.isSupplierPayment = false,
+    this.paymentMethod = 'cash',
     required this.date,
     required this.createdAt,
   });
@@ -39,6 +41,7 @@ class Expense {
       creatorId: json['creatorId'] as String?,
       creatorName: json['creatorName'] as String?,
       isSupplierPayment: json['isSupplierPayment'] as bool? ?? false,
+      paymentMethod: json['paymentMethod'] as String? ?? 'cash',
       date: const TimestampConverter().fromJson(json['date']),
       createdAt: const TimestampConverter().fromJson(json['createdAt']),
     );
@@ -55,6 +58,7 @@ class Expense {
       'creatorId': creatorId,
       'creatorName': creatorName,
       'isSupplierPayment': isSupplierPayment,
+      'paymentMethod': paymentMethod,
       'date': const TimestampConverter().toJson(date),
       'createdAt': const TimestampConverter().toJson(createdAt),
     };
@@ -70,6 +74,7 @@ class Expense {
     String? creatorId,
     String? creatorName,
     bool? isSupplierPayment,
+    String? paymentMethod,
     DateTime? date,
     DateTime? createdAt,
   }) {
@@ -83,6 +88,7 @@ class Expense {
       creatorId: creatorId ?? this.creatorId,
       creatorName: creatorName ?? this.creatorName,
       isSupplierPayment: isSupplierPayment ?? this.isSupplierPayment,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
       date: date ?? this.date,
       createdAt: createdAt ?? this.createdAt,
     );

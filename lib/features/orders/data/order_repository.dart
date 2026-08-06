@@ -271,6 +271,13 @@ class OrderRepository {
         updates['cardTotal'] = FieldValue.increment(order.paidAmount);
       } else if (order.paymentMethod == 'transfer') {
         updates['transferTotal'] = FieldValue.increment(order.paidAmount);
+      } else if (order.paymentMethod == 'split') {
+        if (order.splitCashAmount != null && order.splitCashAmount! > 0) {
+          updates['cashSales'] = FieldValue.increment(order.splitCashAmount!);
+        }
+        if (order.splitNetworkAmount != null && order.splitNetworkAmount! > 0) {
+          updates['cardTotal'] = FieldValue.increment(order.splitNetworkAmount!);
+        }
       }
       
       if (updates.isNotEmpty) {
