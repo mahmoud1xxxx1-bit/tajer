@@ -183,61 +183,63 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             SizedBox(height: 16),
             
             // Summary Cards
-            Row(
-              children: [
-                Expanded(
-                  child: _SummaryCard(
-                    title: AppLocalizations.of(context)!.text105,
-                    value: '${reportsService.totalRevenue} ${currentCurrency.code}',
-                    icon: Icons.account_balance_wallet,
-                    color: Colors.green,
-                  ),
-                ),
-                if (canViewCost) ...[
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: _SummaryCard(
-                      title: AppLocalizations.of(context)!.text106,
-                      value: '${reportsService.netProfit} ${currentCurrency.code}',
-                      icon: Icons.savings,
-                      color: Colors.blue,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final cardWidth = (constraints.maxWidth - 12) / 2;
+                return Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    SizedBox(
+                      width: cardWidth,
+                      child: _SummaryCard(
+                        title: AppLocalizations.of(context)!.text105,
+                        value: '${reportsService.totalRevenue} ${currentCurrency.code}',
+                        icon: Icons.account_balance_wallet,
+                        color: Colors.green,
+                      ),
                     ),
-                  ),
-                ],
-              ],
-            ),
-            SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _SummaryCard(
-                    title: AppLocalizations.of(context)!.text66,
-                    value: '${reportsService.totalExpenses} ${currentCurrency.code}',
-                    icon: Icons.money_off,
-                    color: Colors.orange,
-                  ),
-                ),
-                if (canViewCost) ...[
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: _SummaryCard(
-                      title: isAr ? 'تكلفة البضاعة المباعة (COGS)' : 'Cost of Goods Sold (COGS)',
-                      value: '${reportsService.totalCOGS} ${currentCurrency.code}',
-                      icon: Icons.inventory_2_outlined,
-                      color: Colors.brown,
+                    if (canViewCost)
+                      SizedBox(
+                        width: cardWidth,
+                        child: _SummaryCard(
+                          title: AppLocalizations.of(context)!.text106,
+                          value: '${reportsService.netProfit} ${currentCurrency.code}',
+                          icon: Icons.savings,
+                          color: Colors.blue,
+                        ),
+                      ),
+                    SizedBox(
+                      width: cardWidth,
+                      child: _SummaryCard(
+                        title: AppLocalizations.of(context)!.text66,
+                        value: '${reportsService.totalExpenses} ${currentCurrency.code}',
+                        icon: Icons.money_off,
+                        color: Colors.orange,
+                      ),
                     ),
-                  ),
-                ],
-                SizedBox(width: 12),
-                Expanded(
-                  child: _SummaryCard(
-                    title: AppLocalizations.of(context)!.text107,
-                    value: '${reportsService.totalDebt} ${currentCurrency.code}',
-                    icon: Icons.warning_amber_rounded,
-                    color: Colors.red,
-                  ),
-                ),
-              ],
+                    if (canViewCost)
+                      SizedBox(
+                        width: cardWidth,
+                        child: _SummaryCard(
+                          title: isAr ? 'تكلفة البضاعة المباعة (COGS)' : 'Cost of Goods Sold (COGS)',
+                          value: '${reportsService.totalCOGS} ${currentCurrency.code}',
+                          icon: Icons.inventory_2_outlined,
+                          color: Colors.brown,
+                        ),
+                      ),
+                    SizedBox(
+                      width: cardWidth,
+                      child: _SummaryCard(
+                        title: AppLocalizations.of(context)!.text107,
+                        value: '${reportsService.totalDebt} ${currentCurrency.code}',
+                        icon: Icons.warning_amber_rounded,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
             SizedBox(height: 24),
             
@@ -478,8 +480,8 @@ class _SummaryCard extends StatelessWidget {
                   child: Text(
                     title,
                     style: TextStyle(fontSize: 12, fontFamily: 'Tajawal', height: 1.3),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    maxLines: 3,
+                    overflow: TextOverflow.visible,
                   ),
                 ),
               ],
