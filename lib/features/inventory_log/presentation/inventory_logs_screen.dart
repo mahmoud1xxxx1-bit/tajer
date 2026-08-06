@@ -374,8 +374,15 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
               );
             }).toList(),
             ),
-          ),
         );
+      } catch (e, st) {
+        return Container(
+          margin: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
+          color: Colors.red.withOpacity(0.1),
+          child: Text('خطأ أثناء بناء القائمة:\n$e', style: const TextStyle(color: Colors.red)),
+        );
+      }
       },
     );
           } catch (e, st) {
