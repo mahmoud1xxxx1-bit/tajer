@@ -50,8 +50,8 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
                 validator: (val) {
-                  if (val == null || val.isEmpty || int.tryParse(val) == null) {
-                    return isAr ? 'أدخل رقم صحيح' : 'Enter valid integer';
+                  if (val == null || val.isEmpty || double.tryParse(val) == null) {
+                    return isAr ? 'أدخل رقم صحيح' : 'Enter valid number';
                   }
                   return null;
                 },
@@ -76,7 +76,7 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
           ElevatedButton(
             onPressed: () async {
               if (!formKey.currentState!.validate()) return;
-              final newQty = int.parse(qtyController.text);
+              final newQty = double.parse(qtyController.text);
               final newReason = reasonController.text.trim();
               Navigator.pop(ctx);
 

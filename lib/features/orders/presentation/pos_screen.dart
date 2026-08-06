@@ -18,6 +18,7 @@ import '../../../core/services/printer_service.dart';
 import '../../../core/widgets/tax_dialog.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
+import '../../../core/widgets/app_drawer.dart';
 import 'package:flutter/foundation.dart';
 import '../../shifts/data/shift_repository.dart';
 import '../../shifts/presentation/start_shift_dialog.dart';
@@ -391,6 +392,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         }
 
         return Scaffold(
+          drawer: const AppDrawer(),
           appBar: AppBar(
             title: Text(isAr ? 'نقطة البيع (POS)' : 'Point of Sale (POS)', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
             actions: [

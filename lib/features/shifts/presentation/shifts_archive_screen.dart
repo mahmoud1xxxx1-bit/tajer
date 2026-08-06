@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../data/shift_repository.dart';
 import '../domain/shift.dart';
 import '../../../core/theme/glass_card.dart';
+import 'shift_details_screen.dart';
 
 class ShiftsArchiveScreen extends ConsumerWidget {
   const ShiftsArchiveScreen({super.key});
@@ -49,55 +50,60 @@ class ShiftsArchiveScreen extends ConsumerWidget {
 
   Widget _buildShiftCard(BuildContext context, Shift shift, bool isAr) {
     final dateFormat = DateFormat('yyyy-MM-dd HH:mm');
-    final expected = shift.expectedCash ?? 0.0;
-    final actual = shift.actualCash ?? 0.0;
-    final diff = actual - expected;
-    final hasShortage = diff < 0;
-
+    
+    // Check all three for summary
+    final diffCash = (shift.actualCash ?? 0.0) - (shift.expectedCash ?? 0.0);
+    final diffCard = (shift.actualCard ?? 0.0) - (shift.cardTotal ?? 0.0);
+    final diffTransfer = (shift.actualTransfer ?? 0.0) - (shift.transferTotal ?? 0.0);
+    
+    final isFullyMatched = diffCash == 0 && diffCard == 0 && diffTransfer == 0;
+    
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: GlassCard(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.person, color: Colors.blueGrey),
-                      const SizedBox(width: 8),
-                      Text(
-                        shift.employeeName,
-                        style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: hasShortage ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: hasShortage ? Colors.red : Colors.green),
+      child: InkWell(
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => ShiftDetailsScreen(shift: shift)));
+        },
+        child: GlassCard(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.person, color: Colors.blueGrey),
+                        const SizedBox(width: 8),
+                        Text(
+                          shift.employeeName,
+                          style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                      ],
                     ),
-                    child: Text(
-                      diff == 0 
-                        ? (isAr ? 'مطابق' : 'Matched')
-                        : (hasShortage 
-                            ? (isAr ? 'عجز: ${diff.abs().toStringAsFixed(2)}' : 'Short: ${diff.abs().toStringAsFixed(2)}') 
-                            : (isAr ? 'فائض: ${diff.toStringAsFixed(2)}' : 'Over: ${diff.toStringAsFixed(2)}')),
-                      style: TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontWeight: FontWeight.bold,
-                        color: hasShortage ? Colors.red : Colors.green.shade700,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: isFullyMatched ? Colors.green.withOpacity(0.1) : Colors.amber.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: isFullyMatched ? Colors.green : Colors.amber),
+                      ),
+                      child: Text(
+                        isFullyMatched 
+                          ? (isAr ? 'مطابق كلياً' : 'Fully Matched')
+                          : (isAr ? 'يوجد فروقات' : 'Has Differences'),
+                        style: TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontWeight: FontWeight.bold,
+                          color: isFullyMatched ? Colors.green.shade700 : Colors.amber.shade700,
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const Divider(height: 24),
+                  ],
+                ),
+                const Divider(height: 24),
               Row(
                 children: [
                   Expanded(
@@ -130,11 +136,16 @@ class ShiftsArchiveScreen extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildMiniStat(isAr ? 'المتوقع' : 'Expected', expected.toStringAsFixed(2), Colors.blue.shade800, isAr),
-                    _buildMiniStat(isAr ? 'الفعلي' : 'Actual', actual.toStringAsFixed(2), Colors.black, isAr),
+                    _buildMiniStat(isAr ? 'المتوقع (كاش)' : 'Exp. Cash', (shift.expectedCash ?? 0.0).toStringAsFixed(2), Colors.blue.shade800, isAr),
+                    _buildMiniStat(isAr ? 'الفعلي (كاش)' : 'Act. Cash', (shift.actualCash ?? 0.0).toStringAsFixed(2), Theme.of(context).textTheme.bodyLarge?.color ?? Colors.black, isAr),
                     _buildMiniStat(isAr ? 'مبيعات الكاش' : 'Cash Sales', (shift.cashSales ?? 0).toStringAsFixed(2), Colors.green, isAr),
                   ],
                 ),
+              ),
+              const SizedBox(height: 8),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Text('اضغط للتفاصيل >', style: TextStyle(fontSize: 12, color: Colors.grey, fontFamily: 'Tajawal')),
               ),
             ],
           ),

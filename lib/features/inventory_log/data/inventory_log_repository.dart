@@ -23,9 +23,9 @@ class InventoryLogRepository {
         data['productName'] = data['productName']?.toString() ?? '';
         data['reason'] = data['reason']?.toString() ?? '';
         data['merchantId'] = data['merchantId']?.toString() ?? '';
-        data['changeQuantity'] = (data['changeQuantity'] ?? 0).toInt();
-        data['previousQuantity'] = (data['previousQuantity'] ?? 0).toInt();
-        data['newQuantity'] = (data['newQuantity'] ?? 0).toInt();
+        data['changeQuantity'] = double.tryParse(data['changeQuantity']?.toString() ?? '0') ?? 0.0;
+        data['previousQuantity'] = double.tryParse(data['previousQuantity']?.toString() ?? '0') ?? 0.0;
+        data['newQuantity'] = double.tryParse(data['newQuantity']?.toString() ?? '0') ?? 0.0;
         if (data['date'] == null) data['date'] = Timestamp.now();
         return InventoryLog.fromJson(data);
       },
