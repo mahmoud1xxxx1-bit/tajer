@@ -204,6 +204,7 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
             padding: const EdgeInsets.all(16),
             itemCount: sortedKeys.length,
             itemBuilder: (context, index) {
+              try {
               final key = sortedKeys[index];
               final groupLogs = groupedLogs[key]!;
               final displayName = key.substring(3);
@@ -236,7 +237,6 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                     childrenPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                     children: groupLogs.map<Widget>((log) {
                       final isPositive = log.changeQuantity > 0;
-                      
               
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),

@@ -46,7 +46,8 @@ class AuditLogScreen extends ConsumerStatefulWidget {
 
 class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
 
-  Widget _buildLogItem(AuditLogItem item, ThemeData theme, dynamic currency, bool isAr) {
+  Widget _buildLogItem(AuditLogItem item, ThemeData theme, AppCurrency currency, bool isAr) {
+    try {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -96,6 +97,13 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
         },
       ),
     );
+    } catch (e, st) {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        color: Colors.red.withOpacity(0.1),
+        child: Text('خطأ في العنصر: $e', style: const TextStyle(color: Colors.red)),
+      );
+    }
   }
 
   String _formatTime(DateTime dt, bool isAr) {
@@ -328,6 +336,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                   padding: const EdgeInsets.all(12),
                   itemCount: days.length,
                   itemBuilder: (context, index) {
+                    try {
                     final day = days[index];
                     final dayItems = groupedByDay[day]!;
                     final dailySales = dayItems.where((i) => i.type == 'مبيعات' && i.amount > 0).fold<double>(0.0, (sum, i) => sum + i.amount);
@@ -373,7 +382,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(color: Colors.grey),
                                   ),
-                                  child: Text('  ', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold)),
+                                  child: Text('${dailySales.toStringAsFixed(2)} ${currency.code}', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold)),
                                 ),
                             ],
                           ),
@@ -388,6 +397,14 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                         ),
                       ),
                     );
+                    } catch (e, st) {
+                      return Container(
+                        margin: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(16),
+                        color: Colors.red.withOpacity(0.1),
+                        child: Text('خطأ أثناء بناء قائمة اليوم:\n$e', style: const TextStyle(color: Colors.red)),
+                      );
+                    }
                   },
                 );
                 } catch (e, st) {
