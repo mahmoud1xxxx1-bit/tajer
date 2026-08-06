@@ -373,8 +373,9 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                 ),
               );
             }).toList(),
-            ),
-        );
+          ),
+        ),
+      );
       } catch (e, st) {
         return Container(
           margin: const EdgeInsets.all(16),
