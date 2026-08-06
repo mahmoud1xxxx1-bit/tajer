@@ -1,7 +1,7 @@
 name: tajer
 description: "Tajer - Merchant Inventory and Order Management System"
 publish_to: 'none'
-version: 1.0.71+71
+version: 1.0.72+72
 environment:
   sdk: '>=3.2.0 <4.0.0'
 
