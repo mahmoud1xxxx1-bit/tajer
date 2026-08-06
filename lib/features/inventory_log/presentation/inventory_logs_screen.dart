@@ -375,7 +375,16 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
     );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
+        error: (e, st) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Text(
+              'حدث خطأ: $e',
+              style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
       ),
     );
   }
