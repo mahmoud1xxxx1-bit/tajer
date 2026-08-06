@@ -25,34 +25,11 @@ import '../../authentication/data/auth_repository.dart';
 import '../../authentication/domain/app_user.dart';
 import '../../../core/services/activity_logger.dart';
 
-class OrdersScreen extends ConsumerStatefulWidget {
+class OrdersScreen extends ConsumerWidget {
   const OrdersScreen({super.key});
 
   @override
-  ConsumerState<OrdersScreen> createState() => _OrdersScreenState();
-}
-
-class _OrdersScreenState extends ConsumerState<OrdersScreen> {
-  final ScrollController _scrollController = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
-        ref.read(orderLimitProvider.notifier).state += 30;
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final ordersAsyncValue = ref.watch(ordersStreamProvider);
     final currency = ref.watch(currencyProvider).code;
@@ -115,7 +92,6 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
             final sortedKeys = groupedOrders.keys.toList()..sort();
 
             return ListView.builder(
-              controller: _scrollController,
               itemCount: sortedKeys.length,
               padding: const EdgeInsets.all(16),
               itemBuilder: (context, index) {
