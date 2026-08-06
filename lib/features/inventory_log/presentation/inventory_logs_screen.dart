@@ -160,6 +160,7 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
       ),
       body: logsAsync.when(
         data: (logs) {
+          try {
           if (logs.isEmpty) {
             return Center(child: Text(AppLocalizations.of(context)!.text74, style: const TextStyle(fontFamily: 'Tajawal')));
           }
@@ -373,6 +374,20 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
         );
       },
     );
+          } catch (e, st) {
+            return Center(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'حدث خطأ غير متوقع أثناء بناء الواجهة:\n$e\n\n$st',
+                    style: const TextStyle(color: Colors.red, fontSize: 14),
+                    textDirection: TextDirection.ltr,
+                  ),
+                ),
+              ),
+            );
+          }
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(

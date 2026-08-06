@@ -168,8 +168,12 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                   .collection('inventory_logs')
                   .snapshots(),
               builder: (context, snapshot) {
+                try {
                 if (snapshot.connectionState == ConnectionState.waiting && ordersAsync.isLoading) {
                   return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('خطأ في جلب البيانات: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
                 }
 
                 final List<AuditLogItem> items = [];
@@ -368,6 +372,20 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                     );
                   },
                 );
+                } catch (e, st) {
+                  return Center(
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Text(
+                          'حدث خطأ غير متوقع أثناء بناء الواجهة:\n$e\n\n$st',
+                          style: const TextStyle(color: Colors.red, fontSize: 14),
+                          textDirection: TextDirection.ltr,
+                        ),
+                      ),
+                    ),
+                  );
+                }
               },
             ),
     );
