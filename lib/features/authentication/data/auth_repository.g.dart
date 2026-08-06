@@ -36,5 +36,19 @@ final authStateChangesProvider = AutoDisposeStreamProvider<User?>.internal(
 );
 
 typedef AuthStateChangesRef = AutoDisposeStreamProviderRef<User?>;
+String _$appUserHash() => r'c603032005298d966eaffef02e6357f31bbd770e';
+
+/// See also [appUser].
+@ProviderFor(appUser)
+final appUserProvider = AutoDisposeStreamProvider<AppUser?>.internal(
+  appUser,
+  name: r'appUserProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$appUserHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef AppUserRef = AutoDisposeStreamProviderRef<AppUser?>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

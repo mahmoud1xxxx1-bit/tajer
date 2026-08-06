@@ -6,7 +6,7 @@ part of 'shift_repository.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$shiftRepositoryHash() => r'269a8b1a457ccbc2db1ea624b75a133b8a1c97ef';
+String _$shiftRepositoryHash() => r'938816d906ec46572fc1ce50c22313e447b5c3a7';
 
 /// See also [shiftRepository].
 @ProviderFor(shiftRepository)
@@ -21,7 +21,7 @@ final shiftRepositoryProvider = AutoDisposeProvider<ShiftRepository>.internal(
 );
 
 typedef ShiftRepositoryRef = AutoDisposeProviderRef<ShiftRepository>;
-String _$currentShiftHash() => r'237887ac5b9045731383561a35ccfdbb5059ce36';
+String _$currentShiftHash() => r'c47da9409ccc03a0c3906ae0b5fac2e91f46829c';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -169,5 +169,20 @@ class _CurrentShiftProviderElement
   @override
   String get merchantId => (origin as CurrentShiftProvider).merchantId;
 }
+
+String _$shiftsStreamHash() => r'50229b3f66df8c029160abd07bad325e54c0fcff';
+
+/// See also [shiftsStream].
+@ProviderFor(shiftsStream)
+final shiftsStreamProvider = AutoDisposeStreamProvider<List<Shift>>.internal(
+  shiftsStream,
+  name: r'shiftsStreamProvider',
+  debugGetCreateSourceHash:
+      const bool.fromEnvironment('dart.vm.product') ? null : _$shiftsStreamHash,
+  dependencies: null,
+  allTransitiveDependencies: null,
+);
+
+typedef ShiftsStreamRef = AutoDisposeStreamProviderRef<List<Shift>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
