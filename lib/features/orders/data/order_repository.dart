@@ -535,6 +535,7 @@ class OrderRepository {
     required String customerId,
     required double amountPaid,
     required String? shiftId,
+    required String paymentMethod, // 'cash', 'card', 'transfer'
   }) async {
     final batch = _firestore.batch();
     
@@ -580,12 +581,22 @@ class OrderRepository {
       }
     }
 
-    // 3. Add to shift debt collections cash
+    // 3. Add to shift debt collections
     if (shiftId != null && shiftId.isNotEmpty) {
       final shiftRef = _firestore.collection('shifts').doc(shiftId);
-      batch.update(shiftRef, {
-        'debtCollectionsCash': FieldValue.increment(amountPaid),
-      });
+      if (paymentMethod == 'cash') {
+        batch.update(shiftRef, {
+          'debtCollectionsCash': FieldValue.increment(amountPaid),
+        });
+      } else if (paymentMethod == 'card' || paymentMethod == 'mada') {
+        batch.update(shiftRef, {
+          'debtCollectionsCard': FieldValue.increment(amountPaid),
+        });
+      } else if (paymentMethod == 'transfer') {
+        batch.update(shiftRef, {
+          'debtCollectionsTransfer': FieldValue.increment(amountPaid),
+        });
+      }
     }
 
     await batch.commit();

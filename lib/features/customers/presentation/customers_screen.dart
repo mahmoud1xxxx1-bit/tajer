@@ -644,7 +644,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                 if (context.mounted) Navigator.pop(context); // close first dialog
 
                 if (currentShift != null) {
-                  // Proactive prompt
+                  // Proactive prompt for payment method
                   if (context.mounted) {
                     showDialog(
                       context: context,
@@ -652,56 +652,94 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         title: Row(
                           children: [
-                            const Icon(Icons.account_balance_wallet, color: Colors.green),
+                            const Icon(Icons.payments, color: Colors.green),
                             const SizedBox(width: 8),
-                            Expanded(child: Text(isAr ? "إيداع في درج الكاشير؟" : "Deposit to Cash Drawer?", style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold))),
+                            Expanded(child: Text(isAr ? "طريقة الدفع" : "Payment Method", style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold))),
                           ],
                         ),
                         content: Text(
                           isAr 
-                            ? "تم تسديد الدين! هل استلمت هذا المبلغ نقداً ووضعه في درج الكاشير الآن؟\n(هذا سيضيفه كإيراد في وردية اليوم)"
-                            : "Debt paid! Did you receive this in cash and put it in the drawer now?",
+                            ? "ما هي الطريقة التي تم بها سداد هذا الدين؟\n(سيتم تسجيلها في الوردية الحالية)"
+                            : "How was this debt paid?\n(Will be recorded in current shift)",
                           style: const TextStyle(fontFamily: 'Tajawal', height: 1.5, fontSize: 15),
                         ),
+                        actionsAlignment: MainAxisAlignment.center,
                         actions: [
-                          TextButton(
-                            onPressed: () async {
-                              Navigator.pop(ctx);
-                              await ref.read(orderRepositoryProvider).payCustomerDebt(
-                                merchantId: merchantId,
-                                customerId: customer.id,
-                                amountPaid: paid,
-                                shiftId: null,
-                              );
-                              ActivityLogger.log(
-                                user: user,
-                                actionType: 'Receive Payment|استلام دفعة',
-                                description: 'Received payment of $paid from customer (${customer.name}) via Bank Transfer|استلام دفعة بقيمة $paid من العميل (${customer.name}) عبر حوالة بنكية',
-                              );
-                            },
-                            child: Text(isAr ? "لا، حوالة بنكية" : "No, Bank Transfer", style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-                          ),
-                          ElevatedButton.icon(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.green,
-                              foregroundColor: Colors.white,
-                            ),
-                            onPressed: () async {
-                              Navigator.pop(ctx);
-                              await ref.read(orderRepositoryProvider).payCustomerDebt(
-                                merchantId: merchantId,
-                                customerId: customer.id,
-                                amountPaid: paid,
-                                shiftId: currentShift.id,
-                              );
-                              ActivityLogger.log(
-                                user: user,
-                                actionType: 'Receive Payment|استلام دفعة',
-                                description: 'Received cash payment of $paid from customer (${customer.name})|استلام دفعة نقدية بقيمة $paid من العميل (${customer.name})',
-                              );
-                            },
-                            icon: const Icon(Icons.payments),
-                            label: Text(isAr ? "نعم، إيداع نقدي" : "Yes, Cash Deposit", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  foregroundColor: Colors.white,
+                                ),
+                                onPressed: () async {
+                                  Navigator.pop(ctx);
+                                  await ref.read(orderRepositoryProvider).payCustomerDebt(
+                                    merchantId: merchantId,
+                                    customerId: customer.id,
+                                    amountPaid: paid,
+                                    shiftId: currentShift.id,
+                                    paymentMethod: 'cash',
+                                  );
+                                  ActivityLogger.log(
+                                    user: user,
+                                    actionType: 'Receive Payment|استلام دفعة',
+                                    description: 'Received cash payment of $paid from customer (${customer.name})|استلام دفعة نقدية بقيمة $paid من العميل (${customer.name})',
+                                  );
+                                },
+                                icon: const Icon(Icons.money),
+                                label: Text(isAr ? "كاش 💵" : "Cash 💵", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                              ),
+                              const SizedBox(height: 8),
+                              ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blueGrey,
+                                  foregroundColor: Colors.white,
+                                ),
+                                onPressed: () async {
+                                  Navigator.pop(ctx);
+                                  await ref.read(orderRepositoryProvider).payCustomerDebt(
+                                    merchantId: merchantId,
+                                    customerId: customer.id,
+                                    amountPaid: paid,
+                                    shiftId: currentShift.id,
+                                    paymentMethod: 'card',
+                                  );
+                                  ActivityLogger.log(
+                                    user: user,
+                                    actionType: 'Receive Payment|استلام دفعة',
+                                    description: 'Received mada/card payment of $paid from customer (${customer.name})|استلام دفعة مدى بقيمة $paid من العميل (${customer.name})',
+                                  );
+                                },
+                                icon: const Icon(Icons.credit_card),
+                                label: Text(isAr ? "مدى 💳" : "Mada 💳", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                              ),
+                              const SizedBox(height: 8),
+                              ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blueAccent,
+                                  foregroundColor: Colors.white,
+                                ),
+                                onPressed: () async {
+                                  Navigator.pop(ctx);
+                                  await ref.read(orderRepositoryProvider).payCustomerDebt(
+                                    merchantId: merchantId,
+                                    customerId: customer.id,
+                                    amountPaid: paid,
+                                    shiftId: currentShift.id,
+                                    paymentMethod: 'transfer',
+                                  );
+                                  ActivityLogger.log(
+                                    user: user,
+                                    actionType: 'Receive Payment|استلام دفعة',
+                                    description: 'Received bank transfer of $paid from customer (${customer.name})|استلام حوالة بنكية بقيمة $paid من العميل (${customer.name})',
+                                  );
+                                },
+                                icon: const Icon(Icons.account_balance),
+                                label: Text(isAr ? "حوالة بنكية 🏦" : "Bank Transfer 🏦", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -713,6 +751,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                     customerId: customer.id,
                     amountPaid: paid,
                     shiftId: null,
+                    paymentMethod: 'cash', // Default fallback
                   );
                   ActivityLogger.log(
                     user: user,

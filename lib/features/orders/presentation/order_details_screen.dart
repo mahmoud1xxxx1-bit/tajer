@@ -260,7 +260,11 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                             borderRadius: BorderRadius.circular(20),
                           ),
                           child: Text(
-                            isCancelled ? (isAr ? '❌ طلب ملغي' : '❌ Cancelled') : (isAr ? '✅ طلب مؤكد / مكتمل' : '✅ Completed'),
+                            isCancelled 
+                              ? (isAr ? '❌ طلب ملغي' : '❌ Cancelled') 
+                              : (currentOrder.isCredit && (currentOrder.paidAmount ?? 0.0) >= currentOrder.total)
+                                ? (isAr ? '✅ تم سداد الفاتورة بالكامل' : '✅ Fully Paid')
+                                : (isAr ? '✅ طلب مؤكد / مكتمل' : '✅ Completed'),
                             style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13),
                           ),
                         ),
@@ -339,7 +343,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(isAr ? 'الإجمالي (قبل الضريبة)' : 'Subtotal', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16)),
+                        Text(isAr ? 'المجموع الفرعي' : 'Subtotal', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16)),
                         Text(
                           '${currentOrder.total.toStringAsFixed(2)} ${currency.code}',
                           style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold),
@@ -416,6 +420,32 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                         return const SizedBox.shrink();
                       },
                     ),
+                    const SizedBox(height: 8),
+                    const Divider(),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(isAr ? 'المبلغ المدفوع' : 'Paid Amount', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16, color: Colors.green)),
+                        Text(
+                          '${(currentOrder.paidAmount ?? currentOrder.total).toStringAsFixed(2)} ${currency.code}',
+                          style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
+                        ),
+                      ],
+                    ),
+                    if (currentOrder.isCredit) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(isAr ? 'المبلغ المتبقي' : 'Remaining Amount', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16, color: Colors.red)),
+                          Text(
+                            '${(currentOrder.total - (currentOrder.paidAmount ?? 0.0)).clamp(0.0, double.infinity).toStringAsFixed(2)} ${currency.code}',
+                            style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: Colors.red),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),

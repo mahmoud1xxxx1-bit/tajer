@@ -17,6 +17,8 @@ class Shift {
   final double? transferTotal; // إجمالي مبيعات التحويل
   final double? cashSales; // المبيعات النقدية فقط خلال الوردية
   final double? debtCollectionsCash; // الديون المحصلة كاش خلال الوردية
+  final double? debtCollectionsCard; // الديون المحصلة مدى خلال الوردية
+  final double? debtCollectionsTransfer; // الديون المحصلة حوالة بنكية خلال الوردية
   final double? totalTax; // إجمالي الضريبة المحصلة
   final String status; // 'open', 'closed'
 
@@ -36,6 +38,8 @@ class Shift {
     this.transferTotal,
     this.cashSales,
     this.debtCollectionsCash,
+    this.debtCollectionsCard,
+    this.debtCollectionsTransfer,
     this.totalTax,
     required this.status,
   });
@@ -57,6 +61,8 @@ class Shift {
       'transferTotal': transferTotal,
       'cashSales': cashSales,
       'debtCollectionsCash': debtCollectionsCash,
+      'debtCollectionsCard': debtCollectionsCard,
+      'debtCollectionsTransfer': debtCollectionsTransfer,
       'totalTax': totalTax,
       'status': status,
     };
@@ -79,6 +85,8 @@ class Shift {
       transferTotal: json['transferTotal']?.toDouble(),
       cashSales: json['cashSales']?.toDouble(),
       debtCollectionsCash: json['debtCollectionsCash']?.toDouble(),
+      debtCollectionsCard: json['debtCollectionsCard']?.toDouble(),
+      debtCollectionsTransfer: json['debtCollectionsTransfer']?.toDouble(),
       totalTax: json['totalTax']?.toDouble(),
       status: json['status'] ?? 'open',
     );
@@ -100,6 +108,8 @@ class Shift {
     double? transferTotal,
     double? cashSales,
     double? debtCollectionsCash,
+    double? debtCollectionsCard,
+    double? debtCollectionsTransfer,
     double? totalTax,
     String? status,
   }) {
@@ -119,6 +129,8 @@ class Shift {
       transferTotal: transferTotal ?? this.transferTotal,
       cashSales: cashSales ?? this.cashSales,
       debtCollectionsCash: debtCollectionsCash ?? this.debtCollectionsCash,
+      debtCollectionsCard: debtCollectionsCard ?? this.debtCollectionsCard,
+      debtCollectionsTransfer: debtCollectionsTransfer ?? this.debtCollectionsTransfer,
       totalTax: totalTax ?? this.totalTax,
       status: status ?? this.status,
     );
