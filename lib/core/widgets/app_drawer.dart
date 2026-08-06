@@ -184,15 +184,7 @@ class AppDrawer extends ConsumerWidget {
               context.push('/settings');
             },
           ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.history_toggle_off),
-            title: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'أرشيف الورديات' : 'Shifts Archive', style: const TextStyle(fontFamily: 'Tajawal')),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/shifts_archive');
-            },
-          ),
+
           ListTile(
             leading: const Icon(Icons.lock_clock),
             title: Text(l10n.closeShiftZReport, style: const TextStyle(fontFamily: 'Tajawal')),

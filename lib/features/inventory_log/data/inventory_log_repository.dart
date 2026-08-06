@@ -17,7 +17,7 @@ class InventoryLogRepository {
   Stream<List<InventoryLog>> watchLogs() {
     return _logsRef.withConverter(
       fromFirestore: (snapshot, _) {
-        final data = snapshot.data() ?? {};
+        final data = Map<String, dynamic>.from(snapshot.data() ?? {});
         data['id'] = snapshot.id;
         data['productId'] = data['productId']?.toString() ?? '';
         data['productName'] = data['productName']?.toString() ?? '';
