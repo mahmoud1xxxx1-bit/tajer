@@ -128,71 +128,12 @@ class OrdersScreen extends ConsumerWidget {
                             ),
                           );
                         },
-                        onLongPress: appUser?.role == 'employee' ? null : () {
-                          showDialog(
-                            context: context,
-                            builder: (dialogCtx) => AlertDialog(
-                              title: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'حذف الفاتورة' : 'Delete Order', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                              content: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'هل أنت متأكد من مسح هذه الفاتورة؟ (سيعود المخزون للمنتجات)' : 'Are you sure you want to delete this order? (Inventory will be restored)', style: const TextStyle(fontFamily: 'Tajawal')),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'إلغاء' : 'Cancel', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-                                ),
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                                  onPressed: () async {
-                                    Navigator.pop(context);
-                                    final appUser = ref.read(appUserProvider).value;
-                                    if (appUser != null) {
-                                      final isAr = Localizations.localeOf(context).languageCode == 'ar';
-                                      final success = await PinConfirmationDialog.requirePinOrSetup(
-                                        context, 
-                                        appUser,
-                                        title: isAr ? l10n.warningFinalDelete : 'Warning: Delete Order',
-                                        warning: isAr 
-                                            ? l10n.finalDeleteWarningMsg
-                                            : 'Permanent deletion will erase this order from records completely, refund money, and reverse debt. This cannot be undone.',
-                                      );
-                                      if (!success) return;
-                                    }
-                                    try {
-                                      await ref.read(orderRepositoryProvider).deleteOrder(order);
-                                      final user = ref.read(appUserProvider).value;
-                                      await ActivityLogger.log(
-                                        user: user,
-                                        actionType: Localizations.localeOf(context).languageCode == 'ar' ? 'حذف فاتورة' : 'Order Deleted',
-                                        description: Localizations.localeOf(context).languageCode == 'ar' 
-                                            ? l10n.invoicePermanentlyDeleted((order.queueNumber?.toString() ?? order.id.substring(0, 6)), user?.name ?? "التاجر") 
-                                            : 'Permanently deleted order #${(order.queueNumber?.toString() ?? order.id.substring(0, 6))} by ${user?.name ?? "Owner"}',
-                                        amount: order.total,
-                                      );
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'تم حذف الفاتورة بنجاح' : 'Order deleted successfully', style: const TextStyle(fontFamily: 'Tajawal'))),
-                                        );
-                                      }
-                                    } catch (e) {
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'فشل مسح الفاتورة نهائياً لعدم وجود صلاحية أو لا توجد فاتورة.' : 'Failed to delete. Permission denied.', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
-                                            backgroundColor: Colors.red,
-                                            duration: const Duration(seconds: 10),
-                                            action: SnackBarAction(label: Localizations.localeOf(context).languageCode == 'ar' ? 'إخفاء' : 'Dismiss', textColor: Colors.white, onPressed: () {}),
-                                          ),
-                                        );
-                                      }
-                                    }
-                                  },
-                                  child: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'حذف' : 'Delete', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-
-                        child: Padding(
+                        child: Container(
+                          decoration: order.status == 'cancelled' ? BoxDecoration(
+                            color: Colors.red.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.1),
+                            borderRadius: BorderRadius.circular(20.0),
+                            border: Border.all(color: Colors.red.withOpacity(0.5), width: 1),
+                          ) : null,
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,

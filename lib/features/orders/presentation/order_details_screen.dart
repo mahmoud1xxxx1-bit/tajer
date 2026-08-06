@@ -154,70 +154,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
     }
   }
 
-  Future<void> _deleteOrder(bool isAr) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(isAr ? 'تأكيد الحذف النهائي' : 'Confirm Deletion', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
-        content: Text(
-          isAr ? 'هل أنت متأكد من رغبتك في مسح الفاتورة نهائياً؟ لا يمكن التراجع عن هذه الخطوة.' : 'Are you sure you want to permanently delete this order? This action cannot be undone.',
-          style: const TextStyle(fontFamily: 'Tajawal'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(isAr ? 'تراجع' : 'No', style: const TextStyle(fontFamily: 'Tajawal'))),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(isAr ? 'حذف نهائي' : 'Delete Permanently', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        final appUser = ref.read(appUserProvider).value;
-        if (appUser != null) {
-          final success = await PinConfirmationDialog.requirePinOrSetup(
-            context, 
-            appUser,
-            title: isAr ? 'تحذير: حذف نهائي للطلب' : 'Warning: Delete Order',
-            warning: isAr 
-                ? 'الحذف النهائي سيمحو هذا الطلب من السجلات تماماً بالإضافة إلى إرجاع الأموال وعكس الديون. لا يمكن استعادة الفاتورة. هل أنت متأكد؟'
-                : 'Permanent deletion will erase this order from records completely, refund money, and reverse debt. This cannot be undone.',
-          );
-          if (!success) return;
-        }
-        await ref.read(orderRepositoryProvider).deleteOrder(currentOrder);
-        final user = ref.read(appUserProvider).value;
-        await ActivityLogger.log(
-          user: user,
-          actionType: isAr ? 'حذف فاتورة' : 'Order Deleted',
-          description: isAr 
-              ? 'تم حذف الفاتورة رقم #${currentOrder.queueNumber ?? currentOrder.id.substring(0, 6)} نهائياً من قبل ${user?.name ?? "التاجر"}' 
-              : 'Permanently deleted order #${currentOrder.queueNumber ?? currentOrder.id.substring(0, 6)} by ${user?.name ?? "Owner"}',
-          amount: currentOrder.total,
-        );
-        if (mounted) {
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(isAr ? 'تم حذف الفاتورة نهائياً' : 'Order deleted permanently.', style: const TextStyle(fontFamily: 'Tajawal'))),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('حدث خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 10),
-              action: SnackBarAction(label: 'إخفاء', textColor: Colors.white, onPressed: () {}),
-            ),
-          );
-        }
-      }
-    }
-  }
+  // _deleteOrder function has been completely removed to enforce Soft Delete.
 
   @override
   Widget build(BuildContext context) {
@@ -257,15 +194,17 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
+                            color: isCancelled ? Colors.red.withOpacity(0.2) : (currentOrder.isCredit && (currentOrder.paidAmount ?? 0.0) >= currentOrder.total) ? Colors.green.withOpacity(0.2) : Theme.of(context).colorScheme.primary.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: isCancelled ? Colors.red : Colors.transparent),
                           ),
                           child: Text(
                             isCancelled 
-                              ? (isAr ? '❌ طلب ملغي' : '❌ Cancelled') 
+                              ? (isAr ? '❌ طلب ملغي / مرتجع' : '❌ Cancelled / Refunded') 
                               : (currentOrder.isCredit && (currentOrder.paidAmount ?? 0.0) >= currentOrder.total)
                                 ? (isAr ? '✅ تم سداد الفاتورة بالكامل' : '✅ Fully Paid')
                                 : (isAr ? '✅ طلب مؤكد / مكتمل' : '✅ Completed'),
-                            style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13),
+                            style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13, color: isCancelled ? Colors.red : null),
                           ),
                         ),
                         Text(
@@ -510,21 +449,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                       onPressed: () => _cancelOrder(isAr),
                     ),
                   ),
-                  const SizedBox(width: 12),
                 ],
-                if (!isEmployee)
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.red),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      icon: const Icon(Icons.delete_outline, color: Colors.red),
-                      label: Text(isAr ? 'حذف نهائي' : 'Delete', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
-                      onPressed: () => _deleteOrder(isAr),
-                    ),
-                  ),
               ],
             ),
             const SizedBox(height: 32),
