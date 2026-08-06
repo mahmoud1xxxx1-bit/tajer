@@ -88,7 +88,7 @@ class InventoryLogRepository {
     await _logsRef.doc(log.id).delete();
   }
 
-  Future<void> updateLog(InventoryLog oldLog, int newChangeQuantity, String newReason) async {
+  Future<void> updateLog(InventoryLog oldLog, double newChangeQuantity, String newReason) async {
     final diff = newChangeQuantity - oldLog.changeQuantity;
     if (diff != 0 && oldLog.productId.isNotEmpty) {
       final productRef = _firestore.collection('products').doc(oldLog.productId);

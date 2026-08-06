@@ -187,7 +187,7 @@ class AppDrawer extends ConsumerWidget {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.history_toggle_off),
-            title: Text(l10n.shiftsArchive ?? 'أرشيف الورديات', style: const TextStyle(fontFamily: 'Tajawal')),
+            title: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'أرشيف الورديات' : 'Shifts Archive', style: const TextStyle(fontFamily: 'Tajawal')),
             onTap: () {
               Navigator.pop(context);
               context.push('/shifts_archive');
