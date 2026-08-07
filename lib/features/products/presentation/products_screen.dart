@@ -141,19 +141,19 @@ class ProductsScreen extends ConsumerWidget {
                                     Icon(
                                       Icons.inventory,
                                       size: 14,
-                                      color: product.quantity <= 5 ? Colors.red : Colors.grey[600],
+                                      color: (!product.isManufacturedOnDemand && product.quantity <= 5) ? Colors.red : Colors.grey[600],
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      '${l10n.quantity}: ${product.quantity}',
+                                      product.isManufacturedOnDemand ? 'يُصنع عند الطلب' : '${l10n.quantity}: ${product.quantity}',
                                       style: TextStyle(
                                         fontFamily: 'Tajawal',
-                                        color: product.quantity <= 5 ? Colors.red : Colors.grey[700],
-                                        fontWeight: product.quantity <= 5 ? FontWeight.bold : FontWeight.normal,
+                                        color: (!product.isManufacturedOnDemand && product.quantity <= 5) ? Colors.red : Colors.grey[700],
+                                        fontWeight: (!product.isManufacturedOnDemand && product.quantity <= 5) ? FontWeight.bold : FontWeight.normal,
                                         fontSize: 12,
                                       ),
                                     ),
-                                    if (product.quantity <= 5) ...[
+                                    if (!product.isManufacturedOnDemand && product.quantity <= 5) ...[
                                       const SizedBox(width: 4),
                                       const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 14),
                                     ],

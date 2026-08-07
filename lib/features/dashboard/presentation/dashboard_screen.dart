@@ -199,7 +199,7 @@ class DashboardHome extends ConsumerWidget {
               ),
             );
           } else {
-            final lowStockProducts = productsAsync.value?.where((p) => p.quantity <= 5).toList() ?? [];
+            final lowStockProducts = productsAsync.value?.where((p) => !p.isManufacturedOnDemand && p.quantity <= 5).toList() ?? [];
             if (lowStockProducts.isNotEmpty) {
               lowStockWidget = Container(
                 margin: EdgeInsets.only(bottom: 16),
