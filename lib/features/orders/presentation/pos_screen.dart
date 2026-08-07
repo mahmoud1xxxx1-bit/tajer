@@ -806,6 +806,9 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
         grandTotal += item.total + (item.total * (itemTax / 100));
       }
     }
+    }
+    
+    final requiredAmount = _isCredit ? (double.tryParse(_paidController.text) ?? 0.0) : grandTotal;
 
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
@@ -980,7 +983,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                   onSelected: (val) {
                     setState(() {
                       _paymentMethod = 'split';
-                      _splitNetworkController.text = grandTotal.toStringAsFixed(2);
+                      _splitNetworkController.text = requiredAmount.toStringAsFixed(2);
                       _splitCashController.text = '0';
                     });
                   },
@@ -998,8 +1001,8 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                        decoration: InputDecoration(labelText: isAr ? 'نقدي (كاش)' : 'Cash', border: OutlineInputBorder(), prefixIcon: Icon(Icons.money)),
                        onChanged: (val) {
                          final cash = double.tryParse(val) ?? 0.0;
-                         if (cash <= grandTotal) {
-                           _splitNetworkController.text = (grandTotal - cash).toStringAsFixed(2);
+                         if (cash <= requiredAmount) {
+                           _splitNetworkController.text = (requiredAmount - cash).toStringAsFixed(2);
                          }
                          setState((){});
                        },
@@ -1013,8 +1016,8 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                        decoration: InputDecoration(labelText: isAr ? 'شبكة (بطاقة)' : 'Network', border: OutlineInputBorder(), prefixIcon: Icon(Icons.credit_card)),
                        onChanged: (val) {
                          final network = double.tryParse(val) ?? 0.0;
-                         if (network <= grandTotal) {
-                           _splitCashController.text = (grandTotal - network).toStringAsFixed(2);
+                         if (network <= requiredAmount) {
+                           _splitCashController.text = (requiredAmount - network).toStringAsFixed(2);
                          }
                          setState((){});
                        },
@@ -1022,16 +1025,15 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                    ),
                  ],
                ),
-               Builder(
+                 Builder(
                  builder: (context) {
                    final cash = double.tryParse(_splitCashController.text) ?? 0.0;
                    final network = double.tryParse(_splitNetworkController.text) ?? 0.0;
-                   final total = widget.total;
-                   final diff = total - (cash + network);
+                   final diff = requiredAmount - (cash + network);
                    if (diff.abs() > 0.01) {
                      return Padding(
                        padding: const EdgeInsets.only(top: 8.0),
-                       child: Text('المجموع لا يساوي الإجمالي (${total.toStringAsFixed(2)})', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                       child: Text('المجموع لا يساوي المبلغ المدفوع (${requiredAmount.toStringAsFixed(2)})', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
                      );
                    }
                    return const SizedBox.shrink();
@@ -1050,7 +1052,13 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                 controller: _paidController,
                 keyboardType: TextInputType.number,
                 decoration: InputDecoration(labelText: isAr ? 'المبلغ المدفوع الان' : 'Amount Paid Now', border: OutlineInputBorder()),
-                onChanged: (val) => setState(() {}),
+                onChanged: (val) => setState(() {
+                  if (_paymentMethod == 'split') {
+                     final newPaid = double.tryParse(val) ?? 0.0;
+                     _splitNetworkController.text = newPaid.toStringAsFixed(2);
+                     _splitCashController.text = '0';
+                  }
+                }),
               )
             ],
             if (_paymentMethod == 'cash') ...[
@@ -1058,17 +1066,14 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
               TextField(
                 controller: _tenderedController,
                 keyboardType: TextInputType.number,
-                decoration: InputDecoration(labelText: isAr ? 'المبلغ المستلم من العميل (للكاش فقط)' : 'Tendered Amount (Cash only)', border: OutlineInputBorder(), prefixIcon: Icon(Icons.payments_outlined)),
+                decoration: InputDecoration(labelText: isAr ? 'المبلغ المستلم فعلياً (لحساب الباقي)' : 'Tendered Amount (Cash only)', border: OutlineInputBorder(), prefixIcon: Icon(Icons.payments_outlined)),
                 onChanged: (val) => setState(() {}),
               ),
               if (_tenderedController.text.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Builder(
                   builder: (context) {
-                    // Removed local grandTotal calculation to use the one computed at the start of build()
-
                     final tendered = double.tryParse(_tenderedController.text) ?? 0.0;
-                    final requiredAmount = _isCredit ? (double.tryParse(_paidController.text) ?? 0.0) : grandTotal;
                     final change = tendered - requiredAmount;
                     if (tendered > 0 && change >= 0) {
                       return Container(
@@ -1099,28 +1104,32 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                 // Removed local grandTotal calculation to use the one computed at the start of build()
                 final paid = _isCredit ? (double.tryParse(_paidController.text) ?? 0.0) : grandTotal;
                 
-                // --- Validation for Split Payment ---
-                if (_paymentMethod == 'split' && !_isCredit) {
+                // 1. التحقق من الدفع المتعدد (إلزامي في الكاش والآجل معاً)
+                if (_paymentMethod == 'split') {
                    final cash = double.tryParse(_splitCashController.text) ?? 0.0;
                    final network = double.tryParse(_splitNetworkController.text) ?? 0.0;
-                   final diff = grandTotal - (cash + network);
+                   final diff = requiredAmount - (cash + network);
                    if (diff.abs() > 0.01) {
-                     showDialog(
-                       context: context,
-                       builder: (ctx) => AlertDialog(
+                     showDialog(context: context, builder: (ctx) => AlertDialog(
                          title: Text(isAr ? 'تنبيه' : 'Warning', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
-                         content: Text(isAr 
-                            ? 'في الدفع المتعدد، يجب أن يتطابق مجموع المبالغ المدخلة مع الإجمالي شامل الضريبة (${grandTotal.toStringAsFixed(2)}).'
-                            : 'For split payment, the sum of amounts must match the grand total (${grandTotal.toStringAsFixed(2)}).', 
-                            style: TextStyle(fontFamily: 'Tajawal')
-                         ),
-                         actions: [
-                           TextButton(onPressed: () => Navigator.pop(ctx), child: Text(isAr ? 'حسناً' : 'OK', style: TextStyle(fontFamily: 'Tajawal')))
-                         ],
-                       )
-                     );
+                         content: Text(isAr ? 'يجب أن يتطابق مجموع المبالغ مع المبلغ المدفوع (${requiredAmount.toStringAsFixed(2)}).' : 'Split amounts must match the paid amount.', style: TextStyle(fontFamily: 'Tajawal')),
+                         actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(isAr ? 'حسناً' : 'OK', style: TextStyle(fontFamily: 'Tajawal')))]
+                     ));
                      return;
                    }
+                }
+                
+                // 2. التحقق من الكاش وحساب الباقي (منع ظهور الباقي بالسالب)
+                if (_paymentMethod == 'cash' && _tenderedController.text.isNotEmpty) {
+                  final tendered = double.tryParse(_tenderedController.text);
+                  if (tendered == null || tendered < requiredAmount) {
+                     showDialog(context: context, builder: (ctx) => AlertDialog(
+                         title: Text(isAr ? 'تنبيه' : 'Warning', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
+                         content: Text(isAr ? 'المبلغ المستلم من العميل غير كافٍ لتغطية المطلوب.' : 'Tendered amount is insufficient.', style: TextStyle(fontFamily: 'Tajawal')),
+                         actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: Text(isAr ? 'حسناً' : 'OK', style: TextStyle(fontFamily: 'Tajawal')))]
+                     ));
+                     return;
+                  }
                 }
                 
                 // --- Validation for Anonymous Debt ---

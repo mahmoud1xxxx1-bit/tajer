@@ -57,7 +57,7 @@ class PdfService {
             pw.SizedBox(height: 10),
             pw.Text('الفترة: $title', style: pw.TextStyle(fontSize: 16)),
             pw.SizedBox(height: 20),
-            _buildSummaryRow(reportsService, currency, revenueBeforeTax, totalTaxAmount, totalRevenue, taxPercentage > 0),
+            _buildSummaryRow(reportsService, currency, revenueBeforeTax, totalTaxAmount, totalRevenue, taxPercentage > 0 || totalTaxAmount > 0),
             pw.SizedBox(height: 20),
             pw.Text('أفضل المنتجات مبيعاً:',
                 style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
