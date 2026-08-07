@@ -308,7 +308,8 @@ class OrdersScreen extends ConsumerWidget {
                                             }
                                           }
                                           try {
-                                            await PrinterService.printReceipt(order, currency, isKitchen: false, taxPercentage: tax, defaultIsTaxInclusive: isInclusive).timeout(const Duration(seconds: 5));
+                                            bool isAr = Localizations.localeOf(context).languageCode == 'ar';
+                                            await PrinterService.printReceipt(order, currency, isKitchen: false, taxPercentage: tax, defaultIsTaxInclusive: isInclusive, isAr: isAr).timeout(const Duration(seconds: 5));
                                           } catch (_) {
                                             if (context.mounted) {
                                               ScaffoldMessenger.of(context).showSnackBar(

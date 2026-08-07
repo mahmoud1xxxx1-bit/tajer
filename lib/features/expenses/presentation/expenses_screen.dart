@@ -466,7 +466,11 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                               
                               final now = DateTime.now();
                               final expenseDate = expense.date;
-                              if (now.year != expenseDate.year || now.month != expenseDate.month || now.day != expenseDate.day) {
+                              
+                              bool isSameDay = now.year == expenseDate.year && now.month == expenseDate.month && now.day == expenseDate.day;
+                              bool isRecent = now.difference(expenseDate).inHours < 16;
+                              
+                              if (!isSameDay && !isRecent) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
                                     content: Text(isAr ? 'أمان: لا يمكن إلغاء مصروف قديم بعد إغلاق الوردية.' : 'Security: Cannot cancel an expense from a previous closed shift.'),

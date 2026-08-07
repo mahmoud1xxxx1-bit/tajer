@@ -123,6 +123,7 @@ class _PinConfirmationDialogState extends State<PinConfirmationDialog> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -159,9 +160,9 @@ class _PinConfirmationDialogState extends State<PinConfirmationDialog> {
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
-            'أدخل رمز الأمان (PIN) للتأكيد:',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          Text(
+            isAr ? 'أدخل رمز الأمان (PIN) للتأكيد:' : 'Enter Security PIN to confirm:',
+            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -172,7 +173,7 @@ class _PinConfirmationDialogState extends State<PinConfirmationDialog> {
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 24, letterSpacing: 16, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
-              errorText: _hasError ? 'الرمز غير صحيح' : null,
+              errorText: _hasError ? (isAr ? 'الرمز غير صحيح' : 'Incorrect PIN') : null,
               counterText: '',
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
               filled: true,
@@ -197,7 +198,7 @@ class _PinConfirmationDialogState extends State<PinConfirmationDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
-          child: Text('تراجع', style: TextStyle(color: isDarkMode ? Colors.grey.shade300 : Colors.grey.shade700)),
+          child: Text(isAr ? 'تراجع' : 'Cancel', style: TextStyle(color: isDarkMode ? Colors.grey.shade300 : Colors.grey.shade700)),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
@@ -206,7 +207,7 @@ class _PinConfirmationDialogState extends State<PinConfirmationDialog> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           ),
           onPressed: _pinController.text.length == 4 ? _verifyPin : null,
-          child: const Text('تأكيد وحذف', style: TextStyle(fontWeight: FontWeight.bold)),
+          child: Text(isAr ? 'تأكيد وحذف' : 'Confirm & Delete', style: const TextStyle(fontWeight: FontWeight.bold)),
         ),
       ],
     );

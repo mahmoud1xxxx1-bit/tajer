@@ -118,10 +118,12 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   vatNumber = result.vatNumber!;
                 }
               }
+              }
 
               try {
+                final isAr = Localizations.localeOf(context).languageCode == 'ar';
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('جاري تجهيز التقرير (PDF)...', style: TextStyle(fontFamily: 'Tajawal'))),
+                  SnackBar(content: Text(isAr ? 'جاري تجهيز التقرير (PDF)...' : 'Preparing PDF Report...', style: const TextStyle(fontFamily: 'Tajawal'))),
                 );
                 final pdfData = await PdfService.generateReportPdf(
                   reportsService, 
@@ -130,11 +132,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   taxPercentage: taxPercentage,
                   isInclusive: isInclusive,
                   vatNumber: vatNumber,
+                  isAr: isAr,
                 );
                 await Printing.sharePdf(bytes: pdfData, filename: 'report.pdf');
               } catch (e) {
+                final isAr = Localizations.localeOf(context).languageCode == 'ar';
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('حدث خطأ أثناء استخراج التقرير', style: TextStyle(fontFamily: 'Tajawal'))),
+                  SnackBar(content: Text(isAr ? 'حدث خطأ أثناء استخراج التقرير' : 'Error generating report', style: const TextStyle(fontFamily: 'Tajawal'))),
                 );
               }
             },

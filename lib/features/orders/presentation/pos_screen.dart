@@ -146,7 +146,27 @@ class _PosScreenState extends ConsumerState<PosScreen> {
             subtitle: Text('عدد المنتجات: ${held.length} - الإجمالي: $total', style: TextStyle(fontFamily: 'Tajawal')),
             trailing: IconButton(
               icon: Icon(Icons.restore, color: Colors.green),
-              onPressed: () {
+              onPressed: () async {
+                if (_cart.isNotEmpty) {
+                  final isAr = Localizations.localeOf(context).languageCode == 'ar';
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (dCtx) => AlertDialog(
+                      title: Text(isAr ? 'تنبيه!' : 'Warning!'),
+                      content: Text(isAr ? 'السلة الحالية غير فارغة. استرجاع هذا الطلب سيؤدي لمسح السلة الحالية بالكامل. هل أنت متأكد؟' : 'Current cart is not empty. Restoring this order will clear the current cart completely. Are you sure?'),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(dCtx, false), child: Text(isAr ? 'إلغاء' : 'Cancel')),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
+                          onPressed: () => Navigator.pop(dCtx, true), 
+                          child: Text(isAr ? 'نعم، استرجع وامسح' : 'Yes, Restore & Clear')
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm != true) return;
+                }
+                if (!context.mounted) return;
                 Navigator.pop(ctx);
                 setState(() {
                   _cart.clear();
@@ -355,6 +375,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       // }
 
       // Attempt to print receipt asynchronously in background with a 5-second timeout
+      final bool isAr = Localizations.localeOf(context).languageCode == 'ar';
       PrinterService.printReceipt(
         savedOrder, 
         currency,
@@ -362,6 +383,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         isKitchen: false,
         taxPercentage: tax,
         defaultIsTaxInclusive: storeProfile?.defaultIsTaxInclusive ?? false,
+        isAr: isAr,
       ).timeout(const Duration(seconds: 5)).catchError((e) {
         debugPrint('Auto-print ignored or failed: $e');
       });

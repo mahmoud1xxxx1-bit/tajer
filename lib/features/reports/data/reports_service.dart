@@ -135,6 +135,35 @@ class ReportsService {
     }
     return expensesByCategory;
   }
+
+  Map<String, double> get paymentMethodsBreakdown {
+    final Map<String, double> breakdown = {};
+    for (var order in orders) {
+      if (order.status == 'cancelled') continue;
+      
+      String method = order.paymentMethod ?? 'cash';
+      
+      if (order.status == 'debt_repayment' || order.isCredit) {
+         // Credit orders paid amount goes to their respective payment methods later, 
+         // but for simplicity, we can categorize the paidAmount of credit orders or debt repayments.
+         // Wait, to keep it accurate for the simple merchant:
+         // The actual cash/card currently in the drawer is the order.paidAmount (if it's a credit order).
+      }
+      
+      // Let's strictly use order.total for regular orders, and order.paidAmount for credit.
+      // Wait, if it's debt_repayment, it uses order.paidAmount (which is the repayment amount).
+      double amount = order.total;
+      if (order.isCredit) {
+        amount = order.paidAmount; // Only what they paid upfront goes into the drawer/bank
+      }
+      if (order.status == 'debt_repayment') {
+        amount = order.paidAmount;
+      }
+      
+      breakdown[method] = (breakdown[method] ?? 0.0) + amount;
+    }
+    return breakdown;
+  }
 }
 
 final reportsServiceProvider = Provider<ReportsService?>((ref) {

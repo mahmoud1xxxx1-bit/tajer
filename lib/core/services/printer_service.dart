@@ -78,6 +78,7 @@ class PrinterService {
     bool defaultIsTaxInclusive = false,
     StoreProfile? storeProfile,
     bool isKitchen = false,
+    bool isAr = true,
   }) async {
     bool isConnected = await PrintBluetoothThermal.connectionStatus;
     
@@ -143,7 +144,7 @@ class PrinterService {
         pageFormat: PdfPageFormat(pageWidth, double.infinity, marginAll: 2 * PdfPageFormat.mm),
         build: (pw.Context context) {
           return pw.Directionality(
-            textDirection: pw.TextDirection.rtl,
+            textDirection: isAr ? pw.TextDirection.rtl : pw.TextDirection.ltr,
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.center,
               mainAxisSize: pw.MainAxisSize.min,
@@ -162,14 +163,14 @@ class PrinterService {
                     textAlign: pw.TextAlign.center,
                   ),
                 if (isOfficial) ...[
-                  pw.Text('الرقم الضريبي: ${storeProfile.vatNumber}', style: pw.TextStyle(font: ttf, fontSize: 10), textAlign: pw.TextAlign.center),
+                  pw.Text(isAr ? 'الرقم الضريبي: ${storeProfile.vatNumber}' : 'VAT Number: ${storeProfile.vatNumber}', style: pw.TextStyle(font: ttf, fontSize: 10), textAlign: pw.TextAlign.center),
                   if (storeProfile.crNumber != null && storeProfile.crNumber!.isNotEmpty)
-                    pw.Text('س.ت: ${storeProfile.crNumber}', style: pw.TextStyle(font: ttf, fontSize: 10), textAlign: pw.TextAlign.center),
+                    pw.Text(isAr ? 'س.ت: ${storeProfile.crNumber}' : 'CR Number: ${storeProfile.crNumber}', style: pw.TextStyle(font: ttf, fontSize: 10), textAlign: pw.TextAlign.center),
                   pw.SizedBox(height: 5),
                 ],
                 
                 pw.Text(
-                  isKitchen ? 'تذكرة مطبخ (تحضير)' : (isOfficial ? 'فاتورة ضريبية مبسطة' : 'فاتورة مبيعات'),
+                  isKitchen ? (isAr ? 'تذكرة مطبخ (تحضير)' : 'Kitchen Ticket (Prep)') : (isOfficial ? (isAr ? 'فاتورة ضريبية مبسطة' : 'Simplified Tax Invoice') : (isAr ? 'فاتورة مبيعات' : 'Sales Receipt')),
                   style: pw.TextStyle(font: ttfBold, fontSize: 14),
                   textAlign: pw.TextAlign.center,
                 ),
@@ -179,21 +180,21 @@ class PrinterService {
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Text('رقم الطلب:', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                    pw.Text(isAr ? 'رقم الطلب:' : 'Order No:', style: pw.TextStyle(font: ttf, fontSize: 10)),
                     pw.Text('${order.queueNumber ?? order.id.substring(0, 8)}', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
                   ],
                 ),
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Text('التاريخ:', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                    pw.Text(isAr ? 'التاريخ:' : 'Date:', style: pw.TextStyle(font: ttf, fontSize: 10)),
                     pw.Text(AppDateFormatter.format(order.createdAt), style: pw.TextStyle(font: ttf, fontSize: 10)),
                   ],
                 ),
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
-                    pw.Text('العميل:', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                    pw.Text(isAr ? 'العميل:' : 'Customer:', style: pw.TextStyle(font: ttf, fontSize: 10)),
                     pw.Text(order.customerName, style: pw.TextStyle(font: ttf, fontSize: 10)),
                   ],
                 ),
@@ -204,10 +205,10 @@ class PrinterService {
                 // Headers
                 pw.Row(
                   children: [
-                    pw.Expanded(flex: 3, child: pw.Text('الصنف', style: pw.TextStyle(font: ttfBold, fontSize: 10))),
-                    pw.Expanded(flex: 1, child: pw.Text('الكمية', style: pw.TextStyle(font: ttfBold, fontSize: 10), textAlign: pw.TextAlign.center)),
+                    pw.Expanded(flex: 3, child: pw.Text(isAr ? 'الصنف' : 'Item', style: pw.TextStyle(font: ttfBold, fontSize: 10))),
+                    pw.Expanded(flex: 1, child: pw.Text(isAr ? 'الكمية' : 'Qty', style: pw.TextStyle(font: ttfBold, fontSize: 10), textAlign: pw.TextAlign.center)),
                     if (!isKitchen)
-                      pw.Expanded(flex: 2, child: pw.Text('المجموع', style: pw.TextStyle(font: ttfBold, fontSize: 10), textAlign: pw.TextAlign.left)),
+                      pw.Expanded(flex: 2, child: pw.Text(isAr ? 'المجموع' : 'Total', style: pw.TextStyle(font: ttfBold, fontSize: 10), textAlign: isAr ? pw.TextAlign.left : pw.TextAlign.right)),
                   ]
                 ),
                 pw.SizedBox(height: 2),
@@ -222,7 +223,7 @@ class PrinterService {
                         pw.Expanded(flex: 3, child: pw.Text(item.productName, style: pw.TextStyle(font: ttf, fontSize: 10))),
                         pw.Expanded(flex: 1, child: pw.Text('${item.quantity}', style: pw.TextStyle(font: ttfBold, fontSize: 10), textAlign: pw.TextAlign.center)),
                         if (!isKitchen)
-                          pw.Expanded(flex: 2, child: pw.Text('${item.total.toStringAsFixed(2)}', style: pw.TextStyle(font: ttf, fontSize: 10), textAlign: pw.TextAlign.left)),
+                          pw.Expanded(flex: 2, child: pw.Text('${item.total.toStringAsFixed(2)}', style: pw.TextStyle(font: ttf, fontSize: 10), textAlign: isAr ? pw.TextAlign.left : pw.TextAlign.right)),
                       ]
                     )
                   );
@@ -238,21 +239,21 @@ class PrinterService {
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
-                        pw.Text('الإجمالي (بدون ضريبة):', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                        pw.Text(isAr ? 'الإجمالي (بدون ضريبة):' : 'Total (Excl. Tax):', style: pw.TextStyle(font: ttf, fontSize: 10)),
                         pw.Text('${totalBeforeTax.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 10)),
                       ]
                     ),
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
-                        pw.Text('الضريبة:', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                        pw.Text(isAr ? 'الضريبة:' : 'Tax:', style: pw.TextStyle(font: ttf, fontSize: 10)),
                         pw.Text('${totalTaxAmount.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 10)),
                       ]
                     ),
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
-                        pw.Text('الإجمالي الشامل:', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
+                        pw.Text(isAr ? 'الإجمالي الشامل:' : 'Grand Total:', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
                         pw.Text('${grandTotal.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
                       ]
                     ),
@@ -260,7 +261,7 @@ class PrinterService {
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
-                        pw.Text('الإجمالي:', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
+                        pw.Text(isAr ? 'الإجمالي:' : 'Total:', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
                         pw.Text('${grandTotal.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
                       ]
                     ),
@@ -270,7 +271,7 @@ class PrinterService {
                   pw.Row(
                     mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                     children: [
-                      pw.Text('المدفوع:', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                      pw.Text(isAr ? 'المدفوع:' : 'Paid:', style: pw.TextStyle(font: ttf, fontSize: 10)),
                       pw.Text('${order.paidAmount.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 10)),
                     ]
                   ),
@@ -279,7 +280,7 @@ class PrinterService {
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
-                        pw.Text('المتبقي (آجل):', style: pw.TextStyle(font: ttfBold, fontSize: 10)),
+                        pw.Text(isAr ? 'المتبقي (آجل):' : 'Remaining (Credit):', style: pw.TextStyle(font: ttfBold, fontSize: 10)),
                         pw.Text('${(order.total - order.paidAmount).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 10)),
                       ]
                     ),
@@ -288,7 +289,7 @@ class PrinterService {
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
-                        pw.Text('المبلغ المستلم:', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                        pw.Text(isAr ? 'المبلغ المستلم:' : 'Tendered:', style: pw.TextStyle(font: ttf, fontSize: 10)),
                         pw.Text('${order.tenderedAmount!.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 10)),
                       ]
                     ),
@@ -297,7 +298,7 @@ class PrinterService {
                       pw.Row(
                         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                         children: [
-                          pw.Text('المتبقي للعميل:', style: pw.TextStyle(font: ttfBold, fontSize: 10)),
+                          pw.Text(isAr ? 'المتبقي للعميل:' : 'Change:', style: pw.TextStyle(font: ttfBold, fontSize: 10)),
                           pw.Text('${order.changeAmount!.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 10)),
                         ]
                       ),
@@ -308,14 +309,14 @@ class PrinterService {
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
-                        pw.Text('المدفوع نقداً:', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                        pw.Text(isAr ? 'المدفوع نقداً:' : 'Paid Cash:', style: pw.TextStyle(font: ttf, fontSize: 10)),
                         pw.Text('${(order.splitCashAmount ?? 0).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 10)),
                       ]
                     ),
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
-                        pw.Text('المدفوع شبكة:', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                        pw.Text(isAr ? 'المدفوع شبكة:' : 'Paid Card:', style: pw.TextStyle(font: ttf, fontSize: 10)),
                         pw.Text('${(order.splitNetworkAmount ?? 0).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 10)),
                       ]
                     ),
@@ -343,10 +344,10 @@ class PrinterService {
                 ],
 
                 if (!isKitchen && storeProfile != null && storeProfile.phone.isNotEmpty)
-                  pw.Text('للتواصل: ${storeProfile.phone}', style: pw.TextStyle(font: ttf, fontSize: 10), textAlign: pw.TextAlign.center),
+                  pw.Text('${isAr ? 'للتواصل:' : 'Contact:'} ${storeProfile.phone}', style: pw.TextStyle(font: ttf, fontSize: 10), textAlign: pw.TextAlign.center),
                 
                 if (!isKitchen)
-                  pw.Text('شكراً لتسوقكم معنا', style: pw.TextStyle(font: ttfBold, fontSize: 12), textAlign: pw.TextAlign.center),
+                  pw.Text(isAr ? 'شكراً لتسوقكم معنا' : 'Thank you for shopping with us', style: pw.TextStyle(font: ttfBold, fontSize: 12), textAlign: pw.TextAlign.center),
                 
                 pw.SizedBox(height: 20),
               ]
