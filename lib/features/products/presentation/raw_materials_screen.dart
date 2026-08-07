@@ -277,7 +277,19 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                               ),
                               IconButton(
                                 icon: const Icon(Icons.delete, color: Colors.red),
-                                onPressed: () => ref.read(rawMaterialRepositoryProvider).deleteRawMaterial(item.id),
+                                onPressed: () async {
+                                  final appUser = ref.read(appUserProvider).value;
+                                  if (appUser != null) {
+                                    final success = await PinConfirmationDialog.requirePinOrSetup(
+                                      context,
+                                      appUser,
+                                      title: 'تحذير: حذف مادة خام',
+                                      warning: 'هل أنت متأكد من حذف هذه المادة الخام (${item.name})؟',
+                                    );
+                                    if (!success) return;
+                                  }
+                                  ref.read(rawMaterialRepositoryProvider).deleteRawMaterial(item.id);
+                                },
                               ),
                             ],
                           ) : null,

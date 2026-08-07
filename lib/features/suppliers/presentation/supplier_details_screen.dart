@@ -163,14 +163,16 @@ class SupplierDetailsScreen extends ConsumerWidget {
                                     if (!t.isCancelled && appUser?.hasPermission('can_manage_inventory') == true)
                                       InkWell(
                                         onTap: () async {
-                                          final pin = await PinService.getDeletePin(appUser!);
-                                          if (pin != null) {
-                                            if (!context.mounted) return;
-                                            final success = await PinConfirmationDialog.show(
+                                          final appUser = ref.read(appUserProvider).value;
+                                          if (appUser != null) {
+                                            final isAr = Localizations.localeOf(context).languageCode == 'ar';
+                                            final success = await PinConfirmationDialog.requirePinOrSetup(
                                               context, 
-                                              pin,
-                                              title: 'تأكيد: إلغاء العملية',
-                                              warning: 'سيتم إلغاء العملية وإعادة حساب المديونية. ' + (isPayment ? '(تنبيه: ستحتاج لإلغاء المصروف من شاشة المصروفات أيضاً)' : ''),
+                                              appUser,
+                                              title: isAr ? 'تحذير: إلغاء العملية' : 'Warning: Cancel Transaction',
+                                              warning: isAr 
+                                                ? 'سيتم إلغاء العملية وإعادة حساب المديونية. ' + (isPayment ? '(تنبيه: ستحتاج لإلغاء المصروف من شاشة المصروفات أيضاً)' : '')
+                                                : 'Transaction will be cancelled and debt recalculated.',
                                             );
                                             if (!success) return;
                                           }
@@ -515,17 +517,14 @@ class SupplierDetailsScreen extends ConsumerWidget {
                 Navigator.pop(context);
                 final appUser = ref.read(appUserProvider).value;
                 if (appUser != null) {
-                  final pin = await PinService.getDeletePin(appUser);
-                  if (pin != null) {
-                    if (!context.mounted) return;
-                    final success = await PinConfirmationDialog.show(
-                      context, 
-                      pin,
-                      title: 'تأكيد: أرشفة المورد',
-                      warning: 'سيتم أرشفة المورد ولن يظهر في القائمة الرئيسية. لن يتم مسح بياناته السابقة.',
-                    );
-                    if (!success) return;
-                  }
+                  final isAr = Localizations.localeOf(context).languageCode == 'ar';
+                  final success = await PinConfirmationDialog.requirePinOrSetup(
+                    context, 
+                    appUser,
+                    title: isAr ? 'تأكيد: أرشفة المورد' : 'Warning: Archive Supplier',
+                    warning: isAr ? 'سيتم أرشفة المورد ولن يظهر في القائمة الرئيسية. لن يتم مسح بياناته السابقة.' : 'Supplier will be archived and hidden. Data will remain.',
+                  );
+                  if (!success) return;
                 }
                 final archivedSupplier = currentSupplier.copyWith(isActive: false);
                 ref.read(supplierRepositoryProvider)?.updateSupplier(archivedSupplier);

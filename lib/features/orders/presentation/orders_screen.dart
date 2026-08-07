@@ -332,20 +332,17 @@ class OrdersScreen extends ConsumerWidget {
                                       onPressed: () async {
                                         final appUser = ref.read(appUserProvider).value;
                                         if (appUser != null) {
-                                          final pin = await PinService.getDeletePin(appUser);
-                                          if (pin != null) {
-                                            if (!context.mounted) return;
-                                            final isAr = Localizations.localeOf(context).languageCode == 'ar';
-                                            final success = await PinConfirmationDialog.show(
-                                              context, 
-                                              pin,
-                                              title: isAr ? 'تحذير: إلغاء الطلب' : 'Warning: Cancel Order',
-                                              warning: isAr 
-                                                ? 'تحذير: سيتم إلغاء الفاتورة وإرجاع كميات الأصناف للمخزون تلقائياً، وسيتم خصم المبلغ من كاش الوردية إذا كانت مدفوعة كاش.' 
-                                                : 'Warning: This will cancel the order, restore inventory, and deduct the amount from shift drawer if paid in cash.',
-                                            );
-                                            if (!success) return;
-                                          }
+                                          if (!context.mounted) return;
+                                          final isAr = Localizations.localeOf(context).languageCode == 'ar';
+                                          final success = await PinConfirmationDialog.requirePinOrSetup(
+                                            context, 
+                                            appUser,
+                                            title: isAr ? 'تحذير: إلغاء الطلب' : 'Warning: Cancel Order',
+                                            warning: isAr 
+                                              ? 'تحذير: سيتم إلغاء الفاتورة وإرجاع كميات الأصناف للمخزون تلقائياً، وسيتم خصم المبلغ من كاش الوردية إذا كانت مدفوعة كاش.' 
+                                              : 'Warning: This will cancel the order, restore inventory, and deduct the amount from shift drawer if paid in cash.',
+                                          );
+                                          if (!success) return;
                                         }
                                         ref.read(orderRepositoryProvider).updateOrderStatus(order, 'cancelled');
                                       },

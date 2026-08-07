@@ -148,20 +148,17 @@ Do not share this PIN with anyone!
   void _deleteEmployee(String id) async {
     final appUser = ref.read(appUserProvider).value;
     if (appUser != null) {
-      final pin = await PinService.getDeletePin(appUser);
-      if (pin != null) {
-        if (!mounted) return;
-        final isAr = Localizations.localeOf(context).languageCode == 'ar';
-        final success = await PinConfirmationDialog.show(
-          context, 
-          pin,
-          title: isAr ? 'تحذير: طرد موظف' : 'Warning: Fire employee',
-          warning: isAr 
-            ? 'حذف الموظف سيمنعه فوراً من الدخول للنظام. لا يمكن التراجع عن هذا الإجراء.'
-            : 'Deleting the employee will immediately prevent them from accessing the system. This action cannot be undone.',
-        );
-        if (!success) return;
-      }
+      if (!mounted) return;
+      final isAr = Localizations.localeOf(context).languageCode == 'ar';
+      final success = await PinConfirmationDialog.requirePinOrSetup(
+        context, 
+        appUser,
+        title: isAr ? 'تحذير: طرد موظف' : 'Warning: Fire employee',
+        warning: isAr 
+          ? 'حذف الموظف سيمنعه فوراً من الدخول للنظام. لا يمكن التراجع عن هذا الإجراء.'
+          : 'Deleting the employee will immediately prevent them from accessing the system. This action cannot be undone.',
+      );
+      if (!success) return;
     }
     setState(() => _isLoading = true);
     try {

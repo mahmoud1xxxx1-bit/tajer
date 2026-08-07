@@ -108,41 +108,18 @@ class CategoriesScreen extends ConsumerWidget {
                       if (canManageProducts)
                         IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: const Text('حذف التصنيف', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                                content: const Text('هل أنت متأكد من حذف هذا التصنيف؟', style: TextStyle(fontFamily: 'Tajawal')),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-                                  ),
-                                  TextButton(
-                                    onPressed: () async {
-                                      Navigator.pop(context);
-                                      final appUser = ref.read(appUserProvider).value;
-                                      if (appUser != null) {
-                                        final pin = await PinService.getDeletePin(appUser);
-                                        if (pin != null) {
-                                          if (!context.mounted) return;
-                                          final success = await PinConfirmationDialog.show(
-                                            context, 
-                                            pin,
-                                            title: 'تحذير: حذف قسم رئيسي',
-                                            warning: 'حذف هذا القسم سيؤدي إلى جعل المنتجات التابعة له "بدون تصنيف".\nهل أنت متأكد من الحذف؟',
-                                          );
-                                          if (!success) return;
-                                        }
-                                      }
-                                      ref.read(categoryRepositoryProvider)?.deleteCategory(category.id);
-                                    },
-                                    child: const Text('حذف', style: TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                                  ),
-                                ],
-                              ),
-                            );
+                          onPressed: () async {
+                            final appUser = ref.read(appUserProvider).value;
+                            if (appUser != null) {
+                              final success = await PinConfirmationDialog.requirePinOrSetup(
+                                context,
+                                appUser,
+                                title: 'تحذير: حذف قسم رئيسي',
+                                warning: 'حذف هذا القسم سيؤدي إلى جعل المنتجات التابعة له "بدون تصنيف".\nهل أنت متأكد من الحذف؟',
+                              );
+                              if (!success) return;
+                            }
+                            ref.read(categoryRepositoryProvider)?.deleteCategory(category.id);
                           },
                         ),
                     ],

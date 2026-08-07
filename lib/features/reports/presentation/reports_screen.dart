@@ -242,7 +242,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       width: cardWidth,
                       child: _SummaryCard(
                         title: AppLocalizations.of(context)!.text105,
-                        value: '${reportsService.totalRevenue} ${currentCurrency.code}',
+                        value: '${reportsService.totalRevenue.toStringAsFixed(2)} ${currentCurrency.code}',
                         icon: Icons.account_balance_wallet,
                         color: Colors.green,
                       ),
@@ -252,7 +252,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         width: cardWidth,
                         child: _SummaryCard(
                           title: AppLocalizations.of(context)!.text106,
-                          value: '${reportsService.netProfit} ${currentCurrency.code}',
+                          value: '${reportsService.netProfit.toStringAsFixed(2)} ${currentCurrency.code}',
                           icon: Icons.savings,
                           color: Colors.blue,
                         ),
@@ -261,7 +261,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       width: cardWidth,
                       child: _SummaryCard(
                         title: AppLocalizations.of(context)!.text66,
-                        value: '${reportsService.totalExpenses} ${currentCurrency.code}',
+                        value: '${reportsService.totalExpenses.toStringAsFixed(2)} ${currentCurrency.code}',
                         icon: Icons.money_off,
                         color: Colors.orange,
                       ),
@@ -271,7 +271,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         width: cardWidth,
                         child: _SummaryCard(
                           title: isAr ? 'تكلفة البضاعة المباعة (COGS)' : 'Cost of Goods Sold (COGS)',
-                          value: '${reportsService.totalCOGS} ${currentCurrency.code}',
+                          value: '${reportsService.totalCOGS.toStringAsFixed(2)} ${currentCurrency.code}',
                           icon: Icons.inventory_2_outlined,
                           color: Colors.brown,
                         ),
@@ -280,7 +280,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       width: cardWidth,
                       child: _SummaryCard(
                         title: AppLocalizations.of(context)!.text107,
-                        value: '${reportsService.totalDebt} ${currentCurrency.code}',
+                        value: '${reportsService.totalDebt.toStringAsFixed(2)} ${currentCurrency.code}',
                         icon: Icons.warning_amber_rounded,
                         color: Colors.red,
                       ),

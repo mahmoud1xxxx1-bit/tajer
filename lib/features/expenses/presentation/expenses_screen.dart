@@ -459,9 +459,6 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                         onTap: () async {
                           final appUser = ref.read(appUserProvider).value;
                           if (appUser != null) {
-                            final pin = await PinService.getDeletePin(appUser);
-                            if (pin != null) {
-                              if (!context.mounted) return;
                               final isAr = Localizations.localeOf(context).languageCode == 'ar';
                               
                               final now = DateTime.now();
@@ -476,16 +473,15 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                                 return;
                               }
 
-                              final success = await PinConfirmationDialog.show(
+                              final success = await PinConfirmationDialog.requirePinOrSetup(
                                 context, 
-                                pin,
+                                appUser,
                                 title: isAr ? 'تأكيد: إلغاء مصروف' : 'Warning: Cancel Expense',
                                 warning: isAr 
                                   ? 'تحذير: سيتم شطب المصروف من تقارير الأرباح والخسائر، وإعادة مبلغه إلى الدرج إذا كان قد سُحب منه.'
                                   : 'Warning: This expense will be removed from P&L reports and its amount returned to the drawer if applicable.',
                               );
                               if (!success) return;
-                            }
                           }
                           final cancelledExpense = expense.copyWith(isCancelled: true);
                           ref.read(expenseRepositoryProvider)?.updateExpense(cancelledExpense);

@@ -21,19 +21,16 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
   void _confirmRevert(BuildContext context, InventoryLog log, bool isAr) async {
     final appUser = ref.read(appUserProvider).value;
     if (appUser != null) {
-      final pin = await PinService.getDeletePin(appUser);
-      if (pin != null) {
-        if (!context.mounted) return;
-        final success = await PinConfirmationDialog.show(
-          context, 
-          pin,
-          title: isAr ? 'تحذير: تراجع عن سجل' : 'Warning: Revert Inventory Log',
-          warning: isAr 
-              ? 'التراجع عن هذا السجل لمنتج (${log.productName}) سيؤدي لإنشاء سجل معاكس وإرجاع الكميات. هل أنت متأكد؟'
-              : 'Reverting this log for (${log.productName}) will create a reversing log and restore quantities. Are you sure?',
-        );
-        if (!success) return;
-      }
+      if (!context.mounted) return;
+      final success = await PinConfirmationDialog.requirePinOrSetup(
+        context, 
+        appUser,
+        title: isAr ? 'تحذير: تراجع عن سجل' : 'Warning: Revert Inventory Log',
+        warning: isAr 
+            ? 'التراجع عن هذا السجل لمنتج (${log.productName}) سيؤدي لإنشاء سجل معاكس وإرجاع الكميات. هل أنت متأكد؟'
+            : 'Reverting this log for (${log.productName}) will create a reversing log and restore quantities. Are you sure?',
+      );
+      if (!success) return;
     }
     
     final repo = ref.read(inventoryLogRepositoryProvider);

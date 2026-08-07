@@ -448,40 +448,17 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                       } else if (value == 'pay_debt') {
                         _showPayDebtDialog(context, ref, customer);
                       } else if (value == 'delete') {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: Text(AppLocalizations.of(context)!.text57, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                            content: Text(AppLocalizations.of(context)!.text58, style: const TextStyle(fontFamily: 'Tajawal')),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: Text(AppLocalizations.of(context)!.text43, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-                              ),
-                              TextButton(
-                                onPressed: () async {
-                                  Navigator.pop(context);
-                                  final appUser = ref.read(appUserProvider).value;
-                                  if (appUser != null) {
-                                    final pin = await PinService.getDeletePin(appUser);
-                                    if (pin != null) {
-                                      if (!context.mounted) return;
-                                      final success = await PinConfirmationDialog.show(
-                                        context, 
-                                        pin,
-                                        title: l10n.warningDeleteCustomer,
-                                        warning: l10n.deleteCustomerWarningText,
-                                      );
-                                      if (!success) return;
-                                    }
-                                  }
-                                  ref.read(customerRepositoryProvider).deleteCustomer(customer.id);
-                                },
-                                child: Text(AppLocalizations.of(context)!.text59, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                              ),
-                            ],
-                          ),
-                        );
+                        final appUser = ref.read(appUserProvider).value;
+                        if (appUser != null) {
+                          final success = await PinConfirmationDialog.requirePinOrSetup(
+                            context, 
+                            appUser,
+                            title: l10n.warningDeleteCustomer,
+                            warning: l10n.deleteCustomerWarningText,
+                          );
+                          if (!success) return;
+                        }
+                        ref.read(customerRepositoryProvider).deleteCustomer(customer.id);
                       } else if (value == 'print') {
                         final orders = ref.read(ordersStreamProvider).value ?? [];
                         try {
