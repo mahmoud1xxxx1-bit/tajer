@@ -131,7 +131,6 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
           );
         }
       }
-    }
   }
 
   // _deleteOrder function has been completely removed to enforce Soft Delete.
