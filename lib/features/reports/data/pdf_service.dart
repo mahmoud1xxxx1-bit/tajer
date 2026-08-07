@@ -146,9 +146,10 @@ class PdfService {
       children: [
         pw.Text(title, style: const pw.TextStyle(fontSize: 14)),
         pw.SizedBox(height: 4),
-        pw.Text(value,
-            style: pw.TextStyle(
-                fontSize: 16, fontWeight: pw.FontWeight.bold, color: color)),
+        pw.Directionality(
+          textDirection: pw.TextDirection.ltr,
+          child: pw.Text(value, style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold, color: color)),
+        ),
       ],
     );
   }
@@ -165,7 +166,7 @@ class PdfService {
         return [
           item.product.name,
           item.quantitySold.toString(),
-          '${item.totalRevenue.toStringAsFixed(2)} $currency',
+          '$currency ${item.totalRevenue.toStringAsFixed(2)}',
         ];
       }).toList(),
       headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
@@ -195,7 +196,7 @@ class PdfService {
       data: breakdown.entries.map((e) {
         return [
           getMethodName(e.key),
-          '${e.value.toStringAsFixed(2)} $currency',
+          '$currency ${e.value.toStringAsFixed(2)}',
         ];
       }).toList(),
       headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),
@@ -216,7 +217,7 @@ class PdfService {
       data: dailySales.map((item) {
         return [
           intl.DateFormat('yyyy/MM/dd').format(item.date),
-          '${item.amount.toStringAsFixed(2)} $currency',
+          '$currency ${item.amount.toStringAsFixed(2)}',
         ];
       }).toList(),
       headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, color: PdfColors.white),

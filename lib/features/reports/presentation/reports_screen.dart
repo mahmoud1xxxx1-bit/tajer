@@ -118,7 +118,6 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   vatNumber = result.vatNumber!;
                 }
               }
-              }
 
               try {
                 final isAr = Localizations.localeOf(context).languageCode == 'ar';

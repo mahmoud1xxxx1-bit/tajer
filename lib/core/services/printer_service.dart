@@ -240,21 +240,21 @@ class PrinterService {
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
                         pw.Text(isAr ? 'الإجمالي (بدون ضريبة):' : 'Total (Excl. Tax):', style: pw.TextStyle(font: ttf, fontSize: 10)),
-                        pw.Text('${totalBeforeTax.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                        pw.Text('$currency ${totalBeforeTax.toStringAsFixed(2)}', style: pw.TextStyle(font: ttf, fontSize: 10)),
                       ]
                     ),
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
                         pw.Text(isAr ? 'الضريبة:' : 'Tax:', style: pw.TextStyle(font: ttf, fontSize: 10)),
-                        pw.Text('${totalTaxAmount.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                        pw.Text('$currency ${totalTaxAmount.toStringAsFixed(2)}', style: pw.TextStyle(font: ttf, fontSize: 10)),
                       ]
                     ),
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
                         pw.Text(isAr ? 'الإجمالي الشامل:' : 'Grand Total:', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
-                        pw.Text('${grandTotal.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
+                        pw.Text('$currency ${grandTotal.toStringAsFixed(2)}', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
                       ]
                     ),
                   ] else ...[
@@ -262,7 +262,7 @@ class PrinterService {
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
                         pw.Text(isAr ? 'الإجمالي:' : 'Total:', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
-                        pw.Text('${grandTotal.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
+                        pw.Text('$currency ${grandTotal.toStringAsFixed(2)}', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
                       ]
                     ),
                   ],
@@ -272,7 +272,7 @@ class PrinterService {
                     mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                     children: [
                       pw.Text(isAr ? 'المدفوع:' : 'Paid:', style: pw.TextStyle(font: ttf, fontSize: 10)),
-                      pw.Text('${order.paidAmount.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                      pw.Text('$currency ${order.paidAmount.toStringAsFixed(2)}', style: pw.TextStyle(font: ttf, fontSize: 10)),
                     ]
                   ),
 
@@ -281,7 +281,7 @@ class PrinterService {
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
                         pw.Text(isAr ? 'المتبقي (آجل):' : 'Remaining (Credit):', style: pw.TextStyle(font: ttfBold, fontSize: 10)),
-                        pw.Text('${(order.total - order.paidAmount).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 10)),
+                        pw.Text('$currency ${(order.total - order.paidAmount).toStringAsFixed(2)}', style: pw.TextStyle(font: ttfBold, fontSize: 10)),
                       ]
                     ),
                   if (order.paymentMethod == 'cash' && order.tenderedAmount != null) ...[
@@ -290,7 +290,7 @@ class PrinterService {
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
                         pw.Text(isAr ? 'المبلغ المستلم:' : 'Tendered:', style: pw.TextStyle(font: ttf, fontSize: 10)),
-                        pw.Text('${order.tenderedAmount!.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                        pw.Text('$currency ${order.tenderedAmount!.toStringAsFixed(2)}', style: pw.TextStyle(font: ttf, fontSize: 10)),
                       ]
                     ),
                     if (order.changeAmount != null) ...[
@@ -299,7 +299,7 @@ class PrinterService {
                         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                         children: [
                           pw.Text(isAr ? 'المتبقي للعميل:' : 'Change:', style: pw.TextStyle(font: ttfBold, fontSize: 10)),
-                          pw.Text('${order.changeAmount!.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 10)),
+                          pw.Text('$currency ${order.changeAmount!.toStringAsFixed(2)}', style: pw.TextStyle(font: ttfBold, fontSize: 10)),
                         ]
                       ),
                     ]
@@ -310,14 +310,14 @@ class PrinterService {
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
                         pw.Text(isAr ? 'المدفوع نقداً:' : 'Paid Cash:', style: pw.TextStyle(font: ttf, fontSize: 10)),
-                        pw.Text('${(order.splitCashAmount ?? 0).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                        pw.Text('$currency ${(order.splitCashAmount ?? 0).toStringAsFixed(2)}', style: pw.TextStyle(font: ttf, fontSize: 10)),
                       ]
                     ),
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
                         pw.Text(isAr ? 'المدفوع شبكة:' : 'Paid Card:', style: pw.TextStyle(font: ttf, fontSize: 10)),
-                        pw.Text('${(order.splitNetworkAmount ?? 0).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                        pw.Text('$currency ${(order.splitNetworkAmount ?? 0).toStringAsFixed(2)}', style: pw.TextStyle(font: ttf, fontSize: 10)),
                       ]
                     ),
                   ],
@@ -477,15 +477,15 @@ class PrinterService {
                 
                 pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
                   pw.Text('العهدة الافتتاحية:', style: pw.TextStyle(font: ttf, fontSize: 12)),
-                  pw.Text('${shift.startCash.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 12)),
+                  pw.Text('$currency ${shift.startCash.toStringAsFixed(2)}', style: pw.TextStyle(font: ttf, fontSize: 12)),
                 ]),
                 pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
                   pw.Text('مبيعات نقدية:', style: pw.TextStyle(font: ttf, fontSize: 12)),
-                  pw.Text('${(shift.cashSales ?? 0.0).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 12)),
+                  pw.Text('$currency ${(shift.cashSales ?? 0.0).toStringAsFixed(2)}', style: pw.TextStyle(font: ttf, fontSize: 12)),
                 ]),
                 pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
                   pw.Text('مبيعات شبكة/تحويل:', style: pw.TextStyle(font: ttf, fontSize: 12)),
-                  pw.Text('${((shift.cardTotal ?? 0) + (shift.transferTotal ?? 0)).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 12)),
+                  pw.Text('$currency ${((shift.cardTotal ?? 0) + (shift.transferTotal ?? 0)).toStringAsFixed(2)}', style: pw.TextStyle(font: ttf, fontSize: 12)),
                 ]),
                 
                 pw.SizedBox(height: 5),
@@ -494,20 +494,20 @@ class PrinterService {
 
                 if (totalCashExpenses > 0) pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
                   pw.Text('مصروفات تم دفعها كاش:', style: pw.TextStyle(font: ttf, fontSize: 12)),
-                  pw.Text('-${totalCashExpenses.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 12)),
+                  pw.Text('-$currency ${totalCashExpenses.toStringAsFixed(2)}', style: pw.TextStyle(font: ttf, fontSize: 12)),
                 ]),
                 if (totalSupplierCash > 0) pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
                   pw.Text('ديون موردين تم سدادها كاش:', style: pw.TextStyle(font: ttf, fontSize: 12)),
-                  pw.Text('-${totalSupplierCash.toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttf, fontSize: 12)),
+                  pw.Text('-$currency ${totalSupplierCash.toStringAsFixed(2)}', style: pw.TextStyle(font: ttf, fontSize: 12)),
                 ]),
 
                 pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
                   pw.Text('الكاش المتوقع:', style: pw.TextStyle(font: ttfBold, fontSize: 14)),
-                  pw.Text('${(shift.expectedCash ?? 0.0).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 14)),
+                  pw.Text('$currency ${(shift.expectedCash ?? 0.0).toStringAsFixed(2)}', style: pw.TextStyle(font: ttfBold, fontSize: 14)),
                 ]),
                 pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
                   pw.Text('الكاش الفعلي في الدرج:', style: pw.TextStyle(font: ttfBold, fontSize: 14)),
-                  pw.Text('${(shift.actualCash ?? 0.0).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 14)),
+                  pw.Text('$currency ${(shift.actualCash ?? 0.0).toStringAsFixed(2)}', style: pw.TextStyle(font: ttfBold, fontSize: 14)),
                 ]),
                 pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
                   pw.Text('الفرق في الكاش:', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
@@ -518,11 +518,11 @@ class PrinterService {
                 pw.SizedBox(height: 5),
                 pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
                   pw.Text('مبيعات شبكة/مدى الفعلية:', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
-                  pw.Text('${(shift.actualCard ?? 0.0).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
+                  pw.Text('$currency ${(shift.actualCard ?? 0.0).toStringAsFixed(2)}', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
                 ]),
                 pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
                   pw.Text('مبيعات التحويل الفعلية:', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
-                  pw.Text('${(shift.actualTransfer ?? 0.0).toStringAsFixed(2)} $currency', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
+                  pw.Text('$currency ${(shift.actualTransfer ?? 0.0).toStringAsFixed(2)}', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
                 ]),
                 
                 pw.SizedBox(height: 20),
