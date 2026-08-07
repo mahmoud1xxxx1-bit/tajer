@@ -99,11 +99,11 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       final logRepo = ref.read(inventoryLogRepositoryProvider);
 
       final isEditing = widget.productToEdit != null;
-      final newQuantity = int.parse(_quantityController.text);
+      final newQuantity = _isManufacturedOnDemand ? 0 : (int.tryParse(_quantityController.text) ?? 0);
       final previousQuantity = isEditing ? widget.productToEdit!.quantity : 0;
 
       List<RecipeItem> updatedRecipe = [];
-      if (_selectedRawMaterialId != null && _rawMaterialQtyController.text.isNotEmpty) {
+      if (_isManufacturedOnDemand && _selectedRawMaterialId != null && _rawMaterialQtyController.text.isNotEmpty) {
         final qty = double.tryParse(_rawMaterialQtyController.text) ?? 0.0;
         if (qty > 0) {
           updatedRecipe.add(RecipeItem(rawMaterialId: _selectedRawMaterialId!, amountRequired: qty));
@@ -275,37 +275,70 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                     ),
                   ),
                 ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: TextFormField(
-                    controller: _quantityController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: isAr ? 'الكمية' : 'Quantity',
-                      border: const OutlineInputBorder(),
-                    ),
-                    validator: (value) => value!.isEmpty ? l10n.requiredField : null,
-                  ),
-                ),
               ],
             ),
             SizedBox(height: 16),
-            SwitchListTile(
-              title: Text(
-                isAr ? 'منتج يُحضّر عند الطلب (كالوجبات والقهوة)' : 'Prepared on Demand (e.g. Meals, Coffee)',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.dark ? Colors.blueGrey.withOpacity(0.1) : Colors.blue.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? Colors.blueGrey.withOpacity(0.3) : Colors.blue.shade100),
               ),
-              subtitle: Text(
-                isAr 
-                  ? 'عند التفعيل: سيُخصم مخزون المواد الخام فقط عند البيع. لن تُطالب بتوفير كمية جاهزة من المنتج نفسه.' 
-                  : 'When enabled: Only raw materials are deducted upon sale. Pre-stocked quantity is not required.',
-                style: const TextStyle(fontSize: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isAr ? 'نوع المنتج وطريقة حسابه:' : 'Product Type & Tracking:',
+                    style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 14),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: RadioListTile<bool>(
+                          value: false,
+                          groupValue: _isManufacturedOnDemand,
+                          onChanged: (val) {
+                            setState(() => _isManufacturedOnDemand = val!);
+                          },
+                          title: Text(isAr ? 'منتج جاهز' : 'Ready Product', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold)),
+                          subtitle: Text(isAr ? 'له كمية ثابتة في المستودع' : 'Fixed inventory quantity', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 11)),
+                          contentPadding: EdgeInsets.zero,
+                          activeColor: Colors.blue,
+                        ),
+                      ),
+                      Expanded(
+                        child: RadioListTile<bool>(
+                          value: true,
+                          groupValue: _isManufacturedOnDemand,
+                          onChanged: (val) {
+                            setState(() => _isManufacturedOnDemand = val!);
+                          },
+                          title: Text(isAr ? 'يُصنع عند الطلب' : 'On-Demand', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold)),
+                          subtitle: Text(isAr ? 'يُخصم من المواد الخام' : 'Deducted from raw materials', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 11)),
+                          contentPadding: EdgeInsets.zero,
+                          activeColor: Colors.orange,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              value: _isManufacturedOnDemand,
-              onChanged: (value) => setState(() => _isManufacturedOnDemand = value),
-              activeColor: Colors.orange,
-              contentPadding: EdgeInsets.zero,
             ),
+            if (!_isManufacturedOnDemand) ...[
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _quantityController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: isAr ? 'الكمية الحالية في المستودع' : 'Current Quantity in Inventory',
+                  border: const OutlineInputBorder(),
+                ),
+                validator: (value) => value!.isEmpty ? l10n.requiredField : null,
+              ),
+            ],
             SizedBox(height: 16),
             TextFormField(
               controller: _modifiersController,
@@ -367,45 +400,50 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
               ),
             ),
             SizedBox(height: 24),
-            Text(isAr ? 'المقادير (المواد الخام) - اختياري' : 'Recipe (Raw Material) - Optional', style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', color: Colors.blueGrey)),
-            const SizedBox(height: 8),
-            rawMaterialsAsync.when(
-              data: (materials) {
-                if (materials.isEmpty) {
-                  return Text(isAr ? 'لا توجد مواد خام مضافة' : 'No raw materials added', style: const TextStyle(color: Colors.grey, fontFamily: 'Tajawal'));
-                }
-                return Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: DropdownButtonFormField<String>(
-                        value: _selectedRawMaterialId,
-                        decoration: InputDecoration(
-                          labelText: isAr ? 'اختر المادة الخام' : 'Select Raw Material',
-                          border: const OutlineInputBorder(),
-                        ),
-                        items: materials.map((m) => DropdownMenuItem(value: m.id, child: Text(m.name, style: const TextStyle(fontFamily: 'Tajawal')))).toList(),
-                        onChanged: (val) => setState(() => _selectedRawMaterialId = val),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      flex: 1,
-                      child: TextFormField(
-                        controller: _rawMaterialQtyController,
-                        keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
-                          labelText: isAr ? 'الكمية' : 'Quantity',
-                          border: const OutlineInputBorder(),
+            if (_isManufacturedOnDemand) ...[
+              SizedBox(height: 24),
+              Text(isAr ? 'المقادير (المواد الخام) للمنتج' : 'Recipe (Raw Materials)', style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', color: Colors.orange)),
+              const SizedBox(height: 8),
+              rawMaterialsAsync.when(
+                data: (materials) {
+                  if (materials.isEmpty) {
+                    return Text(isAr ? 'لا توجد مواد خام مضافة' : 'No raw materials added', style: const TextStyle(color: Colors.grey, fontFamily: 'Tajawal'));
+                  }
+                  return Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: DropdownButtonFormField<String>(
+                          value: _selectedRawMaterialId,
+                          decoration: InputDecoration(
+                            labelText: isAr ? 'اختر المادة الخام' : 'Select Raw Material',
+                            border: const OutlineInputBorder(),
+                          ),
+                          items: materials.map((m) => DropdownMenuItem(value: m.id, child: Text(m.name, style: const TextStyle(fontFamily: 'Tajawal')))).toList(),
+                          onChanged: (val) => setState(() => _selectedRawMaterialId = val),
+                          validator: (value) => _isManufacturedOnDemand && value == null ? l10n.requiredField : null,
                         ),
                       ),
-                    ),
-                  ],
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, st) => const Text('Error loading materials'),
-            ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        flex: 1,
+                        child: TextFormField(
+                          controller: _rawMaterialQtyController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: isAr ? 'الكمية' : 'Quantity',
+                            border: const OutlineInputBorder(),
+                          ),
+                          validator: (value) => _isManufacturedOnDemand && value!.isEmpty ? l10n.requiredField : null,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (e, st) => const Text('Error loading materials'),
+              ),
+            ],
             SizedBox(height: 24),
             ElevatedButton(
               onPressed: _isLoading ? null : _submit,
