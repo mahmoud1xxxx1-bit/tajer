@@ -69,44 +69,24 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
   }
 
   Future<void> _cancelOrder(bool isAr) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(isAr ? 'تأكيد الإلغاء' : 'Confirm Cancellation', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-        content: Text(
-          isAr ? 'هل أنت متأكد من رغبتك في إلغاء هذه الفاتورة؟ سيتم إرجاع كميات الأصناف للمخزون تلقائياً.' : 'Are you sure you want to cancel this order? Stock quantities will be restored automatically.',
-          style: const TextStyle(fontFamily: 'Tajawal'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(isAr ? 'تراجع' : 'No', style: const TextStyle(fontFamily: 'Tajawal'))),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(isAr ? 'إلغاء الطلب' : 'Cancel Order', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
-          ),
-        ],
-      ),
-    );
+    final appUser = ref.read(appUserProvider).value;
+    if (appUser != null) {
+      final pin = await PinService.getDeletePin(appUser);
+      if (pin != null) {
+        if (!mounted) return;
+        final success = await PinConfirmationDialog.show(
+          context, 
+          pin,
+          title: isAr ? 'تحذير: إلغاء الطلب' : 'Warning: Cancel Order',
+          warning: isAr 
+            ? 'تحذير: سيتم إلغاء الفاتورة وإرجاع كميات الأصناف للمخزون تلقائياً، وسيتم خصم المبلغ من كاش الوردية إذا كانت مدفوعة كاش.' 
+            : 'Warning: This will cancel the order, restore inventory, and deduct the amount from shift drawer if paid in cash.',
+        );
+        if (!success) return;
+      }
+    }
 
-    if (confirmed == true) {
-      try {
-        final appUser = ref.read(appUserProvider).value;
-        if (appUser != null) {
-          final pin = await PinService.getDeletePin(appUser);
-          if (pin != null) {
-            if (!mounted) return;
-            final success = await PinConfirmationDialog.show(
-              context, 
-              pin,
-              title: isAr ? 'تحذير: إلغاء الطلب' : 'Warning: Cancel Order',
-              warning: isAr 
-                  ? 'إلغاء الطلب سيؤدي إلى إرجاع المنتجات للمخزون، وخصم الأموال المدفوعة من الوردية الحالية، وعكس ديون العميل. هل أنت متأكد؟'
-                  : 'Cancelling this order will restore inventory, refund paid amount from current shift, and reverse customer debt. Are you sure?',
-            );
-            if (!success) return;
-          }
-        }
-        await ref.read(orderRepositoryProvider).updateOrderStatus(currentOrder, 'cancelled');
+    try {
         final user = ref.read(appUserProvider).value;
         await ActivityLogger.log(
           user: user,

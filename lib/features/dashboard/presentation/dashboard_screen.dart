@@ -44,9 +44,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final appUser = ref.watch(appUserProvider).value;
     final themeMode = ref.watch(themeProvider); // Force rebuild on theme change
     
-    final bool canManageCustomers = appUser?.hasPermission('can_manage_customers') ?? true;
-    final bool canViewReports = appUser?.hasPermission('can_view_reports') ?? true;
-    final bool canCreateOrders = appUser?.hasPermission('can_create_orders') ?? true;
+    final bool canManageCustomers = appUser?.hasPermission('can_manage_customers') ?? false;
+    final bool canViewReports = appUser?.hasPermission('can_view_reports') ?? false;
+    final bool canCreateOrders = appUser?.hasPermission('can_create_orders') ?? false;
 
     final List<Widget> screens = [
       DashboardHome(

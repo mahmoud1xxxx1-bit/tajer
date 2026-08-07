@@ -158,13 +158,11 @@ class SupplierDetailsScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Row(
+                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     if (!t.isCancelled && appUser?.hasPermission('can_manage_inventory') == true)
-                                      IconButton(
-                                        icon: const Icon(Icons.cancel_outlined, color: Colors.orange, size: 20),
-                                        padding: EdgeInsets.zero,
-                                        constraints: const BoxConstraints(),
-                                        onPressed: () async {
+                                      InkWell(
+                                        onTap: () async {
                                           final pin = await PinService.getDeletePin(appUser!);
                                           if (pin != null) {
                                             if (!context.mounted) return;
@@ -189,6 +187,14 @@ class SupplierDetailsScreen extends ConsumerWidget {
                                             description: 'Cancelled ${isPayment ? "payment" : "debt"} of ${t.amount} for supplier ${supplier.name}',
                                           );
                                         },
+                                        child: Container(
+                                          padding: const EdgeInsets.all(4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.orange.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(6),
+                                          ),
+                                          child: const Icon(Icons.cancel_outlined, color: Colors.orange, size: 16),
+                                        ),
                                       ),
                                     const SizedBox(width: 8),
                                     Text(

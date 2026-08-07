@@ -204,7 +204,7 @@ class OrderRepository {
           });
         }
         
-        if (recipeList.isNotEmpty) {
+        if (recipeList.isNotEmpty && isManufacturedOnDemand) {
           // Has recipe -> ALSO deduct raw materials
           for (final recipeItem in recipeList) {
             final rawMaterialId = recipeItem['rawMaterialId'] as String;
@@ -322,7 +322,7 @@ class OrderRepository {
             });
           }
 
-          if (recipeList.isNotEmpty) {
+          if (recipeList.isNotEmpty && isManufacturedOnDemand) {
             for (final recipeItem in recipeList) {
               final rawMaterialId = recipeItem['rawMaterialId'] as String;
               final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
@@ -389,6 +389,13 @@ class OrderRepository {
             updates['refundsCard'] = FieldValue.increment(order.paidAmount);
           } else if (order.paymentMethod == 'transfer') {
             updates['refundsTransfer'] = FieldValue.increment(order.paidAmount);
+          } else if (order.paymentMethod == 'split') {
+            if (order.splitCashAmount != null && order.splitCashAmount! > 0) {
+              updates['refundsCash'] = FieldValue.increment(order.splitCashAmount!);
+            }
+            if (order.splitNetworkAmount != null && order.splitNetworkAmount! > 0) {
+              updates['refundsCard'] = FieldValue.increment(order.splitNetworkAmount!);
+            }
           }
           
           if (updates.isNotEmpty) {
@@ -443,7 +450,7 @@ class OrderRepository {
             });
           }
 
-          if (recipeList.isNotEmpty) {
+          if (recipeList.isNotEmpty && isManufacturedOnDemand) {
             for (final recipeItem in recipeList) {
               final rawMaterialId = recipeItem['rawMaterialId'] as String;
               final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
@@ -558,7 +565,7 @@ class OrderRepository {
             });
           }
 
-          if (recipeList.isNotEmpty) {
+          if (recipeList.isNotEmpty && isManufacturedOnDemand) {
             for (final recipeItem in recipeList) {
               final rawMaterialId = recipeItem['rawMaterialId'] as String;
               final amountRequired = (recipeItem['amountRequired'] as num).toDouble();

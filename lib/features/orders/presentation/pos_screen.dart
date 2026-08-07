@@ -787,8 +787,8 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
   Widget build(BuildContext context) {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final appUser = ref.watch(appUserProvider).value;
-    final canManageCustomers = appUser?.hasPermission('can_manage_customers') ?? true;
-    final canSellOnCredit = appUser?.hasPermission('can_sell_on_credit') ?? true;
+    final canManageCustomers = appUser?.hasPermission('can_manage_customers') ?? false;
+    final canSellOnCredit = appUser?.hasPermission('can_sell_on_credit') ?? false;
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(

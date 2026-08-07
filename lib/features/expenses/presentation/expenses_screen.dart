@@ -97,7 +97,7 @@ class ExpensesScreen extends ConsumerWidget {
                         style: TextStyle(fontSize: 18, fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
                       ),
                       Text(
-                        '${expenses.fold<double>(0, (sum, expense) => sum + expense.amount)}',
+                        '${expenses.where((e) => !e.isCancelled).fold<double>(0, (sum, expense) => sum + expense.amount)}',
                         style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.red),
                       ),
                     ],
@@ -462,11 +462,27 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                             final pin = await PinService.getDeletePin(appUser);
                             if (pin != null) {
                               if (!context.mounted) return;
+                              final isAr = Localizations.localeOf(context).languageCode == 'ar';
+                              
+                              final now = DateTime.now();
+                              final expenseDate = expense.date;
+                              if (now.year != expenseDate.year || now.month != expenseDate.month || now.day != expenseDate.day) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(isAr ? 'أمان: لا يمكن إلغاء مصروف قديم بعد إغلاق الوردية.' : 'Security: Cannot cancel an expense from a previous closed shift.'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+
                               final success = await PinConfirmationDialog.show(
                                 context, 
                                 pin,
-                                title: 'تأكيد: إلغاء مصروف',
-                                warning: 'سيتم إلغاء هذا المصروف ولن يتم احتسابه في الوردية. هل أنت متأكد؟',
+                                title: isAr ? 'تأكيد: إلغاء مصروف' : 'Warning: Cancel Expense',
+                                warning: isAr 
+                                  ? 'تحذير: سيتم شطب المصروف من تقارير الأرباح والخسائر، وإعادة مبلغه إلى الدرج إذا كان قد سُحب منه.'
+                                  : 'Warning: This expense will be removed from P&L reports and its amount returned to the drawer if applicable.',
                               );
                               if (!success) return;
                             }
