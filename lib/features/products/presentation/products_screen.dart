@@ -199,7 +199,7 @@ class ProductsScreen extends ConsumerWidget {
                           PopupMenuButton<String>(
                             icon: const Icon(Icons.more_vert, color: Colors.grey),
                             padding: EdgeInsets.zero,
-                            onSelected: (value) {
+                            onSelected: (value) async {
                               if (value == 'edit') {
                                 showModalBottomSheet(
                                   context: context,
@@ -231,7 +231,6 @@ class ProductsScreen extends ConsumerWidget {
                                   actionType: 'Archive Product|أرشفة منتج',
                                   description: 'Archived product "${product.name}"|تم أرشفة وإخفاء المنتج "${product.name}"',
                                 );
-                              }
                               }
                             },
                             itemBuilder: (context) => [
