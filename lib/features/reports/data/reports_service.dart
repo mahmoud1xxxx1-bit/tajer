@@ -53,6 +53,8 @@ class ReportsService {
 
   double get totalRevenue => orders.where((o) => o.status != 'cancelled' && o.status != 'debt_repayment').fold(0.0, (sum, order) => sum + order.total);
   
+  double get netSalesRevenue => totalRevenue - totalTaxCollected;
+
   double get totalDebt => orders.where((o) => o.status != 'cancelled' && o.isCredit).fold(0.0, (sum, order) => sum + (order.total - order.paidAmount));
 
   double get totalExpenses => expenses.where((e) => !e.isSupplierPayment && !e.isCancelled).fold(0.0, (sum, expense) => sum + expense.amount);
@@ -127,7 +129,7 @@ class ReportsService {
   Map<String, double> getExpensesByCategory() {
     final Map<String, double> expensesByCategory = {};
     for (var expense in expenses) {
-      if (expense.isCancelled) continue;
+      if (expense.isCancelled || expense.isSupplierPayment) continue;
       final categoryName = expense.category ?? 'أخرى';
       expensesByCategory[categoryName] = (expensesByCategory[categoryName] ?? 0.0) + expense.amount;
     }

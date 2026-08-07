@@ -172,69 +172,92 @@ class OrderRepository {
     final rmSnaps = await Future.wait(rmFutures);
     final Map<String, DocumentSnapshot> rawMaterialsCache = { for (var snap in rmSnaps) if (snap.exists) snap.id: snap };
 
+    final Map<String, double> productQtyToDeduct = {};
+    final Map<String, double> rmQtyToDeduct = {};
+    final Map<String, String> rmNames = {};
+    final Map<String, String> productNames = {};
+
     for (final item in order.items) {
       if (item.productId.isEmpty) continue;
-      final productRef = _firestore.collection('products').doc(item.productId);
       
       final productDoc = productsCache[item.productId];
       if (productDoc != null) {
         final data = productDoc.data() as Map<String, dynamic>;
         final recipeList = data['recipe'] as List<dynamic>? ?? [];
-        
         final isManufacturedOnDemand = data['isManufacturedOnDemand'] as bool? ?? false;
         
         if (!isManufacturedOnDemand) {
-          batch.update(productRef, {
-            'quantity': FieldValue.increment(-item.quantity),
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
-          
-          final logRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
-          batch.set(logRef, {
-            'id': logRef.id,
-            'merchantId': order.merchantId,
-            'productId': item.productId,
-            'productName': data['name'] ?? item.productName,
-            'changeQuantity': -item.quantity,
-            'previousQuantity': data['quantity'] ?? 0,
-            'newQuantity': (data['quantity'] as num? ?? 0) - item.quantity,
-            'reason': 'فاتورة مبيعات #${nextQueueNumber}',
-            'date': FieldValue.serverTimestamp(),
-            'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
-          });
+          productQtyToDeduct[item.productId] = (productQtyToDeduct[item.productId] ?? 0.0) + item.quantity;
+          productNames[item.productId] = data['name'] ?? item.productName;
         }
         
         if (recipeList.isNotEmpty) {
-          // Has recipe -> ALSO deduct raw materials
           for (final recipeItem in recipeList) {
             final rawMaterialId = recipeItem['rawMaterialId'] as String;
             final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
-            
-            final rmDoc = rawMaterialsCache[rawMaterialId];
-            if (rmDoc != null) {
-              final rawMaterialRef = _firestore.collection('raw_materials').doc(rawMaterialId);
-              final rmData = rmDoc.data() as Map<String, dynamic>;
-              final deducted = amountRequired * item.quantity;
-              batch.update(rawMaterialRef, {
-                'quantity': FieldValue.increment(-deducted),
-                'updatedAt': FieldValue.serverTimestamp(),
-              });
-              final rmLogRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
-              batch.set(rmLogRef, {
-                'id': rmLogRef.id,
-                'merchantId': order.merchantId,
-                'productId': rawMaterialId,
-                'productName': rmData['name'] ?? 'مادة خام',
-                'changeQuantity': -deducted,
-                'previousQuantity': rmData['quantity'] ?? 0,
-                'newQuantity': (rmData['quantity'] as num? ?? 0) - deducted,
-                'reason': 'مباع ضمن: ${data['name'] ?? item.productName} (فاتورة #${nextQueueNumber})',
-                'date': FieldValue.serverTimestamp(),
-                'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
-              });
-            }
+            final deducted = amountRequired * item.quantity;
+            rmQtyToDeduct[rawMaterialId] = (rmQtyToDeduct[rawMaterialId] ?? 0.0) + deducted;
+            rmNames[rawMaterialId] = data['name'] ?? item.productName;
           }
         }
+      }
+    }
+
+    for (final entry in productQtyToDeduct.entries) {
+      final productId = entry.key;
+      final deducted = entry.value;
+      final productRef = _firestore.collection('products').doc(productId);
+      final productDoc = productsCache[productId];
+      final data = productDoc?.data() as Map<String, dynamic>? ?? {};
+      
+      batch.update(productRef, {
+        'quantity': FieldValue.increment(-deducted),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      
+      final logRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+      batch.set(logRef, {
+        'id': logRef.id,
+        'merchantId': order.merchantId,
+        'productId': productId,
+        'productName': productNames[productId] ?? 'منتج',
+        'changeQuantity': -deducted,
+        'previousQuantity': data['quantity'] ?? 0,
+        'newQuantity': (data['quantity'] as num? ?? 0) - deducted,
+        'reason': 'فاتورة مبيعات #${nextQueueNumber}',
+        'date': FieldValue.serverTimestamp(),
+        'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+      });
+    }
+
+    for (final entry in rmQtyToDeduct.entries) {
+      final rmId = entry.key;
+      final deducted = entry.value;
+      final productNameForLog = rmNames[rmId] ?? '';
+      final rmDoc = rawMaterialsCache[rmId];
+      
+      if (rmDoc != null) {
+        final rawMaterialRef = _firestore.collection('raw_materials').doc(rmId);
+        final rmData = rmDoc.data() as Map<String, dynamic>;
+        
+        batch.update(rawMaterialRef, {
+          'quantity': FieldValue.increment(-deducted),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        
+        final rmLogRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+        batch.set(rmLogRef, {
+          'id': rmLogRef.id,
+          'merchantId': order.merchantId,
+          'productId': rmId,
+          'productName': rmData['name'] ?? 'مادة خام',
+          'changeQuantity': -deducted,
+          'previousQuantity': rmData['quantity'] ?? 0,
+          'newQuantity': (rmData['quantity'] as num? ?? 0) - deducted,
+          'reason': 'مباع ضمن: $productNameForLog (فاتورة #${nextQueueNumber})',
+          'date': FieldValue.serverTimestamp(),
+          'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+        });
       }
     }
 
@@ -310,6 +333,11 @@ class OrderRepository {
     // If order is NOT cancelled, restore inventory and subtract customer debt/purchases.
     // If order was ALREADY cancelled, its inventory & debt were already restored upon cancellation!
     if (order.status != 'cancelled') {
+      final Map<String, double> productQtyToAdd = {};
+      final Map<String, double> rmQtyToAdd = {};
+      final Map<String, String> rmNames = {};
+      final Map<String, String> productNames = {};
+
       for (final item in order.items) {
         if (item.productId.isEmpty) continue;
         final productRef = _firestore.collection('products').doc(item.productId);
@@ -317,31 +345,81 @@ class OrderRepository {
         if (productDoc.exists) {
           final data = productDoc.data()!;
           final recipeList = data['recipe'] as List<dynamic>? ?? [];
-
           final isManufacturedOnDemand = data['isManufacturedOnDemand'] as bool? ?? false;
 
           if (!isManufacturedOnDemand) {
-            batch.update(productRef, {
-              'quantity': FieldValue.increment(item.quantity),
-              'updatedAt': FieldValue.serverTimestamp(),
-            });
+            productQtyToAdd[item.productId] = (productQtyToAdd[item.productId] ?? 0.0) + item.quantity;
+            productNames[item.productId] = data['name'] ?? item.productName;
           }
 
           if (recipeList.isNotEmpty) {
             for (final recipeItem in recipeList) {
               final rawMaterialId = recipeItem['rawMaterialId'] as String;
               final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
-              final rawMaterialRef = _firestore.collection('raw_materials').doc(rawMaterialId);
-              final rmDoc = await rawMaterialRef.get(const GetOptions(source: Source.serverAndCache));
+              rmQtyToAdd[rawMaterialId] = (rmQtyToAdd[rawMaterialId] ?? 0.0) + (amountRequired * item.quantity);
+              
+              final rmRef = _firestore.collection('raw_materials').doc(rawMaterialId);
+              final rmDoc = await rmRef.get(const GetOptions(source: Source.serverAndCache));
               if (rmDoc.exists) {
-                batch.update(rawMaterialRef, {
-                  'quantity': FieldValue.increment(amountRequired * item.quantity),
-                  'updatedAt': FieldValue.serverTimestamp(),
-                });
+                rmNames[rawMaterialId] = rmDoc.data()!['name'] ?? 'مادة خام';
               }
             }
           }
         }
+      }
+
+      for (final entry in productQtyToAdd.entries) {
+        final productId = entry.key;
+        final added = entry.value;
+        final productRef = _firestore.collection('products').doc(productId);
+        final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
+        final data = productDoc.data() ?? {};
+        
+        batch.update(productRef, {
+          'quantity': FieldValue.increment(added),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        final logRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+        batch.set(logRef, {
+          'id': logRef.id,
+          'merchantId': order.merchantId,
+          'productId': productId,
+          'productName': productNames[productId] ?? 'منتج',
+          'changeQuantity': added,
+          'previousQuantity': data['quantity'] ?? 0,
+          'newQuantity': (data['quantity'] as num? ?? 0) + added,
+          'reason': 'استرجاع مخزون بسبب حذف نهائي لفاتورة #${order.queueNumber ?? order.id}',
+          'date': FieldValue.serverTimestamp(),
+          'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+        });
+      }
+
+      for (final entry in rmQtyToAdd.entries) {
+        final rmId = entry.key;
+        final added = entry.value;
+        final rawMaterialRef = _firestore.collection('raw_materials').doc(rmId);
+        final rmDoc = await rawMaterialRef.get(const GetOptions(source: Source.serverAndCache));
+        final rmData = rmDoc.data() ?? {};
+
+        batch.update(rawMaterialRef, {
+          'quantity': FieldValue.increment(added),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+
+        final rmLogRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+        batch.set(rmLogRef, {
+          'id': rmLogRef.id,
+          'merchantId': order.merchantId,
+          'productId': rmId,
+          'productName': rmNames[rmId] ?? 'مادة خام',
+          'changeQuantity': added,
+          'previousQuantity': rmData['quantity'] ?? 0,
+          'newQuantity': (rmData['quantity'] as num? ?? 0) + added,
+          'reason': 'استرجاع مادة بسبب حذف نهائي لفاتورة #${order.queueNumber ?? order.id}',
+          'date': FieldValue.serverTimestamp(),
+          'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+        });
       }
 
       if (order.customerId.isNotEmpty && order.customerId != 'walk_in') {
@@ -446,6 +524,12 @@ class OrderRepository {
     // Handle inventory and customer balances upon status transitions
     if (newStatus == 'cancelled' && order.status != 'cancelled') {
       // Transitioning TO cancelled: Restore inventory & deduct from customer purchases/debt
+      final Map<String, double> productQtyToAdd = {};
+      final Map<String, double> rmQtyToAdd = {};
+      final Map<String, String> rmNames = {};
+      final Map<String, String> productNames = {};
+      final Map<String, String> rmParentProductNames = {};
+
       for (final item in order.items) {
         if (item.productId.isEmpty) continue;
         final productRef = _firestore.collection('products').doc(item.productId);
@@ -454,61 +538,82 @@ class OrderRepository {
         if (productDoc.exists) {
           final data = productDoc.data()!;
           final recipeList = data['recipe'] as List<dynamic>? ?? [];
-
           final isManufacturedOnDemand = data['isManufacturedOnDemand'] as bool? ?? false;
 
           if (!isManufacturedOnDemand) {
-            batch.update(productRef, {
-              'quantity': FieldValue.increment(item.quantity),
-              'updatedAt': FieldValue.serverTimestamp(),
-            });
-            
-            final logRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
-            batch.set(logRef, {
-              'id': logRef.id,
-              'merchantId': order.merchantId,
-              'productId': item.productId,
-              'productName': data['name'] ?? item.productName,
-              'changeQuantity': item.quantity,
-              'previousQuantity': data['quantity'] ?? 0,
-              'newQuantity': (data['quantity'] as num? ?? 0) + item.quantity,
-              'reason': 'استرجاع مخزون بسبب إلغاء فاتورة #${order.queueNumber ?? order.id}',
-              'date': FieldValue.serverTimestamp(),
-              'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
-            });
+            productQtyToAdd[item.productId] = (productQtyToAdd[item.productId] ?? 0.0) + item.quantity;
+            productNames[item.productId] = data['name'] ?? item.productName;
           }
 
           if (recipeList.isNotEmpty) {
             for (final recipeItem in recipeList) {
               final rawMaterialId = recipeItem['rawMaterialId'] as String;
               final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
+              rmQtyToAdd[rawMaterialId] = (rmQtyToAdd[rawMaterialId] ?? 0.0) + (amountRequired * item.quantity);
+              
               final rawMaterialRef = _firestore.collection('raw_materials').doc(rawMaterialId);
               final rmDoc = await rawMaterialRef.get(const GetOptions(source: Source.serverAndCache));
               if (rmDoc.exists) {
-                final rmData = rmDoc.data()!;
-                final added = amountRequired * item.quantity;
-                batch.update(rawMaterialRef, {
-                  'quantity': FieldValue.increment(added),
-                  'updatedAt': FieldValue.serverTimestamp(),
-                });
-                
-                final rmLogRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
-                batch.set(rmLogRef, {
-                  'id': rmLogRef.id,
-                  'merchantId': order.merchantId,
-                  'productId': rawMaterialId,
-                  'productName': rmData['name'] ?? 'مادة خام',
-                  'changeQuantity': added,
-                  'previousQuantity': rmData['quantity'] ?? 0,
-                  'newQuantity': (rmData['quantity'] as num? ?? 0) + added,
-                  'reason': 'استرجاع مادة لمنتج: ${data['name'] ?? item.productName} (إلغاء فاتورة #${order.queueNumber ?? order.id})',
-                  'date': FieldValue.serverTimestamp(),
-                  'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
-                });
+                rmNames[rawMaterialId] = rmDoc.data()!['name'] ?? 'مادة خام';
+                rmParentProductNames[rawMaterialId] = data['name'] ?? item.productName;
               }
             }
           }
         }
+      }
+
+      for (final entry in productQtyToAdd.entries) {
+        final productId = entry.key;
+        final added = entry.value;
+        final productRef = _firestore.collection('products').doc(productId);
+        final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
+        final data = productDoc.data() ?? {};
+        
+        batch.update(productRef, {
+          'quantity': FieldValue.increment(added),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        
+        final logRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+        batch.set(logRef, {
+          'id': logRef.id,
+          'merchantId': order.merchantId,
+          'productId': productId,
+          'productName': productNames[productId] ?? 'منتج',
+          'changeQuantity': added,
+          'previousQuantity': data['quantity'] ?? 0,
+          'newQuantity': (data['quantity'] as num? ?? 0) + added,
+          'reason': 'استرجاع مخزون بسبب إلغاء فاتورة #${order.queueNumber ?? order.id}',
+          'date': FieldValue.serverTimestamp(),
+          'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+        });
+      }
+
+      for (final entry in rmQtyToAdd.entries) {
+        final rmId = entry.key;
+        final added = entry.value;
+        final rawMaterialRef = _firestore.collection('raw_materials').doc(rmId);
+        final rmDoc = await rawMaterialRef.get(const GetOptions(source: Source.serverAndCache));
+        final rmData = rmDoc.data() ?? {};
+        
+        batch.update(rawMaterialRef, {
+          'quantity': FieldValue.increment(added),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        
+        final rmLogRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+        batch.set(rmLogRef, {
+          'id': rmLogRef.id,
+          'merchantId': order.merchantId,
+          'productId': rmId,
+          'productName': rmNames[rmId] ?? 'مادة خام',
+          'changeQuantity': added,
+          'previousQuantity': rmData['quantity'] ?? 0,
+          'newQuantity': (rmData['quantity'] as num? ?? 0) + added,
+          'reason': 'استرجاع مادة لمنتج: ${rmParentProductNames[rmId]} (إلغاء فاتورة #${order.queueNumber ?? order.id})',
+          'date': FieldValue.serverTimestamp(),
+          'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+        });
       }
 
       if (order.customerId != 'walk_in' && order.customerId.isNotEmpty) {

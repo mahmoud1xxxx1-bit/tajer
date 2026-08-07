@@ -241,19 +241,29 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     SizedBox(
                       width: cardWidth,
                       child: _SummaryCard(
-                        title: AppLocalizations.of(context)!.text105,
-                        value: '${reportsService.totalRevenue.toStringAsFixed(2)} ${currentCurrency.code}',
+                        title: isAr ? 'صافي المبيعات' : 'Net Sales',
+                        value: '${reportsService.netSalesRevenue.toStringAsFixed(2)} ${currentCurrency.code}',
                         icon: Icons.account_balance_wallet,
                         color: Colors.green,
                       ),
                     ),
+                    if (reportsService.totalTaxCollected > 0)
+                      SizedBox(
+                        width: cardWidth,
+                        child: _SummaryCard(
+                          title: isAr ? 'الضريبة المحصلة' : 'Tax Collected',
+                          value: '${reportsService.totalTaxCollected.toStringAsFixed(2)} ${currentCurrency.code}',
+                          icon: Icons.receipt_long,
+                          color: Colors.purple,
+                        ),
+                      ),
                     if (canViewCost)
                       SizedBox(
                         width: cardWidth,
                         child: _SummaryCard(
                           title: AppLocalizations.of(context)!.text106,
                           value: '${reportsService.netProfit.toStringAsFixed(2)} ${currentCurrency.code}',
-                          icon: Icons.savings,
+                          icon: Icons.trending_up,
                           color: Colors.blue,
                         ),
                       ),

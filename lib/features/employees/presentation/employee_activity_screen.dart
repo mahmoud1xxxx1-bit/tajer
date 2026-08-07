@@ -327,30 +327,75 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
     );
   }
 
-  Widget _buildLogItem(dynamic item, ThemeData theme, AppCurrency currency, bool isAr) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.withOpacity(0.3)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.history, color: theme.colorScheme.primary),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(item['action'] ?? '', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                Text(item['details'] ?? '', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey)),
-              ],
+  Widget _buildLogItem(EmployeeActivityItem item, ThemeData theme, dynamic currency, bool isAr) {
+    return InkWell(
+      onTap: item.isSale && item.order != null ? () {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => OrderDetailsScreen(order: item.order!)));
+      } : null,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: theme.dividerColor.withOpacity(0.5))),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: item.badgeColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(_getIconForAction(item.actionType, item.isSale), color: item.badgeColor, size: 24),
             ),
-          ),
-          Text(item['time'] ?? '', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12)),
-        ],
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.title,
+                          style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 15),
+                        ),
+                      ),
+                      if (item.amount != 0)
+                        Text(
+                          '${item.amount > 0 ? "+" : ""}${item.amount.toStringAsFixed(2)} ${currency.code}',
+                          style: TextStyle(
+                            fontFamily: 'Tajawal', 
+                            fontWeight: FontWeight.bold,
+                            color: item.amount > 0 ? Colors.green : Colors.red,
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    item.subtitle,
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                  if (item.details.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        item.details,
+                        style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey),
+                      ),
+                    ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _formatTime(item.timestamp, isAr),
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 11, color: theme.colorScheme.primary),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

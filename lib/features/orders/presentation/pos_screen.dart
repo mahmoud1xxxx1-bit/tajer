@@ -1176,7 +1176,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                   paymentMethod: _paymentMethod,
                   scheduledDate: finalSchedule,
                   tenderedAmount: _paymentMethod == 'cash' && _tenderedController.text.isNotEmpty ? double.tryParse(_tenderedController.text) : null,
-                  changeAmount: _paymentMethod == 'cash' && _tenderedController.text.isNotEmpty ? (double.tryParse(_tenderedController.text) ?? 0) - grandTotal : null,
+                  changeAmount: _paymentMethod == 'cash' && _tenderedController.text.isNotEmpty ? (double.tryParse(_tenderedController.text) ?? 0) - paid : null,
                   splitCashAmount: _paymentMethod == 'split' ? (double.tryParse(_splitCashController.text) ?? 0) : null,
                   splitNetworkAmount: _paymentMethod == 'split' ? (double.tryParse(_splitNetworkController.text) ?? 0) : null,
                 ));

@@ -23,20 +23,9 @@ class PdfService {
       bold: arabicFontBold,
     );
 
-    double totalRevenue = reportsService.totalRevenue;
-    double totalTaxAmount = 0.0;
-    double revenueBeforeTax = totalRevenue;
-    
-    if (taxPercentage > 0) {
-      if (isInclusive) {
-        totalTaxAmount = totalRevenue - (totalRevenue / (1 + (taxPercentage / 100)));
-        revenueBeforeTax = totalRevenue / (1 + (taxPercentage / 100));
-      } else {
-        totalTaxAmount = totalRevenue * (taxPercentage / 100);
-        revenueBeforeTax = totalRevenue;
-        totalRevenue = totalRevenue + totalTaxAmount; // Grand total
-      }
-    }
+    double totalTaxAmount = reportsService.totalTaxCollected;
+    double totalRevenue = reportsService.totalRevenue; // This is actually Gross (Grand Total)
+    double revenueBeforeTax = reportsService.netSalesRevenue;
 
     pdf.addPage(
       pw.MultiPage(
