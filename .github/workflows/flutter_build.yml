@@ -52,7 +52,7 @@ jobs:
         run: flutter build appbundle --release
 
       - name: Build Web
-        run: flutter build web --release --web-renderer canvaskit --base-href /taj/
+        run: flutter build web --release --base-href /taj/
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
