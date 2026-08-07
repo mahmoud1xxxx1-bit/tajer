@@ -14,6 +14,7 @@ class Supplier with _$Supplier {
     String? phone,
     String? address,
     @Default(0.0) double totalDebt, // Amount the merchant owes the supplier
+    @Default(true) bool isActive,
     @TimestampConverter() required DateTime createdAt,
   }) = _Supplier;
 

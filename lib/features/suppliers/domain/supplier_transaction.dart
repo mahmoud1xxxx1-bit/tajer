@@ -11,6 +11,7 @@ class SupplierTransaction {
   final String description;
   final DateTime date;
   final DateTime createdAt;
+  final bool isCancelled;
 
   SupplierTransaction({
     required this.id,
@@ -22,6 +23,7 @@ class SupplierTransaction {
     required this.description,
     required this.date,
     required this.createdAt,
+    this.isCancelled = false,
   });
 
   factory SupplierTransaction.fromJson(Map<String, dynamic> json) {
@@ -35,6 +37,7 @@ class SupplierTransaction {
       description: json['description'] ?? '',
       date: safeParseDate(json['date']),
       createdAt: safeParseDate(json['createdAt']),
+      isCancelled: json['isCancelled'] as bool? ?? false,
     );
   }
 
@@ -49,6 +52,33 @@ class SupplierTransaction {
       'description': description,
       'date': Timestamp.fromDate(date),
       'createdAt': Timestamp.fromDate(createdAt),
+      'isCancelled': isCancelled,
     };
+  }
+
+  SupplierTransaction copyWith({
+    String? id,
+    String? supplierId,
+    String? merchantId,
+    double? amount,
+    String? type,
+    String? paymentMethod,
+    String? description,
+    DateTime? date,
+    DateTime? createdAt,
+    bool? isCancelled,
+  }) {
+    return SupplierTransaction(
+      id: id ?? this.id,
+      supplierId: supplierId ?? this.supplierId,
+      merchantId: merchantId ?? this.merchantId,
+      amount: amount ?? this.amount,
+      type: type ?? this.type,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      description: description ?? this.description,
+      date: date ?? this.date,
+      createdAt: createdAt ?? this.createdAt,
+      isCancelled: isCancelled ?? this.isCancelled,
+    );
   }
 }

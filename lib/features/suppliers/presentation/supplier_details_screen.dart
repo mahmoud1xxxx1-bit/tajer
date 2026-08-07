@@ -136,14 +136,89 @@ class SupplierDetailsScreen extends ConsumerWidget {
                                 size: 20,
                               ),
                             ),
-                            title: Text(t.description, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
-                            subtitle: Text(DateFormat('hh:mm a').format(t.date), style: const TextStyle(fontSize: 12)),
-                            trailing: Text(
-                              '${isPayment ? "-" : "+"}${t.amount} ${currentCurrency.code}',
+                            title: Text(
+                              t.description, 
                               style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Tajawal'
-                              ),
+                                fontFamily: 'Tajawal', 
+                                fontSize: 14,
+                                decoration: t.isCancelled ? TextDecoration.lineThrough : null,
+                                color: t.isCancelled ? Colors.grey : null,
+                              )
+                            ),
+                            subtitle: Text(
+                              DateFormat('hh:mm a').format(t.date) + (t.isCancelled ? ' (ملغي)' : ''), 
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: t.isCancelled ? Colors.red : null,
+                              )
+                            ),
+                            trailing: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Row(
+                                  children: [
+                                    if (!t.isCancelled && appUser?.hasPermission('can_manage_inventory') == true)
+                                      IconButton(
+                                        icon: const Icon(Icons.cancel_outlined, color: Colors.orange, size: 20),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        onPressed: () async {
+                                          final pin = await PinService.getDeletePin(appUser!);
+                                          if (pin != null) {
+                                            if (!context.mounted) return;
+                                            final success = await PinConfirmationDialog.show(
+                                              context, 
+                                              pin,
+                                              title: 'تأكيد: إلغاء العملية',
+                                              warning: 'سيتم إلغاء العملية وإعادة حساب المديونية. ' + (isPayment ? '(تنبيه: ستحتاج لإلغاء المصروف من شاشة المصروفات أيضاً)' : ''),
+                                            );
+                                            if (!success) return;
+                                          }
+                                          final updatedTransaction = t.copyWith(isCancelled: true);
+                                          ref.read(supplierTransactionRepositoryProvider)?.updateTransaction(updatedTransaction);
+                                          
+                                          // Update supplier debt
+                                          final newDebt = supplier.totalDebt + (isPayment ? t.amount : -t.amount);
+                                          ref.read(supplierRepositoryProvider)?.updateSupplier(supplier.copyWith(totalDebt: newDebt));
+                                          
+                                          ActivityLogger.log(
+                                            user: appUser,
+                                            actionType: 'Cancel Supplier Transaction|إلغاء عملية مورد',
+                                            description: 'Cancelled ${isPayment ? "payment" : "debt"} of ${t.amount} for supplier ${supplier.name}',
+                                          );
+                                        },
+                                      ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      '${isPayment ? "-" : "+"}${t.amount} ${currentCurrency.code}',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontFamily: 'Tajawal',
+                                        decoration: t.isCancelled ? TextDecoration.lineThrough : null,
+                                        color: t.isCancelled ? Colors.grey : (isPayment ? Colors.green : Colors.red),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (isPayment && t.paymentMethod != null)
+                                  Container(
+                                    margin: EdgeInsets.only(top: 4),
+                                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                    decoration: BoxDecoration(
+                                      color: t.paymentMethod == 'network' ? Colors.blue.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      t.paymentMethod == 'network' ? 'شبكة' : 'كاش',
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        color: t.paymentMethod == 'network' ? Colors.blue : Colors.orange,
+                                        fontFamily: 'Tajawal'
+                                      ),
+                                    ),
+                                  )
+                              ],
                             ),
                           );
                         }).toList(),
@@ -257,6 +332,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
   void _showPaySupplierDebtDialog(BuildContext context, WidgetRef ref, Supplier currentSupplier) {
     final amountController = TextEditingController(text: currentSupplier.totalDebt.toString());
     String paymentMethod = 'cash';
+    bool isFromShiftDrawer = true;
     
     showDialog(
       context: context,
@@ -304,6 +380,29 @@ class SupplierDetailsScreen extends ConsumerWidget {
                 ),
               ],
             ),
+            if (paymentMethod == 'cash') ...[
+              const SizedBox(height: 16),
+              Container(
+                decoration: BoxDecoration(
+                  color: isFromShiftDrawer ? Colors.red.withOpacity(0.05) : Colors.grey.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: isFromShiftDrawer ? Colors.red.withOpacity(0.3) : Colors.grey.withOpacity(0.3)),
+                ),
+                child: CheckboxListTile(
+                  title: const Text('خصم من درج الوردية الحالي؟', style: TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
+                  subtitle: Text(
+                    isFromShiftDrawer ? 'سيتم تقليل الكاش في الوردية' : 'لن يتم تغيير كاش الوردية',
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: isFromShiftDrawer ? Colors.red : Colors.grey),
+                  ),
+                  value: isFromShiftDrawer,
+                  onChanged: (val) {
+                    setState(() => isFromShiftDrawer = val ?? true);
+                  },
+                  activeColor: Colors.red,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+              ),
+            ],
           ],
         ),
         actions: [
@@ -331,7 +430,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
                 amount: paid,
                 type: 'payment',
                 paymentMethod: paymentMethod,
-                description: 'دفعة سداد ديون للمورد',
+                description: 'دفعة سداد ديون للمورد' + (paymentMethod == 'cash' ? (isFromShiftDrawer ? ' (من الدرج)' : ' (خارج الدرج)') : ''),
                 date: DateTime.now(),
                 createdAt: DateTime.now(),
               );
@@ -348,6 +447,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
                 createdAt: DateTime.now(),
                 title: 'دفعة سداد ديون للمورد: ${currentSupplier.name}',
                 creatorName: user?.name ?? 'المدير',
+                isFromShiftDrawer: isFromShiftDrawer,
               );
               await ref.read(expenseRepositoryProvider)?.addExpense(expense);
               
@@ -398,16 +498,17 @@ class SupplierDetailsScreen extends ConsumerWidget {
                     final success = await PinConfirmationDialog.show(
                       context, 
                       pin,
-                      title: 'تحذير: حذف مورد',
-                      warning: 'حذف المورد سيؤدي إلى مسح سجله المالي وديونه نهائياً. لا يمكن التراجع عن هذا الإجراء.',
+                      title: 'تأكيد: أرشفة المورد',
+                      warning: 'سيتم أرشفة المورد ولن يظهر في القائمة الرئيسية. لن يتم مسح بياناته السابقة.',
                     );
                     if (!success) return;
                   }
                 }
-                ref.read(supplierRepositoryProvider)?.deleteSupplier(currentSupplier.id);
+                final archivedSupplier = currentSupplier.copyWith(isActive: false);
+                ref.read(supplierRepositoryProvider)?.updateSupplier(archivedSupplier);
                 if (context.mounted) Navigator.pop(context); // Close details screen too
               },
-              child: const Text('حذف', style: TextStyle(color: Colors.red)),
+              child: const Text('أرشفة', style: TextStyle(color: Colors.orange)),
             ),
             ElevatedButton(
               onPressed: () {

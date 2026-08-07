@@ -14,6 +14,8 @@ class Expense {
   final String paymentMethod; // 'cash' or 'network'
   final DateTime date;
   final DateTime createdAt;
+  final bool isFromShiftDrawer;
+  final bool isCancelled;
 
   const Expense({
     required this.id,
@@ -28,6 +30,8 @@ class Expense {
     this.paymentMethod = 'cash',
     required this.date,
     required this.createdAt,
+    this.isFromShiftDrawer = true, // Default to true for backward compatibility
+    this.isCancelled = false,
   });
 
   factory Expense.fromJson(Map<String, dynamic> json) {
@@ -44,6 +48,8 @@ class Expense {
       paymentMethod: json['paymentMethod'] as String? ?? 'cash',
       date: const TimestampConverter().fromJson(json['date']),
       createdAt: const TimestampConverter().fromJson(json['createdAt']),
+      isFromShiftDrawer: json['isFromShiftDrawer'] as bool? ?? true,
+      isCancelled: json['isCancelled'] as bool? ?? false,
     );
   }
 
@@ -61,6 +67,8 @@ class Expense {
       'paymentMethod': paymentMethod,
       'date': const TimestampConverter().toJson(date),
       'createdAt': const TimestampConverter().toJson(createdAt),
+      'isFromShiftDrawer': isFromShiftDrawer,
+      'isCancelled': isCancelled,
     };
   }
 
@@ -77,6 +85,8 @@ class Expense {
     String? paymentMethod,
     DateTime? date,
     DateTime? createdAt,
+    bool? isFromShiftDrawer,
+    bool? isCancelled,
   }) {
     return Expense(
       id: id ?? this.id,
@@ -91,6 +101,8 @@ class Expense {
       paymentMethod: paymentMethod ?? this.paymentMethod,
       date: date ?? this.date,
       createdAt: createdAt ?? this.createdAt,
+      isFromShiftDrawer: isFromShiftDrawer ?? this.isFromShiftDrawer,
+      isCancelled: isCancelled ?? this.isCancelled,
     );
   }
 }

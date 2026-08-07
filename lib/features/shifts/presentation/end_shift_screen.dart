@@ -106,17 +106,17 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           final allShiftExpenses = expenses.where((e) => e.date.isAfter(shift.startTime));
           
           final operatingExpensesCash = allShiftExpenses
-              .where((e) => !e.isSupplierPayment && e.paymentMethod == 'cash')
+              .where((e) => !e.isSupplierPayment && e.paymentMethod == 'cash' && e.isFromShiftDrawer && !e.isCancelled)
               .fold(0.0, (sum, e) => sum + e.amount);
           final operatingExpensesNetwork = allShiftExpenses
-              .where((e) => !e.isSupplierPayment && e.paymentMethod == 'network')
+              .where((e) => !e.isSupplierPayment && e.paymentMethod == 'network' && !e.isCancelled)
               .fold(0.0, (sum, e) => sum + e.amount);
               
           final supplierPaymentsCash = allShiftExpenses
-              .where((e) => e.isSupplierPayment && e.paymentMethod == 'cash')
+              .where((e) => e.isSupplierPayment && e.paymentMethod == 'cash' && e.isFromShiftDrawer && !e.isCancelled)
               .fold(0.0, (sum, e) => sum + e.amount);
           final supplierPaymentsNetwork = allShiftExpenses
-              .where((e) => e.isSupplierPayment && e.paymentMethod == 'network')
+              .where((e) => e.isSupplierPayment && e.paymentMethod == 'network' && !e.isCancelled)
               .fold(0.0, (sum, e) => sum + e.amount);
 
           // Calculate cash expenses (Operating cash + Supplier cash are subtracted from drawer)

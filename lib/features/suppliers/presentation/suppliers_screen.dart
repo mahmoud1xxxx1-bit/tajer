@@ -31,11 +31,12 @@ class SuppliersScreen extends ConsumerWidget {
       ),
       body: suppliersAsync.when(
         data: (suppliers) {
-          if (suppliers.isEmpty) {
+          final activeSuppliers = suppliers.where((s) => s.isActive).toList();
+          if (activeSuppliers.isEmpty) {
             return Center(child: Text(AppLocalizations.of(context)!.text123, style: TextStyle(fontFamily: 'Tajawal')));
           }
           
-          final totalSupplierDebts = suppliers.fold<double>(0, (sum, s) => sum + s.totalDebt);
+          final totalSupplierDebts = activeSuppliers.fold<double>(0, (sum, s) => sum + s.totalDebt);
 
           return Column(
             children: [
@@ -84,9 +85,9 @@ class SuppliersScreen extends ConsumerWidget {
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: suppliers.length,
+                  itemCount: activeSuppliers.length,
                   itemBuilder: (context, index) {
-                    final supplier = suppliers[index];
+                    final supplier = activeSuppliers[index];
               return GlassCard(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: EdgeInsets.zero,

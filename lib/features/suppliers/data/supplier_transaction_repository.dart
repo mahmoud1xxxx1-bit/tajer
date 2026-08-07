@@ -30,6 +30,10 @@ class SupplierTransactionRepository {
   Future<void> addTransaction(SupplierTransaction transaction) async {
     await _transactionsRef(transaction.supplierId).doc(transaction.id).set(transaction.toJson());
   }
+
+  Future<void> updateTransaction(SupplierTransaction transaction) async {
+    await _transactionsRef(transaction.supplierId).doc(transaction.id).update(transaction.toJson());
+  }
 }
 
 final supplierTransactionRepositoryProvider = Provider<SupplierTransactionRepository?>((ref) {

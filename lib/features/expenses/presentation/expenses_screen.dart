@@ -146,6 +146,7 @@ class ExpensesScreen extends ConsumerWidget {
     final amountController = TextEditingController();
     final categoryController = TextEditingController();
     String paymentMethod = 'cash';
+    bool isFromShiftDrawer = true;
 
     showDialog(
       context: context,
@@ -202,6 +203,29 @@ class ExpensesScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
+                if (paymentMethod == 'cash') ...[
+                  SizedBox(height: 16),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: isFromShiftDrawer ? Colors.red.withOpacity(0.05) : Colors.grey.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: isFromShiftDrawer ? Colors.red.withOpacity(0.3) : Colors.grey.withOpacity(0.3)),
+                    ),
+                    child: CheckboxListTile(
+                      title: Text('خصم من درج الوردية الحالي؟', style: TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
+                      subtitle: Text(
+                        isFromShiftDrawer ? 'سيتم تقليل إجمالي الكاش في الوردية' : 'لن يتم تغيير كاش الوردية',
+                        style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: isFromShiftDrawer ? Colors.red : Colors.grey),
+                      ),
+                      value: isFromShiftDrawer,
+                      onChanged: (val) {
+                        setState(() => isFromShiftDrawer = val ?? true);
+                      },
+                      activeColor: Colors.red,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -241,6 +265,7 @@ class ExpensesScreen extends ConsumerWidget {
                   creatorId: appUser?.id,
                   creatorName: appUser?.name ?? 'غير معروف',
                   createdAt: DateTime.now(),
+                  isFromShiftDrawer: isFromShiftDrawer,
                 );
 
                 ref.read(expenseRepositoryProvider)?.addExpense(expense);
@@ -257,7 +282,7 @@ class ExpensesScreen extends ConsumerWidget {
 }
 
 Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, List<Expense> groupExpenses, {bool initiallyExpanded = false, String? subtitle}) {
-  final totalAmount = groupExpenses.fold<double>(0, (sum, e) => sum + e.amount);
+  final totalAmount = groupExpenses.where((e) => !e.isCancelled).fold<double>(0, (sum, e) => sum + e.amount);
   final appUser = ref.watch(appUserProvider).value;
   final canManageExpenses = appUser?.hasPermission('can_manage_expenses') ?? false;
   
@@ -324,7 +349,13 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                     children: [
                       Text(
                         expense.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 14),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold, 
+                          fontFamily: 'Tajawal', 
+                          fontSize: 14,
+                          decoration: expense.isCancelled ? TextDecoration.lineThrough : null,
+                          color: expense.isCancelled ? Colors.grey : null,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Wrap(
@@ -366,6 +397,38 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                                 ),
                               ],
                             ),
+                          if (expense.paymentMethod == 'network')
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.credit_card, size: 10, color: Colors.blue),
+                                  SizedBox(width: 4),
+                                  Text('شبكة', style: TextStyle(fontFamily: 'Tajawal', color: Colors.blue, fontSize: 10)),
+                                ],
+                              ),
+                            )
+                          else
+                            Container(
+                              padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: expense.isFromShiftDrawer ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.money, size: 10, color: expense.isFromShiftDrawer ? Colors.red : Colors.green),
+                                  SizedBox(width: 4),
+                                  Text(expense.isFromShiftDrawer ? 'كاش (من الدرج)' : 'كاش (من الخارج)', style: TextStyle(fontFamily: 'Tajawal', color: expense.isFromShiftDrawer ? Colors.red : Colors.green, fontSize: 10)),
+                                ],
+                              ),
+                            ),
                         ],
                       ),
                     ],
@@ -374,11 +437,23 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
+                    if (expense.isCancelled)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        margin: const EdgeInsets.only(bottom: 4),
+                        decoration: BoxDecoration(color: Colors.grey.withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
+                        child: const Text('ملغي', style: TextStyle(color: Colors.grey, fontSize: 10, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                      ),
                     Text(
                       '-${expense.amount}',
-                      style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 14),
+                      style: TextStyle(
+                        color: expense.isCancelled ? Colors.grey : Colors.red, 
+                        fontWeight: FontWeight.bold, 
+                        fontSize: 14,
+                        decoration: expense.isCancelled ? TextDecoration.lineThrough : null,
+                      ),
                     ),
-                    if (canManageExpenses) ...[
+                    if (canManageExpenses && !expense.isCancelled) ...[
                       const SizedBox(height: 8),
                       InkWell(
                         onTap: () async {
@@ -390,26 +465,27 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                               final success = await PinConfirmationDialog.show(
                                 context, 
                                 pin,
-                                title: 'تحذير: حذف مصروف',
-                                warning: 'إلغاء المصروف سيؤدي إلى مسحه من التقارير المالية. هل أنت متأكد من الحذف؟',
+                                title: 'تأكيد: إلغاء مصروف',
+                                warning: 'سيتم إلغاء هذا المصروف ولن يتم احتسابه في الوردية. هل أنت متأكد؟',
                               );
                               if (!success) return;
                             }
                           }
-                          ref.read(expenseRepositoryProvider)?.deleteExpense(expense.id);
+                          final cancelledExpense = expense.copyWith(isCancelled: true);
+                          ref.read(expenseRepositoryProvider)?.updateExpense(cancelledExpense);
                           ActivityLogger.log(
                             user: appUser,
-                            actionType: 'Delete Expense|حذف مصروف',
-                            description: 'Deleted expense "${expense.title}" for ${expense.amount}|تم حذف المصروف "${expense.title}" بقيمة ${expense.amount}',
+                            actionType: 'Cancel Expense|إلغاء مصروف',
+                            description: 'Cancelled expense "${expense.title}" for ${expense.amount}|تم إلغاء المصروف "${expense.title}" بقيمة ${expense.amount}',
                           );
                         },
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
+                            color: Colors.orange.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: const Icon(Icons.delete_outline, color: Colors.red, size: 16),
+                          child: const Icon(Icons.cancel_outlined, color: Colors.orange, size: 16),
                         ),
                       ),
                     ],
