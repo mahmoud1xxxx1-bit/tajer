@@ -50,7 +50,22 @@ class ReportsService {
     return sum + order.items.fold(0.0, (itemSum, item) => itemSum + ((item.costPrice ?? 0.0) * item.quantity));
   });
 
-  double get netProfit => totalRevenue - totalCOGS - totalExpenses;
+  double get totalTaxCollected => orders.where((o) => o.status != 'cancelled' && o.status != 'debt_repayment').fold(0.0, (sum, order) {
+    double orderTax = 0.0;
+    for (final item in order.items) {
+      if (item.taxPercentage != null && item.taxPercentage! > 0) {
+        final isInclusive = item.isTaxInclusive ?? true;
+        if (isInclusive) {
+          orderTax += item.total - (item.total / (1 + (item.taxPercentage! / 100)));
+        } else {
+          orderTax += item.total * (item.taxPercentage! / 100);
+        }
+      }
+    }
+    return sum + orderTax;
+  });
+
+  double get netProfit => totalRevenue - totalTaxCollected - totalCOGS - totalExpenses;
 
   List<SalesData> getDailySales() {
     final Map<String, double> dailyMap = {};

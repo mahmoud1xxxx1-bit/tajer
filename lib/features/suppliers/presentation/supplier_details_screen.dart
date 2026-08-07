@@ -180,6 +180,22 @@ class SupplierDetailsScreen extends ConsumerWidget {
                                           // Update supplier debt
                                           final newDebt = supplier.totalDebt + (isPayment ? t.amount : -t.amount);
                                           ref.read(supplierRepositoryProvider)?.updateSupplier(supplier.copyWith(totalDebt: newDebt));
+
+                                          if (isPayment) {
+                                            final expensesOpt = ref.read(expensesStreamProvider).value;
+                                            if (expensesOpt != null) {
+                                              final matchingExpenses = expensesOpt.where((e) => 
+                                                e.isSupplierPayment && 
+                                                e.amount == t.amount && 
+                                                e.title.contains(supplier.name) &&
+                                                !e.isCancelled &&
+                                                e.date.difference(t.date).inMinutes.abs() < 5
+                                              );
+                                              if (matchingExpenses.isNotEmpty) {
+                                                ref.read(expenseRepositoryProvider)?.updateExpense(matchingExpenses.first.copyWith(isCancelled: true));
+                                              }
+                                            }
+                                          }
                                           
                                           ActivityLogger.log(
                                             user: appUser,

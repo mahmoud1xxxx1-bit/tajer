@@ -15,6 +15,7 @@ class ProductRepository {
     return _firestore
         .collection('products')
         .where('merchantId', isEqualTo: merchantId)
+        .where('isArchived', isEqualTo: false)
         .withConverter(
           fromFirestore: (snapshot, _) {
             final data = snapshot.data()!;
@@ -28,6 +29,25 @@ class ProductRepository {
           },
           toFirestore: (product, _) => product.toJson(),
         );
+  }
+
+  Future<void> migrateOldProducts(String merchantId) async {
+    try {
+      final snapshot = await _firestore.collection('products').where('merchantId', isEqualTo: merchantId).get();
+      final batch = _firestore.batch();
+      int count = 0;
+      for (var doc in snapshot.docs) {
+        if (!doc.data().containsKey('isArchived')) {
+          batch.update(doc.reference, {'isArchived': false});
+          count++;
+        }
+      }
+      if (count > 0) {
+        await batch.commit();
+      }
+    } catch (e) {
+      print('Migration error: $e');
+    }
   }
 
   Future<void> addProduct(Product product) async {
@@ -73,11 +93,13 @@ Stream<List<Product>> productsStream(ProductsStreamRef ref) {
   if (appUser == null) return const Stream.empty();
 
   final repository = ref.watch(productRepositoryProvider);
+  
+  // Run background migration for missing fields
+  repository.migrateOldProducts(appUser.merchantId ?? appUser.id).catchError((_) {});
+
   return repository.queryProducts(appUser.merchantId ?? appUser.id).snapshots().map(
         (snapshot) {
           var products = snapshot.docs.map((doc) => doc.data()).toList();
-          // Client-side filtering to avoid composite index requirements for existing datasets
-          products = products.where((p) => !p.isArchived).toList();
           products.sort((a, b) => b.createdAt.compareTo(a.createdAt));
           return products;
         },

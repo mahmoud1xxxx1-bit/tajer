@@ -257,7 +257,12 @@ class OrderRepository {
       double orderTax = 0.0;
       for (final item in order.items) {
         if (item.taxPercentage != null && item.taxPercentage! > 0) {
-          orderTax += item.total - (item.total / (1 + (item.taxPercentage! / 100)));
+          final isInclusive = item.isTaxInclusive ?? true;
+          if (isInclusive) {
+            orderTax += item.total - (item.total / (1 + (item.taxPercentage! / 100)));
+          } else {
+            orderTax += item.total * (item.taxPercentage! / 100);
+          }
         }
       }
 
@@ -372,7 +377,12 @@ class OrderRepository {
           double orderTax = 0.0;
           for (final item in order.items) {
             if (item.taxPercentage != null && item.taxPercentage! > 0) {
-              orderTax += item.total - (item.total / (1 + (item.taxPercentage! / 100)));
+              final isInclusive = item.isTaxInclusive ?? true;
+              if (isInclusive) {
+                orderTax += item.total - (item.total / (1 + (item.taxPercentage! / 100)));
+              } else {
+                orderTax += item.total * (item.taxPercentage! / 100);
+              }
             }
           }
 
@@ -514,7 +524,12 @@ class OrderRepository {
           double orderTax = 0.0;
           for (final item in order.items) {
             if (item.taxPercentage != null && item.taxPercentage! > 0) {
-              orderTax += item.total - (item.total / (1 + (item.taxPercentage! / 100)));
+              final isInclusive = item.isTaxInclusive ?? true;
+              if (isInclusive) {
+                orderTax += item.total - (item.total / (1 + (item.taxPercentage! / 100)));
+              } else {
+                orderTax += item.total * (item.taxPercentage! / 100);
+              }
             }
           }
 
