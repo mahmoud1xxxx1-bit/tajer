@@ -12,6 +12,7 @@ import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../domain/expense.dart';
 import 'package:intl/intl.dart';
 import '../../authentication/domain/app_user.dart';
+import '../../shifts/data/shift_repository.dart';
 
 class ExpensesScreen extends ConsumerWidget {
   const ExpensesScreen({super.key});
@@ -464,16 +465,26 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                           if (appUser != null) {
                               final isAr = Localizations.localeOf(context).languageCode == 'ar';
                               
-                              final now = DateTime.now();
-                              final expenseDate = expense.date;
+                              final currentShift = await ref.read(currentShiftProvider(appUser.merchantId ?? appUser.id).future);
+                              bool canCancel = false;
                               
-                              bool isSameDay = now.year == expenseDate.year && now.month == expenseDate.month && now.day == expenseDate.day;
-                              bool isRecent = now.difference(expenseDate).inHours < 16;
+                              if (currentShift != null && currentShift.endTime == null) {
+                                // Shift is open, allow if expense was made during this shift (with 1-min buffer for clock diffs)
+                                if (expense.createdAt.isAfter(currentShift.startTime.subtract(const Duration(minutes: 1)))) {
+                                  canCancel = true;
+                                }
+                              } else if (currentShift == null) {
+                                // Fallback if no shift system is used (shouldn't happen in normal flow)
+                                final now = DateTime.now();
+                                bool isSameDay = now.year == expense.date.year && now.month == expense.date.month && now.day == expense.date.day;
+                                bool isRecent = now.difference(expense.date).inHours < 16;
+                                if (isSameDay || isRecent) canCancel = true;
+                              }
                               
-                              if (!isSameDay && !isRecent) {
+                              if (!canCancel) {
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text(isAr ? 'أمان: لا يمكن إلغاء مصروف قديم بعد إغلاق الوردية.' : 'Security: Cannot cancel an expense from a previous closed shift.'),
+                                    content: Text(isAr ? 'أمان: لا يمكن إلغاء مصروف يخص وردية مغلقة.' : 'Security: Cannot cancel an expense from a previous closed shift.'),
                                     backgroundColor: Colors.red,
                                   ),
                                 );

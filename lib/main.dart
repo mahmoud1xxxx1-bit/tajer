@@ -33,6 +33,14 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   
+  const bool useEmulator = bool.fromEnvironment('USE_EMULATOR', defaultValue: false);
+  if (useEmulator) {
+    // Safety check ensuring we only use the emulator for tests
+    String emulatorHost = !kIsWeb && Platform.isAndroid ? '10.0.2.2' : '127.0.0.1';
+    FirebaseFirestore.instance.useFirestoreEmulator(emulatorHost, 8080);
+    await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
+  }
+
   // Enable Offline Persistence
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: true,

@@ -321,6 +321,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   }
 
   Future<void> _processOrder(OrderDetails details) async {
+    if (_isLoading) return; // Prevent double submission
     setState(() => _isLoading = true);
     try {
       final user = ref.read(authRepositoryProvider).currentUser;
