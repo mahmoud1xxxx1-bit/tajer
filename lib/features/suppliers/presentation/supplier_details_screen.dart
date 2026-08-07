@@ -14,6 +14,7 @@ import '../domain/supplier.dart';
 import '../domain/supplier_transaction.dart';
 import '../../expenses/data/expense_repository.dart';
 import '../../expenses/domain/expense.dart';
+import '../../../core/services/activity_logger.dart';
 
 class SupplierDetailsScreen extends ConsumerWidget {
   final Supplier supplier;

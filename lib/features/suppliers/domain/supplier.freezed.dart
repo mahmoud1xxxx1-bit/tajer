@@ -27,6 +27,7 @@ mixin _$Supplier {
   String? get address => throw _privateConstructorUsedError;
   double get totalDebt =>
       throw _privateConstructorUsedError; // Amount the merchant owes the supplier
+  bool get isActive => throw _privateConstructorUsedError;
   @TimestampConverter()
   DateTime get createdAt => throw _privateConstructorUsedError;
 
@@ -48,6 +49,7 @@ abstract class $SupplierCopyWith<$Res> {
       String? phone,
       String? address,
       double totalDebt,
+      bool isActive,
       @TimestampConverter() DateTime createdAt});
 }
 
@@ -70,6 +72,7 @@ class _$SupplierCopyWithImpl<$Res, $Val extends Supplier>
     Object? phone = freezed,
     Object? address = freezed,
     Object? totalDebt = null,
+    Object? isActive = null,
     Object? createdAt = null,
   }) {
     return _then(_value.copyWith(
@@ -97,6 +100,10 @@ class _$SupplierCopyWithImpl<$Res, $Val extends Supplier>
           ? _value.totalDebt
           : totalDebt // ignore: cast_nullable_to_non_nullable
               as double,
+      isActive: null == isActive
+          ? _value.isActive
+          : isActive // ignore: cast_nullable_to_non_nullable
+              as bool,
       createdAt: null == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -120,6 +127,7 @@ abstract class _$$SupplierImplCopyWith<$Res>
       String? phone,
       String? address,
       double totalDebt,
+      bool isActive,
       @TimestampConverter() DateTime createdAt});
 }
 
@@ -140,6 +148,7 @@ class __$$SupplierImplCopyWithImpl<$Res>
     Object? phone = freezed,
     Object? address = freezed,
     Object? totalDebt = null,
+    Object? isActive = null,
     Object? createdAt = null,
   }) {
     return _then(_$SupplierImpl(
@@ -167,6 +176,10 @@ class __$$SupplierImplCopyWithImpl<$Res>
           ? _value.totalDebt
           : totalDebt // ignore: cast_nullable_to_non_nullable
               as double,
+      isActive: null == isActive
+          ? _value.isActive
+          : isActive // ignore: cast_nullable_to_non_nullable
+              as bool,
       createdAt: null == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -185,6 +198,7 @@ class _$SupplierImpl implements _Supplier {
       this.phone,
       this.address,
       this.totalDebt = 0.0,
+      this.isActive = true,
       @TimestampConverter() required this.createdAt});
 
   factory _$SupplierImpl.fromJson(Map<String, dynamic> json) =>
@@ -205,12 +219,15 @@ class _$SupplierImpl implements _Supplier {
   final double totalDebt;
 // Amount the merchant owes the supplier
   @override
+  @JsonKey()
+  final bool isActive;
+  @override
   @TimestampConverter()
   final DateTime createdAt;
 
   @override
   String toString() {
-    return 'Supplier(id: $id, merchantId: $merchantId, name: $name, phone: $phone, address: $address, totalDebt: $totalDebt, createdAt: $createdAt)';
+    return 'Supplier(id: $id, merchantId: $merchantId, name: $name, phone: $phone, address: $address, totalDebt: $totalDebt, isActive: $isActive, createdAt: $createdAt)';
   }
 
   @override
@@ -226,14 +243,16 @@ class _$SupplierImpl implements _Supplier {
             (identical(other.address, address) || other.address == address) &&
             (identical(other.totalDebt, totalDebt) ||
                 other.totalDebt == totalDebt) &&
+            (identical(other.isActive, isActive) ||
+                other.isActive == isActive) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(
-      runtimeType, id, merchantId, name, phone, address, totalDebt, createdAt);
+  int get hashCode => Object.hash(runtimeType, id, merchantId, name, phone,
+      address, totalDebt, isActive, createdAt);
 
   @JsonKey(ignore: true)
   @override
@@ -257,6 +276,7 @@ abstract class _Supplier implements Supplier {
           final String? phone,
           final String? address,
           final double totalDebt,
+          final bool isActive,
           @TimestampConverter() required final DateTime createdAt}) =
       _$SupplierImpl;
 
@@ -276,6 +296,8 @@ abstract class _Supplier implements Supplier {
   @override
   double get totalDebt;
   @override // Amount the merchant owes the supplier
+  bool get isActive;
+  @override
   @TimestampConverter()
   DateTime get createdAt;
   @override

@@ -14,6 +14,7 @@ _$SupplierImpl _$$SupplierImplFromJson(Map<String, dynamic> json) =>
       phone: json['phone'] as String?,
       address: json['address'] as String?,
       totalDebt: (json['totalDebt'] as num?)?.toDouble() ?? 0.0,
+      isActive: json['isActive'] as bool? ?? true,
       createdAt: const TimestampConverter().fromJson(json['createdAt']),
     );
 
@@ -25,5 +26,6 @@ Map<String, dynamic> _$$SupplierImplToJson(_$SupplierImpl instance) =>
       'phone': instance.phone,
       'address': instance.address,
       'totalDebt': instance.totalDebt,
+      'isActive': instance.isActive,
       'createdAt': const TimestampConverter().toJson(instance.createdAt),
     };
