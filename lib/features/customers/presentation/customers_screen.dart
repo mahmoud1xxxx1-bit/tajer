@@ -452,8 +452,8 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                           showDialog(
                             context: context,
                             builder: (ctx) => AlertDialog(
-                              title: Text(l10n.warning, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
-                              content: Text('لا يمكن حذف عميل لديه رصيد ديون أو رصيد دائن. يرجى تصفية الحساب أولاً.', style: const TextStyle(fontFamily: 'Tajawal')),
+                              title: Text(Localizations.localeOf(ctx).languageCode == 'ar' ? 'تنبيه' : 'Warning', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
+                              content: Text(Localizations.localeOf(ctx).languageCode == 'ar' ? 'لا يمكن حذف عميل لديه رصيد ديون أو رصيد دائن. يرجى تصفية الحساب أولاً.' : 'Cannot delete a customer with an active balance. Please settle the account first.', style: const TextStyle(fontFamily: 'Tajawal')),
                               actions: [
                                 TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('حسناً', style: TextStyle(fontFamily: 'Tajawal')))
                               ],
