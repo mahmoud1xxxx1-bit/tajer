@@ -77,8 +77,8 @@ class UserGuideScreen extends StatelessWidget {
             titleAr: '٤. الموردين والمصروفات',
             titleEn: '4. Suppliers & Expenses',
             icon: Icons.local_shipping,
-            contentAr: '• الموردين: سجل الأشخاص أو الشركات التي تزودك بالبضاعة. يمكنك الشراء منهم بالآجل وتسجيل ديونك لهم.\n• سداد الموردين: عندما تسدد دفعة لمورد، فإن هذا المبلغ يُعتبر من (رأس مالك الخاص) ولا يُخصم من كاش الوردية الحالي لكي لا يظهر عجز لدى الكاشير.\n• المصروفات التشغيلية: (مثل: الإيجار، الرواتب). سجلها لكي تُخصم من إجمالي أرباحك وتعرف ربحك الصافي الحقيقي.',
-            contentEn: '• Suppliers: Register your goods providers. You can buy on credit and record your debts to them.\n• Paying Suppliers: Paying a supplier is considered from your own capital, so it does not deduct from the current shift cash to avoid cashier shortages.\n• Expenses: (e.g., Rent, Salaries). Log them to deduct from gross profit and know your true net profit.',
+            contentAr: '• الموردين: سجل الأشخاص أو الشركات التي تزودك بالبضاعة. يمكنك الشراء منهم بالآجل وتسجيل ديونك لهم.\n• سداد الموردين: عند السداد لمورد، يمكنك سداده من (رأس مالك الخاص) أو تفعيل خيار (الدفع من الدرج) ليتم خصم المبلغ من كاش الوردية الحالي.\n• المصروفات التشغيلية: (مثل: الإيجار، الرواتب). سجلها لكي تُخصم من إجمالي أرباحك وتعرف ربحك الصافي الحقيقي، مع إمكانية الدفع من الدرج أيضاً.',
+            contentEn: '• Suppliers: Register your goods providers. You can buy on credit and record your debts to them.\n• Paying Suppliers: When paying a supplier, you can pay from your own capital, or enable the (Pay from Drawer) option to deduct it from the current shift cash.\n• Expenses: (e.g., Rent, Salaries). Log them to deduct from gross profit and know your true net profit, with the option to pay from drawer as well.',
           ),
 
           _buildGuideStep(
@@ -147,8 +147,8 @@ class UserGuideScreen extends StatelessWidget {
             titleAr: '١١. التقارير المالية (فهم الأرباح)',
             titleEn: '11. Financial Reports & Profits',
             icon: Icons.analytics,
-            contentAr: '• إجمالي المبيعات (Revenue): جميع الأموال التي دخلت لك من المبيعات.\n• تكلفة البضاعة المباعة (COGS): تكلفة البضاعة التي تم بيعها فقط (بناءً على التكلفة التي حددتها للمنتج).\n• إجمالي الربح (Gross Profit): مبيعاتك ناقص التكلفة (COGS).\n• المصروفات (Expenses): الإيجارات، فواتير الكهرباء.\n• صافي الربح (Net Profit): إجمالي الربح ناقص المصروفات (وهو ربحك الصافي النهائي).\n\nستجد رسوماً بيانية تفصيلية توضح لك مبيعاتك اليومية ومصروفاتك في صفحة التقارير.',
-            contentEn: '• Revenue: All money from sales.\n• COGS: Cost of only the goods that were sold.\n• Gross Profit: Revenue minus COGS.\n• Expenses: Rent, bills, salaries.\n• Net Profit: Gross Profit minus Expenses (Your final take-home profit).\n\nDetailed charts for daily sales and expenses are available in the Reports screen.',
+            contentAr: '• إجمالي المبيعات (Revenue): جميع الأموال التي دخلت لك من المبيعات.\n• تكلفة البضاعة المباعة (COGS): تكلفة البضاعة التي تم بيعها فقط (بناءً على التكلفة التي حددتها للمنتج).\n• إجمالي الربح (Gross Profit): إجمالي المبيعات ناقص (الضرائب المحصلة) ناقص (التكلفة COGS).\n• المصروفات (Expenses): الإيجارات، فواتير الكهرباء.\n• صافي الربح (Net Profit): إجمالي الربح ناقص المصروفات (وهو ربحك الصافي النهائي).\n\nستجد رسوماً بيانية تفصيلية توضح لك مبيعاتك اليومية ومصروفاتك في صفحة التقارير.',
+            contentEn: '• Revenue: All money from sales.\n• COGS: Cost of only the goods that were sold.\n• Gross Profit: Revenue minus Taxes minus COGS.\n• Expenses: Rent, bills, salaries.\n• Net Profit: Gross Profit minus Expenses (Your final take-home profit).\n\nDetailed charts for daily sales and expenses are available in the Reports screen.',
           ),
 
           const SizedBox(height: 32),

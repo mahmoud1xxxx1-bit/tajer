@@ -16,6 +16,7 @@ class CategoriesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final categoriesAsync = ref.watch(categoriesStreamProvider);
     final appUser = ref.watch(appUserProvider).value;
     final canManageProducts = appUser?.hasPermission('can_manage_products') ?? false;
@@ -27,7 +28,6 @@ class CategoriesScreen extends ConsumerWidget {
       body: categoriesAsync.when(
         data: (categories) {
           if (categories.isEmpty) {
-            final isAr = Localizations.localeOf(context).languageCode == 'ar';
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -114,8 +114,8 @@ class CategoriesScreen extends ConsumerWidget {
                               final success = await PinConfirmationDialog.requirePinOrSetup(
                                 context,
                                 appUser,
-                                title: 'تحذير: حذف قسم رئيسي',
-                                warning: 'حذف هذا القسم سيؤدي إلى جعل المنتجات التابعة له "بدون تصنيف".\nهل أنت متأكد من الحذف؟',
+                                title: isAr ? 'تحذير: حذف قسم رئيسي' : 'Warning: Delete Main Category',
+                                warning: isAr ? 'حذف هذا القسم سيؤدي إلى جعل المنتجات التابعة له "بدون تصنيف".\nهل أنت متأكد من الحذف؟' : 'Deleting this category will make its products "Uncategorized".\nAre you sure?',
                               );
                               if (!success) return;
                             }

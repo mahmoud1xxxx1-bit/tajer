@@ -18,6 +18,7 @@ class ExpensesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final expensesAsync = ref.watch(expensesStreamProvider);
     final appUser = ref.watch(appUserProvider).value;
     final canManageExpenses = appUser?.hasPermission('can_manage_expenses') ?? false;
@@ -78,7 +79,9 @@ class ExpensesScreen extends ConsumerWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        '💡 دليل المصروفات: سجل هنا كافة مصاريف تشغيل مشروعك (مثل: إيجار، رواتب، فواتير كهرباء أو وقود). يقوم التطبيق بخصمها من إجمالي المبيعات لحساب صافي أرباحك الحقيقي بدقة.',
+                        isAr 
+                          ? '💡 دليل المصروفات: سجل هنا كافة مصاريف تشغيل مشروعك (مثل: إيجار، رواتب، فواتير كهرباء أو وقود). يقوم التطبيق بخصمها من إجمالي المبيعات لحساب صافي أرباحك الحقيقي بدقة.'
+                          : '💡 Expenses Guide: Log all operational expenses here (e.g., rent, salaries, utility bills). The app accurately deducts them from gross sales to calculate true net profit.',
                         style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.4, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                       ),
                     ),
@@ -109,17 +112,17 @@ class ExpensesScreen extends ConsumerWidget {
                   padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   children: [
                     if (todayExpenses.isNotEmpty)
-                      _buildExpenseGroup(context, ref, 'مصروفات اليوم', todayExpenses, initiallyExpanded: true),
+                      _buildExpenseGroup(context, ref, isAr ? 'مصروفات اليوم' : 'Today\'s Expenses', todayExpenses, initiallyExpanded: true),
                     if (weekExpenses.isNotEmpty)
-                      _buildExpenseGroup(context, ref, 'هذا الأسبوع', weekExpenses, 
+                      _buildExpenseGroup(context, ref, isAr ? 'هذا الأسبوع' : 'This Week', weekExpenses, 
                           subtitle: '${DateFormat('yyyy/MM/dd').format(sevenDaysAgo)} - ${DateFormat('yyyy/MM/dd').format(today.subtract(const Duration(days: 1)))}'),
                     if (monthExpenses.isNotEmpty)
-                      _buildExpenseGroup(context, ref, 'هذا الشهر', monthExpenses,
+                      _buildExpenseGroup(context, ref, isAr ? 'هذا الشهر' : 'This Month', monthExpenses,
                           subtitle: '${DateFormat('yyyy/MM/dd').format(thirtyDaysAgo)} - ${DateFormat('yyyy/MM/dd').format(sevenDaysAgo.subtract(const Duration(days: 1)))}'),
                     if (yearExpenses.isNotEmpty)
-                      _buildExpenseGroup(context, ref, 'هذا العام (${now.year})', yearExpenses),
+                      _buildExpenseGroup(context, ref, isAr ? 'هذا العام (${now.year})' : 'This Year (${now.year})', yearExpenses),
                     if (olderExpenses.isNotEmpty)
-                      _buildExpenseGroup(context, ref, 'أقدم', olderExpenses),
+                      _buildExpenseGroup(context, ref, isAr ? 'أقدم' : 'Older', olderExpenses),
                   ],
                 ),
               ),

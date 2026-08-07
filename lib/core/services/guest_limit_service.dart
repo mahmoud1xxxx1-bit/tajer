@@ -74,8 +74,9 @@ class GuestLimitService {
     } catch (e) {
       if (context.mounted) {
         Navigator.pop(context); // close loading
+        final isAr = Localizations.localeOf(context).languageCode == 'ar';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطأ في التحقق من القيود: $e')),
+          SnackBar(content: Text(isAr ? 'خطأ في التحقق من القيود: $e' : 'Error checking limits: $e')),
         );
       }
       return false;
@@ -83,18 +84,21 @@ class GuestLimitService {
   }
 
   static void _showUpgradeDialog(BuildContext context, WidgetRef ref) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('ترقية الباقة', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange)),
+        title: Text(isAr ? 'ترقية الباقة' : 'Upgrade Plan', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange)),
         content: Text(
-          'لقد وصلت للحد الأقصى المسموح به في الباقة المجانية. للتمتع بميزات لا محدودة، يرجى الترقية إلى الباقة الاحترافية (Pro).',
+          isAr 
+            ? 'لقد وصلت للحد الأقصى المسموح به في الباقة المجانية. للتمتع بميزات لا محدودة، يرجى الترقية إلى الباقة الاحترافية (Pro).'
+            : 'You have reached the maximum limit of the free plan. To enjoy unlimited features, please upgrade to the Pro plan.',
           style: TextStyle(fontFamily: 'Tajawal', height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+            child: Text(isAr ? 'إلغاء' : 'Cancel', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
           ),
           ElevatedButton.icon(
             onPressed: () {
@@ -102,7 +106,7 @@ class GuestLimitService {
               context.push('/paywall');
             },
             icon: Icon(Icons.star),
-            label: Text('الترقية الآن (10\$/شهر)', style: TextStyle(fontFamily: 'Tajawal')),
+            label: Text(isAr ? 'الترقية الآن (10\$/شهر)' : 'Upgrade Now (\$10/mo)', style: TextStyle(fontFamily: 'Tajawal')),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
@@ -114,19 +118,22 @@ class GuestLimitService {
   }
 
   static void _showBannedDeviceDialog(BuildContext context, WidgetRef ref) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text('تم استهلاك الباقة المجانية', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
+        title: Text(isAr ? 'تم استهلاك الباقة المجانية' : 'Free Plan Consumed', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
         content: Text(
-          'عذراً، لقد تم اكتشاف استخدام سابق للباقة المجانية على هذا الجهاز. يرجى الترقية إلى الباقة الاحترافية (Pro) أو تسجيل الدخول بحسابك السابق لاستعادة بياناتك.',
+          isAr 
+            ? 'عذراً، لقد تم اكتشاف استخدام سابق للباقة المجانية على هذا الجهاز. يرجى الترقية إلى الباقة الاحترافية (Pro) أو تسجيل الدخول بحسابك السابق لاستعادة بياناتك.'
+            : 'Sorry, previous usage of the free plan on this device was detected. Please upgrade to Pro or login with your previous account.',
           style: TextStyle(fontFamily: 'Tajawal', height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+            child: Text(isAr ? 'إلغاء' : 'Cancel', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
           ),
           ElevatedButton.icon(
             onPressed: () {
@@ -134,7 +141,7 @@ class GuestLimitService {
               context.push('/paywall');
             },
             icon: Icon(Icons.star),
-            label: Text('الترقية الآن (10\$/شهر)', style: TextStyle(fontFamily: 'Tajawal')),
+            label: Text(isAr ? 'الترقية الآن (10\$/شهر)' : 'Upgrade Now (\$10/mo)', style: TextStyle(fontFamily: 'Tajawal')),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,

@@ -188,6 +188,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
     final user = ref.watch(appUserProvider).value;
     final merchantId = user?.merchantId ?? user?.id;
     final canManageInventory = user?.hasPermission('can_manage_inventory') ?? false;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     if (merchantId == null) return const Scaffold();
 
@@ -283,8 +284,8 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                                     final success = await PinConfirmationDialog.requirePinOrSetup(
                                       context,
                                       appUser,
-                                      title: 'تحذير: حذف مادة خام',
-                                      warning: 'هل أنت متأكد من حذف هذه المادة الخام (${item.name})؟',
+                                      title: isAr ? 'تحذير: حذف مادة خام' : 'Warning: Delete Raw Material',
+                                      warning: isAr ? 'هل أنت متأكد من حذف هذه المادة الخام (${item.name})؟' : 'Are you sure you want to delete this raw material (${item.name})?',
                                     );
                                     if (!success) return;
                                   }
