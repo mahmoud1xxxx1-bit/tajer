@@ -59,7 +59,7 @@ class ShiftDetailsScreen extends StatelessWidget {
                     _buildRow(isAr ? 'العهدة الافتتاحية:' : 'Opening Cash:', '${shift.startCash} ${isAr ? 'ر.س' : 'SAR'}'),
                     _buildRow(isAr ? 'مبيعات الكاش:' : 'Cash Sales:', '${shift.cashSales ?? 0} ${isAr ? 'ر.س' : 'SAR'}'),
                     _buildRow(isAr ? 'ديون محصلة (كاش):' : 'Debts Collected (Cash):', '${shift.debtCollectionsCash ?? 0} ${isAr ? 'ر.س' : 'SAR'}'),
-                    _buildRow(isAr ? 'إجمالي الضريبة:' : 'Total Tax:', '${shift.totalTax ?? 0} ${isAr ? 'ر.س' : 'SAR'}'),
+                    _buildRow(isAr ? 'إجمالي الضريبة:' : 'Total Tax:', '${(shift.totalTax ?? 0).toStringAsFixed(2)} ${isAr ? 'ر.س' : 'SAR'}'),
                   ],
                 ),
               ),

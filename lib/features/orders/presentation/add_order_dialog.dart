@@ -196,6 +196,8 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
         newQuantity: selectedProduct.quantity - quantity,
         reason: AppLocalizations.of(context)!.text82,
         userEmail: user.email,
+        userName: appUser?.name ?? user.email,
+        itemType: 'product',
       );
 
       if (mounted) Navigator.pop(context);

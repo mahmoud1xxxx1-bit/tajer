@@ -11,6 +11,9 @@ class InventoryLog {
   final double newQuantity;
   final String reason;
   final String? userEmail;
+  final String? userName;
+  final String? itemType; // 'product' or 'raw_material'
+  final bool isReverted;
   final DateTime date;
 
   const InventoryLog({
@@ -23,6 +26,9 @@ class InventoryLog {
     required this.newQuantity,
     required this.reason,
     this.userEmail,
+    this.userName,
+    this.itemType,
+    this.isReverted = false,
     required this.date,
   });
 
@@ -37,6 +43,9 @@ class InventoryLog {
       newQuantity: (json['newQuantity'] as num).toDouble(),
       reason: json['reason'] as String,
       userEmail: json['userEmail'] as String?,
+      userName: json['userName'] as String?,
+      itemType: json['itemType'] as String?,
+      isReverted: json['isReverted'] as bool? ?? false,
       date: safeParseDate(json['date']),
     );
   }
@@ -52,6 +61,9 @@ class InventoryLog {
       'newQuantity': newQuantity,
       'reason': reason,
       'userEmail': userEmail,
+      'userName': userName,
+      'itemType': itemType,
+      'isReverted': isReverted,
       'date': Timestamp.fromDate(date),
     };
   }
@@ -66,6 +78,9 @@ class InventoryLog {
     double? newQuantity,
     String? reason,
     String? userEmail,
+    String? userName,
+    String? itemType,
+    bool? isReverted,
     DateTime? date,
   }) {
     return InventoryLog(
@@ -78,6 +93,9 @@ class InventoryLog {
       newQuantity: newQuantity ?? this.newQuantity,
       reason: reason ?? this.reason,
       userEmail: userEmail ?? this.userEmail,
+      userName: userName ?? this.userName,
+      itemType: itemType ?? this.itemType,
+      isReverted: isReverted ?? this.isReverted,
       date: date ?? this.date,
     );
   }

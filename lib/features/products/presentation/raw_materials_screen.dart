@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../domain/raw_material.dart';
 import '../data/raw_material_repository.dart';
+import '../../inventory_log/data/inventory_log_repository.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../authentication/domain/app_user.dart';
 import '../../../core/services/pin_service.dart';
@@ -137,6 +138,19 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                     updatedAt: DateTime.now(),
                   );
                   await repo.addRawMaterial(newItem);
+                  if (qty > 0) {
+                    final logRepo = ref.read(inventoryLogRepositoryProvider);
+                    await logRepo?.logChange(
+                      productId: newItem.id,
+                      productName: newItem.name,
+                      previousQuantity: 0,
+                      newQuantity: qty,
+                      reason: 'إضافة خام جديد / Add New Raw Material',
+                      userEmail: user?.email,
+                      userName: user?.name ?? user?.email,
+                      itemType: 'raw_material',
+                    );
+                  }
                 } else {
                   final updatedItem = rawMaterial.copyWith(
                     name: name,
@@ -145,6 +159,19 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                     updatedAt: DateTime.now(),
                   );
                   await repo.updateRawMaterial(updatedItem);
+                  if (qty != rawMaterial.quantity) {
+                    final logRepo = ref.read(inventoryLogRepositoryProvider);
+                    await logRepo?.logChange(
+                      productId: updatedItem.id,
+                      productName: updatedItem.name,
+                      previousQuantity: rawMaterial.quantity,
+                      newQuantity: qty,
+                      reason: 'تحديث يدوي / Manual Update',
+                      userEmail: user?.email,
+                      userName: user?.name ?? user?.email,
+                      itemType: 'raw_material',
+                    );
+                  }
                 }
                 if (mounted) Navigator.pop(ctx);
               },

@@ -18,99 +18,7 @@ class InventoryLogsScreen extends ConsumerStatefulWidget {
 }
 
 class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
-  void _showEditDialog(BuildContext context, InventoryLog log, bool isAr) {
-    final qtyController = TextEditingController(text: log.changeQuantity.toString());
-    final reasonController = TextEditingController(text: log.reason);
-    final formKey = GlobalKey<FormState>();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          isAr ? 'تعديل سجل المخزون' : 'Edit Inventory Log',
-          style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '${log.productName}',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: qtyController,
-                keyboardType: const TextInputType.numberWithOptions(signed: true),
-                decoration: InputDecoration(
-                  labelText: isAr ? 'الكمية (موجب لإضافة، سالب لنقص)' : 'Quantity Change (+ add, - remove)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                validator: (val) {
-                  if (val == null || val.isEmpty || double.tryParse(val) == null) {
-                    return isAr ? 'أدخل رقم صحيح' : 'Enter valid number';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: reasonController,
-                decoration: InputDecoration(
-                  labelText: isAr ? 'السبب / الوصف' : 'Reason / Description',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                validator: (val) => val == null || val.isEmpty ? (isAr ? 'مطلوب' : 'Required') : null,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text(isAr ? 'إلغاء' : 'Cancel', style: const TextStyle(fontFamily: 'Tajawal')),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              final newQty = double.parse(qtyController.text);
-              final newReason = reasonController.text.trim();
-              Navigator.pop(ctx);
-
-              final repo = ref.read(inventoryLogRepositoryProvider);
-              if (repo != null) {
-                await repo.updateLog(log, newQty, newReason);
-                final appUser = ref.read(appUserProvider).value;
-                await ActivityLogger.log(
-                  user: appUser,
-                  actionType: isAr ? 'تعديل سجل مخزون' : 'Inventory Log Edited',
-                  description: isAr 
-                      ? 'تم تعديل كمية السجل للمنتج (${log.productName}) من (${log.changeQuantity}) إلى ($newQty)' 
-                      : 'Updated quantity log for (${log.productName}) from (${log.changeQuantity}) to ($newQty)',
-                );
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(isAr ? 'تم تعديل السجل وتحديث المخزون بنجاح' : 'Log updated & inventory reconciled successfully', style: const TextStyle(fontFamily: 'Tajawal'))),
-                  );
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Colors.white,
-            ),
-            child: Text(isAr ? 'حفظ' : 'Save', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _confirmDelete(BuildContext context, InventoryLog log, bool isAr) async {
+  void _confirmRevert(BuildContext context, InventoryLog log, bool isAr) async {
     final appUser = ref.read(appUserProvider).value;
     if (appUser != null) {
       final pin = await PinService.getDeletePin(appUser);
@@ -119,29 +27,28 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
         final success = await PinConfirmationDialog.show(
           context, 
           pin,
-          title: isAr ? 'تحذير: مسح سجل جرد' : 'Warning: Delete Inventory Log',
+          title: isAr ? 'تحذير: تراجع عن سجل' : 'Warning: Revert Inventory Log',
           warning: isAr 
-              ? 'مسح هذا السجل لمنتج (${log.productName}) سيؤدي إلى تلاعب في تسوية المخزون وإرجاع الكميات. هل أنت متأكد؟'
-              : 'Deleting this log for (${log.productName}) will manipulate inventory reconciliation and restore quantities. Are you sure?',
+              ? 'التراجع عن هذا السجل لمنتج (${log.productName}) سيؤدي لإنشاء سجل معاكس وإرجاع الكميات. هل أنت متأكد؟'
+              : 'Reverting this log for (${log.productName}) will create a reversing log and restore quantities. Are you sure?',
         );
         if (!success) return;
       }
     }
     
     final repo = ref.read(inventoryLogRepositoryProvider);
-    if (repo != null) {
-      await repo.deleteLog(log, adjustInventory: true);
-      final appUser = ref.read(appUserProvider).value;
+    if (repo != null && appUser != null) {
+      await repo.revertLog(log, userEmail: appUser.email ?? '', userName: appUser.name ?? appUser.email ?? '');
       await ActivityLogger.log(
         user: appUser,
-        actionType: isAr ? 'حذف سجل مخزون' : 'Inventory Log Deleted',
+        actionType: isAr ? 'تراجع عن سجل مخزون' : 'Inventory Log Reverted',
         description: isAr 
-            ? 'تم حذف سجل المخزون للمنتج (${log.productName}) بكمية (${log.changeQuantity}) بواسطة التاجر' 
-            : 'Deleted inventory log for (${log.productName}) quantity (${log.changeQuantity}) by merchant',
+            ? 'تم التراجع عن سجل المخزون للمنتج (${log.productName})' 
+            : 'Reverted inventory log for (${log.productName})',
       );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(isAr ? 'تم حذف السجل وتسوية المخزون بنجاح' : 'Log deleted & inventory reconciled successfully', style: const TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(content: Text(isAr ? 'تم التراجع عن السجل وتسوية المخزون بنجاح' : 'Log reverted & inventory reconciled successfully', style: const TextStyle(fontFamily: 'Tajawal'))),
         );
       }
     }
@@ -245,9 +152,11 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.05)),
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
+                child: Opacity(
+                  opacity: log.isReverted ? 0.5 : 1.0,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(12),
@@ -266,11 +175,41 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              log.productName,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    log.productName,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Tajawal',
+                                      fontSize: 16,
+                                      decoration: log.isReverted ? TextDecoration.lineThrough : null,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (log.itemType != null) ...[
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: log.itemType == 'raw_material' ? Colors.green.withOpacity(0.1) : Colors.blue.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      log.itemType == 'raw_material' ? (isAr ? 'مواد خام' : 'Raw Material') : (isAr ? 'منتج جاهز' : 'Product'),
+                                      style: TextStyle(
+                                        color: log.itemType == 'raw_material' ? Colors.green[700] : Colors.blue[700],
+                                        fontSize: 10,
+                                        fontFamily: 'Tajawal',
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                             const SizedBox(height: 6),
                             Row(
@@ -303,14 +242,14 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                                     style: TextStyle(fontSize: 12, color: Colors.grey[400], fontFamily: 'Tajawal'),
                                   ),
                                 ),
-                                if (log.userEmail != null)
+                                if (log.userName != null || log.userEmail != null)
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(Icons.person_pin, size: 14, color: Colors.blueAccent.withOpacity(0.7)),
                                       const SizedBox(width: 4),
                                       Text(
-                                        log.userEmail!,
+                                        log.userName ?? log.userEmail!,
                                         style: const TextStyle(fontSize: 12, color: Colors.blueAccent, fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
                                       ),
                                     ],
@@ -345,33 +284,27 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                           ),
                           if (isMerchant) ...[
                             const SizedBox(height: 8),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.edit_outlined, color: Colors.amber, size: 20),
-                                  onPressed: () => _showEditDialog(context, log, isAr),
-                                  constraints: const BoxConstraints(),
-                                  padding: const EdgeInsets.all(4),
-                                  tooltip: isAr ? 'تعديل السجل' : 'Edit Log',
-                                ),
-                                const SizedBox(width: 4),
-                                IconButton(
-                                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 20),
-                                  onPressed: () => _confirmDelete(context, log, isAr),
-                                  constraints: const BoxConstraints(),
-                                  padding: const EdgeInsets.all(4),
-                                  tooltip: isAr ? 'حذف السجل' : 'Delete Log',
-                                ),
-                              ],
-                            ),
+                            if (!log.isReverted)
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.undo, color: Colors.orangeAccent, size: 20),
+                                    onPressed: () => _confirmRevert(context, log, isAr),
+                                    constraints: const BoxConstraints(),
+                                    padding: const EdgeInsets.all(4),
+                                    tooltip: isAr ? 'تراجع عن السجل' : 'Revert Log',
+                                  ),
+                                ],
+                              ),
                           ],
                         ],
                       ),
                     ],
                   ),
                 ),
-              );
+              ),
+            );
             }).toList(),
           ),
         ),

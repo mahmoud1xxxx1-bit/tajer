@@ -53,6 +53,8 @@ class InventoryLogRepository {
     required num newQuantity,
     required String reason,
     String? userEmail,
+    String? userName,
+    String? itemType,
   }) async {
     final change = (newQuantity - previousQuantity).toDouble();
     if (change == 0) return; // No real change
@@ -67,18 +69,29 @@ class InventoryLogRepository {
       newQuantity: newQuantity.toDouble(),
       reason: reason,
       userEmail: userEmail,
+      userName: userName,
+      itemType: itemType,
       date: DateTime.now(),
     );
 
     await _logsRef.doc(log.id).set(log.toJson());
   }
 
-  Future<void> deleteLog(InventoryLog log, {bool adjustInventory = true}) async {
-    if (adjustInventory && log.productId.isNotEmpty && log.changeQuantity != 0) {
+  Future<void> revertLog(InventoryLog log, {required String userEmail, required String userName}) async {
+    if (log.isReverted) return;
+
+    // 1. Mark original log as reverted
+    await _logsRef.doc(log.id).update({'isReverted': true});
+
+    // 2. Adjust inventory
+    double currentInventory = 0.0;
+    if (log.productId.isNotEmpty && log.changeQuantity != 0) {
       final productRef = _firestore.collection('products').doc(log.productId);
       final rawRef = _firestore.collection('raw_materials').doc(log.productId);
+      
       final pDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
       if (pDoc.exists) {
+        currentInventory = (pDoc.data()?['quantity'] as num?)?.toDouble() ?? 0.0;
         await productRef.update({
           'quantity': FieldValue.increment(-log.changeQuantity),
           'updatedAt': FieldValue.serverTimestamp(),
@@ -86,6 +99,7 @@ class InventoryLogRepository {
       } else {
         final rDoc = await rawRef.get(const GetOptions(source: Source.serverAndCache));
         if (rDoc.exists) {
+          currentInventory = (rDoc.data()?['quantity'] as num?)?.toDouble() ?? 0.0;
           await rawRef.update({
             'quantity': FieldValue.increment(-log.changeQuantity),
             'updatedAt': FieldValue.serverTimestamp(),
@@ -93,35 +107,23 @@ class InventoryLogRepository {
         }
       }
     }
-    await _logsRef.doc(log.id).delete();
-  }
 
-  Future<void> updateLog(InventoryLog oldLog, double newChangeQuantity, String newReason) async {
-    final diff = newChangeQuantity - oldLog.changeQuantity;
-    if (diff != 0 && oldLog.productId.isNotEmpty) {
-      final productRef = _firestore.collection('products').doc(oldLog.productId);
-      final rawRef = _firestore.collection('raw_materials').doc(oldLog.productId);
-      final pDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
-      if (pDoc.exists) {
-        await productRef.update({
-          'quantity': FieldValue.increment(diff),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      } else {
-        final rDoc = await rawRef.get(const GetOptions(source: Source.serverAndCache));
-        if (rDoc.exists) {
-          await rawRef.update({
-            'quantity': FieldValue.increment(diff),
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
-        }
-      }
-    }
-    await _logsRef.doc(oldLog.id).update({
-      'changeQuantity': newChangeQuantity,
-      'newQuantity': oldLog.previousQuantity + newChangeQuantity,
-      'reason': newReason,
-    });
+    // 3. Create a reverting log
+    final revertLog = InventoryLog(
+      id: Uuid().v4(),
+      merchantId: _merchantId,
+      productId: log.productId,
+      productName: log.productName,
+      changeQuantity: -log.changeQuantity,
+      previousQuantity: currentInventory,
+      newQuantity: currentInventory - log.changeQuantity,
+      reason: 'تراجع عن عملية سابقة / Reverted previous log',
+      userEmail: userEmail,
+      userName: userName,
+      itemType: log.itemType,
+      date: DateTime.now(),
+    );
+    await _logsRef.doc(revertLog.id).set(revertLog.toJson());
   }
 }
 
