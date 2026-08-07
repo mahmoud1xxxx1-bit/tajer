@@ -806,7 +806,6 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
         grandTotal += item.total + (item.total * (itemTax / 100));
       }
     }
-    }
     
     final requiredAmount = _isCredit ? (double.tryParse(_paidController.text) ?? 0.0) : grandTotal;
 
