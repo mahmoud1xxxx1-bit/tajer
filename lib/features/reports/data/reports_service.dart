@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers/store_profile_provider.dart';
 import '../../orders/data/order_repository.dart';
 import '../../orders/domain/order.dart';
 import '../../products/data/product_repository.dart';
@@ -31,13 +32,23 @@ class ReportsService {
   final List<Expense> expenses;
   final List<Customer> customers;
   final List<Supplier> suppliers;
+  final double defaultTaxPercentage;
+  final bool defaultIsTaxInclusive;
 
-  ReportsService(this.orders, this.products, this.expenses, this.customers, this.suppliers);
+  ReportsService(this.orders, this.products, this.expenses, this.customers, this.suppliers, {this.defaultTaxPercentage = 0.0, this.defaultIsTaxInclusive = true});
 
   ReportsService filterByDate(DateTime start, DateTime end) {
     final filteredOrders = orders.where((o) => o.createdAt.isAfter(start) && o.createdAt.isBefore(end)).toList();
     final filteredExpenses = expenses.where((e) => e.date.isAfter(start) && e.date.isBefore(end)).toList();
-    return ReportsService(filteredOrders, products, filteredExpenses, customers, suppliers);
+    return ReportsService(
+      filteredOrders, 
+      products, 
+      filteredExpenses, 
+      customers, 
+      suppliers, 
+      defaultTaxPercentage: defaultTaxPercentage, 
+      defaultIsTaxInclusive: defaultIsTaxInclusive,
+    );
   }
 
   double get totalRevenue => orders.where((o) => o.status != 'cancelled' && o.status != 'debt_repayment').fold(0.0, (sum, order) => sum + order.total);
@@ -53,12 +64,13 @@ class ReportsService {
   double get totalTaxCollected => orders.where((o) => o.status != 'cancelled' && o.status != 'debt_repayment').fold(0.0, (sum, order) {
     double orderTax = 0.0;
     for (final item in order.items) {
-      if (item.taxPercentage != null && item.taxPercentage! > 0) {
-        final isInclusive = item.isTaxInclusive ?? true;
+      final itemTax = item.taxPercentage ?? defaultTaxPercentage;
+      if (itemTax > 0) {
+        final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
         if (isInclusive) {
-          orderTax += item.total - (item.total / (1 + (item.taxPercentage! / 100)));
+          orderTax += item.total - (item.total / (1 + (itemTax / 100)));
         } else {
-          orderTax += item.total * (item.taxPercentage! / 100);
+          orderTax += item.total * (itemTax / 100);
         }
       }
     }
@@ -129,6 +141,7 @@ final reportsServiceProvider = Provider<ReportsService?>((ref) {
   final expensesState = ref.watch(expensesStreamProvider);
   final customersState = ref.watch(customersStreamProvider);
   final suppliersState = ref.watch(suppliersStreamProvider);
+  final storeProfileState = ref.watch(storeProfileProvider);
 
   if (ordersState.value == null || productsState.value == null || expensesState.value == null || customersState.value == null || suppliersState.value == null) {
     return null; // Still loading
@@ -140,5 +153,7 @@ final reportsServiceProvider = Provider<ReportsService?>((ref) {
     expensesState.value!,
     customersState.value!,
     suppliersState.value!,
+    defaultTaxPercentage: storeProfileState.value?.defaultTaxPercentage ?? 0.0,
+    defaultIsTaxInclusive: storeProfileState.value?.defaultIsTaxInclusive ?? true,
   );
 });

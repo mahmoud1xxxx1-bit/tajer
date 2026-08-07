@@ -204,7 +204,7 @@ class OrderRepository {
           });
         }
         
-        if (recipeList.isNotEmpty && isManufacturedOnDemand) {
+        if (recipeList.isNotEmpty) {
           // Has recipe -> ALSO deduct raw materials
           for (final recipeItem in recipeList) {
             final rawMaterialId = recipeItem['rawMaterialId'] as String;
@@ -327,7 +327,7 @@ class OrderRepository {
             });
           }
 
-          if (recipeList.isNotEmpty && isManufacturedOnDemand) {
+          if (recipeList.isNotEmpty) {
             for (final recipeItem in recipeList) {
               final rawMaterialId = recipeItem['rawMaterialId'] as String;
               final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
@@ -422,8 +422,26 @@ class OrderRepository {
   Future<void> updateOrderStatus(AppOrder order, String newStatus) async {
     if (order.status == newStatus) return;
 
-    final batch = _firestore.batch();
     final orderRef = _firestore.collection('orders').doc(order.id);
+
+    // 1. Transaction to prevent double cancellations (Race condition lock)
+    final canProceed = await _firestore.runTransaction<bool>((transaction) async {
+       final snapshot = await transaction.get(orderRef);
+       if (!snapshot.exists) return false;
+       final currentStatus = snapshot.data()?['status'] as String?;
+       if (currentStatus == newStatus) {
+         return false;
+       }
+       transaction.update(orderRef, {
+         'status': newStatus,
+         'updatedAt': FieldValue.serverTimestamp(),
+       });
+       return true;
+    });
+
+    if (!canProceed) return;
+
+    final batch = _firestore.batch();
 
     // Handle inventory and customer balances upon status transitions
     if (newStatus == 'cancelled' && order.status != 'cancelled') {
@@ -460,7 +478,7 @@ class OrderRepository {
             });
           }
 
-          if (recipeList.isNotEmpty && isManufacturedOnDemand) {
+          if (recipeList.isNotEmpty) {
             for (final recipeItem in recipeList) {
               final rawMaterialId = recipeItem['rawMaterialId'] as String;
               final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
@@ -580,7 +598,7 @@ class OrderRepository {
             });
           }
 
-          if (recipeList.isNotEmpty && isManufacturedOnDemand) {
+          if (recipeList.isNotEmpty) {
             for (final recipeItem in recipeList) {
               final rawMaterialId = recipeItem['rawMaterialId'] as String;
               final amountRequired = (recipeItem['amountRequired'] as num).toDouble();

@@ -361,6 +361,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         storeProfile: storeProfile,
         isKitchen: false,
         taxPercentage: tax,
+        defaultIsTaxInclusive: storeProfile?.defaultIsTaxInclusive ?? false,
       ).timeout(const Duration(seconds: 5)).catchError((e) {
         debugPrint('Auto-print ignored or failed: $e');
       });
@@ -789,6 +790,23 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
     final appUser = ref.watch(appUserProvider).value;
     final canManageCustomers = appUser?.hasPermission('can_manage_customers') ?? false;
     final canSellOnCredit = appUser?.hasPermission('can_sell_on_credit') ?? false;
+
+    // Calculate Grand Total including taxes correctly for validation
+    final storeProfile = ref.read(storeProfileProvider).value;
+    final defaultTaxPercentage = storeProfile?.defaultTaxPercentage ?? 0.0;
+    final defaultIsTaxInclusive = storeProfile?.defaultIsTaxInclusive ?? false;
+    
+    double grandTotal = 0.0;
+    for (var item in widget.cart) {
+      final itemTax = item.taxPercentage ?? defaultTaxPercentage;
+      final isInclusive = (item.taxPercentage != null && item.taxPercentage! > 0) ? (item.isTaxInclusive ?? defaultIsTaxInclusive) : defaultIsTaxInclusive;
+      if (isInclusive) {
+        grandTotal += item.total;
+      } else {
+        grandTotal += item.total + (item.total * (itemTax / 100));
+      }
+    }
+
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
@@ -962,7 +980,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                   onSelected: (val) {
                     setState(() {
                       _paymentMethod = 'split';
-                      _splitNetworkController.text = widget.total.toStringAsFixed(2);
+                      _splitNetworkController.text = grandTotal.toStringAsFixed(2);
                       _splitCashController.text = '0';
                     });
                   },
@@ -980,9 +998,8 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                        decoration: InputDecoration(labelText: isAr ? 'نقدي (كاش)' : 'Cash', border: OutlineInputBorder(), prefixIcon: Icon(Icons.money)),
                        onChanged: (val) {
                          final cash = double.tryParse(val) ?? 0.0;
-                         final total = widget.total;
-                         if (cash <= total) {
-                           _splitNetworkController.text = (total - cash).toStringAsFixed(2);
+                         if (cash <= grandTotal) {
+                           _splitNetworkController.text = (grandTotal - cash).toStringAsFixed(2);
                          }
                          setState((){});
                        },
@@ -996,9 +1013,8 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                        decoration: InputDecoration(labelText: isAr ? 'شبكة (بطاقة)' : 'Network', border: OutlineInputBorder(), prefixIcon: Icon(Icons.credit_card)),
                        onChanged: (val) {
                          final network = double.tryParse(val) ?? 0.0;
-                         final total = widget.total;
-                         if (network <= total) {
-                           _splitCashController.text = (total - network).toStringAsFixed(2);
+                         if (network <= grandTotal) {
+                           _splitCashController.text = (grandTotal - network).toStringAsFixed(2);
                          }
                          setState((){});
                        },
@@ -1049,20 +1065,8 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                 const SizedBox(height: 8),
                 Builder(
                   builder: (context) {
-                    final storeProfile = ref.read(storeProfileProvider).value;
-                    final defaultTaxPercentage = storeProfile?.defaultTaxPercentage ?? 0.0;
-                    final defaultIsTaxInclusive = storeProfile?.defaultIsTaxInclusive ?? false;
-                    
-                    double grandTotal = 0.0;
-                    for (var item in widget.cart) {
-                      final itemTax = item.taxPercentage ?? defaultTaxPercentage;
-                      final isInclusive = (item.taxPercentage != null && item.taxPercentage! > 0) ? (item.isTaxInclusive ?? defaultIsTaxInclusive) : defaultIsTaxInclusive;
-                      if (isInclusive) {
-                        grandTotal += item.total;
-                      } else {
-                        grandTotal += item.total + (item.total * (itemTax / 100));
-                      }
-                    }
+                    // Removed local grandTotal calculation to use the one computed at the start of build()
+
                     final tendered = double.tryParse(_tenderedController.text) ?? 0.0;
                     final requiredAmount = _isCredit ? (double.tryParse(_paidController.text) ?? 0.0) : grandTotal;
                     final change = tendered - requiredAmount;
@@ -1092,21 +1096,32 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                 foregroundColor: Colors.white,
               ),
               onPressed: () {
-                final storeProfile = ref.read(storeProfileProvider).value;
-                final defaultTaxPercentage = storeProfile?.defaultTaxPercentage ?? 0.0;
-                final defaultIsTaxInclusive = storeProfile?.defaultIsTaxInclusive ?? false;
-                
-                double grandTotal = 0.0;
-                for (var item in widget.cart) {
-                  final itemTax = item.taxPercentage ?? defaultTaxPercentage;
-                  final isInclusive = (item.taxPercentage != null && item.taxPercentage! > 0) ? (item.isTaxInclusive ?? defaultIsTaxInclusive) : defaultIsTaxInclusive;
-                  if (isInclusive) {
-                    grandTotal += item.total;
-                  } else {
-                    grandTotal += item.total + (item.total * (itemTax / 100));
-                  }
-                }
+                // Removed local grandTotal calculation to use the one computed at the start of build()
                 final paid = _isCredit ? (double.tryParse(_paidController.text) ?? 0.0) : grandTotal;
+                
+                // --- Validation for Split Payment ---
+                if (_paymentMethod == 'split' && !_isCredit) {
+                   final cash = double.tryParse(_splitCashController.text) ?? 0.0;
+                   final network = double.tryParse(_splitNetworkController.text) ?? 0.0;
+                   final diff = grandTotal - (cash + network);
+                   if (diff.abs() > 0.01) {
+                     showDialog(
+                       context: context,
+                       builder: (ctx) => AlertDialog(
+                         title: Text(isAr ? 'تنبيه' : 'Warning', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
+                         content: Text(isAr 
+                            ? 'في الدفع المتعدد، يجب أن يتطابق مجموع المبالغ المدخلة مع الإجمالي شامل الضريبة (${grandTotal.toStringAsFixed(2)}).'
+                            : 'For split payment, the sum of amounts must match the grand total (${grandTotal.toStringAsFixed(2)}).', 
+                            style: TextStyle(fontFamily: 'Tajawal')
+                         ),
+                         actions: [
+                           TextButton(onPressed: () => Navigator.pop(ctx), child: Text(isAr ? 'حسناً' : 'OK', style: TextStyle(fontFamily: 'Tajawal')))
+                         ],
+                       )
+                     );
+                     return;
+                   }
+                }
                 
                 // --- Validation for Anonymous Debt ---
                 if (_isCredit && _selectedCustomerId == null) {

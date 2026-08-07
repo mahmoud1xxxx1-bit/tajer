@@ -448,6 +448,20 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                       } else if (value == 'pay_debt') {
                         _showPayDebtDialog(context, ref, customer);
                       } else if (value == 'delete') {
+                        if (customer.totalDebt.abs() > 0.01) {
+                          showDialog(
+                            context: context,
+                            builder: (ctx) => AlertDialog(
+                              title: Text(l10n.warning, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
+                              content: Text('لا يمكن حذف عميل لديه رصيد ديون أو رصيد دائن. يرجى تصفية الحساب أولاً.', style: const TextStyle(fontFamily: 'Tajawal')),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('حسناً', style: TextStyle(fontFamily: 'Tajawal')))
+                              ],
+                            )
+                          );
+                          return;
+                        }
+
                         final appUser = ref.read(appUserProvider).value;
                         if (appUser != null) {
                           final success = await PinConfirmationDialog.requirePinOrSetup(

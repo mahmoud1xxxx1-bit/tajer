@@ -86,6 +86,11 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
 
     try {
         final user = ref.read(appUserProvider).value;
+        final repository = ref.read(orderRepositoryProvider);
+
+        // Actually update the database
+        await repository.updateOrderStatus(currentOrder, 'cancelled');
+
         await ActivityLogger.log(
           user: user,
           actionType: isAr ? 'إلغاء فاتورة' : 'Order Cancelled',
