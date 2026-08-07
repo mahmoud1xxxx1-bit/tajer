@@ -97,7 +97,7 @@ class OrdersScreen extends ConsumerWidget {
               itemBuilder: (context, index) {
                 final key = sortedKeys[index];
                 final groupOrders = groupedOrders[key]!;
-                final totalRevenue = groupOrders.fold(0.0, (sum, o) => sum + o.total);
+                final totalRevenue = groupOrders.where((o) => o.status != 'cancelled').fold(0.0, (sum, o) => sum + o.total);
                 final displayName = key.substring(3);
                 
                 return GlassCard(
