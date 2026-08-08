@@ -36,6 +36,13 @@ class ReportCashflowLedger {
         continue;
       }
 
+      // Legacy v107 debt repayments were sometimes represented as synthetic
+      // orders. New multi-branch collections use immutable debt-payment records.
+      if (order.status == 'debt_repayment') {
+        add(method, order.paidAmount);
+        continue;
+      }
+
       // Regular sale: the whole total was received.
       // Credit sale: only the upfront paid amount was received at sale time.
       final received = order.isCredit ? order.paidAmount : order.total;
