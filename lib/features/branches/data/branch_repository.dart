@@ -1,0 +1,89 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../authentication/data/auth_repository.dart';
+import '../domain/branch.dart';
+
+class BranchRepository {
+  final FirebaseFirestore _firestore;
+  final String merchantId;
+
+  BranchRepository(this._firestore, this.merchantId);
+
+  CollectionReference<Map<String, dynamic>> get _ref =>
+      _firestore.collection('merchants').doc(merchantId).collection('branches');
+
+  Stream<List<Branch>> watchBranches() {
+    return _ref.orderBy('createdAt').snapshots().map((snapshot) {
+      final branches = snapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data());
+        data['id'] = doc.id;
+        data['merchantId'] = data['merchantId']?.toString() ?? merchantId;
+        return Branch.fromJson(data);
+      }).toList();
+
+      branches.sort((a, b) {
+        if (a.isMain != b.isMain) return a.isMain ? -1 : 1;
+        return a.createdAt.compareTo(b.createdAt);
+      });
+      return branches;
+    });
+  }
+
+  Future<Branch> ensureMainBranch({required String fallbackName}) async {
+    final docRef = _ref.doc(BranchIds.main);
+    final snapshot = await docRef.get();
+    if (snapshot.exists && snapshot.data() != null) {
+      final data = Map<String, dynamic>.from(snapshot.data()!);
+      data['id'] = snapshot.id;
+      data['merchantId'] = merchantId;
+      return Branch.fromJson(data);
+    }
+
+    final branch = Branch.main(
+      merchantId: merchantId,
+      name: fallbackName.trim().isEmpty ? 'Main Branch' : fallbackName.trim(),
+    );
+    await docRef.set(branch.toJson());
+    return branch;
+  }
+
+  Future<void> addBranch(Branch branch) async {
+    if (branch.merchantId != merchantId) {
+      throw StateError('Branch merchant mismatch');
+    }
+    await _ref.doc(branch.id).set(branch.toJson());
+  }
+
+  Future<void> updateBranch(Branch branch) async {
+    if (branch.merchantId != merchantId) {
+      throw StateError('Branch merchant mismatch');
+    }
+    await _ref.doc(branch.id).update(branch.toJson());
+  }
+
+  Future<void> setBranchActive(String branchId, bool isActive) async {
+    if (branchId == BranchIds.main && !isActive) {
+      throw StateError('The main branch cannot be disabled');
+    }
+    await _ref.doc(branchId).update({
+      'isActive': isActive,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+}
+
+final branchRepositoryProvider = Provider<BranchRepository?>((ref) {
+  final user = ref.watch(appUserProvider).value;
+  if (user == null) return null;
+  return BranchRepository(
+    FirebaseFirestore.instance,
+    user.merchantId ?? user.id,
+  );
+});
+
+final branchesStreamProvider = StreamProvider<List<Branch>>((ref) {
+  final repository = ref.watch(branchRepositoryProvider);
+  if (repository == null) return Stream.value(const <Branch>[]);
+  return repository.watchBranches();
+});
