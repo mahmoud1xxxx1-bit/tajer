@@ -176,13 +176,6 @@ class SupplierDetailsScreen extends ConsumerWidget {
                                             );
                                             if (!success) return;
                                           }
-                                          final updatedTransaction = t.copyWith(isCancelled: true);
-                                          ref.read(supplierTransactionRepositoryProvider)?.updateTransaction(updatedTransaction);
-                                          
-                                          // Update supplier debt
-                                          final newDebt = supplier.totalDebt + (isPayment ? t.amount : -t.amount);
-                                          ref.read(supplierRepositoryProvider)?.updateSupplier(supplier.copyWith(totalDebt: newDebt));
-
                                           if (isPayment) {
                                             final expensesOpt = ref.read(expensesStreamProvider).value;
                                             if (expensesOpt != null) {
@@ -194,10 +187,25 @@ class SupplierDetailsScreen extends ConsumerWidget {
                                                 e.date.difference(t.date).inMinutes.abs() < 5
                                               );
                                               if (matchingExpenses.isNotEmpty) {
-                                                ref.read(expenseRepositoryProvider)?.updateExpense(matchingExpenses.first.copyWith(isCancelled: true));
+                                                try {
+                                                  await ref.read(expenseRepositoryProvider)?.cancelExpense(matchingExpenses.first);
+                                                } catch (e) {
+                                                  if (context.mounted) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''), style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.red));
+                                                  }
+                                                  return; // Stop the whole reversal if expense is in a closed shift
+                                                }
                                               }
                                             }
                                           }
+                                          
+                                          final updatedTransaction = t.copyWith(isCancelled: true);
+                                          ref.read(supplierTransactionRepositoryProvider)?.updateTransaction(updatedTransaction);
+                                          
+                                          // Update supplier debt
+                                          final newDebt = supplier.totalDebt + (isPayment ? t.amount : -t.amount);
+                                          ref.read(supplierRepositoryProvider)?.updateSupplier(supplier.copyWith(totalDebt: newDebt));
+
                                           
                                           ActivityLogger.log(
                                             user: appUser,
@@ -440,9 +448,30 @@ class SupplierDetailsScreen extends ConsumerWidget {
               final paid = double.tryParse(amountController.text.trim()) ?? 0.0;
               if (paid <= 0) return;
               
-              final newDebt = (currentSupplier.totalDebt - paid) < 0 ? 0.0 : (currentSupplier.totalDebt - paid);
-              final updatedSupplier = currentSupplier.copyWith(totalDebt: newDebt);
-              await ref.read(supplierRepositoryProvider)?.updateSupplier(updatedSupplier);
+              if (paid > currentSupplier.totalDebt) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق.', style: TextStyle(fontFamily: 'Tajawal')),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
+
+              try {
+                await ref.read(supplierRepositoryProvider)?.paySupplierDebt(
+                  supplierId: currentSupplier.id,
+                  amountPaid: paid,
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(e.toString().replaceAll('Exception: ', ''), style: const TextStyle(fontFamily: 'Tajawal')),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
               
               final user = ref.read(appUserProvider).value;
               final merchantId = user?.merchantId ?? user?.id ?? '';

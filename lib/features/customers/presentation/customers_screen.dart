@@ -657,6 +657,16 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                 final paid = double.tryParse(amountController.text.trim()) ?? 0.0;
                 if (paid <= 0) return;
                 
+                if (paid > customer.totalDebt) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(isAr ? 'مبلغ السداد لا يمكن أن يتجاوز الدين المستحق.' : 'Payment amount cannot exceed the outstanding debt.', style: const TextStyle(fontFamily: 'Tajawal')),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+                
                 final user = ref.read(appUserProvider).value;
                 final merchantId = user?.merchantId ?? user?.id ?? '';
                 final currentShift = ref.read(currentShiftProvider(merchantId)).value;

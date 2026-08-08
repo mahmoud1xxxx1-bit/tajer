@@ -803,17 +803,30 @@ class OrderRepository {
     required String? shiftId,
     required String paymentMethod, // 'cash', 'card', 'transfer'
   }) async {
-    final batch = _firestore.batch();
-    
-    // 1. Update customer total debt
-    final customerRef = _firestore.collection('customers').doc(customerId);
-    final customerDoc = await customerRef.get();
-    if (customerDoc.exists) {
-      batch.update(customerRef, {
+    if (amountPaid <= 0) return;
+
+    // Concurrency Lock: Read current debt using a transaction
+    final canProceed = await _firestore.runTransaction<bool>((transaction) async {
+      final customerRef = _firestore.collection('customers').doc(customerId);
+      final customerDoc = await transaction.get(customerRef);
+      if (!customerDoc.exists) return false;
+
+      final currentDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
+      if (amountPaid > currentDebt) {
+        throw Exception('مبلغ السداد لا يمكن أن يتجاوز الدين المستحق.');
+      }
+      
+      transaction.update(customerRef, {
         'totalDebt': FieldValue.increment(-amountPaid),
         'updatedAt': FieldValue.serverTimestamp(),
       });
-    }
+      return true;
+    });
+
+    if (!canProceed) return;
+
+    final batch = _firestore.batch();
+
 
     // 2. Fetch all unpaid credit orders for this customer to distribute the payment
     final allCreditOrdersSnapshot = await _firestore

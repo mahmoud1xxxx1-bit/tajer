@@ -468,13 +468,13 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                               final currentShift = await ref.read(currentShiftProvider(appUser.merchantId ?? appUser.id).future);
                               bool canCancel = false;
                               
-                              if (currentShift != null && currentShift.endTime == null) {
-                                // Shift is open, allow if expense was made during this shift (with 1-min buffer for clock diffs)
-                                if (expense.createdAt.isAfter(currentShift.startTime.subtract(const Duration(minutes: 1)))) {
+                              if (expense.shiftId != null && expense.shiftId!.isNotEmpty) {
+                                // If the expense is attached to a shift, we can only cancel if it matches the current OPEN shift
+                                if (currentShift != null && currentShift.endTime == null && currentShift.id == expense.shiftId) {
                                   canCancel = true;
                                 }
-                              } else if (currentShift == null) {
-                                // Fallback if no shift system is used (shouldn't happen in normal flow)
+                              } else {
+                                // Fallback if no shift system is used
                                 final now = DateTime.now();
                                 bool isSameDay = now.year == expense.date.year && now.month == expense.date.month && now.day == expense.date.day;
                                 bool isRecent = now.difference(expense.date).inHours < 16;
@@ -501,8 +501,17 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                               );
                               if (!success) return;
                           }
-                          final cancelledExpense = expense.copyWith(isCancelled: true);
-                          ref.read(expenseRepositoryProvider)?.updateExpense(cancelledExpense);
+                          try {
+                            await ref.read(expenseRepositoryProvider)?.cancelExpense(expense);
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(e.toString().replaceAll('Exception: ', ''), style: const TextStyle(fontFamily: 'Tajawal')),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return;
+                          }
                           ActivityLogger.log(
                             user: appUser,
                             actionType: 'Cancel Expense|إلغاء مصروف',

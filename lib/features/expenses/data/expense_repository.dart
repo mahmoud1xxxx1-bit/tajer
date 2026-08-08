@@ -35,6 +35,24 @@ class ExpenseRepository {
     await _expensesRef.doc(expense.id).update(expense.toJson());
   }
 
+  Future<void> cancelExpense(Expense expense) async {
+    // BUG #2 FIX: Verify referenced shift exists and is still open
+    if (expense.shiftId != null && expense.shiftId!.isNotEmpty) {
+      final shiftRef = _firestore.collection('shifts').doc(expense.shiftId);
+      final shiftDoc = await shiftRef.get();
+      if (!shiftDoc.exists) {
+        throw Exception('الوردية المرتبطة بهذا المصروف غير موجودة.');
+      }
+      final data = shiftDoc.data();
+      if (data != null && data['endTime'] != null) {
+        throw Exception('لا يمكن إلغاء هذا المصروف لأن الوردية المرتبطة به مغلقة.');
+      }
+    }
+    
+    final cancelledExpense = expense.copyWith(isCancelled: true);
+    await _expensesRef.doc(expense.id).update(cancelledExpense.toJson());
+  }
+
   Future<void> deleteExpense(String expenseId) async {
     await _expensesRef.doc(expenseId).delete();
   }
