@@ -62,12 +62,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final baseReportsService = ref.watch(reportsServiceProvider);
+    final baseReportsService = ref.watch(activeReportsServiceProvider);
     final currentCurrency = ref.watch(currencyProvider);
     final appUser = ref.watch(appUserProvider).value;
     final canViewCost = appUser?.hasPermission('can_view_cost') ?? false;
 
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final reportScope = ref.watch(reportsScopeProvider);
 
     if (baseReportsService == null) {
       return const Scaffold(
@@ -153,6 +154,31 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                DropdownButton<ReportsScope>(
+                  value: reportScope,
+                  items: [
+                    DropdownMenuItem<ReportsScope>(
+                      value: ReportsScope.branch,
+                      child: Text(
+                        isAr ? 'الفرع الحالي' : 'Current branch',
+                        style: const TextStyle(fontFamily: 'Tajawal'),
+                      ),
+                    ),
+                    DropdownMenuItem<ReportsScope>(
+                      value: ReportsScope.merchant,
+                      child: Text(
+                        isAr ? 'جميع الفروع' : 'All branches',
+                        style: const TextStyle(fontFamily: 'Tajawal'),
+                      ),
+                    ),
+                  ],
+                  onChanged: (scope) {
+                    if (scope != null) {
+                      ref.read(reportsScopeProvider.notifier).state = scope;
+                    }
+                  },
+                ),
+                const SizedBox(width: 12),
                 DropdownButton<String>(
                   value: _selectedFilter,
                   items: ['اليوم', 'أمس', 'قبل يومين', 'أسبوع', 'شهر', 'نصف سنوي', 'سنة'].map((String value) {
