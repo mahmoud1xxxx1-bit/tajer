@@ -3,6 +3,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../domain/branch_inventory.dart';
 
+class BranchInventoryMutation {
+  final String itemType;
+  final String itemId;
+  final double delta;
+  final double legacyMainQuantity;
+
+  const BranchInventoryMutation({
+    required this.itemType,
+    required this.itemId,
+    required this.delta,
+    required this.legacyMainQuantity,
+  });
+}
+
 class BranchInventoryRepository {
   final FirebaseFirestore firestore;
   final String merchantId;
@@ -65,28 +79,84 @@ class BranchInventoryRepository {
     required double delta,
     required double legacyMainQuantity,
   }) async {
-    final id = docId(branchId, itemType, itemId);
-    final itemRef = ref.doc(id);
-    return firestore.runTransaction<double>((tx) async {
-      final snap = await tx.get(itemRef);
-      final current = snap.exists
-          ? (snap.data()?['quantity'] as num?)?.toDouble() ?? 0.0
-          : (branchId == 'main' ? legacyMainQuantity : 0.0);
-      final next = current + delta;
-      if (next < -0.000001) throw Exception('Insufficient branch inventory');
-      tx.set(itemRef, {
-        'id': id,
-        'merchantId': merchantId,
-        'branchId': branchId,
-        'itemId': itemId,
-        'itemType': itemType,
-        'quantity': next < 0 ? 0.0 : next,
-        'initialQuantity': snap.exists
-            ? ((snap.data()?['initialQuantity'] as num?)?.toDouble() ?? current)
-            : current,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      return next < 0 ? 0.0 : next;
+    final result = await changeQuantities(
+      branchId: branchId,
+      mutations: [
+        BranchInventoryMutation(
+          itemType: itemType,
+          itemId: itemId,
+          delta: delta,
+          legacyMainQuantity: legacyMainQuantity,
+        ),
+      ],
+    );
+    return result[docId(branchId, itemType, itemId)]!;
+  }
+
+  /// Applies a complete sale/void inventory effect in one Firestore transaction.
+  /// Every document is read before any write, so concurrent cashiers cannot
+  /// oversell the same branch inventory and a failed item rolls back all items.
+  Future<Map<String, double>> changeQuantities({
+    required String branchId,
+    required List<BranchInventoryMutation> mutations,
+  }) async {
+    if (mutations.isEmpty) return const {};
+
+    // Merge duplicate recipe/product mutations before entering the transaction.
+    final merged = <String, BranchInventoryMutation>{};
+    for (final mutation in mutations) {
+      final key = docId(branchId, mutation.itemType, mutation.itemId);
+      final existing = merged[key];
+      merged[key] = existing == null
+          ? mutation
+          : BranchInventoryMutation(
+              itemType: mutation.itemType,
+              itemId: mutation.itemId,
+              delta: existing.delta + mutation.delta,
+              legacyMainQuantity: mutation.legacyMainQuantity,
+            );
+    }
+
+    return firestore.runTransaction<Map<String, double>>((tx) async {
+      final snapshots = <String, DocumentSnapshot<Map<String, dynamic>>>{};
+      for (final entry in merged.entries) {
+        snapshots[entry.key] = await tx.get(ref.doc(entry.key));
+      }
+
+      final nextQuantities = <String, double>{};
+      for (final entry in merged.entries) {
+        final mutation = entry.value;
+        final snap = snapshots[entry.key]!;
+        final current = snap.exists
+            ? (snap.data()?['quantity'] as num?)?.toDouble() ?? 0.0
+            : (branchId == 'main' ? mutation.legacyMainQuantity : 0.0);
+        final next = current + mutation.delta;
+        if (next < -0.000001) {
+          throw Exception('Insufficient branch inventory: ${mutation.itemId}');
+        }
+        nextQuantities[entry.key] = next < 0 ? 0.0 : next;
+      }
+
+      for (final entry in merged.entries) {
+        final mutation = entry.value;
+        final snap = snapshots[entry.key]!;
+        final current = snap.exists
+            ? (snap.data()?['quantity'] as num?)?.toDouble() ?? 0.0
+            : (branchId == 'main' ? mutation.legacyMainQuantity : 0.0);
+        tx.set(ref.doc(entry.key), {
+          'id': entry.key,
+          'merchantId': merchantId,
+          'branchId': branchId,
+          'itemId': mutation.itemId,
+          'itemType': mutation.itemType,
+          'quantity': nextQuantities[entry.key],
+          'initialQuantity': snap.exists
+              ? ((snap.data()?['initialQuantity'] as num?)?.toDouble() ?? current)
+              : current,
+          'updatedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+      return nextQuantities;
     });
   }
 }
