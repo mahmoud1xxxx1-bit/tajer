@@ -41,6 +41,50 @@ class SupplierRepository {
     await _suppliersRef.doc(supplier.id).update(supplier.toJson());
   }
 
+  Future<void> addSupplierDebt({
+    required String supplierId,
+    required double amount,
+    required String branchId,
+    required String transactionId,
+    required String description,
+    required DateTime occurredAt,
+  }) async {
+    if (amount <= 0) {
+      throw Exception('قيمة الدين يجب أن تكون أكبر من صفر.');
+    }
+    if (branchId.trim().isEmpty) {
+      throw Exception('تعذر تحديد الفرع المرتبط بالدين.');
+    }
+
+    final supplierRef = _suppliersRef.doc(supplierId);
+    final supplierTxRef = supplierRef.collection('transactions').doc(transactionId);
+
+    await _firestore.runTransaction((transaction) async {
+      final supplierSnapshot = await transaction.get(supplierRef);
+      if (!supplierSnapshot.exists || supplierSnapshot.data() == null) {
+        throw Exception('المورد غير موجود.');
+      }
+
+      transaction.update(supplierRef, {
+        'totalDebt': FieldValue.increment(amount),
+      });
+      transaction.set(supplierTxRef, {
+        'id': transactionId,
+        'supplierId': supplierId,
+        'merchantId': _merchantId,
+        'branchId': branchId,
+        'expenseId': null,
+        'amount': amount,
+        'type': 'debt_addition',
+        'paymentMethod': 'cash',
+        'description': description,
+        'date': Timestamp.fromDate(occurredAt),
+        'createdAt': Timestamp.fromDate(occurredAt),
+        'isCancelled': false,
+      });
+    });
+  }
+
   Future<void> paySupplierDebt({
     required String supplierId,
     required double amountPaid,
@@ -260,7 +304,10 @@ class SupplierRepository {
 final supplierRepositoryProvider = Provider<SupplierRepository?>((ref) {
   final appUser = ref.watch(appUserProvider).value;
   if (appUser == null) return null;
-  return SupplierRepository(FirebaseFirestore.instance, appUser.merchantId ?? appUser.id);
+  return SupplierRepository(
+    FirebaseFirestore.instance,
+    appUser.merchantId ?? appUser.id,
+  );
 });
 
 final suppliersStreamProvider = StreamProvider<List<Supplier>>((ref) {
