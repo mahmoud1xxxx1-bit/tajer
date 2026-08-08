@@ -119,6 +119,23 @@ class OrderBranchInventoryService {
         'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
       });
     }
-    await batch.commit();
+
+    try {
+      await batch.commit();
+    } catch (e) {
+      // Inventory and its audit trail must behave as one logical operation.
+      // If the log write fails, reverse the exact inventory mutation before
+      // surfacing the failure to the caller.
+      final rollback = mutations
+          .map((mutation) => BranchInventoryMutation(
+                itemType: mutation.itemType,
+                itemId: mutation.itemId,
+                delta: -mutation.delta,
+                legacyMainQuantity: mutation.legacyMainQuantity,
+              ))
+          .toList();
+      await repository.changeQuantities(branchId: order.branchId, mutations: rollback);
+      rethrow;
+    }
   }
 }
