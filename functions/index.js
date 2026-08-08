@@ -26,8 +26,9 @@ exports.captureOrderCostSnapshot = onDocumentCreated(
       .collection('order_cost_snapshots')
       .doc(orderId);
 
-    // Idempotency: Firestore triggers are at-least-once. Never overwrite a
-    // historical snapshot that has already been captured for this order.
+    // Firestore triggers are at-least-once. The historical cost of an order is
+    // immutable, so an already-captured snapshot must never be overwritten by a
+    // retry or by a later product cost change.
     const existing = await targetRef.get();
     if (existing.exists) return;
 
@@ -50,7 +51,7 @@ exports.captureOrderCostSnapshot = onDocumentCreated(
       }
     }
 
-    let totalCost = 0;
+    let calculatedTotalCost = 0;
     let complete = true;
     const protectedItems = rawItems.map((item) => {
       const productId = String(item?.productId || '').trim();
@@ -59,15 +60,14 @@ exports.captureOrderCostSnapshot = onDocumentCreated(
         : 0;
       const unitCost = costs.get(productId);
       if (unitCost === undefined) complete = false;
-      const safeUnitCost = unitCost ?? 0;
-      const lineCost = safeUnitCost * quantity;
-      totalCost += lineCost;
+      const lineCost = unitCost === undefined ? null : unitCost * quantity;
+      if (lineCost !== null) calculatedTotalCost += lineCost;
       return {
         productId,
         productName: String(item?.productName || ''),
         quantity,
         unitCost: unitCost ?? null,
-        lineCost: unitCost === undefined ? null : lineCost,
+        lineCost,
       };
     });
 
@@ -76,7 +76,10 @@ exports.captureOrderCostSnapshot = onDocumentCreated(
       orderId,
       branchId: String(order.branchId || 'main'),
       items: protectedItems,
-      totalCost,
+      // A partial total must never masquerade as valid profit data. Readers only
+      // consume numeric totalCost values, so null makes COGS completeness fail
+      // closed until all sold items have an authoritative cost snapshot.
+      totalCost: complete ? calculatedTotalCost : null,
       isComplete: complete,
       source: 'trusted_server_trigger',
       orderCreatedAt: order.createdAt || null,
