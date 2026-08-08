@@ -109,7 +109,7 @@ class SetupChecklistCard extends ConsumerWidget {
               isCompleted: hasShift,
               title: OnboardingL10n.get('setupStep3', isAr),
               icon: Icons.point_of_sale,
-              onTap: () => context.push('/start_shift'),
+              onTap: () => onNavigateToTab(1),
             ),
             _buildStepItem(
               context,
