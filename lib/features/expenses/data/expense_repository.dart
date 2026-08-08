@@ -1,6 +1,7 @@
 import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../branches/presentation/branch_context.dart';
 import '../domain/expense.dart';
@@ -13,6 +14,25 @@ class ExpenseRepository {
 
   CollectionReference<Map<String, dynamic>> get _expensesRef =>
       _firestore.collection('merchants').doc(_merchantId).collection('expenses');
+
+  Future<String> _selectedBranchId() async {
+    final prefs = await SharedPreferences.getInstance();
+    final value = prefs.getString('selected_branch_$_merchantId')?.trim();
+    return value == null || value.isEmpty ? 'main' : value;
+  }
+
+  Future<DocumentSnapshot<Map<String, dynamic>>?> _openShiftForBranch(String branchId) async {
+    final snap = await _firestore
+        .collection('shifts')
+        .where('merchantId', isEqualTo: _merchantId)
+        .where('status', isEqualTo: 'open')
+        .get();
+    for (final doc in snap.docs) {
+      final docBranchId = doc.data()['branchId']?.toString() ?? 'main';
+      if (docBranchId == branchId) return doc;
+    }
+    return null;
+  }
 
   Stream<List<Expense>> watchExpenses({String branchId = 'main'}) {
     return _expensesRef.withConverter(
@@ -33,22 +53,34 @@ class ExpenseRepository {
   }
 
   Future<void> addExpense(Expense expense) async {
-    // Drawer expenses must be pinned to the exact open shift. This prevents a
-    // later branch switch from changing which historical drawer is affected.
+    final branchId = await _selectedBranchId();
+    String? shiftId = expense.shiftId;
+
     if (expense.isFromShiftDrawer && expense.paymentMethod == 'cash') {
-      if (expense.shiftId == null || expense.shiftId!.isEmpty) {
+      final openShift = await _openShiftForBranch(branchId);
+      if (openShift == null) {
         throw Exception('لا يمكن خصم المصروف من الدرج بدون وردية مفتوحة في هذا الفرع.');
       }
-      final shift = await _firestore.collection('shifts').doc(expense.shiftId).get(const GetOptions(source: Source.serverAndCache));
+      shiftId = openShift.id;
+    }
+
+    final normalized = expense.copyWith(
+      branchId: branchId,
+      shiftId: shiftId,
+    );
+
+    if (normalized.shiftId != null && normalized.shiftId!.isNotEmpty) {
+      final shift = await _firestore.collection('shifts').doc(normalized.shiftId).get(const GetOptions(source: Source.serverAndCache));
       if (!shift.exists) throw Exception('الوردية المرتبطة بالمصروف غير موجودة.');
       final data = shift.data()!;
-      final branchId = data['branchId']?.toString() ?? 'main';
+      final shiftBranchId = data['branchId']?.toString() ?? 'main';
       final status = data['status']?.toString();
-      if (branchId != expense.branchId || status != 'open') {
+      if (shiftBranchId != normalized.branchId || status != 'open') {
         throw Exception('لا يمكن تسجيل المصروف على وردية مغلقة أو فرع مختلف.');
       }
     }
-    await _expensesRef.doc(expense.id).set(expense.toJson());
+
+    await _expensesRef.doc(normalized.id).set(normalized.toJson());
   }
 
   Future<void> updateExpense(Expense expense) async {
@@ -58,8 +90,6 @@ class ExpenseRepository {
   Future<void> cancelExpense(Expense expense) async {
     if (expense.isCancelled) return;
 
-    // New multi-branch records have an exact shift snapshot. This is the
-    // authoritative path and keeps closed-shift history immutable.
     if (expense.shiftId != null && expense.shiftId!.isNotEmpty) {
       final shift = await _firestore.collection('shifts').doc(expense.shiftId).get(const GetOptions(source: Source.serverAndCache));
       if (!shift.exists) {
@@ -75,8 +105,6 @@ class ExpenseRepository {
         throw Exception('لا يمكن إلغاء هذا المصروف لأن الوردية المرتبطة به مغلقة.');
       }
     } else {
-      // Legacy v107 fallback: records had no shiftId. Keep the existing safety
-      // behaviour, but restrict the open-shift match to this branch in memory.
       final openShifts = await _firestore
           .collection('shifts')
           .where('merchantId', isEqualTo: expense.merchantId)
