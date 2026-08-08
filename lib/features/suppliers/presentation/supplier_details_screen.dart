@@ -518,19 +518,29 @@ class SupplierDetailsScreen extends ConsumerWidget {
                 final appUser = ref.read(appUserProvider).value;
                 if (appUser != null) {
                   final isAr = Localizations.localeOf(context).languageCode == 'ar';
+                  final title = currentSupplier.isActive 
+                    ? (isAr ? 'تأكيد: إلغاء المورد' : 'Warning: Cancel Supplier')
+                    : (isAr ? 'تأكيد: استعادة المورد' : 'Confirm: Restore Supplier');
+                  final warning = currentSupplier.isActive
+                    ? (isAr ? 'سيتم شطب المورد من القائمة. لن يتم مسح بياناته السابقة.' : 'Supplier will be crossed out. Data will remain.')
+                    : (isAr ? 'سيتم استعادة المورد وإزالة الشطب.' : 'Supplier will be restored.');
+                    
                   final success = await PinConfirmationDialog.requirePinOrSetup(
                     context, 
                     appUser,
-                    title: isAr ? 'تأكيد: أرشفة المورد' : 'Warning: Archive Supplier',
-                    warning: isAr ? 'سيتم أرشفة المورد ولن يظهر في القائمة الرئيسية. لن يتم مسح بياناته السابقة.' : 'Supplier will be archived and hidden. Data will remain.',
+                    title: title,
+                    warning: warning,
                   );
                   if (!success) return;
                 }
-                final archivedSupplier = currentSupplier.copyWith(isActive: false);
-                ref.read(supplierRepositoryProvider)?.updateSupplier(archivedSupplier);
+                final updatedSupplier = currentSupplier.copyWith(isActive: !currentSupplier.isActive);
+                ref.read(supplierRepositoryProvider)?.updateSupplier(updatedSupplier);
                 if (context.mounted) Navigator.pop(context); // Close details screen too
               },
-              child: const Text('أرشفة', style: TextStyle(color: Colors.orange)),
+              child: Text(
+                currentSupplier.isActive ? 'إلغاء المورد' : 'استعادة المورد', 
+                style: TextStyle(color: currentSupplier.isActive ? Colors.red : Colors.green)
+              ),
             ),
             ElevatedButton(
               onPressed: () {

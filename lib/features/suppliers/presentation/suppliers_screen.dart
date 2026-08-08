@@ -31,7 +31,7 @@ class SuppliersScreen extends ConsumerWidget {
       ),
       body: suppliersAsync.when(
         data: (suppliers) {
-          final activeSuppliers = suppliers.where((s) => s.isActive).toList();
+          final activeSuppliers = suppliers;
           if (activeSuppliers.isEmpty) {
             return Center(child: Text(AppLocalizations.of(context)!.text123, style: TextStyle(fontFamily: 'Tajawal')));
           }
@@ -115,7 +115,13 @@ class SuppliersScreen extends ConsumerWidget {
                           children: [
                             Text(
                               supplier.name,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 17),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold, 
+                                fontFamily: 'Tajawal', 
+                                fontSize: 17,
+                                decoration: !supplier.isActive ? TextDecoration.lineThrough : null,
+                                color: !supplier.isActive ? Colors.grey : null,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),

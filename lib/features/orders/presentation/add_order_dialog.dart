@@ -16,6 +16,7 @@ import '../../products/domain/product.dart';
 import '../../customers/domain/customer.dart';
 import '../../../core/services/limits_service.dart';
 import '../../../core/services/guest_limit_service.dart';
+import '../../../core/providers/store_profile_provider.dart';
 
 class AddOrderDialog extends ConsumerStatefulWidget {
   const AddOrderDialog({super.key});
@@ -159,7 +160,14 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       }
 
       final appUser = ref.read(appUserProvider).value;
+      final storeProfile = ref.read(storeProfileStreamProvider).value;
+      final defaultTax = storeProfile?.defaultTaxPercentage ?? 0.0;
+      final defaultIsInclusive = storeProfile?.defaultIsTaxInclusive ?? true;
       
+      final hasCustomTax = selectedProduct.taxPercentage != null && selectedProduct.taxPercentage! > 0;
+      final finalTax = hasCustomTax ? selectedProduct.taxPercentage : (defaultTax > 0 ? defaultTax : null);
+      final finalIsInclusive = hasCustomTax ? selectedProduct.isTaxInclusive : defaultIsInclusive;
+
       final newOrder = AppOrder(
         id: Uuid().v4(),
         merchantId: ref.read(appUserProvider).value?.merchantId ?? user.uid,
@@ -172,8 +180,8 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
             quantity: quantity,
             price: selectedProduct.price,
             total: total,
-            isTaxInclusive: selectedProduct.isTaxInclusive,
-            taxPercentage: selectedProduct.taxPercentage,
+            isTaxInclusive: finalIsInclusive,
+            taxPercentage: finalTax,
             costPrice: selectedProduct.costPrice,
           )
         ],

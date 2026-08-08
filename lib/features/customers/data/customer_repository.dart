@@ -58,12 +58,15 @@ class CustomerRepository {
           .collection('orders')
           .where('merchantId', isEqualTo: merchantId)
           .where('customerId', isEqualTo: customerId)
-          .where('paymentMethod', isEqualTo: 'credit')
-          .where('status', isNotEqualTo: 'cancelled')
           .get();
           
       bool hasUnpaid = unpaidOrders.docs.any((doc) {
         final orderData = doc.data();
+        final paymentMethod = orderData['paymentMethod'] as String?;
+        final status = orderData['status'] as String?;
+        
+        if (paymentMethod != 'credit' || status == 'cancelled') return false;
+        
         final total = (orderData['total'] as num?)?.toDouble() ?? 0.0;
         final paidAmount = (orderData['paidAmount'] as num?)?.toDouble() ?? 0.0;
         return (total - paidAmount) > 0.01;

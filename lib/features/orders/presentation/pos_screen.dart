@@ -42,6 +42,14 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   String? _selectedCategoryId;
 
   void _addToCart(Product product, {List<String> selectedModifiers = const []}) {
+    final storeProfile = ref.read(storeProfileStreamProvider).value;
+    final defaultTax = storeProfile?.defaultTaxPercentage ?? 0.0;
+    final defaultIsInclusive = storeProfile?.defaultIsTaxInclusive ?? true;
+
+    final hasCustomTax = product.taxPercentage != null && product.taxPercentage! > 0;
+    final finalTax = hasCustomTax ? product.taxPercentage : (defaultTax > 0 ? defaultTax : null);
+    final finalIsInclusive = hasCustomTax ? product.isTaxInclusive : defaultIsInclusive;
+
     setState(() {
       final existingIndex = _cart.indexWhere((item) => item.productId == product.id && listEquals(item.selectedModifiers, selectedModifiers));
       if (existingIndex >= 0) {
@@ -62,8 +70,8 @@ class _PosScreenState extends ConsumerState<PosScreen> {
             price: product.price,
             total: product.price,
             selectedModifiers: List.from(selectedModifiers),
-            isTaxInclusive: product.isTaxInclusive,
-            taxPercentage: product.taxPercentage,
+            isTaxInclusive: finalIsInclusive,
+            taxPercentage: finalTax,
             costPrice: product.costPrice,
           ));
         } else {
