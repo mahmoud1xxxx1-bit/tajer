@@ -472,7 +472,22 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                           );
                           if (!success) return;
                         }
-                        ref.read(customerRepositoryProvider).deleteCustomer(customer.id);
+                        try {
+                          await ref.read(customerRepositoryProvider).deleteCustomer(customer.id);
+                        } catch (e) {
+                          if (context.mounted) {
+                            showDialog(
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                title: Text(Localizations.localeOf(ctx).languageCode == 'ar' ? 'تنبيه' : 'Warning', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
+                                content: Text(e.toString().replaceAll('Exception: ', ''), style: const TextStyle(fontFamily: 'Tajawal')),
+                                actions: [
+                                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('حسناً', style: TextStyle(fontFamily: 'Tajawal')))
+                                ],
+                              )
+                            );
+                          }
+                        }
                       } else if (value == 'print') {
                         final orders = ref.read(ordersStreamProvider).value ?? [];
                         try {

@@ -41,7 +41,37 @@ class CustomerRepository {
   }
 
   Future<void> deleteCustomer(String customerId) async {
-    await _firestore.collection('customers').doc(customerId).delete();
+    final docRef = _firestore.collection('customers').doc(customerId);
+    final snapshot = await docRef.get();
+    
+    if (snapshot.exists) {
+      final data = snapshot.data();
+      final totalDebt = (data?['totalDebt'] as num?)?.toDouble() ?? 0.0;
+      
+      if (totalDebt.abs() > 0.01) {
+        throw Exception('لا يمكن حذف العميل لأن عليه مبلغاً مستحقاً قدره $totalDebt ر.س. يرجى تسوية المبلغ أولاً.');
+      }
+
+      final unpaidOrders = await _firestore
+          .collection('orders')
+          .where('customerId', isEqualTo: customerId)
+          .where('paymentMethod', isEqualTo: 'credit')
+          .where('status', isNotEqualTo: 'cancelled')
+          .get();
+          
+      bool hasUnpaid = unpaidOrders.docs.any((doc) {
+        final orderData = doc.data();
+        final total = (orderData['total'] as num?)?.toDouble() ?? 0.0;
+        final paidAmount = (orderData['paidAmount'] as num?)?.toDouble() ?? 0.0;
+        return (total - paidAmount) > 0.01;
+      });
+
+      if (hasUnpaid) {
+        throw Exception('لا يمكن حذف العميل لوجود فواتير آجلة غير مسددة.');
+      }
+
+      await docRef.delete();
+    }
   }
 
   Future<void> moveCustomersToFolder(List<String> customerIds, String? folderName) async {
