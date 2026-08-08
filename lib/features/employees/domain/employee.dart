@@ -7,6 +7,7 @@ class Employee {
   final String email;
   final String role; // 'admin', 'cashier'
   final DateTime createdAt;
+  final List<String> assignedBranchIds;
 
   Employee({
     required this.id,
@@ -14,15 +15,22 @@ class Employee {
     required this.email,
     required this.role,
     required this.createdAt,
+    this.assignedBranchIds = const ['main'],
   });
 
   factory Employee.fromJson(Map<String, dynamic> json) {
+    final rawBranches = json['assignedBranchIds'];
+    final branches = rawBranches is List
+        ? rawBranches.map((value) => value.toString()).where((id) => id.isNotEmpty).toList()
+        : <String>['main'];
+
     return Employee(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      email: json['email'] as String? ?? '',
-      role: json['role'] as String? ?? 'cashier',
+      id: json['id']?.toString() ?? '',
+      name: json['name']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      role: json['role']?.toString() ?? 'cashier',
       createdAt: safeParseDate(json['createdAt']),
+      assignedBranchIds: branches.isEmpty ? const ['main'] : branches,
     );
   }
 
@@ -33,6 +41,7 @@ class Employee {
       'email': email,
       'role': role,
       'createdAt': Timestamp.fromDate(createdAt),
+      'assignedBranchIds': assignedBranchIds.isEmpty ? const ['main'] : assignedBranchIds,
     };
   }
 }
