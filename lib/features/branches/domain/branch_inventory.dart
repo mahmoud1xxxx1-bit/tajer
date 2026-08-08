@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'branch.dart';
 
 class BranchInventory {
   final String id;
@@ -35,7 +36,7 @@ class BranchInventory {
     return BranchInventory(
       id: json['id']?.toString() ?? '',
       merchantId: json['merchantId']?.toString() ?? '',
-      branchId: json['branchId']?.toString() ?? 'main',
+      branchId: resolveBranchId(json['branchId']),
       itemId: json['itemId']?.toString() ?? '',
       itemType: json['itemType']?.toString() ?? 'product',
       quantity: (json['quantity'] as num?)?.toDouble() ?? 0.0,
