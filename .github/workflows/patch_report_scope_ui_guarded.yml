@@ -25,8 +25,7 @@ jobs:
           text = path.read_text(encoding='utf-8')
 
           old = "final reportScope = ref.watch(reportsScopeProvider);"
-          new = """final reportScope = ref.watch(effectiveReportsScopeProvider);
-    final canViewAllBranches = appUser?.role == 'merchant';"""
+          new = "final reportScope = ref.watch(effectiveReportsScopeProvider);\n    final canViewAllBranches = appUser?.role == 'merchant';"
           if old in text:
               if text.count(old) != 1:
                   raise SystemExit(f'Unexpected scope watch count: {text.count(old)}')
@@ -34,21 +33,8 @@ jobs:
           elif new not in text:
               raise SystemExit('Report scope watch marker not found')
 
-          old = """                    DropdownMenuItem<ReportsScope>(
-                      value: ReportsScope.merchant,
-                      child: Text(
-                        isAr ? 'جميع الفروع' : 'All branches',
-                        style: const TextStyle(fontFamily: 'Tajawal'),
-                      ),
-                    ),"""
-          new = """                    if (canViewAllBranches)
-                      DropdownMenuItem<ReportsScope>(
-                        value: ReportsScope.merchant,
-                        child: Text(
-                          isAr ? 'جميع الفروع' : 'All branches',
-                          style: const TextStyle(fontFamily: 'Tajawal'),
-                        ),
-                      ),"""
+          old = "                    DropdownMenuItem<ReportsScope>(\n                      value: ReportsScope.merchant,\n                      child: Text(\n                        isAr ? 'جميع الفروع' : 'All branches',\n                        style: const TextStyle(fontFamily: 'Tajawal'),\n                      ),\n                    ),"
+          new = "                    if (canViewAllBranches)\n                      DropdownMenuItem<ReportsScope>(\n                        value: ReportsScope.merchant,\n                        child: Text(\n                          isAr ? 'جميع الفروع' : 'All branches',\n                          style: const TextStyle(fontFamily: 'Tajawal'),\n                        ),\n                      ),"
           if old in text:
               if text.count(old) != 1:
                   raise SystemExit(f'Unexpected all-branches item count: {text.count(old)}')
@@ -57,9 +43,7 @@ jobs:
               raise SystemExit('All-branches dropdown marker not found')
 
           old = "title: AppLocalizations.of(context)!.text107,"
-          new = """title: reportScope == ReportsScope.merchant
-                            ? (isAr ? 'إجمالي الديون المستحقة' : 'Total Outstanding Debt')
-                            : (isAr ? 'الديون المستحقة من مبيعات هذا الفرع' : 'Outstanding Debt from This Branch'),"""
+          new = "title: reportScope == ReportsScope.merchant\n                            ? (isAr ? 'إجمالي الديون المستحقة' : 'Total Outstanding Debt')\n                            : (isAr ? 'الديون المستحقة من مبيعات هذا الفرع' : 'Outstanding Debt from This Branch'),"
           if old in text:
               if text.count(old) != 1:
                   raise SystemExit(f'Unexpected debt title count: {text.count(old)}')
