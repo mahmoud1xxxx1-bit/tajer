@@ -31,6 +31,18 @@ void main() {
       expect(rules, contains("'orderCount'"));
     });
 
+    test('inventory audit log is append-only for cashiers', () {
+      expect(rules, contains('match /inventory_logs/{logId}'));
+      expect(
+        rules,
+        contains("allow create: if hasPermission(merchantId, 'can_manage_inventory') || hasPermission(merchantId, 'can_create_orders');"),
+      );
+      expect(
+        rules,
+        contains("allow update, delete: if hasPermission(merchantId, 'can_manage_inventory');"),
+      );
+    });
+
     test('branch configuration is owner controlled', () {
       expect(rules, contains('match /branches/{branchId}'));
       expect(
