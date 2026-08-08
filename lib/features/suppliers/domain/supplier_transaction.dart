@@ -5,6 +5,8 @@ class SupplierTransaction {
   final String id;
   final String supplierId;
   final String merchantId;
+  final String branchId;
+  final String? expenseId;
   final double amount;
   final String type; // 'debt_addition', 'payment'
   final String? paymentMethod; // 'cash', 'network'
@@ -17,6 +19,8 @@ class SupplierTransaction {
     required this.id,
     required this.supplierId,
     required this.merchantId,
+    this.branchId = 'main',
+    this.expenseId,
     required this.amount,
     required this.type,
     this.paymentMethod = 'cash',
@@ -31,6 +35,8 @@ class SupplierTransaction {
       id: json['id'] ?? '',
       supplierId: json['supplierId'] ?? '',
       merchantId: json['merchantId'] ?? '',
+      branchId: json['branchId']?.toString() ?? 'main',
+      expenseId: json['expenseId']?.toString(),
       amount: (json['amount'] ?? 0.0).toDouble(),
       type: json['type'] ?? 'payment',
       paymentMethod: json['paymentMethod'] ?? 'cash',
@@ -46,6 +52,8 @@ class SupplierTransaction {
       'id': id,
       'supplierId': supplierId,
       'merchantId': merchantId,
+      'branchId': branchId,
+      'expenseId': expenseId,
       'amount': amount,
       'type': type,
       'paymentMethod': paymentMethod,
@@ -60,6 +68,8 @@ class SupplierTransaction {
     String? id,
     String? supplierId,
     String? merchantId,
+    String? branchId,
+    String? expenseId,
     double? amount,
     String? type,
     String? paymentMethod,
@@ -72,6 +82,8 @@ class SupplierTransaction {
       id: id ?? this.id,
       supplierId: supplierId ?? this.supplierId,
       merchantId: merchantId ?? this.merchantId,
+      branchId: branchId ?? this.branchId,
+      expenseId: expenseId ?? this.expenseId,
       amount: amount ?? this.amount,
       type: type ?? this.type,
       paymentMethod: paymentMethod ?? this.paymentMethod,
