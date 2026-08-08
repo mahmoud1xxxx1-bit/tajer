@@ -52,8 +52,11 @@ class CustomerRepository {
         throw Exception('لا يمكن حذف العميل لأن عليه مبلغاً مستحقاً قدره $totalDebt ر.س. يرجى تسوية المبلغ أولاً.');
       }
 
+      final merchantId = data?['merchantId'] as String?;
+
       final unpaidOrders = await _firestore
           .collection('orders')
+          .where('merchantId', isEqualTo: merchantId)
           .where('customerId', isEqualTo: customerId)
           .where('paymentMethod', isEqualTo: 'credit')
           .where('status', isNotEqualTo: 'cancelled')
