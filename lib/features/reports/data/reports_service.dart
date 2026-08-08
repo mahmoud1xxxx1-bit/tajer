@@ -22,8 +22,21 @@ enum ReportsScope {
   merchant,
 }
 
+ReportsScope resolveReportsScope({
+  required String? role,
+  required ReportsScope requested,
+}) {
+  return role == 'merchant' ? requested : ReportsScope.branch;
+}
+
 final reportsScopeProvider = StateProvider<ReportsScope>((ref) {
   return ReportsScope.branch;
+});
+
+final effectiveReportsScopeProvider = Provider<ReportsScope>((ref) {
+  final requested = ref.watch(reportsScopeProvider);
+  final role = ref.watch(appUserProvider).value?.role;
+  return resolveReportsScope(role: role, requested: requested);
 });
 
 class SalesData {
@@ -322,7 +335,7 @@ final consolidatedReportsServiceProvider = Provider<ReportsService?>((ref) {
 });
 
 final activeReportsServiceProvider = Provider<ReportsService?>((ref) {
-  final scope = ref.watch(reportsScopeProvider);
+  final scope = ref.watch(effectiveReportsScopeProvider);
   return scope == ReportsScope.merchant
       ? ref.watch(consolidatedReportsServiceProvider)
       : ref.watch(reportsServiceProvider);
