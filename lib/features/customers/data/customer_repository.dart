@@ -2,6 +2,7 @@ import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../orders/domain/order.dart';
 import '../domain/customer.dart';
 
 part 'customer_repository.g.dart';
@@ -38,6 +39,59 @@ class CustomerRepository {
   Future<void> updateCustomer(Customer customer) async {
     final docRef = _firestore.collection('customers').doc(customer.id);
     await docRef.update(customer.toJson());
+  }
+
+  /// Returns the complete merchant-wide order history for one customer.
+  ///
+  /// Customer balances are merchant-wide in Tajer, so customer statements must
+  /// never be built from the branch-scoped order stream. Legacy orders without
+  /// branchId remain readable through AppOrder's main-branch fallback.
+  Future<List<AppOrder>> getCustomerOrdersAcrossBranches({
+    required String merchantId,
+    required String customerId,
+  }) async {
+    final snapshot = await _firestore
+        .collection('orders')
+        .where('merchantId', isEqualTo: merchantId)
+        .where('customerId', isEqualTo: customerId)
+        .get(const GetOptions(source: Source.serverAndCache));
+
+    final orders = snapshot.docs.map((doc) {
+      final data = Map<String, dynamic>.from(doc.data());
+      data['id'] = doc.id;
+      data['merchantId'] = data['merchantId']?.toString() ?? merchantId;
+      data['customerId'] = data['customerId']?.toString() ?? customerId;
+      data['customerName'] = data['customerName']?.toString() ?? '';
+      data['total'] = (data['total'] as num?)?.toDouble() ?? 0.0;
+      data['paidAmount'] = (data['paidAmount'] as num?)?.toDouble() ?? 0.0;
+      data['isCredit'] = data['isCredit'] as bool? ?? false;
+      data['status'] = data['status']?.toString() ?? 'pending';
+
+      if (data['items'] == null && data['productId'] != null) {
+        data['items'] = [
+          {
+            'productId': data['productId']?.toString() ?? '',
+            'productName': data['productName']?.toString() ?? '',
+            'quantity': (data['quantity'] as num?)?.toInt() ?? 0,
+            'price': (data['price'] as num?)?.toDouble() ?? 0.0,
+            'total': (data['total'] as num?)?.toDouble() ?? 0.0,
+          }
+        ];
+      } else if (data['items'] != null) {
+        data['items'] = List<Map<String, dynamic>>.from(
+          (data['items'] as List).map(
+            (item) => Map<String, dynamic>.from(item as Map),
+          ),
+        );
+      } else {
+        data['items'] = <Map<String, dynamic>>[];
+      }
+
+      return AppOrder.fromJson(data);
+    }).toList();
+
+    orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return orders;
   }
 
   Future<void> deleteCustomer(String customerId) async {
@@ -118,5 +172,3 @@ Stream<List<Customer>> customersStream(CustomersStreamRef ref) {
         },
       );
 }
-
-
