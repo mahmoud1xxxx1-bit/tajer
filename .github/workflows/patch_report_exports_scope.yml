@@ -1,0 +1,67 @@
+name: Patch Report Exports Scope
+
+on:
+  push:
+    branches: [ "feature/multi-branch-v1" ]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ github.actor != 'github-actions[bot]' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/multi-branch-v1
+          fetch-depth: 0
+
+      - name: Apply guarded report export patch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('lib/features/reports/presentation/reports_screen.dart')
+          text = path.read_text(encoding='utf-8')
+
+          old = "await ExcelService.exportToExcel(reportsService, currentCurrency.code);"
+          new = """await ExcelService.exportToExcel(
+                  reportsService,
+                  currentCurrency.code,
+                  isAr: isAr,
+                  scopeLabel: reportScope == ReportsScope.merchant
+                      ? (isAr ? 'جميع الفروع' : 'All branches')
+                      : (isAr ? 'الفرع الحالي' : 'Current branch'),
+                  isConsolidated: reportScope == ReportsScope.merchant,
+                  canViewCost: canViewCost,
+                );"""
+          if text.count(old) != 1:
+              raise SystemExit(f'Expected one Excel export marker, found {text.count(old)}')
+          text = text.replace(old, new, 1)
+
+          old = """                  vatNumber: vatNumber,
+                  isAr: isAr,
+                );"""
+          new = """                  vatNumber: vatNumber,
+                  isAr: isAr,
+                  scopeLabel: reportScope == ReportsScope.merchant
+                      ? (isAr ? 'جميع الفروع' : 'All branches')
+                      : (isAr ? 'الفرع الحالي' : 'Current branch'),
+                  canViewCost: canViewCost,
+                );"""
+          if text.count(old) != 1:
+              raise SystemExit(f'Expected one PDF export marker, found {text.count(old)}')
+          text = text.replace(old, new, 1)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+          git diff --check
+          CHANGED=$(git diff --name-only)
+          test "$CHANGED" = "lib/features/reports/presentation/reports_screen.dart"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/features/reports/presentation/reports_screen.dart
+          git commit -m "feat(reports): propagate bilingual scope and cost permissions to exports"
+          git push origin HEAD:feature/multi-branch-v1
