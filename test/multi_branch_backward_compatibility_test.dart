@@ -4,6 +4,7 @@ import 'package:tajer/features/expenses/domain/expense.dart';
 import 'package:tajer/features/inventory_log/domain/inventory_log.dart';
 import 'package:tajer/features/orders/domain/order.dart';
 import 'package:tajer/features/shifts/domain/shift.dart';
+import 'package:tajer/features/suppliers/domain/supplier_transaction.dart';
 
 void main() {
   group('Multi-branch backward compatibility', () {
@@ -24,7 +25,6 @@ void main() {
         'total': 0,
         'createdAt': DateTime(2026, 8, 8).toIso8601String(),
       });
-
       expect(order.branchId, BranchIds.main);
       expect(order.toJson()['branchId'], BranchIds.main);
     });
@@ -39,7 +39,6 @@ void main() {
         total: 50,
         createdAt: DateTime(2026, 8, 8),
       );
-
       final json = order.toJson();
       expect(json['branchId'], 'branch-2');
       expect(AppOrder.fromJson(json).branchId, 'branch-2');
@@ -108,6 +107,44 @@ void main() {
       final decoded = Expense.fromJson(json);
       expect(decoded.branchId, 'branch-2');
       expect(decoded.shiftId, 'shift-2');
+    });
+
+    test('legacy supplier transaction defaults to main and no linked expense', () {
+      final now = DateTime(2026, 8, 8, 12);
+      final tx = SupplierTransaction.fromJson({
+        'id': 'supplier-tx-107',
+        'supplierId': 'supplier-1',
+        'merchantId': 'merchant-1',
+        'amount': 100,
+        'type': 'payment',
+        'description': 'legacy payment',
+        'date': now.toIso8601String(),
+        'createdAt': now.toIso8601String(),
+      });
+      expect(tx.branchId, BranchIds.main);
+      expect(tx.expenseId, isNull);
+    });
+
+    test('new supplier payment preserves branch and exact linked expense', () {
+      final now = DateTime(2026, 8, 8, 13);
+      final tx = SupplierTransaction(
+        id: 'supplier-tx-2',
+        supplierId: 'supplier-1',
+        merchantId: 'merchant-1',
+        branchId: 'branch-2',
+        expenseId: 'expense-supplier-2',
+        amount: 100,
+        type: 'payment',
+        description: 'payment',
+        date: now,
+        createdAt: now,
+      );
+      final json = tx.toJson();
+      expect(json['branchId'], 'branch-2');
+      expect(json['expenseId'], 'expense-supplier-2');
+      final decoded = SupplierTransaction.fromJson(json);
+      expect(decoded.branchId, 'branch-2');
+      expect(decoded.expenseId, 'expense-supplier-2');
     });
 
     test('legacy inventory log without branchId belongs to main branch', () {
