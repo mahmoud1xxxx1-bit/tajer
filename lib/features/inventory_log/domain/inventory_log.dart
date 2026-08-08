@@ -4,6 +4,7 @@ import '../../../core/utils/date_parser.dart';
 class InventoryLog {
   final String id;
   final String merchantId;
+  final String branchId;
   final String productId;
   final String productName;
   final double changeQuantity;
@@ -19,6 +20,7 @@ class InventoryLog {
   const InventoryLog({
     required this.id,
     required this.merchantId,
+    this.branchId = 'main',
     required this.productId,
     required this.productName,
     required this.changeQuantity,
@@ -36,6 +38,7 @@ class InventoryLog {
     return InventoryLog(
       id: json['id'] as String,
       merchantId: json['merchantId'] as String,
+      branchId: json['branchId']?.toString() ?? 'main',
       productId: json['productId'] as String,
       productName: json['productName'] as String,
       changeQuantity: (json['changeQuantity'] as num).toDouble(),
@@ -54,6 +57,7 @@ class InventoryLog {
     return {
       'id': id,
       'merchantId': merchantId,
+      'branchId': branchId,
       'productId': productId,
       'productName': productName,
       'changeQuantity': changeQuantity,
@@ -71,6 +75,7 @@ class InventoryLog {
   InventoryLog copyWith({
     String? id,
     String? merchantId,
+    String? branchId,
     String? productId,
     String? productName,
     double? changeQuantity,
@@ -86,6 +91,7 @@ class InventoryLog {
     return InventoryLog(
       id: id ?? this.id,
       merchantId: merchantId ?? this.merchantId,
+      branchId: branchId ?? this.branchId,
       productId: productId ?? this.productId,
       productName: productName ?? this.productName,
       changeQuantity: changeQuantity ?? this.changeQuantity,
