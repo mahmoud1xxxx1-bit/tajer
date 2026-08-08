@@ -26,6 +26,9 @@ class BranchInventoryRepository {
   CollectionReference<Map<String, dynamic>> get ref =>
       firestore.collection('merchants').doc(merchantId).collection('branch_inventory');
 
+  CollectionReference<Map<String, dynamic>> get _logsRef =>
+      firestore.collection('merchants').doc(merchantId).collection('inventory_logs');
+
   String docId(String branchId, String itemType, String itemId) =>
       '${branchId}_${itemType}_$itemId';
 
@@ -72,6 +75,79 @@ class BranchInventoryRepository {
     }, SetOptions(merge: true));
   }
 
+  /// Sets an exact branch quantity and writes the corresponding audit record in
+  /// the same Firestore transaction. This is the canonical path for manual
+  /// stock counts/corrections from product and raw-material screens.
+  Future<double> setQuantityWithAudit({
+    required String branchId,
+    required String itemType,
+    required String itemId,
+    required String itemName,
+    required double quantity,
+    required double legacyMainQuantity,
+    required String reason,
+    String? userEmail,
+    String? userName,
+  }) async {
+    if (quantity < -0.000001) {
+      throw Exception('Branch inventory cannot be negative');
+    }
+
+    final normalizedQuantity = quantity < 0 ? 0.0 : quantity;
+    final id = docId(branchId, itemType, itemId);
+    final inventoryRef = ref.doc(id);
+    final logRef = _logsRef.doc();
+
+    return firestore.runTransaction<double>((tx) async {
+      final snap = await tx.get(inventoryRef);
+      final current = snap.exists
+          ? (snap.data()?['quantity'] as num?)?.toDouble() ?? 0.0
+          : (branchId == 'main' ? legacyMainQuantity : 0.0);
+
+      if ((normalizedQuantity - current).abs() <= 0.000001) return current;
+
+      final initial = snap.exists
+          ? ((snap.data()?['initialQuantity'] as num?)?.toDouble() ?? current)
+          : current;
+
+      tx.set(
+        inventoryRef,
+        {
+          'id': id,
+          'merchantId': merchantId,
+          'branchId': branchId,
+          'itemId': itemId,
+          'itemType': itemType,
+          'quantity': normalizedQuantity,
+          'initialQuantity': initial == 0.0 && current == 0.0
+              ? normalizedQuantity
+              : initial,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+
+      tx.set(logRef, {
+        'id': logRef.id,
+        'merchantId': merchantId,
+        'branchId': branchId,
+        'productId': itemId,
+        'productName': itemName,
+        'itemType': itemType,
+        'changeQuantity': normalizedQuantity - current,
+        'previousQuantity': current,
+        'newQuantity': normalizedQuantity,
+        'reason': reason,
+        'date': FieldValue.serverTimestamp(),
+        'userEmail': userEmail,
+        'userName': userName,
+        'isReverted': false,
+      });
+
+      return normalizedQuantity;
+    });
+  }
+
   Future<double> changeQuantity({
     required String branchId,
     required String itemType,
@@ -102,7 +178,6 @@ class BranchInventoryRepository {
   }) async {
     if (mutations.isEmpty) return const {};
 
-    // Merge duplicate recipe/product mutations before entering the transaction.
     final merged = <String, BranchInventoryMutation>{};
     for (final mutation in mutations) {
       final key = docId(branchId, mutation.itemType, mutation.itemId);
