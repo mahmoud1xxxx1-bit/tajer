@@ -89,9 +89,21 @@ service cloud.firestore {
     }
 
     match /products/{productId} {
-      allow read: if resource == null || hasAccess(resource.data.get('merchantId', ''));
-      allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_manage_products');
-      allow update, delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_products');
+      // Legacy v107 documents may still contain costPrice until the merchant's
+      // one-way migration runs. Fail closed for employees without can_view_cost
+      // so sensitive cost can never be retrieved through the public collection.
+      allow read: if resource == null || (
+        hasAccess(resource.data.get('merchantId', '')) &&
+        (resource.data.get('costPrice', null) == null ||
+         hasPermission(resource.data.get('merchantId', ''), 'can_view_cost'))
+      );
+      allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_manage_products') &&
+        request.resource.data.get('costPrice', null) == null;
+      allow update: if resource == null || (
+        hasPermission(resource.data.get('merchantId', ''), 'can_manage_products') &&
+        request.resource.data.get('costPrice', null) == null
+      );
+      allow delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_products');
     }
     match /customers/{customerId} {
       allow read: if resource == null || hasAccess(resource.data.get('merchantId', ''));
@@ -124,6 +136,11 @@ service cloud.firestore {
     }
 
     match /merchants/{merchantId} {
+      match /product_costs/{productId} {
+        allow read: if hasPermission(merchantId, 'can_view_cost');
+        allow create, update, delete: if hasPermission(merchantId, 'can_manage_products') &&
+          hasPermission(merchantId, 'can_view_cost');
+      }
       match /categories/{categoryId} {
         allow read: if hasAccess(merchantId);
         allow create, update, delete: if hasPermission(merchantId, 'can_manage_products');
