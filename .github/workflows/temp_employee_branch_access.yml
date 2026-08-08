@@ -1,0 +1,374 @@
+name: Temporary Employee Branch Access
+
+on:
+  push:
+    branches: [ feature/multi-branch-v1 ]
+    paths:
+      - '.github/workflows/temp_employee_branch_access.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/multi-branch-v1
+      - name: Patch employee branch assignment
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          # --- Auth repository ---
+          p = Path('lib/features/authentication/data/auth_repository.dart')
+          s = p.read_text()
+
+          old = """          Map<String, dynamic> permissions = {};
+          String empName = 'موظف';"""
+          new = """          Map<String, dynamic> permissions = {};
+          List<String> assignedBranchIds = const ['main'];
+          String empName = 'موظف';"""
+          assert old in s
+          s = s.replace(old, new, 1)
+
+          old = """              if (data.containsKey('name')) {
+                empName = data['name']?.toString() ?? 'موظف';
+              }"""
+          new = """              if (data.containsKey('name')) {
+                empName = data['name']?.toString() ?? 'موظف';
+              }
+              final rawAssignedBranches = data['assignedBranchIds'];
+              if (rawAssignedBranches is List && rawAssignedBranches.isNotEmpty) {
+                assignedBranchIds = rawAssignedBranches
+                    .map((value) => value.toString())
+                    .where((value) => value.isNotEmpty)
+                    .toSet()
+                    .toList();
+                if (assignedBranchIds.isEmpty) assignedBranchIds = const ['main'];
+              }"""
+          assert old in s
+          s = s.replace(old, new, 1)
+
+          old = """            'permissions': permissions,
+          });"""
+          new = """            'permissions': permissions,
+            'assignedBranchIds': assignedBranchIds,
+          });"""
+          assert old in s
+          s = s.replace(old, new, 1)
+
+          old = """  Future<void> createEmployee(String merchantEmail, String name, String pin, {Map<String, dynamic> permissions = const {}}) async {
+    try {"""
+          new = """  Future<void> createEmployee(
+    String merchantEmail,
+    String name,
+    String pin, {
+    Map<String, dynamic> permissions = const {},
+    List<String> assignedBranchIds = const ['main'],
+  }) async {
+    try {
+      final normalizedBranchIds = assignedBranchIds
+          .map((id) => id.trim())
+          .where((id) => id.isNotEmpty)
+          .toSet()
+          .toList();
+      if (normalizedBranchIds.isEmpty) {
+        throw Exception('Employee must be assigned to at least one branch.');
+      }"""
+          assert old in s
+          s = s.replace(old, new, 1)
+
+          old = """              'permissions': permissions,
+              'createdAt': FieldValue.serverTimestamp(),
+              'merchantUid': merchantUid,"""
+          new = """              'permissions': permissions,
+              'assignedBranchIds': normalizedBranchIds,
+              'createdAt': FieldValue.serverTimestamp(),
+              'merchantUid': merchantUid,"""
+          assert old in s
+          s = s.replace(old, new, 1)
+
+          old = """                'permissions': permissions,
+            });"""
+          new = """                'permissions': permissions,
+                'assignedBranchIds': normalizedBranchIds,
+            });"""
+          assert old in s
+          s = s.replace(old, new, 1)
+
+          start = s.index('  Future<void> updateEmployeePermissions(')
+          end = s.index('\n  }\n}', start) + len('\n  }')
+          old_block = s[start:end]
+          new_block = """  Future<void> updateEmployeePermissions(
+    String employeeUid,
+    Map<String, dynamic> permissions, {
+    List<String>? assignedBranchIds,
+  }) async {
+    try {
+      final merchantUid = _auth.currentUser?.uid;
+      if (merchantUid == null) throw Exception(\"يجب أن تكون مسجل الدخول\");
+
+      final currentUserDoc = await _firestore.collection('users').doc(merchantUid).get();
+      if (currentUserDoc.data()?['role'] == 'employee') {
+        throw Exception(\"غير مصرح لك بتعديل الصلاحيات\");
+      }
+
+      List<String>? normalizedBranchIds;
+      if (assignedBranchIds != null) {
+        normalizedBranchIds = assignedBranchIds
+            .map((id) => id.trim())
+            .where((id) => id.isNotEmpty)
+            .toSet()
+            .toList();
+        if (normalizedBranchIds.isEmpty) {
+          throw Exception('Employee must be assigned to at least one branch.');
+        }
+      }
+
+      final employeeData = <String, dynamic>{'permissions': permissions};
+      final rootData = <String, dynamic>{'permissions': permissions};
+      if (normalizedBranchIds != null) {
+        employeeData['assignedBranchIds'] = normalizedBranchIds;
+        rootData['assignedBranchIds'] = normalizedBranchIds;
+      }
+
+      final batch = _firestore.batch();
+      batch.update(
+        _firestore.collection('users').doc(merchantUid).collection('employees').doc(employeeUid),
+        employeeData,
+      );
+      batch.update(_firestore.collection('users').doc(employeeUid), rootData);
+      await batch.commit();
+    } catch (e) {
+      throw Exception(\"حدث خطأ أثناء تحديث صلاحيات وفروع الموظف: $e\");
+    }
+  }"""
+          s = s[:start] + new_block + s[end:]
+          p.write_text(s)
+
+          # --- Employees UI ---
+          p = Path('lib/features/employees/presentation/employees_screen.dart')
+          s = p.read_text()
+
+          old = """import '../../orders/data/order_repository.dart';
+
+import '../../../core/services/pin_service.dart';"""
+          new = """import '../../orders/data/order_repository.dart';
+import '../../branches/data/branch_repository.dart';
+import '../../branches/domain/branch.dart';
+
+import '../../../core/services/pin_service.dart';"""
+          assert old in s
+          s = s.replace(old, new, 1)
+
+          old = """  void _showAddEmployeeDialog(int currentCount) {
+    if (currentCount >= 3) {
+      showBeautifulUpgradeDialog(context);
+      return;
+    }
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => EmployeeDialog(
+        merchantEmail: _merchantEmail,
+        ref: ref,
+      ),
+    );
+  }"""
+          new = """  void _showAddEmployeeDialog(int currentCount) {
+    if (currentCount >= 3) {
+      showBeautifulUpgradeDialog(context);
+      return;
+    }
+    final branches = (ref.read(branchesStreamProvider).valueOrNull ?? const <Branch>[])
+        .where((branch) => branch.isActive)
+        .toList();
+    if (branches.isEmpty) {
+      final isAr = Localizations.localeOf(context).languageCode == 'ar';
+      _showError(isAr ? 'تعذر تحميل الفروع النشطة. حاول مرة أخرى.' : 'Active branches are not available yet. Please try again.');
+      return;
+    }
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => EmployeeDialog(
+        merchantEmail: _merchantEmail,
+        ref: ref,
+        branches: branches,
+      ),
+    );
+  }"""
+          assert old in s
+          s = s.replace(old, new, 1)
+
+          old = """  void _showEditEmployeeDialog(String id, Map<String, dynamic> data) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => EmployeeDialog(
+        merchantEmail: _merchantEmail,
+        ref: ref,
+        employeeUid: id,
+        initialData: data,
+      ),
+    );
+  }"""
+          new = """  void _showEditEmployeeDialog(String id, Map<String, dynamic> data) {
+    final branches = (ref.read(branchesStreamProvider).valueOrNull ?? const <Branch>[])
+        .where((branch) => branch.isActive)
+        .toList();
+    if (branches.isEmpty) {
+      final isAr = Localizations.localeOf(context).languageCode == 'ar';
+      _showError(isAr ? 'تعذر تحميل الفروع النشطة. حاول مرة أخرى.' : 'Active branches are not available yet. Please try again.');
+      return;
+    }
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => EmployeeDialog(
+        merchantEmail: _merchantEmail,
+        ref: ref,
+        branches: branches,
+        employeeUid: id,
+        initialData: data,
+      ),
+    );
+  }"""
+          assert old in s
+          s = s.replace(old, new, 1)
+
+          old = """  final Map<String, dynamic>? initialData;
+  final String? employeeUid;
+
+  const EmployeeDialog({
+    super.key,
+    required this.merchantEmail,
+    required this.ref,
+    this.initialData,
+    this.employeeUid,
+  });"""
+          new = """  final Map<String, dynamic>? initialData;
+  final String? employeeUid;
+  final List<Branch> branches;
+
+  const EmployeeDialog({
+    super.key,
+    required this.merchantEmail,
+    required this.ref,
+    required this.branches,
+    this.initialData,
+    this.employeeUid,
+  });"""
+          assert old in s
+          s = s.replace(old, new, 1)
+
+          old = """  bool isSaving = false;
+
+  Map<String, bool> permissions = {"""
+          new = """  bool isSaving = false;
+  final Set<String> assignedBranchIds = <String>{};
+
+  Map<String, bool> permissions = {"""
+          assert old in s
+          s = s.replace(old, new, 1)
+
+          old = """    if (widget.initialData != null) {
+      nameController.text = widget.initialData!['name'] ?? '';
+      pinController.text = widget.initialData!['pin'] ?? '';
+      if (widget.initialData!['permissions'] != null) {"""
+          new = """    final initialAssigned = widget.initialData?['assignedBranchIds'];
+    if (initialAssigned is List && initialAssigned.isNotEmpty) {
+      assignedBranchIds.addAll(initialAssigned.map((value) => value.toString()));
+    } else {
+      assignedBranchIds.add('main');
+    }
+    assignedBranchIds.removeWhere((id) => !widget.branches.any((branch) => branch.id == id));
+    if (assignedBranchIds.isEmpty && widget.branches.isNotEmpty) {
+      assignedBranchIds.add(widget.branches.first.id);
+    }
+    if (widget.initialData != null) {
+      nameController.text = widget.initialData!['name'] ?? '';
+      pinController.text = widget.initialData!['pin'] ?? '';
+      if (widget.initialData!['permissions'] != null) {"""
+          assert old in s
+          s = s.replace(old, new, 1)
+
+          marker = """              const Divider(height: 32),
+              Text(isAr ? \"صلاحيات الموظف:\" : \"Employee Permissions:\", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),"""
+          insert = """              const Divider(height: 32),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  isAr ? 'الفروع المسموح للموظف العمل بها:' : 'Branches this employee can access:',
+                  style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  isAr
+                      ? 'يجب اختيار فرع واحد على الأقل. الموظف لن يستطيع رؤية أو تنفيذ عمليات في الفروع غير المحددة.'
+                      : 'Select at least one branch. The employee cannot view or operate in unassigned branches.',
+                  style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...widget.branches.map((branch) => CheckboxListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(branch.name, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
+                    subtitle: branch.isMain
+                        ? Text(isAr ? 'الفرع الرئيسي' : 'Main branch', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12))
+                        : null,
+                    value: assignedBranchIds.contains(branch.id),
+                    onChanged: isSaving
+                        ? null
+                        : (selected) {
+                            setState(() {
+                              if (selected == true) {
+                                assignedBranchIds.add(branch.id);
+                              } else if (assignedBranchIds.length > 1) {
+                                assignedBranchIds.remove(branch.id);
+                              } else {
+                                _showError(isAr ? 'يجب تعيين فرع واحد على الأقل.' : 'At least one branch must remain assigned.');
+                              }
+                            });
+                          },
+                  )),
+              const Divider(height: 32),
+              Text(isAr ? \"صلاحيات الموظف:\" : \"Employee Permissions:\", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),"""
+          assert marker in s
+          s = s.replace(marker, insert, 1)
+
+          old = """                await widget.ref.read(authRepositoryProvider).updateEmployeePermissions(widget.employeeUid!, permissions);"""
+          new = """                await widget.ref.read(authRepositoryProvider).updateEmployeePermissions(
+                  widget.employeeUid!,
+                  permissions,
+                  assignedBranchIds: assignedBranchIds.toList(),
+                );"""
+          assert old in s
+          s = s.replace(old, new, 1)
+
+          old = """                await widget.ref.read(authRepositoryProvider).createEmployee(widget.merchantEmail, name, pin, permissions: permissions);"""
+          new = """                await widget.ref.read(authRepositoryProvider).createEmployee(
+                  widget.merchantEmail,
+                  name,
+                  pin,
+                  permissions: permissions,
+                  assignedBranchIds: assignedBranchIds.toList(),
+                );"""
+          assert old in s
+          s = s.replace(old, new, 1)
+
+          p.write_text(s)
+          PY
+
+          dart format lib/features/authentication/data/auth_repository.dart lib/features/employees/presentation/employees_screen.dart
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/features/authentication/data/auth_repository.dart lib/features/employees/presentation/employees_screen.dart
+          git commit -m 'feat(employees): assign staff to authorized branches'
+          git push
