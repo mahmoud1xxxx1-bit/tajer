@@ -109,4 +109,31 @@ void main() {
 
     expect(service.paymentMethodsBreakdown['cash'], 25);
   });
+
+  test('total debt is outstanding receivable created by orders in report scope', () {
+    final service = ReportsService(
+      [
+        order(
+          id: 'credit-partial',
+          createdAt: DateTime(2026, 8, 8, 12),
+          total: 100,
+          isCredit: true,
+          paidAmount: 30,
+        ),
+        order(
+          id: 'cash-sale',
+          createdAt: DateTime(2026, 8, 8, 13),
+          total: 50,
+          isCredit: false,
+          paidAmount: 50,
+        ),
+      ],
+      const [],
+      const [],
+      const [],
+      const [],
+    );
+
+    expect(service.totalDebt, 70);
+  });
 }
