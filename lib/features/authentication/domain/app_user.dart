@@ -27,7 +27,10 @@ class AppUser with _$AppUser {
   factory AppUser.fromJson(Map<String, dynamic> json) => _$AppUserFromJson(json);
 
   bool hasPermission(String permissionName) {
-    if (role == 'merchant') return true; // Merchants have all permissions
+    // Merchant owners and the internal admin role are full-access roles. Keeping
+    // this centralized prevents individual screens from disagreeing about admin
+    // capabilities while employees remain strictly permission-scoped.
+    if (role == 'merchant' || role == 'admin') return true;
     return permissions[permissionName] == true;
   }
 }
