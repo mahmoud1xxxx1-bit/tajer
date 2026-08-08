@@ -1,6 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tajer/features/branches/domain/branch.dart';
+import 'package:tajer/features/expenses/domain/expense.dart';
+import 'package:tajer/features/inventory_log/domain/inventory_log.dart';
 import 'package:tajer/features/orders/domain/order.dart';
+import 'package:tajer/features/shifts/domain/shift.dart';
 
 void main() {
   group('Multi-branch backward compatibility', () {
@@ -40,6 +43,51 @@ void main() {
       final json = order.toJson();
       expect(json['branchId'], 'branch-2');
       expect(AppOrder.fromJson(json).branchId, 'branch-2');
+    });
+
+    test('legacy shift without branchId belongs to main branch', () {
+      final shift = Shift.fromJson({
+        'id': 'shift-107',
+        'merchantId': 'merchant-1',
+        'employeeId': 'owner',
+        'employeeName': 'Owner',
+        'startTime': DateTime(2026, 8, 8).toIso8601String(),
+        'startCash': 100,
+        'status': 'closed',
+      });
+      expect(shift.branchId, BranchIds.main);
+      expect(shift.toJson()['branchId'], BranchIds.main);
+    });
+
+    test('legacy expense without branchId and shiftId remains readable', () {
+      final now = DateTime(2026, 8, 8);
+      final expense = Expense.fromJson({
+        'id': 'expense-107',
+        'merchantId': 'merchant-1',
+        'title': 'Rent',
+        'amount': 250,
+        'date': now.toIso8601String(),
+        'createdAt': now.toIso8601String(),
+      });
+      expect(expense.branchId, BranchIds.main);
+      expect(expense.shiftId, isNull);
+      expect(expense.toJson()['branchId'], BranchIds.main);
+    });
+
+    test('legacy inventory log without branchId belongs to main branch', () {
+      final log = InventoryLog.fromJson({
+        'id': 'log-107',
+        'merchantId': 'merchant-1',
+        'productId': 'p1',
+        'productName': 'Coffee',
+        'changeQuantity': -1,
+        'previousQuantity': 10,
+        'newQuantity': 9,
+        'reason': 'sale',
+        'date': DateTime(2026, 8, 8).toIso8601String(),
+      });
+      expect(log.branchId, BranchIds.main);
+      expect(log.toJson()['branchId'], BranchIds.main);
     });
   });
 }
