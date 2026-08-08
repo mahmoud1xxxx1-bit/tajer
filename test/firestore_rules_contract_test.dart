@@ -15,6 +15,19 @@ void main() {
       expect(rules, contains("data.get('assignedBranchIds', ['main']).hasAny([branchId])"));
     });
 
+    test('employees cannot self-escalate permissions or branch assignments', () {
+      expect(rules, contains('function isSafeSelfUserUpdate(userId)'));
+      expect(rules, contains("'permissions', 'assignedBranchIds'"));
+      expect(rules, contains("'plan', 'role', 'merchantId'"));
+      expect(rules, contains('allow update: if isSafeSelfUserUpdate(userId) ||'));
+      expect(rules, contains("isOwner(resource.data.get('merchantId', ''))"));
+    });
+
+    test('employee root documents can only be created by self or merchant owner', () {
+      expect(rules, contains('request.auth.uid == userId ||'));
+      expect(rules, contains("isOwner(request.resource.data.get('merchantId', ''))"));
+    });
+
     test('orders require both permission and branch authorization', () {
       expect(rules, contains('match /orders/{orderId}'));
       expect(rules, contains("hasPermission(request.resource.data.get('merchantId', ''), 'can_create_orders')"));
