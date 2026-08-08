@@ -19,6 +19,7 @@ import 'core/services/backup_service.dart';
 import 'core/services/subscription_service.dart';
 import 'features/orders/data/order_repository.dart';
 import 'features/orders/data/branch_aware_order_repository.dart';
+import 'features/orders/data/branch_orders_stream.dart';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -61,11 +62,14 @@ void main() async {
   final container = ProviderContainer(
     overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
-      // All order entry/status/deletion call sites keep using the original
-      // provider API, while the implementation safely scopes non-main branches.
+      // Multi-branch development is activated through provider overrides,
+      // leaving the proven 1.0.107 repository file intact as the baseline.
       orderRepositoryProvider.overrideWithValue(
         BranchAwareOrderRepository(FirebaseFirestore.instance),
       ),
+      ordersStreamProvider.overrideWith((ref) {
+        return ref.watch(branchOrdersStreamProvider.stream);
+      }),
     ],
   );
   try {
