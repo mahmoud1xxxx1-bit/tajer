@@ -68,7 +68,8 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     final canViewCost = appUser?.hasPermission('can_view_cost') ?? false;
 
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
-    final reportScope = ref.watch(reportsScopeProvider);
+    final reportScope = ref.watch(effectiveReportsScopeProvider);
+    final canViewAllBranches = appUser?.role == 'merchant';
 
     if (baseReportsService == null) {
       return const Scaffold(
@@ -177,13 +178,14 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         style: const TextStyle(fontFamily: 'Tajawal'),
                       ),
                     ),
-                    DropdownMenuItem<ReportsScope>(
-                      value: ReportsScope.merchant,
-                      child: Text(
-                        isAr ? 'جميع الفروع' : 'All branches',
-                        style: const TextStyle(fontFamily: 'Tajawal'),
+                    if (canViewAllBranches)
+                      DropdownMenuItem<ReportsScope>(
+                        value: ReportsScope.merchant,
+                        child: Text(
+                          isAr ? 'جميع الفروع' : 'All branches',
+                          style: const TextStyle(fontFamily: 'Tajawal'),
+                        ),
                       ),
-                    ),
                   ],
                   onChanged: (scope) {
                     if (scope != null) {
@@ -331,7 +333,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     SizedBox(
                       width: cardWidth,
                       child: _SummaryCard(
-                        title: AppLocalizations.of(context)!.text107,
+                        title: reportScope == ReportsScope.merchant
+                            ? (isAr ? 'إجمالي الديون المستحقة' : 'Total Outstanding Debt')
+                            : (isAr ? 'الديون المستحقة من مبيعات هذا الفرع' : 'Outstanding Debt from This Branch'),
                         value: '${reportsService.totalDebt.toStringAsFixed(2)} ${currentCurrency.code}',
                         icon: Icons.warning_amber_rounded,
                         color: Colors.red,
