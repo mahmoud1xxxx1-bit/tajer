@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tajer/features/branches/domain/branch.dart';
+import 'package:tajer/features/customers/domain/customer_debt_payment.dart';
 import 'package:tajer/features/expenses/domain/expense.dart';
 import 'package:tajer/features/inventory_log/domain/inventory_log.dart';
 import 'package:tajer/features/orders/domain/order.dart';
@@ -145,6 +146,44 @@ void main() {
       final decoded = SupplierTransaction.fromJson(json);
       expect(decoded.branchId, 'branch-2');
       expect(decoded.expenseId, 'expense-supplier-2');
+    });
+
+    test('customer debt payment preserves branch, shift and allocations', () {
+      final payment = CustomerDebtPayment(
+        id: 'customer-payment-1',
+        merchantId: 'merchant-1',
+        customerId: 'customer-1',
+        branchId: 'branch-2',
+        shiftId: 'shift-2',
+        amount: 75,
+        paymentMethod: 'cash',
+        allocations: const [
+          CustomerDebtAllocation(orderId: 'order-a', amount: 50),
+          CustomerDebtAllocation(orderId: 'order-b', amount: 25),
+        ],
+        createdAt: DateTime(2026, 8, 8, 14),
+      );
+      final decoded = CustomerDebtPayment.fromJson(payment.toJson());
+      expect(decoded.branchId, 'branch-2');
+      expect(decoded.shiftId, 'shift-2');
+      expect(decoded.amount, 75);
+      expect(decoded.allocations.length, 2);
+      expect(decoded.allocations[0].orderId, 'order-a');
+      expect(decoded.allocations[1].amount, 25);
+    });
+
+    test('customer debt payment missing branchId safely resolves to main', () {
+      final decoded = CustomerDebtPayment.fromJson({
+        'id': 'customer-payment-legacy-shape',
+        'merchantId': 'merchant-1',
+        'customerId': 'customer-1',
+        'amount': 20,
+        'paymentMethod': 'cash',
+        'allocations': const [],
+        'createdAt': DateTime(2026, 8, 8, 15).toIso8601String(),
+      });
+      expect(decoded.branchId, BranchIds.main);
+      expect(decoded.shiftId, isNull);
     });
 
     test('legacy inventory log without branchId belongs to main branch', () {
