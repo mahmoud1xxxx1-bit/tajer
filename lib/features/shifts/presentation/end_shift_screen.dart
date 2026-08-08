@@ -51,7 +51,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
         actualTransfer: actualTransfer,
         status: 'closed',
       );
-      
+
       await ref.read(shiftRepositoryProvider).closeShift(updatedShift);
       final user = ref.read(appUserProvider).value;
       ActivityLogger.log(
@@ -59,13 +59,11 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
         actionType: 'End Shift|إنهاء وردية',
         description: 'Ended shift with expected cash ${updatedShift.expectedCash} and actual cash $actualCash|تم إنهاء الوردية بمبلغ متوقع ${updatedShift.expectedCash} ومبلغ فعلي $actualCash',
       );
-      
-      // Print Z-Report
+
       final storeProfile = ref.read(storeProfileProvider).value;
       try {
         await PrinterService.printZReport(updatedShift, 'ر.س', storeProfile: storeProfile, totalCashExpenses: operatingExpensesCash, totalSupplierCash: supplierPaymentsCash);
       } catch (e) {
-        // Just show a snackbar if printing fails, but shift is closed
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم الإغلاق ولكن تعذرت الطباعة: $e', style: TextStyle(fontFamily: 'Tajawal'))));
       }
 
@@ -85,7 +83,6 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
     final user = ref.watch(appUserProvider).value;
     final merchantId = user?.merchantId ?? user?.id;
     final shiftAsync = ref.watch(currentShiftProvider(merchantId ?? ''));
-
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     return Scaffold(
@@ -103,15 +100,22 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
           }
 
           final expenses = ref.watch(expensesStreamProvider).value ?? [];
-          final allShiftExpenses = expenses.where((e) => e.date.isAfter(shift.startTime));
-          
+          // New records are tied to the exact shiftId. Legacy v107 expenses had
+          // no shiftId, so they retain the proven time-based fallback.
+          final allShiftExpenses = expenses.where((e) {
+            if (e.shiftId != null && e.shiftId!.isNotEmpty) {
+              return e.shiftId == shift.id;
+            }
+            return e.date.isAfter(shift.startTime);
+          });
+
           final operatingExpensesCash = allShiftExpenses
               .where((e) => !e.isSupplierPayment && e.paymentMethod == 'cash' && e.isFromShiftDrawer && !e.isCancelled)
               .fold(0.0, (sum, e) => sum + e.amount);
           final operatingExpensesNetwork = allShiftExpenses
               .where((e) => !e.isSupplierPayment && e.paymentMethod == 'network' && !e.isCancelled)
               .fold(0.0, (sum, e) => sum + e.amount);
-              
+
           final supplierPaymentsCash = allShiftExpenses
               .where((e) => e.isSupplierPayment && e.paymentMethod == 'cash' && e.isFromShiftDrawer && !e.isCancelled)
               .fold(0.0, (sum, e) => sum + e.amount);
@@ -119,20 +123,16 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
               .where((e) => e.isSupplierPayment && e.paymentMethod == 'network' && !e.isCancelled)
               .fold(0.0, (sum, e) => sum + e.amount);
 
-          // Calculate cash expenses (Operating cash + Supplier cash are subtracted from drawer)
           final totalCashExpenses = operatingExpensesCash + supplierPaymentsCash;
-          
           final totalDebtsCollectedCash = shift.debtCollectionsCash ?? 0.0;
           final totalDebtsCollectedCard = shift.debtCollectionsCard ?? 0.0;
           final totalDebtsCollectedTransfer = shift.debtCollectionsTransfer ?? 0.0;
           final totalTax = shift.totalTax ?? 0.0;
-          
           final totalRefundsCash = shift.refundsCash ?? 0.0;
           final totalRefundsCard = shift.refundsCard ?? 0.0;
           final totalRefundsTransfer = shift.refundsTransfer ?? 0.0;
-
-          // Expected Cash = Start Cash + Cash Sales + Debts Collected Cash - Cash Expenses - Cash Refunds
           final expectedCash = shift.startCash + (shift.cashSales ?? 0.0) + totalDebtsCollectedCash - totalCashExpenses - totalRefundsCash;
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24.0),
             child: Column(
@@ -157,7 +157,6 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                           _buildRow(isAr ? 'مصروفات تشغيلية (كاش - خُصمت من الدرج):' : 'Op. Expenses (Cash):', '-$operatingExpensesCash ${isAr ? 'ر.س' : 'SAR'}', color: Colors.red),
                         if (operatingExpensesNetwork > 0)
                           _buildRow(isAr ? 'مصروفات تشغيلية (شبكة):' : 'Op. Expenses (Network):', '$operatingExpensesNetwork ${isAr ? 'ر.س' : 'SAR'}', color: Colors.orange),
-                        
                         if (supplierPaymentsCash > 0)
                           _buildRow(isAr ? 'سداد موردين (كاش - خُصم من الدرج):' : 'Supplier (Cash):', '-$supplierPaymentsCash ${isAr ? 'ر.س' : 'SAR'}', color: Colors.red),
                         if (supplierPaymentsNetwork > 0)
@@ -226,7 +225,7 @@ class _EndShiftScreenState extends ConsumerState<EndShiftScreen> {
                       _closeShift(finalShift, operatingExpensesCash, supplierPaymentsCash);
                     },
                     style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
-                    child: _isLoading 
+                    child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : Text(isAr ? 'إغلاق الوردية وطباعة التقرير' : 'Close Shift & Print Report', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold)),
                   ),
