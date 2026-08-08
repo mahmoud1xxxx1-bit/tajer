@@ -1,15 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../branches/data/order_branch_inventory_service.dart';
 import '../domain/order.dart';
 import 'order_repository.dart';
 
-/// Multi-branch adapter around the proven v1.0.107 order repository.
-///
-/// Main Branch deliberately delegates to the untouched v107 implementation so
-/// existing merchants keep the exact accounting/inventory behaviour they use
-/// today. Non-main branches use isolated branch inventory documents.
+/// Multi-branch implementation that preserves the v1.0.107 accounting formulas
+/// while changing only the inventory/shift scope from merchant-wide to branch.
 class BranchAwareOrderRepository extends OrderRepository {
   final FirebaseFirestore firestore;
 
@@ -36,10 +34,12 @@ class BranchAwareOrderRepository extends OrderRepository {
         .doc('daily_orders_$branchId');
 
     try {
-      final serverNumber = await firestore.runTransaction<int>((tx) async {
+      localNumber = await firestore.runTransaction<int>((tx) async {
         final snap = await tx.get(counterRef);
         final data = snap.data();
-        final current = data?['date'] == date ? (data?['lastNumber'] as num?)?.toInt() ?? 0 : 0;
+        final current = data?['date'] == date
+            ? (data?['lastNumber'] as num?)?.toInt() ?? 0
+            : 0;
         final next = (current > localNumber ? current : localNumber) + 1;
         tx.set(counterRef, {
           'date': date,
@@ -49,7 +49,6 @@ class BranchAwareOrderRepository extends OrderRepository {
         }, SetOptions(merge: true));
         return next;
       });
-      localNumber = serverNumber;
     } catch (_) {
       localNumber += 1;
     }
@@ -62,18 +61,12 @@ class BranchAwareOrderRepository extends OrderRepository {
   @override
   Future<AppOrder> createOrder(AppOrder order, {String? shiftId}) async {
     final branchId = await _selectedBranch(order.merchantId);
-    final scopedOrder = order.copyWith(branchId: branchId);
-
-    // Golden compatibility path: v107 remains authoritative for Main Branch.
-    if (branchId == 'main') {
-      return super.createOrder(scopedOrder, shiftId: shiftId);
-    }
-
     final queueNumber = await _nextBranchQueueNumber(order.merchantId, branchId);
-    final orderWithQueue = scopedOrder.copyWith(queueNumber: queueNumber);
+    final orderWithQueue = order.copyWith(
+      branchId: branchId,
+      queueNumber: queueNumber,
+    );
 
-    // Inventory first uses an atomic multi-item transaction and fails the sale
-    // before any financial records are written if branch stock is insufficient.
     await OrderBranchInventoryService(firestore)
         .applySale(orderWithQueue, queueNumber: queueNumber);
 
@@ -98,40 +91,18 @@ class BranchAwareOrderRepository extends OrderRepository {
 
     if (shiftId != null && shiftId.isNotEmpty) {
       final shiftRef = firestore.collection('shifts').doc(shiftId);
-      double orderTax = 0.0;
-      for (final item in orderWithQueue.items) {
-        final tax = item.taxPercentage ?? 0.0;
-        if (tax <= 0) continue;
-        final inclusive = item.isTaxInclusive ?? true;
-        orderTax += inclusive
-            ? item.total - (item.total / (1 + tax / 100))
-            : item.total * (tax / 100);
+      final shiftSnap = await shiftRef.get(const GetOptions(source: Source.serverAndCache));
+      if (!shiftSnap.exists) {
+        await OrderBranchInventoryService(firestore).restoreForDeletion(orderWithQueue);
+        throw Exception('Shift not found');
       }
-
-      final updates = <String, dynamic>{
-        if (orderTax > 0) 'totalTax': FieldValue.increment(orderTax),
-      };
-      switch (orderWithQueue.paymentMethod) {
-        case 'cash':
-          updates['cashSales'] = FieldValue.increment(orderWithQueue.paidAmount);
-          break;
-        case 'card':
-        case 'mada':
-        case 'apple_pay':
-          updates['cardTotal'] = FieldValue.increment(orderWithQueue.paidAmount);
-          break;
-        case 'transfer':
-          updates['transferTotal'] = FieldValue.increment(orderWithQueue.paidAmount);
-          break;
-        case 'split':
-          if ((orderWithQueue.splitCashAmount ?? 0) > 0) {
-            updates['cashSales'] = FieldValue.increment(orderWithQueue.splitCashAmount!);
-          }
-          if ((orderWithQueue.splitNetworkAmount ?? 0) > 0) {
-            updates['cardTotal'] = FieldValue.increment(orderWithQueue.splitNetworkAmount!);
-          }
-          break;
+      final shiftBranchId = shiftSnap.data()?['branchId']?.toString() ?? 'main';
+      final shiftStatus = shiftSnap.data()?['status']?.toString();
+      if (shiftBranchId != branchId || shiftStatus != 'open') {
+        await OrderBranchInventoryService(firestore).restoreForDeletion(orderWithQueue);
+        throw Exception('Order branch does not match the active shift');
       }
+      final updates = _saleShiftUpdates(orderWithQueue);
       if (updates.isNotEmpty) batch.update(shiftRef, updates);
     }
 
@@ -139,40 +110,110 @@ class BranchAwareOrderRepository extends OrderRepository {
     try {
       await batch.commit();
       return orderWithQueue;
-    } catch (e) {
-      // Compensating rollback. This path is intentionally explicit because
-      // inventory and accounting use different Firestore transaction scopes.
-      await OrderBranchInventoryService(firestore)
-          .restoreForDeletion(orderWithQueue);
+    } catch (_) {
+      await OrderBranchInventoryService(firestore).restoreForDeletion(orderWithQueue);
       rethrow;
     }
   }
 
+  Map<String, dynamic> _saleShiftUpdates(AppOrder order) {
+    final updates = <String, dynamic>{};
+    final orderTax = _orderTax(order);
+    if (orderTax > 0) updates['totalTax'] = FieldValue.increment(orderTax);
+
+    switch (order.paymentMethod) {
+      case 'cash':
+        updates['cashSales'] = FieldValue.increment(order.paidAmount);
+        break;
+      case 'card':
+      case 'mada':
+      case 'apple_pay':
+        updates['cardTotal'] = FieldValue.increment(order.paidAmount);
+        break;
+      case 'transfer':
+        updates['transferTotal'] = FieldValue.increment(order.paidAmount);
+        break;
+      case 'split':
+        if ((order.splitCashAmount ?? 0) > 0) {
+          updates['cashSales'] = FieldValue.increment(order.splitCashAmount!);
+        }
+        if ((order.splitNetworkAmount ?? 0) > 0) {
+          updates['cardTotal'] = FieldValue.increment(order.splitNetworkAmount!);
+        }
+        break;
+    }
+    return updates;
+  }
+
+  double _orderTax(AppOrder order) {
+    double orderTax = 0.0;
+    for (final item in order.items) {
+      final tax = item.taxPercentage ?? 0.0;
+      if (tax <= 0) continue;
+      final inclusive = item.isTaxInclusive ?? true;
+      orderTax += inclusive
+          ? item.total - (item.total / (1 + tax / 100))
+          : item.total * (tax / 100);
+    }
+    return orderTax;
+  }
+
+  Future<bool> _claimStatusTransition(AppOrder order, String newStatus) {
+    final orderRef = firestore.collection('orders').doc(order.id);
+    return firestore.runTransaction<bool>((tx) async {
+      final snap = await tx.get(orderRef);
+      if (!snap.exists) return false;
+      final data = snap.data()!;
+      final currentStatus = data['status']?.toString() ?? 'pending';
+      if (currentStatus == newStatus) return false;
+      if (currentStatus != order.status || data['statusTransition'] != null) {
+        throw Exception('Order status changed on another device. Please refresh.');
+      }
+      tx.update(orderRef, {
+        'statusTransition': {
+          'from': currentStatus,
+          'to': newStatus,
+          'startedAt': FieldValue.serverTimestamp(),
+        },
+      });
+      return true;
+    });
+  }
+
+  Future<void> _clearStatusTransition(String orderId) async {
+    await firestore.collection('orders').doc(orderId).update({
+      'statusTransition': FieldValue.delete(),
+    });
+  }
+
   @override
   Future<void> updateOrderStatus(AppOrder order, String newStatus) async {
-    if (order.branchId == 'main') {
-      return super.updateOrderStatus(order, newStatus);
-    }
     if (order.status == newStatus) return;
+    final claimed = await _claimStatusTransition(order, newStatus);
+    if (!claimed) return;
 
-    if (newStatus == 'cancelled' && order.status != 'cancelled') {
-      await OrderBranchInventoryService(firestore).restoreForCancellation(order);
-    } else if (order.status == 'cancelled' && newStatus != 'cancelled') {
-      await OrderBranchInventoryService(firestore)
-          .reDeductAfterCancellationReversal(order);
-    }
-
+    var inventoryChanged = false;
     try {
-      await _applyStatusFinancials(order, newStatus);
-    } catch (e) {
-      // Restore inventory to the pre-transition state when financial/status
-      // mutation fails, so a branch can never retain a half-cancelled order.
       if (newStatus == 'cancelled' && order.status != 'cancelled') {
+        await OrderBranchInventoryService(firestore).restoreForCancellation(order);
+        inventoryChanged = true;
+      } else if (order.status == 'cancelled' && newStatus != 'cancelled') {
         await OrderBranchInventoryService(firestore)
             .reDeductAfterCancellationReversal(order);
-      } else if (order.status == 'cancelled' && newStatus != 'cancelled') {
-        await OrderBranchInventoryService(firestore).restoreForCancellation(order);
+        inventoryChanged = true;
       }
+
+      await _applyStatusFinancials(order, newStatus);
+    } catch (_) {
+      if (inventoryChanged) {
+        if (newStatus == 'cancelled' && order.status != 'cancelled') {
+          await OrderBranchInventoryService(firestore)
+              .reDeductAfterCancellationReversal(order);
+        } else if (order.status == 'cancelled' && newStatus != 'cancelled') {
+          await OrderBranchInventoryService(firestore).restoreForCancellation(order);
+        }
+      }
+      await _clearStatusTransition(order.id).catchError((_) {});
       rethrow;
     }
   }
@@ -208,15 +249,13 @@ class BranchAwareOrderRepository extends OrderRepository {
 
     batch.update(orderRef, {
       'status': newStatus,
+      'statusTransition': FieldValue.delete(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
     await batch.commit();
   }
 
-  Future<void> _appendRefundToOpenBranchShift(
-    WriteBatch batch,
-    AppOrder order,
-  ) async {
+  Future<void> _appendRefundToOpenBranchShift(WriteBatch batch, AppOrder order) async {
     if (order.paidAmount <= 0) return;
     final snap = await firestore
         .collection('shifts')
@@ -230,15 +269,7 @@ class BranchAwareOrderRepository extends OrderRepository {
     if (matching.isEmpty) return;
 
     final updates = <String, dynamic>{};
-    double orderTax = 0.0;
-    for (final item in order.items) {
-      final tax = item.taxPercentage ?? 0.0;
-      if (tax <= 0) continue;
-      final inclusive = item.isTaxInclusive ?? true;
-      orderTax += inclusive
-          ? item.total - (item.total / (1 + tax / 100))
-          : item.total * (tax / 100);
-    }
+    final orderTax = _orderTax(order);
     if (orderTax > 0) updates['totalTax'] = FieldValue.increment(-orderTax);
 
     switch (order.paymentMethod) {
@@ -267,7 +298,13 @@ class BranchAwareOrderRepository extends OrderRepository {
 
   @override
   Future<void> deleteOrder(AppOrder order) async {
-    if (order.branchId == 'main') return super.deleteOrder(order);
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      final userDoc = await firestore.collection('users').doc(uid).get();
+      if (userDoc.data()?['role'] == 'employee') {
+        throw Exception('غير مصرح لك بالحذف النهائي، يمكنك الإلغاء فقط');
+      }
+    }
 
     if (order.status != 'cancelled') {
       await OrderBranchInventoryService(firestore).restoreForDeletion(order);
@@ -286,7 +323,7 @@ class BranchAwareOrderRepository extends OrderRepository {
       }
       batch.delete(firestore.collection('orders').doc(order.id));
       await batch.commit();
-    } catch (e) {
+    } catch (_) {
       if (order.status != 'cancelled') {
         await OrderBranchInventoryService(firestore)
             .reDeductAfterCancellationReversal(order);
