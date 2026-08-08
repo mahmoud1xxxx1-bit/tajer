@@ -35,9 +35,20 @@ service cloud.firestore {
       return hasBranchAccess(merchantId, data.get('branchId', 'main'));
     }
 
-    // A signed-in user may edit their own harmless profile fields, but never
-    // security, subscription or tenancy fields. This prevents an employee from
-    // granting themselves permissions or adding branches directly in Firestore.
+    function canReadOrder(merchantId, data) {
+      return hasAccess(merchantId) &&
+        hasDataBranchAccess(merchantId, data) &&
+        (hasPermission(merchantId, 'can_view_all_orders') ||
+         data.get('creatorId', '') == request.auth.uid);
+    }
+
+    function isOrderCancellation(merchantId) {
+      return resource != null &&
+        request.resource.data.get('status', '') == 'cancelled' &&
+        resource.data.get('status', '') != 'cancelled' &&
+        hasPermission(merchantId, 'can_cancel_orders');
+    }
+
     function isSafeSelfUserUpdate(userId) {
       return isAuthenticated() && request.auth.uid == userId &&
         !request.resource.data.diff(resource.data).affectedKeys().hasAny([
@@ -89,9 +100,15 @@ service cloud.firestore {
       allow delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_customers');
     }
     match /orders/{orderId} {
-      allow read: if resource != null && hasAccess(resource.data.get('merchantId', '')) && hasDataBranchAccess(resource.data.get('merchantId', ''), resource.data);
+      allow read: if resource != null && canReadOrder(resource.data.get('merchantId', ''), resource.data);
       allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_create_orders') && hasDataBranchAccess(request.resource.data.get('merchantId', ''), request.resource.data);
-      allow update: if resource != null && hasPermission(resource.data.get('merchantId', ''), 'can_create_orders') && hasDataBranchAccess(resource.data.get('merchantId', ''), resource.data);
+      allow update: if resource != null &&
+        hasDataBranchAccess(resource.data.get('merchantId', ''), resource.data) &&
+        request.resource.data.get('merchantId', '') == resource.data.get('merchantId', '') &&
+        request.resource.data.get('branchId', 'main') == resource.data.get('branchId', 'main') &&
+        (isOrderCancellation(resource.data.get('merchantId', '')) ||
+         (request.resource.data.get('status', '') != 'cancelled' &&
+          hasPermission(resource.data.get('merchantId', ''), 'can_create_orders')));
       allow delete: if resource == null || isOwner(resource.data.get('merchantId', ''));
     }
     match /shifts/{shiftId} {
