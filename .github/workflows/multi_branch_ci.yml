@@ -52,6 +52,7 @@ jobs:
           flutter test test/branch_inventory_manual_adjustment_contract_test.dart
           flutter test test/branch_inventory_concurrency_contract_test.dart
           flutter test test/employee_branch_access_policy_test.dart
+          flutter test test/employee_permission_catalog_test.dart
 
       - name: Build Web
         run: flutter build web --release --base-href /taj/
