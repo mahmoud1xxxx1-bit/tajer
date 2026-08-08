@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/store_profile_provider.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../branches/presentation/branch_context.dart';
 import '../../customers/data/customer_debt_payment_repository.dart';
 import '../../customers/data/customer_repository.dart';
 import '../../customers/domain/customer.dart';
 import '../../customers/domain/customer_debt_payment.dart';
 import '../../expenses/data/expense_repository.dart';
 import '../../expenses/domain/expense.dart';
+import '../../orders/data/order_cost_snapshot_repository.dart';
 import '../../orders/data/order_repository.dart';
 import '../../orders/domain/order.dart';
 import '../../products/data/product_repository.dart';
@@ -17,16 +19,15 @@ import '../../suppliers/data/supplier_repository.dart';
 import '../../suppliers/domain/supplier.dart';
 import 'report_cashflow_ledger.dart';
 
-enum ReportsScope {
-  branch,
-  merchant,
-}
+enum ReportsScope { branch, merchant }
 
 ReportsScope resolveReportsScope({
   required String? role,
   required ReportsScope requested,
 }) {
-  return role == 'merchant' ? requested : ReportsScope.branch;
+  return role == 'merchant' || role == 'admin'
+      ? requested
+      : ReportsScope.branch;
 }
 
 final reportsScopeProvider = StateProvider<ReportsScope>((ref) {
@@ -42,7 +43,6 @@ final effectiveReportsScopeProvider = Provider<ReportsScope>((ref) {
 class SalesData {
   final DateTime date;
   final double amount;
-
   SalesData(this.date, this.amount);
 }
 
@@ -50,7 +50,6 @@ class ProductSales {
   final Product product;
   final int quantitySold;
   final double totalRevenue;
-
   ProductSales(this.product, this.quantitySold, this.totalRevenue);
 }
 
@@ -61,6 +60,8 @@ class ReportsService {
   final List<Customer> customers;
   final List<Supplier> suppliers;
   final List<CustomerDebtPayment> debtPayments;
+  final Map<String, double> protectedOrderCosts;
+  final bool canViewCost;
   final double defaultTaxPercentage;
   final bool defaultIsTaxInclusive;
 
@@ -71,6 +72,8 @@ class ReportsService {
     this.customers,
     this.suppliers, {
     this.debtPayments = const [],
+    this.protectedOrderCosts = const {},
+    this.canViewCost = true,
     this.defaultTaxPercentage = 0.0,
     this.defaultIsTaxInclusive = true,
   });
@@ -78,7 +81,6 @@ class ReportsService {
   ReportsService filterByDate(DateTime start, DateTime end) {
     bool withinRange(DateTime value) =>
         !value.isBefore(start) && !value.isAfter(end);
-
     final filteredOrders =
         orders.where((order) => withinRange(order.createdAt)).toList();
     final filteredExpenses =
@@ -86,6 +88,11 @@ class ReportsService {
     final filteredDebtPayments = debtPayments
         .where((payment) => withinRange(payment.createdAt))
         .toList();
+    final filteredIds = filteredOrders.map((order) => order.id).toSet();
+    final filteredProtectedCosts = <String, double>{
+      for (final entry in protectedOrderCosts.entries)
+        if (filteredIds.contains(entry.key)) entry.key: entry.value,
+    };
 
     return ReportsService(
       filteredOrders,
@@ -94,6 +101,8 @@ class ReportsService {
       customers,
       suppliers,
       debtPayments: filteredDebtPayments,
+      protectedOrderCosts: filteredProtectedCosts,
+      canViewCost: canViewCost,
       defaultTaxPercentage: defaultTaxPercentage,
       defaultIsTaxInclusive: defaultIsTaxInclusive,
     );
@@ -114,17 +123,39 @@ class ReportsService {
       .where((expense) => !expense.isSupplierPayment && !expense.isCancelled)
       .fold(0.0, (sum, expense) => sum + expense.amount);
 
-  double get totalCOGS => orders
-      .where((order) =>
-          order.status != 'cancelled' && order.status != 'debt_repayment')
-      .fold(0.0, (sum, order) {
-    return sum +
-        order.items.fold(
-          0.0,
-          (itemSum, item) =>
-              itemSum + ((item.costPrice ?? 0.0) * item.quantity),
-        );
-  });
+  /// Cost is never inferred from current product prices. A protected historical
+  /// snapshot wins. Legacy in-memory item cost is accepted only as a v107
+  /// compatibility fallback until the merchant migration has copied it into the
+  /// protected collection.
+  double get totalCOGS {
+    if (!canViewCost) return 0.0;
+    return orders
+        .where((order) =>
+            order.status != 'cancelled' && order.status != 'debt_repayment')
+        .fold(0.0, (sum, order) {
+      final protected = protectedOrderCosts[order.id];
+      if (protected != null) return sum + protected;
+      final legacy = order.items.fold<double>(
+        0.0,
+        (itemSum, item) => itemSum + ((item.costPrice ?? 0.0) * item.quantity),
+      );
+      return sum + legacy;
+    });
+  }
+
+  /// True only when every non-cancelled sale has an auditable historical cost
+  /// source. Callers can use this to avoid presenting a misleading profit.
+  bool get isCOGSComplete {
+    if (!canViewCost) return false;
+    for (final order in orders.where((order) =>
+        order.status != 'cancelled' && order.status != 'debt_repayment')) {
+      if (protectedOrderCosts.containsKey(order.id)) continue;
+      if (order.items.isNotEmpty &&
+          order.items.every((item) => item.costPrice != null)) continue;
+      return false;
+    }
+    return true;
+  }
 
   double get totalTaxCollected => orders
       .where((order) =>
@@ -134,13 +165,10 @@ class ReportsService {
     for (final item in order.items) {
       final itemTax = item.taxPercentage ?? defaultTaxPercentage;
       if (itemTax <= 0) continue;
-
       final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
-      if (isInclusive) {
-        orderTax += item.total - (item.total / (1 + (itemTax / 100)));
-      } else {
-        orderTax += item.total * (itemTax / 100);
-      }
+      orderTax += isInclusive
+          ? item.total - (item.total / (1 + (itemTax / 100)))
+          : item.total * (itemTax / 100);
     }
     return sum + orderTax;
   });
@@ -151,21 +179,18 @@ class ReportsService {
   List<SalesData> getDailySales() {
     final Map<String, double> dailyMap = {};
     for (final order in orders) {
-      if (order.status == 'cancelled' || order.status == 'debt_repayment') {
-        continue;
-      }
+      if (order.status == 'cancelled' || order.status == 'debt_repayment') continue;
       final dateStr =
           '${order.createdAt.year}-${order.createdAt.month.toString().padLeft(2, '0')}-${order.createdAt.day.toString().padLeft(2, '0')}';
       dailyMap[dateStr] = (dailyMap[dateStr] ?? 0.0) + order.total;
     }
-
     final result = dailyMap.entries.map((entry) {
       final parts = entry.key.split('-');
-      final date =
-          DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
-      return SalesData(date, entry.value);
+      return SalesData(
+        DateTime(int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2])),
+        entry.value,
+      );
     }).toList();
-
     result.sort((a, b) => a.date.compareTo(b.date));
     return result;
   }
@@ -173,31 +198,23 @@ class ReportsService {
   List<ProductSales> getBestSellers() {
     final Map<String, int> qtyMap = {};
     final Map<String, double> revenueMap = {};
-
     for (final order in orders) {
-      if (order.status == 'cancelled' || order.status == 'debt_repayment') {
-        continue;
-      }
-
+      if (order.status == 'cancelled' || order.status == 'debt_repayment') continue;
       for (final item in order.items) {
         qtyMap[item.productId] = (qtyMap[item.productId] ?? 0) + item.quantity;
         revenueMap[item.productId] =
             (revenueMap[item.productId] ?? 0.0) + item.total;
       }
     }
-
     final List<ProductSales> bestSellers = [];
     for (final product in products) {
       if (!qtyMap.containsKey(product.id)) continue;
-      bestSellers.add(
-        ProductSales(
-          product,
-          qtyMap[product.id]!,
-          revenueMap[product.id]!,
-        ),
-      );
+      bestSellers.add(ProductSales(
+        product,
+        qtyMap[product.id]!,
+        revenueMap[product.id]!,
+      ));
     }
-
     bestSellers.sort((a, b) => b.quantitySold.compareTo(a.quantitySold));
     return bestSellers;
   }
@@ -225,12 +242,35 @@ bool _canViewReports(ref) {
   return appUser != null && appUser.hasPermission('can_view_reports');
 }
 
-/// Branch-scoped report used by the normal report screen.
-/// Permission is enforced here as well as in the UI so a hidden tab is never
-/// the only barrier protecting financial report aggregation.
+final branchOrderCostsProvider = StreamProvider<Map<String, double>>((ref) {
+  final appUser = ref.watch(appUserProvider).value;
+  if (appUser == null ||
+      !appUser.hasPermission('can_view_reports') ||
+      !appUser.hasPermission('can_view_cost')) {
+    return Stream.value(const <String, double>{});
+  }
+  final merchantId = appUser.merchantId ?? appUser.id;
+  final branchId = ref.watch(selectedBranchIdProvider);
+  return OrderCostSnapshotRepository(FirebaseFirestore.instance)
+      .watchBranchOrderCosts(merchantId, branchId);
+});
+
+final merchantOrderCostsProvider = StreamProvider<Map<String, double>>((ref) {
+  final appUser = ref.watch(appUserProvider).value;
+  if (appUser == null ||
+      (appUser.role != 'merchant' && appUser.role != 'admin') ||
+      !appUser.hasPermission('can_view_reports') ||
+      !appUser.hasPermission('can_view_cost')) {
+    return Stream.value(const <String, double>{});
+  }
+  final merchantId = appUser.merchantId ?? appUser.id;
+  return OrderCostSnapshotRepository(FirebaseFirestore.instance)
+      .watchOrderCosts(merchantId);
+});
+
 final reportsServiceProvider = Provider<ReportsService?>((ref) {
   if (!_canViewReports(ref)) return null;
-
+  final appUser = ref.watch(appUserProvider).value!;
   final ordersState = ref.watch(ordersStreamProvider);
   final productsState = ref.watch(productsStreamProvider);
   final expensesState = ref.watch(expensesStreamProvider);
@@ -238,13 +278,16 @@ final reportsServiceProvider = Provider<ReportsService?>((ref) {
   final suppliersState = ref.watch(suppliersStreamProvider);
   final debtPaymentsState = ref.watch(branchCustomerDebtPaymentsProvider);
   final storeProfileState = ref.watch(storeProfileProvider);
+  final costsState = ref.watch(branchOrderCostsProvider);
+  final canViewCost = appUser.hasPermission('can_view_cost');
 
   if (ordersState.value == null ||
       productsState.value == null ||
       expensesState.value == null ||
       customersState.value == null ||
       suppliersState.value == null ||
-      debtPaymentsState.value == null) {
+      debtPaymentsState.value == null ||
+      (canViewCost && costsState.value == null)) {
     return null;
   }
 
@@ -255,6 +298,8 @@ final reportsServiceProvider = Provider<ReportsService?>((ref) {
     customersState.value!,
     suppliersState.value!,
     debtPayments: debtPaymentsState.value!,
+    protectedOrderCosts: costsState.value ?? const {},
+    canViewCost: canViewCost,
     defaultTaxPercentage:
         storeProfileState.value?.defaultTaxPercentage ?? 0.0,
     defaultIsTaxInclusive:
@@ -262,15 +307,12 @@ final reportsServiceProvider = Provider<ReportsService?>((ref) {
   );
 });
 
-/// Merchant-wide orders are owner/admin-only even if this provider is invoked
-/// directly by another screen in the future.
 final merchantWideOrdersStreamProvider = StreamProvider<List<AppOrder>>((ref) {
   final appUser = ref.watch(appUserProvider).value;
   if (appUser == null ||
       (appUser.role != 'merchant' && appUser.role != 'admin')) {
     return Stream.value(const <AppOrder>[]);
   }
-
   final merchantId = appUser.merchantId ?? appUser.id;
   final repository = OrderRepository(FirebaseFirestore.instance);
   return repository.queryOrders(merchantId).snapshots().map((snapshot) {
@@ -280,14 +322,12 @@ final merchantWideOrdersStreamProvider = StreamProvider<List<AppOrder>>((ref) {
   });
 });
 
-/// Merchant-wide expense source for consolidated reports is owner/admin-only.
 final merchantWideExpensesStreamProvider = StreamProvider<List<Expense>>((ref) {
   final appUser = ref.watch(appUserProvider).value;
   if (appUser == null ||
       (appUser.role != 'merchant' && appUser.role != 'admin')) {
     return Stream.value(const <Expense>[]);
   }
-
   final merchantId = appUser.merchantId ?? appUser.id;
   return FirebaseFirestore.instance
       .collection('merchants')
@@ -308,8 +348,6 @@ final merchantWideExpensesStreamProvider = StreamProvider<List<Expense>>((ref) {
   });
 });
 
-/// Consolidated merchant report: all branches for sales, expenses, and debt
-/// collections. It is never constructed for an employee account.
 final consolidatedReportsServiceProvider = Provider<ReportsService?>((ref) {
   final appUser = ref.watch(appUserProvider).value;
   if (appUser == null ||
@@ -325,13 +363,16 @@ final consolidatedReportsServiceProvider = Provider<ReportsService?>((ref) {
   final suppliersState = ref.watch(suppliersStreamProvider);
   final debtPaymentsState = ref.watch(merchantCustomerDebtPaymentsProvider);
   final storeProfileState = ref.watch(storeProfileProvider);
+  final costsState = ref.watch(merchantOrderCostsProvider);
+  final canViewCost = appUser.hasPermission('can_view_cost');
 
   if (ordersState.value == null ||
       productsState.value == null ||
       expensesState.value == null ||
       customersState.value == null ||
       suppliersState.value == null ||
-      debtPaymentsState.value == null) {
+      debtPaymentsState.value == null ||
+      (canViewCost && costsState.value == null)) {
     return null;
   }
 
@@ -342,6 +383,8 @@ final consolidatedReportsServiceProvider = Provider<ReportsService?>((ref) {
     customersState.value!,
     suppliersState.value!,
     debtPayments: debtPaymentsState.value!,
+    protectedOrderCosts: costsState.value ?? const {},
+    canViewCost: canViewCost,
     defaultTaxPercentage:
         storeProfileState.value?.defaultTaxPercentage ?? 0.0,
     defaultIsTaxInclusive:
