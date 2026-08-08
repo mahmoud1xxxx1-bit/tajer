@@ -1,5 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/providers/store_profile_provider.dart';
+import '../../authentication/data/auth_repository.dart';
 import '../../orders/data/order_repository.dart';
 import '../../orders/domain/order.dart';
 import '../../products/data/product_repository.dart';
@@ -10,6 +13,15 @@ import '../../customers/domain/customer.dart';
 import '../../suppliers/domain/supplier.dart';
 import '../../customers/data/customer_repository.dart';
 import '../../suppliers/data/supplier_repository.dart';
+
+enum ReportsScope {
+  branch,
+  merchant,
+}
+
+final reportsScopeProvider = StateProvider<ReportsScope>((ref) {
+  return ReportsScope.branch;
+});
 
 class SalesData {
   final DateTime date;
@@ -213,6 +225,8 @@ class ReportsService {
   }
 }
 
+/// Branch-scoped report used by the normal report screen.
+/// Orders and expenses are already scoped by selectedBranchIdProvider upstream.
 final reportsServiceProvider = Provider<ReportsService?>((ref) {
   final ordersState = ref.watch(ordersStreamProvider);
   final productsState = ref.watch(productsStreamProvider);
@@ -240,4 +254,84 @@ final reportsServiceProvider = Provider<ReportsService?>((ref) {
     defaultIsTaxInclusive:
         storeProfileState.value?.defaultIsTaxInclusive ?? true,
   );
+});
+
+/// Merchant-wide orders intentionally bypass the branch-aware UI stream.
+/// The base repository query reads all merchant orders while AppOrder preserves
+/// each order's branchId (legacy orders fall back to `main`).
+final merchantWideOrdersStreamProvider = StreamProvider<List<AppOrder>>((ref) {
+  final appUser = ref.watch(appUserProvider).value;
+  if (appUser == null) return const Stream.empty();
+
+  final merchantId = appUser.merchantId ?? appUser.id;
+  final repository = OrderRepository(FirebaseFirestore.instance);
+  return repository.queryOrders(merchantId).snapshots().map((snapshot) {
+    final values = snapshot.docs.map((doc) => doc.data()).toList();
+    values.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return values;
+  });
+});
+
+/// Merchant-wide expense source for consolidated reports only.
+/// Normal expense screens remain branch-scoped.
+final merchantWideExpensesStreamProvider = StreamProvider<List<Expense>>((ref) {
+  final appUser = ref.watch(appUserProvider).value;
+  if (appUser == null) return const Stream.empty();
+
+  final merchantId = appUser.merchantId ?? appUser.id;
+  return FirebaseFirestore.instance
+      .collection('merchants')
+      .doc(merchantId)
+      .collection('expenses')
+      .snapshots()
+      .map((snapshot) {
+    final values = snapshot.docs.map((doc) {
+      final data = Map<String, dynamic>.from(doc.data());
+      data['id'] = doc.id;
+      data['merchantId'] = data['merchantId']?.toString() ?? merchantId;
+      data['branchId'] = data['branchId']?.toString() ?? 'main';
+      data['amount'] = (data['amount'] as num?)?.toDouble() ?? 0.0;
+      return Expense.fromJson(data);
+    }).toList();
+    values.sort((a, b) => b.date.compareTo(a.date));
+    return values;
+  });
+});
+
+/// Consolidated merchant report: all branches for sales/expenses, while shared
+/// master data (products/customers/suppliers) remains merchant-wide as before.
+final consolidatedReportsServiceProvider = Provider<ReportsService?>((ref) {
+  final ordersState = ref.watch(merchantWideOrdersStreamProvider);
+  final productsState = ref.watch(productsStreamProvider);
+  final expensesState = ref.watch(merchantWideExpensesStreamProvider);
+  final customersState = ref.watch(customersStreamProvider);
+  final suppliersState = ref.watch(suppliersStreamProvider);
+  final storeProfileState = ref.watch(storeProfileProvider);
+
+  if (ordersState.value == null ||
+      productsState.value == null ||
+      expensesState.value == null ||
+      customersState.value == null ||
+      suppliersState.value == null) {
+    return null;
+  }
+
+  return ReportsService(
+    ordersState.value!,
+    productsState.value!,
+    expensesState.value!,
+    customersState.value!,
+    suppliersState.value!,
+    defaultTaxPercentage:
+        storeProfileState.value?.defaultTaxPercentage ?? 0.0,
+    defaultIsTaxInclusive:
+        storeProfileState.value?.defaultIsTaxInclusive ?? true,
+  );
+});
+
+final activeReportsServiceProvider = Provider<ReportsService?>((ref) {
+  final scope = ref.watch(reportsScopeProvider);
+  return scope == ReportsScope.merchant
+      ? ref.watch(consolidatedReportsServiceProvider)
+      : ref.watch(reportsServiceProvider);
 });
