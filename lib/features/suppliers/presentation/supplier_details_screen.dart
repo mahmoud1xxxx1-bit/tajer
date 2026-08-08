@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
-import '../../../core/theme/glass_card.dart';
+
 import '../../../core/providers/settings_provider.dart';
-import '../../../core/services/pin_service.dart';
+import '../../../core/services/activity_logger.dart';
+import '../../../core/theme/glass_card.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
-import '../../authentication/domain/app_user.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../branches/presentation/branch_context.dart';
+import '../../expenses/data/expense_repository.dart';
+import '../../shifts/data/shift_repository.dart';
 import '../data/supplier_repository.dart';
 import '../data/supplier_transaction_repository.dart';
 import '../domain/supplier.dart';
 import '../domain/supplier_transaction.dart';
-import '../../expenses/data/expense_repository.dart';
-import '../../expenses/domain/expense.dart';
-import '../../../core/services/activity_logger.dart';
 
 class SupplierDetailsScreen extends ConsumerWidget {
   final Supplier supplier;
@@ -23,14 +23,16 @@ class SupplierDetailsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Watch the specific supplier to get real-time totalDebt updates
-    final suppliers = ref.watch(suppliersStreamProvider).value ?? [];
-    final currentSupplier = suppliers.firstWhere((s) => s.id == supplier.id, orElse: () => supplier);
-    
+    final suppliers = ref.watch(suppliersStreamProvider).value ?? const <Supplier>[];
+    final currentSupplier = suppliers.firstWhere(
+      (s) => s.id == supplier.id,
+      orElse: () => supplier,
+    );
     final transactionsAsync = ref.watch(supplierTransactionsStreamProvider(supplier.id));
     final currentCurrency = ref.watch(currencyProvider);
     final appUser = ref.watch(appUserProvider).value;
     final canManageInventory = appUser?.hasPermission('can_manage_inventory') ?? false;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     return Scaffold(
       appBar: AppBar(
@@ -45,18 +47,19 @@ class SupplierDetailsScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          // Header Card
           Padding(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16),
             child: GlassCard(
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: currentSupplier.totalDebt > 0 ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+                        color: currentSupplier.totalDebt > 0
+                            ? Colors.red.withOpacity(0.1)
+                            : Colors.green.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -71,8 +74,12 @@ class SupplierDetailsScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'الديون المستحقة',
-                            style: TextStyle(fontSize: 14, color: Colors.grey[700], fontFamily: 'Tajawal'),
+                            isAr ? 'الديون المستحقة' : 'Outstanding Debt',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[700],
+                              fontFamily: 'Tajawal',
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -92,165 +99,120 @@ class SupplierDetailsScreen extends ConsumerWidget {
               ),
             ),
           ),
-          
-          // Transactions List
           Expanded(
             child: transactionsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text(isAr ? 'خطأ: $e' : 'Error: $e')),
               data: (transactions) {
                 if (transactions.isEmpty) {
-                  return const Center(child: Text('لا يوجد سجل حركات لهذا المورد', style: TextStyle(fontFamily: 'Tajawal')));
+                  return Center(
+                    child: Text(
+                      isAr ? 'لا يوجد سجل حركات لهذا المورد' : 'No transactions for this supplier',
+                      style: const TextStyle(fontFamily: 'Tajawal'),
+                    ),
+                  );
                 }
 
-                // Group by Date (ignoring time)
                 final grouped = <String, List<SupplierTransaction>>{};
-                for (var t in transactions) {
-                  final dateStr = DateFormat('yyyy-MM-dd').format(t.date);
-                  if (!grouped.containsKey(dateStr)) {
-                    grouped[dateStr] = [];
-                  }
-                  grouped[dateStr]!.add(t);
+                for (final transaction in transactions) {
+                  final key = DateFormat('yyyy-MM-dd').format(transaction.date);
+                  grouped.putIfAbsent(key, () => <SupplierTransaction>[]).add(transaction);
                 }
-
-                final sortedDates = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
+                final dates = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
 
                 return ListView.builder(
-                  itemCount: sortedDates.length,
+                  itemCount: dates.length,
                   itemBuilder: (context, index) {
-                    final dateStr = sortedDates[index];
-                    final dayTransactions = grouped[dateStr]!;
-                    
+                    final date = dates[index];
                     return GlassCard(
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                       child: ExpansionTile(
                         initiallyExpanded: index == 0,
                         title: Text(
-                          dateStr,
-                          style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+                          date,
+                          style: const TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                        children: dayTransactions.map((t) {
-                          final isPayment = t.type == 'payment';
+                        children: grouped[date]!.map((transaction) {
+                          final isPayment = transaction.type == 'payment';
                           return ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: isPayment ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                              backgroundColor: isPayment
+                                  ? Colors.green.withOpacity(0.1)
+                                  : Colors.red.withOpacity(0.1),
                               child: Icon(
                                 isPayment ? Icons.arrow_downward : Icons.arrow_upward,
                                 size: 20,
                               ),
                             ),
                             title: Text(
-                              t.description, 
+                              transaction.description,
                               style: TextStyle(
-                                fontFamily: 'Tajawal', 
+                                fontFamily: 'Tajawal',
                                 fontSize: 14,
-                                decoration: t.isCancelled ? TextDecoration.lineThrough : null,
-                                color: t.isCancelled ? Colors.grey : null,
-                              )
+                                decoration: transaction.isCancelled
+                                    ? TextDecoration.lineThrough
+                                    : null,
+                                color: transaction.isCancelled ? Colors.grey : null,
+                              ),
                             ),
                             subtitle: Text(
-                              DateFormat('hh:mm a').format(t.date) + (t.isCancelled ? ' (ملغي)' : ''), 
+                              '${DateFormat('hh:mm a').format(transaction.date)}${transaction.isCancelled ? (isAr ? ' (ملغي)' : ' (Cancelled)') : ''}',
                               style: TextStyle(
                                 fontSize: 12,
-                                color: t.isCancelled ? Colors.red : null,
-                              )
+                                color: transaction.isCancelled ? Colors.red : null,
+                              ),
                             ),
-                            trailing: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.end,
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
+                                if (!transaction.isCancelled && canManageInventory)
+                                  IconButton(
+                                    visualDensity: VisualDensity.compact,
+                                    tooltip: isAr ? 'إلغاء العملية' : 'Cancel transaction',
+                                    icon: const Icon(
+                                      Icons.cancel_outlined,
+                                      color: Colors.orange,
+                                      size: 18,
+                                    ),
+                                    onPressed: () => _cancelTransaction(
+                                      context,
+                                      ref,
+                                      currentSupplier,
+                                      transaction,
+                                    ),
+                                  ),
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    if (!t.isCancelled && appUser?.hasPermission('can_manage_inventory') == true)
-                                      InkWell(
-                                        onTap: () async {
-                                          final appUser = ref.read(appUserProvider).value;
-                                          if (appUser != null) {
-                                            final isAr = Localizations.localeOf(context).languageCode == 'ar';
-                                            final success = await PinConfirmationDialog.requirePinOrSetup(
-                                              context, 
-                                              appUser,
-                                              title: isAr ? 'تحذير: إلغاء العملية' : 'Warning: Cancel Transaction',
-                                              warning: isAr 
-                                                ? 'سيتم إلغاء العملية وإعادة حساب المديونية. ' + (isPayment ? '(تنبيه: ستحتاج لإلغاء المصروف من شاشة المصروفات أيضاً)' : '')
-                                                : 'Transaction will be cancelled and debt recalculated.',
-                                            );
-                                            if (!success) return;
-                                          }
-                                          if (isPayment) {
-                                            final expensesOpt = ref.read(expensesStreamProvider).value;
-                                            if (expensesOpt != null) {
-                                              final matchingExpenses = expensesOpt.where((e) => 
-                                                e.isSupplierPayment && 
-                                                e.amount == t.amount && 
-                                                e.title.contains(supplier.name) &&
-                                                !e.isCancelled &&
-                                                e.date.difference(t.date).inMinutes.abs() < 5
-                                              );
-                                              if (matchingExpenses.isNotEmpty) {
-                                                try {
-                                                  await ref.read(expenseRepositoryProvider)?.cancelExpense(matchingExpenses.first);
-                                                } catch (e) {
-                                                  if (context.mounted) {
-                                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''), style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.red));
-                                                  }
-                                                  return; // Stop the whole reversal if expense is in a closed shift
-                                                }
-                                              }
-                                            }
-                                          }
-                                          
-                                          final updatedTransaction = t.copyWith(isCancelled: true);
-                                          ref.read(supplierTransactionRepositoryProvider)?.updateTransaction(updatedTransaction);
-                                          
-                                          // Update supplier debt
-                                          final newDebt = supplier.totalDebt + (isPayment ? t.amount : -t.amount);
-                                          ref.read(supplierRepositoryProvider)?.updateSupplier(supplier.copyWith(totalDebt: newDebt));
-
-                                          
-                                          ActivityLogger.log(
-                                            user: appUser,
-                                            actionType: 'Cancel Supplier Transaction|إلغاء عملية مورد',
-                                            description: 'Cancelled ${isPayment ? "payment" : "debt"} of ${t.amount} for supplier ${supplier.name}',
-                                          );
-                                        },
-                                        child: Container(
-                                          padding: const EdgeInsets.all(4),
-                                          decoration: BoxDecoration(
-                                            color: Colors.orange.withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(6),
-                                          ),
-                                          child: const Icon(Icons.cancel_outlined, color: Colors.orange, size: 16),
-                                        ),
-                                      ),
-                                    const SizedBox(width: 8),
                                     Text(
-                                      '${isPayment ? "-" : "+"}${t.amount} ${currentCurrency.code}',
+                                      '${isPayment ? '-' : '+'}${transaction.amount} ${currentCurrency.code}',
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         fontFamily: 'Tajawal',
-                                        decoration: t.isCancelled ? TextDecoration.lineThrough : null,
-                                        color: t.isCancelled ? Colors.grey : (isPayment ? Colors.green : Colors.red),
+                                        decoration: transaction.isCancelled
+                                            ? TextDecoration.lineThrough
+                                            : null,
+                                        color: transaction.isCancelled
+                                            ? Colors.grey
+                                            : (isPayment ? Colors.green : Colors.red),
                                       ),
                                     ),
+                                    if (isPayment && transaction.paymentMethod != null)
+                                      Text(
+                                        transaction.paymentMethod == 'network'
+                                            ? (isAr ? 'شبكة/حوالة' : 'Card/Transfer')
+                                            : (isAr ? 'كاش' : 'Cash'),
+                                        style: const TextStyle(
+                                          fontFamily: 'Tajawal',
+                                          fontSize: 10,
+                                        ),
+                                      ),
                                   ],
                                 ),
-                                if (isPayment && t.paymentMethod != null)
-                                  Container(
-                                    margin: EdgeInsets.only(top: 4),
-                                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
-                                    decoration: BoxDecoration(
-                                      color: t.paymentMethod == 'network' ? Colors.blue.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      t.paymentMethod == 'network' ? 'شبكة' : 'كاش',
-                                      style: TextStyle(
-                                        fontSize: 9,
-                                        color: t.paymentMethod == 'network' ? Colors.blue : Colors.orange,
-                                        fontFamily: 'Tajawal'
-                                      ),
-                                    ),
-                                  )
                               ],
                             ),
                           );
@@ -260,332 +222,491 @@ class SupplierDetailsScreen extends ConsumerWidget {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, st) => Center(child: Text('خطأ: $e')),
             ),
           ),
         ],
       ),
-      bottomNavigationBar: canManageInventory ? SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => _showAddDebtDialog(context, ref, currentSupplier),
-                  icon: const Icon(Icons.add),
-                  label: const Text('إضافة دين', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                    foregroundColor: Theme.of(context).colorScheme.onError,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
+      bottomNavigationBar: canManageInventory
+          ? SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showAddDebtDialog(context, ref, currentSupplier),
+                        icon: const Icon(Icons.add),
+                        label: Text(
+                          isAr ? 'إضافة دين' : 'Add Debt',
+                          style: const TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).colorScheme.error,
+                          foregroundColor: Theme.of(context).colorScheme.onError,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showPaySupplierDebtDialog(context, ref, currentSupplier),
+                        icon: const Icon(Icons.payment),
+                        label: Text(
+                          isAr ? 'تسديد دفعة' : 'Pay Debt',
+                          style: const TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.green,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: () => _showPaySupplierDebtDialog(context, ref, currentSupplier),
-                  icon: const Icon(Icons.payment),
-                  label: const Text('تسديد دفعة', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ) : null,
+            )
+          : null,
     );
   }
 
-  void _showAddDebtDialog(BuildContext context, WidgetRef ref, Supplier currentSupplier) {
+  Future<void> _cancelTransaction(
+    BuildContext context,
+    WidgetRef ref,
+    Supplier currentSupplier,
+    SupplierTransaction transaction,
+  ) async {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final appUser = ref.read(appUserProvider).value;
+    if (appUser != null) {
+      final confirmed = await PinConfirmationDialog.requirePinOrSetup(
+        context,
+        appUser,
+        title: isAr ? 'تحذير: إلغاء العملية' : 'Warning: Cancel Transaction',
+        warning: isAr
+            ? 'سيتم إلغاء العملية وإعادة حساب مديونية المورد.'
+            : 'The transaction will be cancelled and supplier debt recalculated.',
+      );
+      if (!confirmed) return;
+    }
+
+    try {
+      final repository = ref.read(supplierRepositoryProvider);
+      if (repository == null) return;
+
+      if (transaction.type == 'payment' &&
+          transaction.expenseId != null &&
+          transaction.expenseId!.isNotEmpty) {
+        await repository.reverseSupplierPayment(
+          supplierId: currentSupplier.id,
+          transactionId: transaction.id,
+        );
+      } else if (transaction.type == 'payment') {
+        // Legacy v107 payments did not persist an exact expenseId. Preserve
+        // the validated compatibility path only for those historical records.
+        final expenses = ref.read(expensesStreamProvider).value;
+        if (expenses != null) {
+          final matching = expenses.where(
+            (expense) =>
+                expense.isSupplierPayment &&
+                expense.amount == transaction.amount &&
+                expense.title.contains(currentSupplier.name) &&
+                !expense.isCancelled &&
+                expense.date.difference(transaction.date).inMinutes.abs() < 5,
+          );
+          if (matching.isNotEmpty) {
+            await ref.read(expenseRepositoryProvider)?.cancelExpense(matching.first);
+          }
+        }
+        await ref.read(supplierTransactionRepositoryProvider)?.updateTransaction(
+              transaction.copyWith(isCancelled: true),
+            );
+        await repository.updateSupplier(
+          currentSupplier.copyWith(
+            totalDebt: currentSupplier.totalDebt + transaction.amount,
+          ),
+        );
+      } else {
+        await ref.read(supplierTransactionRepositoryProvider)?.updateTransaction(
+              transaction.copyWith(isCancelled: true),
+            );
+        final newDebt = currentSupplier.totalDebt - transaction.amount;
+        await repository.updateSupplier(
+          currentSupplier.copyWith(totalDebt: newDebt < 0 ? 0 : newDebt),
+        );
+      }
+
+      ActivityLogger.log(
+        user: appUser,
+        actionType: 'Cancel Supplier Transaction|إلغاء عملية مورد',
+        description:
+            'Cancelled ${transaction.type} of ${transaction.amount} for supplier ${currentSupplier.name}',
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString().replaceAll('Exception: ', ''),
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _showAddDebtDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Supplier currentSupplier,
+  ) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final amountController = TextEditingController();
-    final descController = TextEditingController(text: 'إضافة مديونية جديدة');
-    
+    final descriptionController = TextEditingController(
+      text: isAr ? 'إضافة مديونية جديدة' : 'New supplier debt',
+    );
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('إضافة دين جديد للمورد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        title: Text(
+          isAr ? 'إضافة دين جديد للمورد' : 'Add Supplier Debt',
+          style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: amountController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: 'المبلغ', border: OutlineInputBorder()),
+              decoration: InputDecoration(
+                labelText: isAr ? 'المبلغ' : 'Amount',
+                border: const OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
-              controller: descController,
-              decoration: const InputDecoration(labelText: 'البيان / التفاصيل', border: OutlineInputBorder()),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal'))),
-          ElevatedButton(
-            onPressed: () async {
-              final amount = double.tryParse(amountController.text) ?? 0.0;
-              if (amount <= 0) return;
-              
-              final user = ref.read(appUserProvider).value;
-              final merchantId = user?.merchantId ?? user?.id ?? '';
-              
-              // 1. Update Supplier
-              final updatedSupplier = currentSupplier.copyWith(totalDebt: currentSupplier.totalDebt + amount);
-              await ref.read(supplierRepositoryProvider)?.updateSupplier(updatedSupplier);
-              
-              // 2. Add Transaction
-              final tx = SupplierTransaction(
-                id: const Uuid().v4(),
-                supplierId: currentSupplier.id,
-                merchantId: merchantId,
-                amount: amount,
-                type: 'debt_addition',
-                description: descController.text.isEmpty ? 'إضافة دين' : descController.text,
-                date: DateTime.now(),
-                createdAt: DateTime.now(),
-              );
-              await ref.read(supplierTransactionRepositoryProvider)?.addTransaction(tx);
-              
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('إضافة', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showPaySupplierDebtDialog(BuildContext context, WidgetRef ref, Supplier currentSupplier) {
-    final amountController = TextEditingController(text: currentSupplier.totalDebt.toString());
-    String paymentMethod = 'cash';
-    bool isFromShiftDrawer = true;
-    
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-        title: const Text('تسديد ديون المورد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('إجمالي دين المورد: ${currentSupplier.totalDebt}', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600)),
-            const SizedBox(height: 16),
-            TextField(
-              controller: amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'المبلغ المدفوع للمورد',
-                labelStyle: TextStyle(fontFamily: 'Tajawal'),
-                border: OutlineInputBorder(),
+              controller: descriptionController,
+              decoration: InputDecoration(
+                labelText: isAr ? 'البيان / التفاصيل' : 'Description / Details',
+                border: const OutlineInputBorder(),
               ),
             ),
-            const SizedBox(height: 16),
-            const Text('طريقة الدفع:', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: ChoiceChip(
-                    label: const Text('كاش', style: TextStyle(fontFamily: 'Tajawal')),
-                    selected: paymentMethod == 'cash',
-                    onSelected: (val) {
-                      if (val) setState(() => paymentMethod = 'cash');
-                    },
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ChoiceChip(
-                    label: const Text('شبكة/حوالة', style: TextStyle(fontFamily: 'Tajawal')),
-                    selected: paymentMethod == 'network',
-                    onSelected: (val) {
-                      if (val) setState(() => paymentMethod = 'network');
-                    },
-                  ),
-                ),
-              ],
-            ),
-            if (paymentMethod == 'cash') ...[
-              const SizedBox(height: 16),
-              Container(
-                decoration: BoxDecoration(
-                  color: isFromShiftDrawer ? Colors.red.withOpacity(0.05) : Colors.grey.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: isFromShiftDrawer ? Colors.red.withOpacity(0.3) : Colors.grey.withOpacity(0.3)),
-                ),
-                child: CheckboxListTile(
-                  title: const Text('خصم من درج الوردية الحالي؟', style: TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
-                  subtitle: Text(
-                    isFromShiftDrawer ? 'سيتم تقليل الكاش في الوردية' : 'لن يتم تغيير كاش الوردية',
-                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: isFromShiftDrawer ? Colors.red : Colors.grey),
-                  ),
-                  value: isFromShiftDrawer,
-                  onChanged: (val) {
-                    setState(() => isFromShiftDrawer = val ?? true);
-                  },
-                  activeColor: Colors.red,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                ),
-              ),
-            ],
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+            child: Text(isAr ? 'إلغاء' : 'Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
-              final paid = double.tryParse(amountController.text.trim()) ?? 0.0;
-              if (paid <= 0) return;
-              
-              if (paid > currentSupplier.totalDebt) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق.', style: TextStyle(fontFamily: 'Tajawal')),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-
-              try {
-                await ref.read(supplierRepositoryProvider)?.paySupplierDebt(
-                  supplierId: currentSupplier.id,
-                  amountPaid: paid,
-                );
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(e.toString().replaceAll('Exception: ', ''), style: const TextStyle(fontFamily: 'Tajawal')),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-                return;
-              }
-              
+              final amount = double.tryParse(amountController.text.trim()) ?? 0;
+              if (amount <= 0) return;
               final user = ref.read(appUserProvider).value;
               final merchantId = user?.merchantId ?? user?.id ?? '';
-              
-              // 1. Register as Supplier Transaction
-              final tx = SupplierTransaction(
-                id: const Uuid().v4(),
-                supplierId: currentSupplier.id,
-                merchantId: merchantId,
-                amount: paid,
-                type: 'payment',
-                paymentMethod: paymentMethod,
-                description: 'دفعة سداد ديون للمورد' + (paymentMethod == 'cash' ? (isFromShiftDrawer ? ' (من الدرج)' : ' (خارج الدرج)') : ''),
-                date: DateTime.now(),
-                createdAt: DateTime.now(),
+              final branchId = ref.read(selectedBranchIdProvider);
+
+              final updatedSupplier = currentSupplier.copyWith(
+                totalDebt: currentSupplier.totalDebt + amount,
               );
-              await ref.read(supplierTransactionRepositoryProvider)?.addTransaction(tx);
-              
-              // 2. Register as Expense
-              final expense = Expense(
-                id: const Uuid().v4(),
-                merchantId: merchantId,
-                amount: paid,
-                isSupplierPayment: true,
-                paymentMethod: paymentMethod,
-                date: DateTime.now(),
-                createdAt: DateTime.now(),
-                title: 'دفعة سداد ديون للمورد: ${currentSupplier.name}',
-                creatorName: user?.name ?? 'المدير',
-                isFromShiftDrawer: isFromShiftDrawer,
-              );
-              await ref.read(expenseRepositoryProvider)?.addExpense(expense);
-              
+              await ref.read(supplierRepositoryProvider)?.updateSupplier(updatedSupplier);
+
+              await ref.read(supplierTransactionRepositoryProvider)?.addTransaction(
+                    SupplierTransaction(
+                      id: const Uuid().v4(),
+                      supplierId: currentSupplier.id,
+                      merchantId: merchantId,
+                      branchId: branchId,
+                      amount: amount,
+                      type: 'debt_addition',
+                      description: descriptionController.text.trim().isEmpty
+                          ? (isAr ? 'إضافة دين' : 'Debt added')
+                          : descriptionController.text.trim(),
+                      date: DateTime.now(),
+                      createdAt: DateTime.now(),
+                    ),
+                  );
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text('سداد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+            child: Text(isAr ? 'إضافة' : 'Add'),
           ),
         ],
-      )),
+      ),
     );
   }
 
-  void _showEditSupplierDialog(BuildContext context, WidgetRef ref, Supplier currentSupplier) {
+  void _showPaySupplierDebtDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Supplier currentSupplier,
+  ) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final amountController = TextEditingController(
+      text: currentSupplier.totalDebt.toString(),
+    );
+    String paymentMethod = 'cash';
+    bool isFromShiftDrawer = true;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(
+            isAr ? 'تسديد ديون المورد' : 'Pay Supplier Debt',
+            style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${isAr ? 'إجمالي دين المورد' : 'Supplier total debt'}: ${currentSupplier.totalDebt}',
+                style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: amountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: isAr ? 'المبلغ المدفوع للمورد' : 'Amount paid to supplier',
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                isAr ? 'طريقة الدفع:' : 'Payment method:',
+                style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ChoiceChip(
+                      label: Text(isAr ? 'كاش' : 'Cash'),
+                      selected: paymentMethod == 'cash',
+                      onSelected: (value) {
+                        if (value) setState(() => paymentMethod = 'cash');
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ChoiceChip(
+                      label: Text(isAr ? 'شبكة/حوالة' : 'Card/Transfer'),
+                      selected: paymentMethod == 'network',
+                      onSelected: (value) {
+                        if (value) setState(() => paymentMethod = 'network');
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              if (paymentMethod == 'cash') ...[
+                const SizedBox(height: 16),
+                CheckboxListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(
+                    isAr ? 'خصم من درج الوردية الحالي؟' : 'Deduct from current shift drawer?',
+                    style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14),
+                  ),
+                  subtitle: Text(
+                    isFromShiftDrawer
+                        ? (isAr ? 'سيتم تقليل الكاش في الوردية' : 'Shift cash will be reduced')
+                        : (isAr ? 'لن يتم تغيير كاش الوردية' : 'Shift cash will not change'),
+                    style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12),
+                  ),
+                  value: isFromShiftDrawer,
+                  onChanged: (value) => setState(
+                    () => isFromShiftDrawer = value ?? true,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(isAr ? 'إلغاء' : 'Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final paid = double.tryParse(amountController.text.trim()) ?? 0;
+                if (paid <= 0) return;
+                if (paid > currentSupplier.totalDebt) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        isAr
+                            ? 'مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق.'
+                            : 'Payment cannot exceed the supplier outstanding debt.',
+                      ),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                final user = ref.read(appUserProvider).value;
+                final merchantId = user?.merchantId ?? user?.id ?? '';
+                final branchId = ref.read(selectedBranchIdProvider);
+                final currentShift = ref.read(currentShiftProvider(merchantId)).value;
+                final needsShift = paymentMethod == 'cash' && isFromShiftDrawer;
+
+                if (needsShift && currentShift == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        isAr
+                            ? 'لا يمكن خصم سداد المورد من الدرج بدون وردية مفتوحة في هذا الفرع.'
+                            : 'Open a shift in this branch before deducting supplier payment from the drawer.',
+                      ),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                  return;
+                }
+
+                try {
+                  await ref.read(supplierRepositoryProvider)?.settleSupplierDebt(
+                        supplierId: currentSupplier.id,
+                        supplierName: currentSupplier.name,
+                        amountPaid: paid,
+                        paymentMethod: paymentMethod,
+                        isFromShiftDrawer: isFromShiftDrawer,
+                        branchId: branchId,
+                        transactionId: const Uuid().v4(),
+                        expenseId: const Uuid().v4(),
+                        occurredAt: DateTime.now(),
+                        shiftId: needsShift ? currentShift!.id : null,
+                        creatorId: user?.id,
+                        creatorName: user?.name,
+                      );
+
+                  ActivityLogger.log(
+                    user: user,
+                    actionType: 'Supplier Debt Payment|سداد دين مورد',
+                    description:
+                        'Paid $paid to supplier ${currentSupplier.name} in branch $branchId|تم سداد $paid للمورد ${currentSupplier.name} في الفرع $branchId',
+                  );
+                  if (context.mounted) Navigator.pop(context);
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          e.toString().replaceAll('Exception: ', ''),
+                          style: const TextStyle(fontFamily: 'Tajawal'),
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                }
+              },
+              child: Text(isAr ? 'سداد' : 'Pay'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditSupplierDialog(
+    BuildContext context,
+    WidgetRef ref,
+    Supplier currentSupplier,
+  ) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final nameController = TextEditingController(text: currentSupplier.name);
     final phoneController = TextEditingController(text: currentSupplier.phone);
 
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('تعديل بيانات المورد', style: TextStyle(fontFamily: 'Tajawal')),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: 'اسم المورد'),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(labelText: 'رقم الهاتف'),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                final appUser = ref.read(appUserProvider).value;
-                if (appUser != null) {
-                  final isAr = Localizations.localeOf(context).languageCode == 'ar';
-                  final title = currentSupplier.isActive 
-                    ? (isAr ? 'تأكيد: إلغاء المورد' : 'Warning: Cancel Supplier')
-                    : (isAr ? 'تأكيد: استعادة المورد' : 'Confirm: Restore Supplier');
-                  final warning = currentSupplier.isActive
-                    ? (isAr ? 'سيتم شطب المورد من القائمة. لن يتم مسح بياناته السابقة.' : 'Supplier will be crossed out. Data will remain.')
-                    : (isAr ? 'سيتم استعادة المورد وإزالة الشطب.' : 'Supplier will be restored.');
-                    
-                  final success = await PinConfirmationDialog.requirePinOrSetup(
-                    context, 
-                    appUser,
-                    title: title,
-                    warning: warning,
-                  );
-                  if (!success) return;
-                }
-                final updatedSupplier = currentSupplier.copyWith(isActive: !currentSupplier.isActive);
-                ref.read(supplierRepositoryProvider)?.updateSupplier(updatedSupplier);
-                if (context.mounted) Navigator.pop(context); // Close details screen too
-              },
-              child: Text(
-                currentSupplier.isActive ? 'إلغاء المورد' : 'استعادة المورد', 
-                style: TextStyle(color: currentSupplier.isActive ? Colors.red : Colors.green)
+      builder: (context) => AlertDialog(
+        title: Text(
+          isAr ? 'تعديل بيانات المورد' : 'Edit Supplier',
+          style: const TextStyle(fontFamily: 'Tajawal'),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(
+                labelText: isAr ? 'اسم المورد' : 'Supplier name',
               ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                if (nameController.text.isEmpty) return;
-                final updatedSupplier = currentSupplier.copyWith(
-                  name: nameController.text,
-                  phone: phoneController.text,
-                );
-                ref.read(supplierRepositoryProvider)?.updateSupplier(updatedSupplier);
-                Navigator.pop(context);
-              },
-              child: const Text('حفظ'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: phoneController,
+              keyboardType: TextInputType.phone,
+              decoration: InputDecoration(
+                labelText: isAr ? 'رقم الهاتف' : 'Phone number',
+              ),
             ),
           ],
-        );
-      },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              final appUser = ref.read(appUserProvider).value;
+              if (appUser != null) {
+                final confirmed = await PinConfirmationDialog.requirePinOrSetup(
+                  context,
+                  appUser,
+                  title: currentSupplier.isActive
+                      ? (isAr ? 'تأكيد: إلغاء المورد' : 'Warning: Cancel Supplier')
+                      : (isAr ? 'تأكيد: استعادة المورد' : 'Confirm: Restore Supplier'),
+                  warning: currentSupplier.isActive
+                      ? (isAr
+                          ? 'سيتم شطب المورد من القائمة. لن يتم مسح بياناته السابقة.'
+                          : 'Supplier will be crossed out. Historical data will remain.')
+                      : (isAr
+                          ? 'سيتم استعادة المورد وإزالة الشطب.'
+                          : 'Supplier will be restored.'),
+                );
+                if (!confirmed) return;
+              }
+              await ref.read(supplierRepositoryProvider)?.updateSupplier(
+                    currentSupplier.copyWith(isActive: !currentSupplier.isActive),
+                  );
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: Text(
+              currentSupplier.isActive
+                  ? (isAr ? 'إلغاء المورد' : 'Cancel Supplier')
+                  : (isAr ? 'استعادة المورد' : 'Restore Supplier'),
+              style: TextStyle(
+                color: currentSupplier.isActive ? Colors.red : Colors.green,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (nameController.text.trim().isEmpty) return;
+              await ref.read(supplierRepositoryProvider)?.updateSupplier(
+                    currentSupplier.copyWith(
+                      name: nameController.text.trim(),
+                      phone: phoneController.text.trim(),
+                    ),
+                  );
+              if (context.mounted) Navigator.pop(context);
+            },
+            child: Text(isAr ? 'حفظ' : 'Save'),
+          ),
+        ],
+      ),
     );
   }
 }
