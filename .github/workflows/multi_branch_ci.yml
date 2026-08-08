@@ -37,6 +37,9 @@ jobs:
       - name: Analyze application code
         run: flutter analyze lib --no-fatal-warnings --no-fatal-infos
 
+      - name: Validate trusted backend syntax
+        run: node --check functions/index.js
+
       - name: Run multi-branch regression tests
         run: |
           flutter test test/multi_branch_backward_compatibility_test.dart
@@ -56,6 +59,7 @@ jobs:
           flutter test test/employee_permission_presentation_test.dart
           flutter test test/employee_permission_atomicity_contract_test.dart
           flutter test test/order_cost_privacy_contract_test.dart
+          flutter test test/trusted_cogs_backend_contract_test.dart
 
       - name: Build Web
         run: flutter build web --release --base-href /taj/
