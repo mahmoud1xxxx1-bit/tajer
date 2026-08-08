@@ -33,7 +33,7 @@ void main() {
     expect((serializedItems.single as Map).containsKey('costPrice'), isFalse);
   });
 
-  test('legacy order cost migration is separate and removes public field', () {
+  test('legacy order cost migration is separate, fail-closed and removes public field', () {
     final source = File(
       'lib/features/orders/data/order_cost_snapshot_repository.dart',
     ).readAsStringSync();
@@ -41,6 +41,11 @@ void main() {
     expect(source, contains("collection('order_cost_snapshots')"));
     expect(source, contains("item.remove('costPrice')"));
     expect(source, contains("batch.update(orderDoc.reference, {'items': publicItems})"));
-    expect(source, contains("'totalCost': totalCost"));
+
+    // Migration must not publish a partial COGS total as if it were complete.
+    expect(source, contains("'totalCost': complete ? calculatedTotalCost : null"));
+    expect(source, contains("'isComplete': complete"));
+    expect(source, contains("'unitCost': null"));
+    expect(source, contains("'lineCost': null"));
   });
 }
