@@ -1,0 +1,86 @@
+name: Guarded Report Scope UI Patch
+
+on:
+  push:
+    branches: [ "feature/multi-branch-v1" ]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/multi-branch-v1
+          fetch-depth: 0
+
+      - name: Apply exact report scope UI changes
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('lib/features/reports/presentation/reports_screen.dart')
+          text = path.read_text(encoding='utf-8')
+
+          old = "final reportScope = ref.watch(reportsScopeProvider);"
+          new = """final reportScope = ref.watch(effectiveReportsScopeProvider);
+    final canViewAllBranches = appUser?.role == 'merchant';"""
+          if old in text:
+              if text.count(old) != 1:
+                  raise SystemExit(f'Unexpected scope watch count: {text.count(old)}')
+              text = text.replace(old, new, 1)
+          elif new not in text:
+              raise SystemExit('Report scope watch marker not found')
+
+          old = """                    DropdownMenuItem<ReportsScope>(
+                      value: ReportsScope.merchant,
+                      child: Text(
+                        isAr ? 'جميع الفروع' : 'All branches',
+                        style: const TextStyle(fontFamily: 'Tajawal'),
+                      ),
+                    ),"""
+          new = """                    if (canViewAllBranches)
+                      DropdownMenuItem<ReportsScope>(
+                        value: ReportsScope.merchant,
+                        child: Text(
+                          isAr ? 'جميع الفروع' : 'All branches',
+                          style: const TextStyle(fontFamily: 'Tajawal'),
+                        ),
+                      ),"""
+          if old in text:
+              if text.count(old) != 1:
+                  raise SystemExit(f'Unexpected all-branches item count: {text.count(old)}')
+              text = text.replace(old, new, 1)
+          elif new not in text:
+              raise SystemExit('All-branches dropdown marker not found')
+
+          old = "title: AppLocalizations.of(context)!.text107,"
+          new = """title: reportScope == ReportsScope.merchant
+                            ? (isAr ? 'إجمالي الديون المستحقة' : 'Total Outstanding Debt')
+                            : (isAr ? 'الديون المستحقة من مبيعات هذا الفرع' : 'Outstanding Debt from This Branch'),"""
+          if old in text:
+              if text.count(old) != 1:
+                  raise SystemExit(f'Unexpected debt title count: {text.count(old)}')
+              text = text.replace(old, new, 1)
+          elif new not in text:
+              raise SystemExit('Debt title marker not found')
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+          git diff --check
+          if git diff --quiet; then
+            echo "Patch already applied; nothing to commit."
+            exit 0
+          fi
+
+          CHANGED=$(git diff --name-only)
+          test "$CHANGED" = "lib/features/reports/presentation/reports_screen.dart"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/features/reports/presentation/reports_screen.dart
+          git commit -m "feat(reports): restrict consolidated UI to merchant and clarify debt scope"
+          git push origin HEAD:feature/multi-branch-v1
