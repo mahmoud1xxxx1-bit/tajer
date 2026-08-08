@@ -24,9 +24,6 @@ service cloud.firestore {
         (data.get('role', '') == 'employee' && data.get('merchantId', '') == merchantId && data.get('permissions', {}).get(permission, false) == true)));
     }
 
-    // Branch authorization is independent from feature permission. Owners/admins
-    // can operate all branches. Employees are restricted to assignedBranchIds.
-    // Legacy v107 employee documents without this field are Main Branch only.
     function hasBranchAccess(merchantId, branchId) {
       let data = getUserData();
       return isAdmin() || isOwner(merchantId) ||
@@ -38,6 +35,17 @@ service cloud.firestore {
       return hasBranchAccess(merchantId, data.get('branchId', 'main'));
     }
 
+    // A signed-in user may edit their own harmless profile fields, but never
+    // security, subscription or tenancy fields. This prevents an employee from
+    // granting themselves permissions or adding branches directly in Firestore.
+    function isSafeSelfUserUpdate(userId) {
+      return isAuthenticated() && request.auth.uid == userId &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'plan', 'role', 'merchantId', 'permissions', 'assignedBranchIds',
+          'isRevoked', 'isAnonymous', 'createdAt'
+        ]);
+    }
+
     function isCustomerOrderAccountingUpdate(merchantId) {
       return hasPermission(merchantId, 'can_create_orders') && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalPurchases','orderCount','totalDebt','lastPurchaseDate','updatedAt']);
     }
@@ -47,9 +55,13 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isAuthenticated() && (request.auth.uid == userId || hasAccess(userId) || hasAccess(resource.data.get('merchantId', '')));
-      allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && (request.auth.uid == userId || hasAccess(resource.data.get('merchantId', ''))) && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['plan']));
-      allow delete: if isAuthenticated() && hasAccess(resource.data.get('merchantId', ''));
+      allow create: if isAuthenticated() && (
+        request.auth.uid == userId ||
+        isOwner(request.resource.data.get('merchantId', ''))
+      );
+      allow update: if isSafeSelfUserUpdate(userId) ||
+        (resource != null && isOwner(resource.data.get('merchantId', '')));
+      allow delete: if resource != null && isOwner(resource.data.get('merchantId', ''));
       match /employees/{employeeId} {
         allow read: if hasAccess(userId);
         allow create, update, delete: if isAuthenticated() && request.auth.uid == userId;
