@@ -15,17 +15,29 @@ class RawMaterialRepository {
         .where('merchantId', isEqualTo: merchantId)
         .snapshots()
         .map((snapshot) {
-      final items = snapshot.docs.map((doc) => RawMaterial.fromJson(doc.data())).toList();
+      final items = snapshot.docs
+          .map((doc) => RawMaterial.fromJson(doc.data()))
+          .toList();
       return items.where((item) => !item.isArchived).toList();
     });
   }
 
+  /// Raw-material documents are merchant-wide master data. Stock belongs to
+  /// branch_inventory, so a newly-created item starts with zero legacy stock.
   Future<void> addRawMaterial(RawMaterial rawMaterial) async {
-    await _firestore.collection('raw_materials').doc(rawMaterial.id).set(rawMaterial.toJson());
+    final data = rawMaterial.toJson();
+    data['quantity'] = 0.0;
+    data['initialQuantity'] = 0.0;
+    await _firestore.collection('raw_materials').doc(rawMaterial.id).set(data);
   }
 
+  /// Do not overwrite merchant-wide legacy stock with the currently selected
+  /// branch quantity. Stock corrections are applied via BranchInventoryRepository.
   Future<void> updateRawMaterial(RawMaterial rawMaterial) async {
-    await _firestore.collection('raw_materials').doc(rawMaterial.id).update(rawMaterial.toJson());
+    final data = rawMaterial.toJson();
+    data.remove('quantity');
+    data.remove('initialQuantity');
+    await _firestore.collection('raw_materials').doc(rawMaterial.id).update(data);
   }
 
   Future<void> deleteRawMaterial(String id) async {
@@ -37,7 +49,8 @@ final rawMaterialRepositoryProvider = Provider<RawMaterialRepository>((ref) {
   return RawMaterialRepository(FirebaseFirestore.instance);
 });
 
-final rawMaterialsStreamProvider = StreamProvider.family<List<RawMaterial>, String>((ref, merchantId) {
+final rawMaterialsStreamProvider =
+    StreamProvider.family<List<RawMaterial>, String>((ref, merchantId) {
   final repository = ref.watch(rawMaterialRepositoryProvider);
   final branchId = ref.watch(selectedBranchIdProvider);
   final branchInventory = ref.watch(branchInventoryStreamProvider(branchId));
