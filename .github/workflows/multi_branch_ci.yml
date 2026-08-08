@@ -47,6 +47,7 @@ jobs:
           flutter test test/shift_report_reconciliation_test.dart
           flutter test test/report_scope_policy_test.dart
           flutter test test/branch_inventory_atomicity_contract_test.dart
+          flutter test test/branch_inventory_scope_contract_test.dart
 
       - name: Build Web
         run: flutter build web --release --base-href /taj/
