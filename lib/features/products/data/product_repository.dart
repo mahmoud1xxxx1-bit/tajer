@@ -34,7 +34,10 @@ class ProductRepository {
 
   Future<void> migrateOldProducts(String merchantId) async {
     try {
-      final snapshot = await _firestore.collection('products').where('merchantId', isEqualTo: merchantId).get();
+      final snapshot = await _firestore
+          .collection('products')
+          .where('merchantId', isEqualTo: merchantId)
+          .get();
       final batch = _firestore.batch();
       int count = 0;
       for (var doc in snapshot.docs) {
@@ -49,12 +52,22 @@ class ProductRepository {
     }
   }
 
+  /// Product documents are merchant-wide master data. Quantities belong to
+  /// branch_inventory. A zero legacy quantity prevents a newly-created product
+  /// in a non-main branch from accidentally appearing as stock in Main Branch.
   Future<void> addProduct(Product product) async {
-    await _firestore.collection('products').doc(product.id).set(product.toJson());
+    final data = product.toJson();
+    data['quantity'] = 0;
+    await _firestore.collection('products').doc(product.id).set(data);
   }
 
+  /// Never overwrite the legacy merchant-wide quantity with the currently
+  /// selected branch quantity. Manual stock changes are handled atomically by
+  /// BranchInventoryRepository.
   Future<void> updateProduct(Product product) async {
-    await _firestore.collection('products').doc(product.id).update(product.toJson());
+    final data = product.toJson();
+    data.remove('quantity');
+    await _firestore.collection('products').doc(product.id).update(data);
   }
 
   Future<void> deleteProduct(String productId) async {
@@ -62,7 +75,10 @@ class ProductRepository {
   }
 
   Future<int> getProductCount(String merchantId) async {
-    final snapshot = await _firestore.collection('products').where('merchantId', isEqualTo: merchantId).get();
+    final snapshot = await _firestore
+        .collection('products')
+        .where('merchantId', isEqualTo: merchantId)
+        .get();
     return snapshot.docs.where((doc) => doc.data()['isArchived'] != true).length;
   }
 }
