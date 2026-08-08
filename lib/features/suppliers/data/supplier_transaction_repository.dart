@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../branches/presentation/branch_context.dart';
 import '../domain/supplier_transaction.dart';
 
 class SupplierTransactionRepository {
@@ -14,16 +15,23 @@ class SupplierTransactionRepository {
           .collection('suppliers').doc(supplierId)
           .collection('transactions');
 
-  Stream<List<SupplierTransaction>> watchTransactions(String supplierId) {
+  Stream<List<SupplierTransaction>> watchTransactions(
+    String supplierId, {
+    String branchId = 'main',
+  }) {
     return _transactionsRef(supplierId).withConverter(
       fromFirestore: (snapshot, _) {
         final data = snapshot.data()!;
         data['id'] = snapshot.id;
+        data['branchId'] = data['branchId']?.toString() ?? 'main';
         return SupplierTransaction.fromJson(data);
       },
       toFirestore: (transaction, _) => transaction.toJson(),
     ).orderBy('date', descending: true).snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => doc.data()).toList();
+      return snapshot.docs
+          .map((doc) => doc.data())
+          .where((transaction) => transaction.branchId == branchId)
+          .toList();
     });
   }
 
@@ -45,5 +53,6 @@ final supplierTransactionRepositoryProvider = Provider<SupplierTransactionReposi
 final supplierTransactionsStreamProvider = StreamProvider.family<List<SupplierTransaction>, String>((ref, supplierId) {
   final repo = ref.watch(supplierTransactionRepositoryProvider);
   if (repo == null) return Stream.value([]);
-  return repo.watchTransactions(supplierId);
+  final branchId = ref.watch(selectedBranchIdProvider);
+  return repo.watchTransactions(supplierId, branchId: branchId);
 });
