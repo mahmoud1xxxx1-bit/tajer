@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tajer/features/reports/data/reports_service.dart';
 
@@ -29,6 +31,21 @@ void main() {
         resolveReportsScope(role: null, requested: ReportsScope.merchant),
         ReportsScope.branch,
       );
+    });
+
+    test('report aggregation has a permission gate at provider boundary', () {
+      final source = File('lib/features/reports/data/reports_service.dart')
+          .readAsStringSync();
+      expect(source, contains("appUser.hasPermission('can_view_reports')"));
+      expect(source, contains('if (!_canViewReports(ref)) return null;'));
+    });
+
+    test('merchant-wide report sources cannot be opened by employee accounts', () {
+      final source = File('lib/features/reports/data/reports_service.dart')
+          .readAsStringSync();
+      expect(source, contains("appUser.role != 'merchant' && appUser.role != 'admin'"));
+      expect(source, contains('merchantWideOrdersStreamProvider'));
+      expect(source, contains('merchantWideExpensesStreamProvider'));
     });
   });
 }
