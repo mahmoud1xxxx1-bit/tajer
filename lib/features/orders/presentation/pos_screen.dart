@@ -72,6 +72,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
             selectedModifiers: List.from(selectedModifiers),
             isTaxInclusive: finalIsInclusive,
             taxPercentage: finalTax,
+            taxMode: product.taxMode,
             costPrice: product.costPrice,
           ));
         } else {

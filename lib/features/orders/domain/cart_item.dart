@@ -1,3 +1,5 @@
+import 'package:tajer/features/products/domain/product.dart';
+
 class CartItem {
   final String productId;
   final String productName;
@@ -7,6 +9,7 @@ class CartItem {
   final List<String> selectedModifiers;
   final bool? isTaxInclusive;
   final double? taxPercentage;
+  final TaxMode taxMode;
   final double? costPrice; // Task 6: Optional COGS value per item at time of sale
 
   const CartItem({
@@ -18,6 +21,7 @@ class CartItem {
     this.selectedModifiers = const [],
     this.isTaxInclusive,
     this.taxPercentage,
+    this.taxMode = TaxMode.store,
     this.costPrice,
   });
 
@@ -31,8 +35,31 @@ class CartItem {
       selectedModifiers: (json['selectedModifiers'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       isTaxInclusive: json['isTaxInclusive'] as bool?,
       taxPercentage: json['taxPercentage'] != null ? (json['taxPercentage'] as num).toDouble() : null,
+      taxMode: _parseTaxMode(json['taxMode']),
       costPrice: json['costPrice'] != null ? (json['costPrice'] as num).toDouble() : null,
     );
+  }
+
+  static TaxMode _parseTaxMode(dynamic value) {
+    if (value == null) return TaxMode.store;
+    if (value is String) {
+      for (final mode in TaxMode.values) {
+        if (mode.name == value) return mode;
+      }
+    }
+    return TaxMode.store;
+  }
+
+  double getEffectiveTax(double storeDefaultTax) {
+    switch (taxMode) {
+      case TaxMode.exempt:
+        return 0.0;
+      case TaxMode.custom:
+        return taxPercentage ?? storeDefaultTax;
+      case TaxMode.store:
+      default:
+        return storeDefaultTax;
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -45,6 +72,7 @@ class CartItem {
       'selectedModifiers': selectedModifiers,
       'isTaxInclusive': isTaxInclusive,
       'taxPercentage': taxPercentage,
+      'taxMode': taxMode.name,
       'costPrice': costPrice,
     };
   }
@@ -57,6 +85,7 @@ class CartItem {
     double? total,
     bool? isTaxInclusive,
     double? taxPercentage,
+    TaxMode? taxMode,
     double? costPrice,
   }) {
     return CartItem(
@@ -67,6 +96,7 @@ class CartItem {
       total: total ?? this.total,
       isTaxInclusive: isTaxInclusive ?? this.isTaxInclusive,
       taxPercentage: taxPercentage ?? this.taxPercentage,
+      taxMode: taxMode ?? this.taxMode,
       costPrice: costPrice ?? this.costPrice,
     );
   }
