@@ -16,6 +16,7 @@ import '../features/suppliers/presentation/suppliers_screen.dart';
 import '../features/categories/presentation/categories_screen.dart';
 import '../features/inventory_log/presentation/inventory_logs_screen.dart';
 import '../features/employees/presentation/employees_screen.dart';
+import '../features/employees/presentation/employee_branch_assignments_screen.dart';
 import '../features/subscription/presentation/subscription_screen.dart';
 import '../features/settings/presentation/profile_screen.dart';
 import '../features/settings/presentation/audit_log_screen.dart';
@@ -52,6 +53,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/inventory_history', builder: (context, state) => const InventoryLogsScreen()),
       GoRoute(path: '/inventory_transfer', builder: (context, state) => const InventoryTransferScreen()),
       GoRoute(path: '/employees', builder: (context, state) => const EmployeesScreen()),
+      GoRoute(path: '/employee_branches', builder: (context, state) => const EmployeeBranchAssignmentsScreen()),
       GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
       GoRoute(path: '/subscription', builder: (context, state) => const SubscriptionScreen()),
       GoRoute(path: '/backup_security', builder: (context, state) => const BackupSecurityScreen()),
