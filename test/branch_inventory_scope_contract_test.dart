@@ -22,8 +22,22 @@ void main() {
       expect(source, contains('selectedBranchIdProvider'));
       expect(source, contains('branchInventoryStreamProvider(branchId)'));
       expect(source, contains("item.itemType == 'product'"));
-      expect(source, contains("if (branchId == 'main') return product;"));
-      expect(source, contains('return product.copyWith(quantity: 0);'));
+
+      // v107 compatibility: when no branch_inventory row exists, Main keeps
+      // the legacy product quantity while every non-main branch fails closed
+      // to zero. The current implementation applies this after the protected
+      // product-cost overlay instead of returning early from the mapper.
+      expect(source, contains('final scopedQuantity = quantities[product.id];'));
+      expect(source, contains('if (scopedQuantity != null)'));
+      expect(source, contains('next = next.copyWith(quantity: scopedQuantity.round());'));
+      expect(source, contains("else if (branchId != 'main')"));
+      expect(source, contains('next = next.copyWith(quantity: 0);'));
+
+      // Cost visibility is orthogonal to branch stock and must come only from
+      // the protected product_costs stream for authorized users.
+      expect(source, contains("appUser.hasPermission('can_view_cost')"));
+      expect(source, contains('costRepository.watchCosts(merchantId)'));
+      expect(source, contains('next = next.copyWith(costPrice: cost);'));
     });
 
     test('raw materials resolve quantity from selected branch inventory', () {
