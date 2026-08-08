@@ -20,62 +20,27 @@ jobs:
           fetch-depth: 0
 
       - name: Apply guarded bilingual report scope patch
-        if: github.actor != 'github-actions[bot]'
+        if: ${{ github.actor != 'github-actions[bot]' }}
         run: |
           python3 - <<'PY'
           from pathlib import Path
-
           path = Path('lib/features/reports/presentation/reports_screen.dart')
           text = path.read_text(encoding='utf-8')
-
           old = "final baseReportsService = ref.watch(reportsServiceProvider);"
           new = "final baseReportsService = ref.watch(activeReportsServiceProvider);"
           if text.count(old) != 1:
               raise SystemExit(f'Expected one base report provider marker, found {text.count(old)}')
           text = text.replace(old, new, 1)
-
           old = "final isAr = Localizations.localeOf(context).languageCode == 'ar';"
-          new = """final isAr = Localizations.localeOf(context).languageCode == 'ar';
-    final reportScope = ref.watch(reportsScopeProvider);"""
+          new = "final isAr = Localizations.localeOf(context).languageCode == 'ar';\n    final reportScope = ref.watch(reportsScopeProvider);"
           if text.count(old) < 1:
               raise SystemExit('Locale marker missing')
           text = text.replace(old, new, 1)
-
-          old = """              children: [
-                DropdownButton<String>(
-                  value: _selectedFilter,"""
-          new = """              children: [
-                DropdownButton<ReportsScope>(
-                  value: reportScope,
-                  items: [
-                    DropdownMenuItem<ReportsScope>(
-                      value: ReportsScope.branch,
-                      child: Text(
-                        isAr ? 'الفرع الحالي' : 'Current branch',
-                        style: const TextStyle(fontFamily: 'Tajawal'),
-                      ),
-                    ),
-                    DropdownMenuItem<ReportsScope>(
-                      value: ReportsScope.merchant,
-                      child: Text(
-                        isAr ? 'جميع الفروع' : 'All branches',
-                        style: const TextStyle(fontFamily: 'Tajawal'),
-                      ),
-                    ),
-                  ],
-                  onChanged: (scope) {
-                    if (scope != null) {
-                      ref.read(reportsScopeProvider.notifier).state = scope;
-                    }
-                  },
-                ),
-                const SizedBox(width: 12),
-                DropdownButton<String>(
-                  value: _selectedFilter,"""
+          old = "              children: [\n                DropdownButton<String>(\n                  value: _selectedFilter,"
+          new = "              children: [\n                DropdownButton<ReportsScope>(\n                  value: reportScope,\n                  items: [\n                    DropdownMenuItem<ReportsScope>(\n                      value: ReportsScope.branch,\n                      child: Text(\n                        isAr ? 'الفرع الحالي' : 'Current branch',\n                        style: const TextStyle(fontFamily: 'Tajawal'),\n                      ),\n                    ),\n                    DropdownMenuItem<ReportsScope>(\n                      value: ReportsScope.merchant,\n                      child: Text(\n                        isAr ? 'جميع الفروع' : 'All branches',\n                        style: const TextStyle(fontFamily: 'Tajawal'),\n                      ),\n                    ),\n                  ],\n                  onChanged: (scope) {\n                    if (scope != null) {\n                      ref.read(reportsScopeProvider.notifier).state = scope;\n                    }\n                  },\n                ),\n                const SizedBox(width: 12),\n                DropdownButton<String>(\n                  value: _selectedFilter,"
           if text.count(old) != 1:
               raise SystemExit(f'Expected one date dropdown marker, found {text.count(old)}')
           text = text.replace(old, new, 1)
-
           path.write_text(text, encoding='utf-8')
           PY
           git diff --check
