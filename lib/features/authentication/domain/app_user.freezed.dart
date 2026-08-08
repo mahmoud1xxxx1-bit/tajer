@@ -31,6 +31,7 @@ mixin _$AppUser {
   String? get merchantId => throw _privateConstructorUsedError;
   String? get deviceId => throw _privateConstructorUsedError;
   Map<String, dynamic> get permissions => throw _privateConstructorUsedError;
+  List<String> get assignedBranchIds => throw _privateConstructorUsedError;
   String? get vatNumber => throw _privateConstructorUsedError;
   String? get crNumber => throw _privateConstructorUsedError;
   String? get nationalAddress => throw _privateConstructorUsedError;
@@ -57,6 +58,7 @@ abstract class $AppUserCopyWith<$Res> {
       String? merchantId,
       String? deviceId,
       Map<String, dynamic> permissions,
+      List<String> assignedBranchIds,
       String? vatNumber,
       String? crNumber,
       String? nationalAddress});
@@ -86,6 +88,7 @@ class _$AppUserCopyWithImpl<$Res, $Val extends AppUser>
     Object? merchantId = freezed,
     Object? deviceId = freezed,
     Object? permissions = null,
+    Object? assignedBranchIds = null,
     Object? vatNumber = freezed,
     Object? crNumber = freezed,
     Object? nationalAddress = freezed,
@@ -135,6 +138,10 @@ class _$AppUserCopyWithImpl<$Res, $Val extends AppUser>
           ? _value.permissions
           : permissions // ignore: cast_nullable_to_non_nullable
               as Map<String, dynamic>,
+      assignedBranchIds: null == assignedBranchIds
+          ? _value.assignedBranchIds
+          : assignedBranchIds // ignore: cast_nullable_to_non_nullable
+              as List<String>,
       vatNumber: freezed == vatNumber
           ? _value.vatNumber
           : vatNumber // ignore: cast_nullable_to_non_nullable
@@ -170,6 +177,7 @@ abstract class _$$AppUserImplCopyWith<$Res> implements $AppUserCopyWith<$Res> {
       String? merchantId,
       String? deviceId,
       Map<String, dynamic> permissions,
+      List<String> assignedBranchIds,
       String? vatNumber,
       String? crNumber,
       String? nationalAddress});
@@ -197,6 +205,7 @@ class __$$AppUserImplCopyWithImpl<$Res>
     Object? merchantId = freezed,
     Object? deviceId = freezed,
     Object? permissions = null,
+    Object? assignedBranchIds = null,
     Object? vatNumber = freezed,
     Object? crNumber = freezed,
     Object? nationalAddress = freezed,
@@ -246,6 +255,10 @@ class __$$AppUserImplCopyWithImpl<$Res>
           ? _value._permissions
           : permissions // ignore: cast_nullable_to_non_nullable
               as Map<String, dynamic>,
+      assignedBranchIds: null == assignedBranchIds
+          ? _value._assignedBranchIds
+          : assignedBranchIds // ignore: cast_nullable_to_non_nullable
+              as List<String>,
       vatNumber: freezed == vatNumber
           ? _value.vatNumber
           : vatNumber // ignore: cast_nullable_to_non_nullable
@@ -277,10 +290,12 @@ class _$AppUserImpl extends _AppUser {
       this.merchantId,
       this.deviceId,
       final Map<String, dynamic> permissions = const {},
+      final List<String> assignedBranchIds = const <String>[],
       this.vatNumber,
       this.crNumber,
       this.nationalAddress})
       : _permissions = permissions,
+        _assignedBranchIds = assignedBranchIds,
         super._();
 
   factory _$AppUserImpl.fromJson(Map<String, dynamic> json) =>
@@ -318,6 +333,16 @@ class _$AppUserImpl extends _AppUser {
     return EqualUnmodifiableMapView(_permissions);
   }
 
+  final List<String> _assignedBranchIds;
+  @override
+  @JsonKey()
+  List<String> get assignedBranchIds {
+    if (_assignedBranchIds is EqualUnmodifiableListView)
+      return _assignedBranchIds;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_assignedBranchIds);
+  }
+
   @override
   final String? vatNumber;
   @override
@@ -327,7 +352,7 @@ class _$AppUserImpl extends _AppUser {
 
   @override
   String toString() {
-    return 'AppUser(id: $id, name: $name, phone: $phone, email: $email, plan: $plan, createdAt: $createdAt, isAnonymous: $isAnonymous, role: $role, merchantId: $merchantId, deviceId: $deviceId, permissions: $permissions, vatNumber: $vatNumber, crNumber: $crNumber, nationalAddress: $nationalAddress)';
+    return 'AppUser(id: $id, name: $name, phone: $phone, email: $email, plan: $plan, createdAt: $createdAt, isAnonymous: $isAnonymous, role: $role, merchantId: $merchantId, deviceId: $deviceId, permissions: $permissions, assignedBranchIds: $assignedBranchIds, vatNumber: $vatNumber, crNumber: $crNumber, nationalAddress: $nationalAddress)';
   }
 
   @override
@@ -351,6 +376,8 @@ class _$AppUserImpl extends _AppUser {
                 other.deviceId == deviceId) &&
             const DeepCollectionEquality()
                 .equals(other._permissions, _permissions) &&
+            const DeepCollectionEquality()
+                .equals(other._assignedBranchIds, _assignedBranchIds) &&
             (identical(other.vatNumber, vatNumber) ||
                 other.vatNumber == vatNumber) &&
             (identical(other.crNumber, crNumber) ||
@@ -374,6 +401,7 @@ class _$AppUserImpl extends _AppUser {
       merchantId,
       deviceId,
       const DeepCollectionEquality().hash(_permissions),
+      const DeepCollectionEquality().hash(_assignedBranchIds),
       vatNumber,
       crNumber,
       nationalAddress);
@@ -405,6 +433,7 @@ abstract class _AppUser extends AppUser {
       final String? merchantId,
       final String? deviceId,
       final Map<String, dynamic> permissions,
+      final List<String> assignedBranchIds,
       final String? vatNumber,
       final String? crNumber,
       final String? nationalAddress}) = _$AppUserImpl;
@@ -434,6 +463,8 @@ abstract class _AppUser extends AppUser {
   String? get deviceId;
   @override
   Map<String, dynamic> get permissions;
+  @override
+  List<String> get assignedBranchIds;
   @override
   String? get vatNumber;
   @override

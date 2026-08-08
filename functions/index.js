@@ -71,19 +71,26 @@ exports.captureOrderCostSnapshot = onDocumentCreated(
       };
     });
 
-    await targetRef.create({
-      merchantId,
-      orderId,
-      branchId: String(order.branchId || 'main'),
-      items: protectedItems,
-      // A partial total must never masquerade as valid profit data. Readers only
-      // consume numeric totalCost values, so null makes COGS completeness fail
-      // closed until all sold items have an authoritative cost snapshot.
-      totalCost: complete ? calculatedTotalCost : null,
-      isComplete: complete,
-      source: 'trusted_server_trigger',
-      orderCreatedAt: order.createdAt || null,
-      createdAt: FieldValue.serverTimestamp(),
-    });
+    try {
+      await targetRef.create({
+        merchantId,
+        orderId,
+        branchId: String(order.branchId || 'main'),
+        items: protectedItems,
+        // A partial total must never masquerade as valid profit data. Readers only
+        // consume numeric totalCost values, so null makes COGS completeness fail
+        // closed until all sold items have an authoritative cost snapshot.
+        totalCost: complete ? calculatedTotalCost : null,
+        isComplete: complete,
+        source: 'trusted_server_trigger',
+        orderCreatedAt: order.createdAt || null,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+    } catch (error) {
+      if (error && (error.code === 6 || error.code === 'already-exists')) {
+        return;
+      }
+      throw error;
+    }
   },
 );

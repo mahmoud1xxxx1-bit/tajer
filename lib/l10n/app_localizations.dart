@@ -2897,19 +2897,19 @@ abstract class AppLocalizations {
   /// No description provided for @aboutApp.
   ///
   /// In ar, this message translates to:
-  /// **'?? ???????'**
+  /// **'حول التطبيق'**
   String get aboutApp;
 
   /// No description provided for @databaseBackupText.
   ///
   /// In ar, this message translates to:
-  /// **'????? ?????????'**
+  /// **'نسخ احتياطي لقاعدة البيانات'**
   String get databaseBackupText;
 
   /// No description provided for @thermalPrinterText.
   ///
   /// In ar, this message translates to:
-  /// **'??????? ????????'**
+  /// **'الطابعة الحرارية'**
   String get thermalPrinterText;
 
   /// No description provided for @setupChecklistTitle.

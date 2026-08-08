@@ -10,8 +10,21 @@ class DataMigrationService {
   /// Returns true if successful, false otherwise.
   Future<bool> migrateData(String oldMerchantId, String newMerchantId) async {
     try {
-      final batch = _firestore.batch();
-      int operationCount = 0;
+      var batch = _firestore.batch();
+      var operationCount = 0;
+
+      Future<void> flushBatchIfNeeded({bool force = false}) async {
+        if (operationCount == 0) return;
+        if (!force && operationCount < 490) return;
+        await batch.commit();
+        batch = _firestore.batch();
+        operationCount = 0;
+      }
+
+      void addOperation(void Function(WriteBatch batch) write) {
+        write(batch);
+        operationCount++;
+      }
 
       // Helper function to process collections
       Future<void> migrateCollection(String collectionName) async {
@@ -21,14 +34,10 @@ class DataMigrationService {
             .get();
 
         for (var doc in querySnapshot.docs) {
-          batch.update(doc.reference, {'merchantId': newMerchantId});
-          operationCount++;
-          
-          // Firestore batch limit is 500 operations
-          if (operationCount >= 490) {
-            await batch.commit();
-            operationCount = 0;
-          }
+          addOperation((currentBatch) {
+            currentBatch.update(doc.reference, {'merchantId': newMerchantId});
+          });
+          await flushBatchIfNeeded();
         }
       }
 
@@ -61,24 +70,22 @@ class DataMigrationService {
             .doc(newMerchantId)
             .collection('inventory_logs')
             .doc(doc.id);
-        
-        batch.set(newDocRef, {
-          ...doc.data(),
-          'merchantId': newMerchantId,
-        });
-        batch.delete(doc.reference);
-        operationCount += 2; // one set, one delete
 
-        if (operationCount >= 490) {
-          await batch.commit();
-          operationCount = 0;
-        }
+        addOperation((currentBatch) {
+          currentBatch.set(newDocRef, {
+            ...doc.data(),
+            'merchantId': newMerchantId,
+          });
+        });
+        addOperation((currentBatch) {
+          currentBatch.delete(doc.reference);
+        });
+
+        await flushBatchIfNeeded();
       }
 
       // Commit remaining operations
-      if (operationCount > 0) {
-        await batch.commit();
-      }
+      await flushBatchIfNeeded(force: true);
 
       return true;
     } catch (e) {

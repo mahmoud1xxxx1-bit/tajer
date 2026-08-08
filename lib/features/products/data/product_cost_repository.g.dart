@@ -1,27 +1,31 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'shift_repository.dart';
+part of 'product_cost_repository.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$shiftRepositoryHash() => r'938816d906ec46572fc1ce50c22313e447b5c3a7';
+String _$productCostRepositoryHash() =>
+    r'14c9ad5c8dcab5906c1fbd7696ae36fc268e5678';
 
-/// See also [shiftRepository].
-@ProviderFor(shiftRepository)
-final shiftRepositoryProvider = AutoDisposeProvider<ShiftRepository>.internal(
-  shiftRepository,
-  name: r'shiftRepositoryProvider',
+/// See also [productCostRepository].
+@ProviderFor(productCostRepository)
+final productCostRepositoryProvider =
+    AutoDisposeProvider<ProductCostRepository>.internal(
+  productCostRepository,
+  name: r'productCostRepositoryProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
       ? null
-      : _$shiftRepositoryHash,
+      : _$productCostRepositoryHash,
   dependencies: null,
   allTransitiveDependencies: null,
 );
 
-typedef ShiftRepositoryRef = AutoDisposeProviderRef<ShiftRepository>;
-String _$currentShiftHash() => r'3e6d19d2189f0a0eb6bee613c4f771a8546645fd';
+typedef ProductCostRepositoryRef
+    = AutoDisposeProviderRef<ProductCostRepository>;
+String _$productCostsStreamHash() =>
+    r'98f94b1ea6a19407250b67055a7092790c46b6bd';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -44,27 +48,27 @@ class _SystemHash {
   }
 }
 
-/// See also [currentShift].
-@ProviderFor(currentShift)
-const currentShiftProvider = CurrentShiftFamily();
+/// See also [productCostsStream].
+@ProviderFor(productCostsStream)
+const productCostsStreamProvider = ProductCostsStreamFamily();
 
-/// See also [currentShift].
-class CurrentShiftFamily extends Family<AsyncValue<Shift?>> {
-  /// See also [currentShift].
-  const CurrentShiftFamily();
+/// See also [productCostsStream].
+class ProductCostsStreamFamily extends Family<AsyncValue<Map<String, double>>> {
+  /// See also [productCostsStream].
+  const ProductCostsStreamFamily();
 
-  /// See also [currentShift].
-  CurrentShiftProvider call(
+  /// See also [productCostsStream].
+  ProductCostsStreamProvider call(
     String merchantId,
   ) {
-    return CurrentShiftProvider(
+    return ProductCostsStreamProvider(
       merchantId,
     );
   }
 
   @override
-  CurrentShiftProvider getProviderOverride(
-    covariant CurrentShiftProvider provider,
+  ProductCostsStreamProvider getProviderOverride(
+    covariant ProductCostsStreamProvider provider,
   ) {
     return call(
       provider.merchantId,
@@ -83,32 +87,33 @@ class CurrentShiftFamily extends Family<AsyncValue<Shift?>> {
       _allTransitiveDependencies;
 
   @override
-  String? get name => r'currentShiftProvider';
+  String? get name => r'productCostsStreamProvider';
 }
 
-/// See also [currentShift].
-class CurrentShiftProvider extends AutoDisposeStreamProvider<Shift?> {
-  /// See also [currentShift].
-  CurrentShiftProvider(
+/// See also [productCostsStream].
+class ProductCostsStreamProvider
+    extends AutoDisposeStreamProvider<Map<String, double>> {
+  /// See also [productCostsStream].
+  ProductCostsStreamProvider(
     String merchantId,
   ) : this._internal(
-          (ref) => currentShift(
-            ref as CurrentShiftRef,
+          (ref) => productCostsStream(
+            ref as ProductCostsStreamRef,
             merchantId,
           ),
-          from: currentShiftProvider,
-          name: r'currentShiftProvider',
+          from: productCostsStreamProvider,
+          name: r'productCostsStreamProvider',
           debugGetCreateSourceHash:
               const bool.fromEnvironment('dart.vm.product')
                   ? null
-                  : _$currentShiftHash,
-          dependencies: CurrentShiftFamily._dependencies,
+                  : _$productCostsStreamHash,
+          dependencies: ProductCostsStreamFamily._dependencies,
           allTransitiveDependencies:
-              CurrentShiftFamily._allTransitiveDependencies,
+              ProductCostsStreamFamily._allTransitiveDependencies,
           merchantId: merchantId,
         );
 
-  CurrentShiftProvider._internal(
+  ProductCostsStreamProvider._internal(
     super._createNotifier, {
     required super.name,
     required super.dependencies,
@@ -122,12 +127,12 @@ class CurrentShiftProvider extends AutoDisposeStreamProvider<Shift?> {
 
   @override
   Override overrideWith(
-    Stream<Shift?> Function(CurrentShiftRef provider) create,
+    Stream<Map<String, double>> Function(ProductCostsStreamRef provider) create,
   ) {
     return ProviderOverride(
       origin: this,
-      override: CurrentShiftProvider._internal(
-        (ref) => create(ref as CurrentShiftRef),
+      override: ProductCostsStreamProvider._internal(
+        (ref) => create(ref as ProductCostsStreamRef),
         from: from,
         name: null,
         dependencies: null,
@@ -139,13 +144,14 @@ class CurrentShiftProvider extends AutoDisposeStreamProvider<Shift?> {
   }
 
   @override
-  AutoDisposeStreamProviderElement<Shift?> createElement() {
-    return _CurrentShiftProviderElement(this);
+  AutoDisposeStreamProviderElement<Map<String, double>> createElement() {
+    return _ProductCostsStreamProviderElement(this);
   }
 
   @override
   bool operator ==(Object other) {
-    return other is CurrentShiftProvider && other.merchantId == merchantId;
+    return other is ProductCostsStreamProvider &&
+        other.merchantId == merchantId;
   }
 
   @override
@@ -157,32 +163,19 @@ class CurrentShiftProvider extends AutoDisposeStreamProvider<Shift?> {
   }
 }
 
-mixin CurrentShiftRef on AutoDisposeStreamProviderRef<Shift?> {
+mixin ProductCostsStreamRef
+    on AutoDisposeStreamProviderRef<Map<String, double>> {
   /// The parameter `merchantId` of this provider.
   String get merchantId;
 }
 
-class _CurrentShiftProviderElement
-    extends AutoDisposeStreamProviderElement<Shift?> with CurrentShiftRef {
-  _CurrentShiftProviderElement(super.provider);
+class _ProductCostsStreamProviderElement
+    extends AutoDisposeStreamProviderElement<Map<String, double>>
+    with ProductCostsStreamRef {
+  _ProductCostsStreamProviderElement(super.provider);
 
   @override
-  String get merchantId => (origin as CurrentShiftProvider).merchantId;
+  String get merchantId => (origin as ProductCostsStreamProvider).merchantId;
 }
-
-String _$shiftsStreamHash() => r'078bd011ba1cd0d4a835b69eb82339b62b0d8795';
-
-/// See also [shiftsStream].
-@ProviderFor(shiftsStream)
-final shiftsStreamProvider = AutoDisposeStreamProvider<List<Shift>>.internal(
-  shiftsStream,
-  name: r'shiftsStreamProvider',
-  debugGetCreateSourceHash:
-      const bool.fromEnvironment('dart.vm.product') ? null : _$shiftsStreamHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-typedef ShiftsStreamRef = AutoDisposeStreamProviderRef<List<Shift>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

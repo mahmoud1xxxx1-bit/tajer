@@ -56,5 +56,5 @@ conn.on('ready', () => {
   host: '163.245.218.57',
   port: 22,
   username: 'root',
-  password: '0598106535Mm@'
+  password: process.env.VPS_PASSWORD
 });

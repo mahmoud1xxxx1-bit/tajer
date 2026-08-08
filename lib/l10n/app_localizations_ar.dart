@@ -1484,13 +1484,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unknown => 'unknown';
 
   @override
-  String get aboutApp => '?? ???????';
+  String get aboutApp => 'حول التطبيق';
 
   @override
-  String get databaseBackupText => '????? ?????????';
+  String get databaseBackupText => 'نسخ احتياطي لقاعدة البيانات';
 
   @override
-  String get thermalPrinterText => '??????? ????????';
+  String get thermalPrinterText => 'الطابعة الحرارية';
 
   @override
   String get setupChecklistTitle => 'جهز متجرك للبيع';

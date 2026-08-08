@@ -19,6 +19,10 @@ _$AppUserImpl _$$AppUserImplFromJson(Map<String, dynamic> json) =>
       merchantId: json['merchantId'] as String?,
       deviceId: json['deviceId'] as String?,
       permissions: json['permissions'] as Map<String, dynamic>? ?? const {},
+      assignedBranchIds: (json['assignedBranchIds'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const <String>[],
       vatNumber: json['vatNumber'] as String?,
       crNumber: json['crNumber'] as String?,
       nationalAddress: json['nationalAddress'] as String?,
@@ -37,6 +41,7 @@ Map<String, dynamic> _$$AppUserImplToJson(_$AppUserImpl instance) =>
       'merchantId': instance.merchantId,
       'deviceId': instance.deviceId,
       'permissions': instance.permissions,
+      'assignedBranchIds': instance.assignedBranchIds,
       'vatNumber': instance.vatNumber,
       'crNumber': instance.crNumber,
       'nationalAddress': instance.nationalAddress,

@@ -1,11 +1,12 @@
 import urllib.request
 import json
+import os
 
-API_KEY = "AIzaSyCYLpEIYZU1uuKZXxKBz7sa0Xk-cicnQ7Y"
-PROJECT_ID = "tajer-19289"
+API_KEY = os.environ["FIREBASE_WEB_API_KEY"]
+PROJECT_ID = os.environ.get("FIREBASE_PROJECT_ID", "tajer-19289")
 
-email = "support@alldown.uk"
-password = "Support123!"
+email = os.environ["TAJER_ADMIN_EMAIL"]
+password = os.environ["TAJER_ADMIN_PASSWORD"]
 
 # 1. Create User
 signup_url = f"https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={API_KEY}"

@@ -14,16 +14,8 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const isSupport = localStorage.getItem('isSupport') === 'true';
-    if (isSupport) {
-      setUser({ uid: 'support', email: 'support@alldown.uk' });
-      setLoading(false);
-    }
-    
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (!isSupport) {
-        setUser(currentUser);
-      }
+      setUser(currentUser);
       setLoading(false);
     });
     return () => unsubscribe();
