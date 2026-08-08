@@ -44,6 +44,7 @@ jobs:
           flutter test test/firestore_rules_contract_test.dart
           flutter test test/reports_service_test.dart
           flutter test test/report_cashflow_ledger_test.dart
+          flutter test test/shift_report_reconciliation_test.dart
 
       - name: Build Web
         run: flutter build web --release --base-href /taj/
