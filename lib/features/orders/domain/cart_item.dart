@@ -10,7 +10,7 @@ class CartItem {
   final bool? isTaxInclusive;
   final double? taxPercentage;
   final TaxMode taxMode;
-  final double? costPrice; // Task 6: Optional COGS value per item at time of sale
+  final double? costPrice;
 
   const CartItem({
     required this.productId,
@@ -36,6 +36,8 @@ class CartItem {
       isTaxInclusive: json['isTaxInclusive'] as bool?,
       taxPercentage: json['taxPercentage'] != null ? (json['taxPercentage'] as num).toDouble() : null,
       taxMode: _parseTaxMode(json['taxMode']),
+      // Legacy v107 orders may still contain this field until the protected
+      // historical-cost migration removes it. New public order writes never do.
       costPrice: json['costPrice'] != null ? (json['costPrice'] as num).toDouble() : null,
     );
   }
@@ -51,15 +53,21 @@ class CartItem {
   }
 
   double getEffectiveTax(double storeDefaultTax) {
-    if (taxMode == TaxMode.exempt) {
-      return 0.0;
-    }
-    // Safe fallback for both new and legacy orders:
-    // Uses the saved snapshot percentage if it exists, otherwise falls back to store default.
+    if (taxMode == TaxMode.exempt) return 0.0;
     return taxPercentage ?? storeDefaultTax;
   }
 
+  /// Full in-memory representation for trusted local calculations only.
   Map<String, dynamic> toJson() {
+    return {
+      ...toPublicJson(),
+      'costPrice': costPrice,
+    };
+  }
+
+  /// Safe payload used for /orders. Firestore cannot redact individual fields,
+  /// so sensitive COGS is stored separately in a protected collection.
+  Map<String, dynamic> toPublicJson() {
     return {
       'productId': productId,
       'productName': productName,
@@ -70,7 +78,6 @@ class CartItem {
       'isTaxInclusive': isTaxInclusive,
       'taxPercentage': taxPercentage,
       'taxMode': taxMode.name,
-      'costPrice': costPrice,
     };
   }
 
