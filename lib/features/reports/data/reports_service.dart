@@ -99,8 +99,6 @@ class ReportsService {
     );
   }
 
-  /// Accrual sales revenue. Credit sales belong here at invoice time even when
-  /// the cash is collected later.
   double get totalRevenue => orders
       .where((order) =>
           order.status != 'cancelled' && order.status != 'debt_repayment')
@@ -108,9 +106,6 @@ class ReportsService {
 
   double get netSalesRevenue => totalRevenue - totalTaxCollected;
 
-  /// Outstanding credit created by the orders in this report scope.
-  /// In a branch report this is branch-originated receivables, not the merchant-
-  /// wide customer balance shown on the customer account.
   double get totalDebt => orders
       .where((order) => order.status != 'cancelled' && order.isCredit)
       .fold(0.0, (sum, order) => sum + (order.total - order.paidAmount));
@@ -218,9 +213,6 @@ class ReportsService {
     return expensesByCategory;
   }
 
-  /// Actual money received during the report period. This is deliberately not
-  /// the same as revenue: credit collections are included when received while
-  /// the original credit sale remains revenue at invoice time.
   Map<String, double> get paymentMethodsBreakdown =>
       ReportCashflowLedger.paymentMethods(
         orders: orders,
@@ -228,8 +220,17 @@ class ReportsService {
       );
 }
 
+bool _canViewReports(ref) {
+  final appUser = ref.watch(appUserProvider).value;
+  return appUser != null && appUser.hasPermission('can_view_reports');
+}
+
 /// Branch-scoped report used by the normal report screen.
+/// Permission is enforced here as well as in the UI so a hidden tab is never
+/// the only barrier protecting financial report aggregation.
 final reportsServiceProvider = Provider<ReportsService?>((ref) {
+  if (!_canViewReports(ref)) return null;
+
   final ordersState = ref.watch(ordersStreamProvider);
   final productsState = ref.watch(productsStreamProvider);
   final expensesState = ref.watch(expensesStreamProvider);
@@ -261,10 +262,14 @@ final reportsServiceProvider = Provider<ReportsService?>((ref) {
   );
 });
 
-/// Merchant-wide orders intentionally bypass the branch-aware UI stream.
+/// Merchant-wide orders are owner/admin-only even if this provider is invoked
+/// directly by another screen in the future.
 final merchantWideOrdersStreamProvider = StreamProvider<List<AppOrder>>((ref) {
   final appUser = ref.watch(appUserProvider).value;
-  if (appUser == null) return const Stream.empty();
+  if (appUser == null ||
+      (appUser.role != 'merchant' && appUser.role != 'admin')) {
+    return Stream.value(const <AppOrder>[]);
+  }
 
   final merchantId = appUser.merchantId ?? appUser.id;
   final repository = OrderRepository(FirebaseFirestore.instance);
@@ -275,10 +280,13 @@ final merchantWideOrdersStreamProvider = StreamProvider<List<AppOrder>>((ref) {
   });
 });
 
-/// Merchant-wide expense source for consolidated reports only.
+/// Merchant-wide expense source for consolidated reports is owner/admin-only.
 final merchantWideExpensesStreamProvider = StreamProvider<List<Expense>>((ref) {
   final appUser = ref.watch(appUserProvider).value;
-  if (appUser == null) return const Stream.empty();
+  if (appUser == null ||
+      (appUser.role != 'merchant' && appUser.role != 'admin')) {
+    return Stream.value(const <Expense>[]);
+  }
 
   final merchantId = appUser.merchantId ?? appUser.id;
   return FirebaseFirestore.instance
@@ -301,8 +309,15 @@ final merchantWideExpensesStreamProvider = StreamProvider<List<Expense>>((ref) {
 });
 
 /// Consolidated merchant report: all branches for sales, expenses, and debt
-/// collections. Shared master data remains merchant-wide as before.
+/// collections. It is never constructed for an employee account.
 final consolidatedReportsServiceProvider = Provider<ReportsService?>((ref) {
+  final appUser = ref.watch(appUserProvider).value;
+  if (appUser == null ||
+      (appUser.role != 'merchant' && appUser.role != 'admin') ||
+      !appUser.hasPermission('can_view_reports')) {
+    return null;
+  }
+
   final ordersState = ref.watch(merchantWideOrdersStreamProvider);
   final productsState = ref.watch(productsStreamProvider);
   final expensesState = ref.watch(merchantWideExpensesStreamProvider);
@@ -335,6 +350,7 @@ final consolidatedReportsServiceProvider = Provider<ReportsService?>((ref) {
 });
 
 final activeReportsServiceProvider = Provider<ReportsService?>((ref) {
+  if (!_canViewReports(ref)) return null;
   final scope = ref.watch(effectiveReportsScopeProvider);
   return scope == ReportsScope.merchant
       ? ref.watch(consolidatedReportsServiceProvider)
