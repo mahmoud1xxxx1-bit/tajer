@@ -17,36 +17,38 @@ class EmployeeRepository {
 
   Stream<List<Employee>> watchEmployees() {
     return _employeesRef.snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => Employee.fromJson(doc.data())).toList();
+      return snapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data());
+        data['id'] ??= doc.id;
+        return Employee.fromJson(data);
+      }).toList();
     });
   }
 
   Future<void> addEmployee(Employee employee, String password) async {
-    
-    // 1. Initialize secondary app to create user without signing out merchant
     FirebaseApp secondaryApp = await Firebase.initializeApp(
-      name: 'Secondary',
+      name: 'Secondary_${DateTime.now().microsecondsSinceEpoch}',
       options: Firebase.app().options,
     );
     try {
-      UserCredential userCred = await FirebaseAuth.instanceFor(app: secondaryApp)
+      final userCred = await FirebaseAuth.instanceFor(app: secondaryApp)
           .createUserWithEmailAndPassword(email: employee.email, password: password);
-      
       final newUid = userCred.user!.uid;
-      
+      final branches = employee.assignedBranchIds.isEmpty
+          ? const <String>['main']
+          : employee.assignedBranchIds;
       final newEmployee = Employee(
         id: newUid,
         name: employee.name,
         email: employee.email,
         role: employee.role,
         createdAt: employee.createdAt,
+        assignedBranchIds: branches,
       );
 
-      // Save to merchant's employees subcollection
-      await _employeesRef.doc(newUid).set(newEmployee.toJson());
-
-      // Save to global users collection so they can login normally
-      await _firestore.collection('users').doc(newUid).set({
+      final batch = _firestore.batch();
+      batch.set(_employeesRef.doc(newUid), newEmployee.toJson());
+      batch.set(_firestore.collection('users').doc(newUid), {
         'id': newUid,
         'name': newEmployee.name,
         'email': newEmployee.email,
@@ -54,8 +56,9 @@ class EmployeeRepository {
         'merchantId': _merchantId,
         'isAnonymous': false,
         'createdAt': FieldValue.serverTimestamp(),
+        'assignedBranchIds': branches,
       });
-
+      await batch.commit();
       await FirebaseAuth.instanceFor(app: secondaryApp).signOut();
     } finally {
       await secondaryApp.delete();
@@ -63,23 +66,55 @@ class EmployeeRepository {
   }
 
   Future<void> updateEmployee(Employee employee) async {
-    await _employeesRef.doc(employee.id).update(employee.toJson());
+    final branches = employee.assignedBranchIds.isEmpty
+        ? const <String>['main']
+        : employee.assignedBranchIds;
+    final employeeData = employee.toJson()..['assignedBranchIds'] = branches;
+    final batch = _firestore.batch();
+    batch.update(_employeesRef.doc(employee.id), employeeData);
+    batch.update(_firestore.collection('users').doc(employee.id), {
+      'name': employee.name,
+      'role': employee.role,
+      'assignedBranchIds': branches,
+    });
+    await batch.commit();
+  }
+
+  Future<void> updateAssignedBranches(
+    String employeeId,
+    List<String> branchIds,
+  ) async {
+    final normalized = branchIds.toSet().where((id) => id.isNotEmpty).toList();
+    if (normalized.isEmpty) {
+      throw ArgumentError('An employee must be assigned to at least one branch');
+    }
+    final batch = _firestore.batch();
+    batch.update(_employeesRef.doc(employeeId), {'assignedBranchIds': normalized});
+    batch.update(_firestore.collection('users').doc(employeeId), {
+      'assignedBranchIds': normalized,
+    });
+    await batch.commit();
   }
 
   Future<void> deleteEmployee(String employeeId) async {
-    await _employeesRef.doc(employeeId).delete();
+    final batch = _firestore.batch();
+    batch.delete(_employeesRef.doc(employeeId));
+    batch.delete(_firestore.collection('users').doc(employeeId));
+    await batch.commit();
   }
 }
 
 final employeeRepositoryProvider = Provider<EmployeeRepository?>((ref) {
   final appUser = ref.watch(appUserProvider).value;
   if (appUser == null) return null;
-  return EmployeeRepository(FirebaseFirestore.instance, appUser.merchantId ?? appUser.id);
+  return EmployeeRepository(
+    FirebaseFirestore.instance,
+    appUser.merchantId ?? appUser.id,
+  );
 });
 
 final employeesStreamProvider = StreamProvider<List<Employee>>((ref) {
   final repository = ref.watch(employeeRepositoryProvider);
-  if (repository == null) return Stream.value([]);
+  if (repository == null) return Stream.value(const <Employee>[]);
   return repository.watchEmployees();
 });
-
