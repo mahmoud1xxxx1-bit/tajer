@@ -5,6 +5,7 @@ import '../../authentication/data/auth_repository.dart';
 import '../../branches/data/branch_inventory_repository.dart';
 import '../../branches/presentation/branch_context.dart';
 import '../domain/product.dart';
+import 'product_cost_repository.dart';
 
 part 'product_repository.g.dart';
 
@@ -26,9 +27,16 @@ class ProductRepository {
             data['quantity'] = (data['quantity'] ?? 0).toInt();
             data['name'] = data['name']?.toString() ?? '';
             data['merchantId'] = data['merchantId']?.toString() ?? '';
+            // Cost is intentionally not trusted from the public product record.
+            // It is overlaid later from the protected product_costs collection.
+            data.remove('costPrice');
             return Product.fromJson(data);
           },
-          toFirestore: (product, _) => product.toJson(),
+          toFirestore: (product, _) {
+            final data = product.toJson();
+            data.remove('costPrice');
+            return data;
+          },
         );
   }
 
@@ -53,21 +61,57 @@ class ProductRepository {
   }
 
   /// Product documents are merchant-wide master data. Quantities belong to
-  /// branch_inventory. A zero legacy quantity prevents a newly-created product
-  /// in a non-main branch from accidentally appearing as stock in Main Branch.
+  /// branch_inventory. Sensitive cost data belongs to product_costs.
   Future<void> addProduct(Product product) async {
+    final productRef = _firestore.collection('products').doc(product.id);
+    final costRef = _firestore
+        .collection('merchants')
+        .doc(product.merchantId)
+        .collection('product_costs')
+        .doc(product.id);
     final data = product.toJson();
     data['quantity'] = 0;
-    await _firestore.collection('products').doc(product.id).set(data);
+    data.remove('costPrice');
+
+    final batch = _firestore.batch();
+    batch.set(productRef, data);
+    if (product.costPrice != null) {
+      batch.set(costRef, {
+        'merchantId': product.merchantId,
+        'productId': product.id,
+        'costPrice': product.costPrice,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
+    await batch.commit();
   }
 
   /// Never overwrite the legacy merchant-wide quantity with the currently
-  /// selected branch quantity. Manual stock changes are handled atomically by
-  /// BranchInventoryRepository.
+  /// selected branch quantity. Cost is updated atomically in its protected doc.
   Future<void> updateProduct(Product product) async {
+    final productRef = _firestore.collection('products').doc(product.id);
+    final costRef = _firestore
+        .collection('merchants')
+        .doc(product.merchantId)
+        .collection('product_costs')
+        .doc(product.id);
     final data = product.toJson();
     data.remove('quantity');
-    await _firestore.collection('products').doc(product.id).update(data);
+    data.remove('costPrice');
+
+    final batch = _firestore.batch();
+    batch.update(productRef, data);
+    if (product.costPrice == null) {
+      batch.delete(costRef);
+    } else {
+      batch.set(costRef, {
+        'merchantId': product.merchantId,
+        'productId': product.id,
+        'costPrice': product.costPrice,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    }
+    await batch.commit();
   }
 
   Future<void> deleteProduct(String productId) async {
@@ -94,31 +138,52 @@ Stream<List<Product>> productsStream(ProductsStreamRef ref) {
   if (appUser == null) return const Stream.empty();
 
   final repository = ref.watch(productRepositoryProvider);
+  final costRepository = ref.watch(productCostRepositoryProvider);
   final merchantId = appUser.merchantId ?? appUser.id;
   final branchId = ref.watch(selectedBranchIdProvider);
   final branchInventory = ref.watch(branchInventoryStreamProvider(branchId));
+  final canViewCost = appUser.hasPermission('can_view_cost');
 
   repository.migrateOldProducts(merchantId).catchError((_) {});
 
-  return repository.queryProducts(merchantId).snapshots().map((snapshot) {
-    var products = snapshot.docs.map((doc) => doc.data()).toList();
-    final inventory = branchInventory.valueOrNull ?? const [];
-    final quantities = <String, double>{
-      for (final item in inventory)
-        if (item.itemType == 'product') item.itemId: item.quantity,
-    };
+  // Only merchant/admin performs the destructive legacy cost migration. Until
+  // it runs, Firestore Rules fail closed for employees without can_view_cost.
+  if (appUser.role == 'merchant' || appUser.role == 'admin') {
+    costRepository.migrateLegacyCosts(merchantId).catchError((_) {});
+  }
 
-    products = products.map((product) {
-      final scopedQuantity = quantities[product.id];
-      if (scopedQuantity != null) {
-        return product.copyWith(quantity: scopedQuantity.round());
-      }
-      // Backward compatibility: only Main Branch inherits the legacy v107 stock.
-      if (branchId == 'main') return product;
-      return product.copyWith(quantity: 0);
-    }).toList();
+  final productSnapshots = repository.queryProducts(merchantId).snapshots();
+  final costSnapshots = canViewCost
+      ? costRepository.watchCosts(merchantId)
+      : Stream<Map<String, double>>.value(const <String, double>{});
 
-    products.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-    return products;
+  return productSnapshots.asyncExpand((snapshot) {
+    final baseProducts = snapshot.docs.map((doc) => doc.data()).toList();
+    return costSnapshots.map((costs) {
+      final inventory = branchInventory.valueOrNull ?? const [];
+      final quantities = <String, double>{
+        for (final item in inventory)
+          if (item.itemType == 'product') item.itemId: item.quantity,
+      };
+
+      var products = baseProducts.map((product) {
+        final scopedQuantity = quantities[product.id];
+        var next = product;
+        if (scopedQuantity != null) {
+          next = next.copyWith(quantity: scopedQuantity.round());
+        } else if (branchId != 'main') {
+          // Backward compatibility: only Main Branch inherits v107 stock.
+          next = next.copyWith(quantity: 0);
+        }
+        if (canViewCost) {
+          final cost = costs[product.id];
+          if (cost != null) next = next.copyWith(costPrice: cost);
+        }
+        return next;
+      }).toList();
+
+      products.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return products;
+    });
   });
 }
