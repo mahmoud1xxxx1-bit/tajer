@@ -16,21 +16,26 @@ class CustomerDebtPaymentRepository {
       .doc(_merchantId)
       .collection('customer_debt_payments');
 
+  List<CustomerDebtPayment> _decode(
+    QuerySnapshot<Map<String, dynamic>> snapshot,
+  ) {
+    final payments = snapshot.docs.map((doc) {
+      final data = Map<String, dynamic>.from(doc.data());
+      data['id'] = doc.id;
+      data['merchantId'] = data['merchantId']?.toString() ?? _merchantId;
+      return CustomerDebtPayment.fromJson(data);
+    }).toList()
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return payments;
+  }
+
   /// Merchant-wide history for a customer. This is the authoritative view used
   /// when reconciling a merchant-wide customer balance across branches.
   Stream<List<CustomerDebtPayment>> watchCustomerPayments(String customerId) {
     return _paymentsRef.snapshots().map((snapshot) {
-      final payments = snapshot.docs
-          .map((doc) {
-            final data = Map<String, dynamic>.from(doc.data());
-            data['id'] = doc.id;
-            data['merchantId'] = data['merchantId']?.toString() ?? _merchantId;
-            return CustomerDebtPayment.fromJson(data);
-          })
+      return _decode(snapshot)
           .where((payment) => payment.customerId == customerId)
-          .toList()
-        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      return payments;
+          .toList();
     });
   }
 
@@ -38,18 +43,15 @@ class CustomerDebtPaymentRepository {
   /// remains merchant-wide; only cash/card/transfer provenance is filtered.
   Stream<List<CustomerDebtPayment>> watchBranchPayments(String branchId) {
     return _paymentsRef.snapshots().map((snapshot) {
-      final payments = snapshot.docs
-          .map((doc) {
-            final data = Map<String, dynamic>.from(doc.data());
-            data['id'] = doc.id;
-            data['merchantId'] = data['merchantId']?.toString() ?? _merchantId;
-            return CustomerDebtPayment.fromJson(data);
-          })
+      return _decode(snapshot)
           .where((payment) => payment.branchId == branchId)
-          .toList()
-        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      return payments;
+          .toList();
     });
+  }
+
+  /// Complete immutable collection history for consolidated cashflow reports.
+  Stream<List<CustomerDebtPayment>> watchAllPayments() {
+    return _paymentsRef.snapshots().map(_decode);
   }
 }
 
@@ -76,4 +78,11 @@ final branchCustomerDebtPaymentsProvider =
   if (repository == null) return Stream.value(const []);
   final branchId = ref.watch(selectedBranchIdProvider);
   return repository.watchBranchPayments(branchId);
+});
+
+final merchantCustomerDebtPaymentsProvider =
+    StreamProvider.autoDispose<List<CustomerDebtPayment>>((ref) {
+  final repository = ref.watch(customerDebtPaymentRepositoryProvider);
+  if (repository == null) return Stream.value(const []);
+  return repository.watchAllPayments();
 });
