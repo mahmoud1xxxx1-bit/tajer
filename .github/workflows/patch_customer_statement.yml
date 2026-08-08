@@ -1,0 +1,38 @@
+name: Patch Customer Statement Source
+
+on:
+  push:
+    branches: [ "feature/multi-branch-v1" ]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: ${{ !contains(github.event.head_commit.message, 'fix(customers): use merchant-wide orders for statements') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/multi-branch-v1
+          fetch-depth: 0
+      - name: Apply exact statement source patch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('lib/features/customers/presentation/customers_screen.dart')
+          text = path.read_text()
+          old = """                      } else if (value == 'print') {\n                        final orders = ref.read(ordersStreamProvider).value ?? [];\n                        try {\n                          await PdfService.printCustomerStatement(context, customer, orders, currency);\n                        } catch (e) {"""
+          new = """                      } else if (value == 'print') {\n                        try {\n                          final appUser = ref.read(appUserProvider).value;\n                          final merchantId = appUser?.merchantId ?? appUser?.id ?? customer.merchantId;\n                          final orders = await ref.read(customerRepositoryProvider).getCustomerOrdersAcrossBranches(\n                            merchantId: merchantId,\n                            customerId: customer.id,\n                          );\n                          if (!context.mounted) return;\n                          await PdfService.printCustomerStatement(context, customer, orders, currency);\n                        } catch (e) {"""
+          if old not in text:
+              raise SystemExit('Expected customer statement block not found; refusing broad patch.')
+          path.write_text(text.replace(old, new, 1))
+          PY
+      - name: Commit surgical patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/features/customers/presentation/customers_screen.dart
+          git diff --cached --quiet && exit 0
+          git commit -m "fix(customers): use merchant-wide orders for statements"
+          git push origin HEAD:feature/multi-branch-v1
