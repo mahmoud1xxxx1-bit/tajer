@@ -62,10 +62,7 @@ class BranchAwareOrderRepository extends OrderRepository {
   Future<AppOrder> createOrder(AppOrder order, {String? shiftId}) async {
     final branchId = await _selectedBranch(order.merchantId);
     final queueNumber = await _nextBranchQueueNumber(order.merchantId, branchId);
-    final orderWithQueue = order.copyWith(
-      branchId: branchId,
-      queueNumber: queueNumber,
-    );
+    final orderWithQueue = order.copyWith(branchId: branchId, queueNumber: queueNumber);
 
     await OrderBranchInventoryService(firestore)
         .applySale(orderWithQueue, queueNumber: queueNumber);
@@ -198,17 +195,14 @@ class BranchAwareOrderRepository extends OrderRepository {
         await OrderBranchInventoryService(firestore).restoreForCancellation(order);
         inventoryChanged = true;
       } else if (order.status == 'cancelled' && newStatus != 'cancelled') {
-        await OrderBranchInventoryService(firestore)
-            .reDeductAfterCancellationReversal(order);
+        await OrderBranchInventoryService(firestore).reDeductAfterCancellationReversal(order);
         inventoryChanged = true;
       }
-
       await _applyStatusFinancials(order, newStatus);
     } catch (_) {
       if (inventoryChanged) {
         if (newStatus == 'cancelled' && order.status != 'cancelled') {
-          await OrderBranchInventoryService(firestore)
-              .reDeductAfterCancellationReversal(order);
+          await OrderBranchInventoryService(firestore).reDeductAfterCancellationReversal(order);
         } else if (order.status == 'cancelled' && newStatus != 'cancelled') {
           await OrderBranchInventoryService(firestore).restoreForCancellation(order);
         }
@@ -297,6 +291,127 @@ class BranchAwareOrderRepository extends OrderRepository {
   }
 
   @override
+  Future<void> payCustomerDebt({
+    required String merchantId,
+    required String customerId,
+    required double amountPaid,
+    required String? shiftId,
+    required String paymentMethod,
+  }) async {
+    if (amountPaid <= 0) return;
+
+    final branchId = await _selectedBranch(merchantId);
+    final creditOrdersSnapshot = await firestore
+        .collection('orders')
+        .where('merchantId', isEqualTo: merchantId)
+        .where('customerId', isEqualTo: customerId)
+        .where('isCredit', isEqualTo: true)
+        .get();
+
+    final orderRefs = creditOrdersSnapshot.docs.map((doc) => doc.reference).toList();
+    final paymentRef = firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection('customer_debt_payments')
+        .doc();
+
+    await firestore.runTransaction((transaction) async {
+      final customerRef = firestore.collection('customers').doc(customerId);
+      final customerDoc = await transaction.get(customerRef);
+      if (!customerDoc.exists || customerDoc.data() == null) {
+        throw Exception('العميل غير موجود.');
+      }
+
+      final currentDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
+      if (amountPaid > currentDebt) {
+        throw Exception('مبلغ السداد لا يمكن أن يتجاوز الدين المستحق.');
+      }
+
+      DocumentReference<Map<String, dynamic>>? activeShiftRef;
+      if (shiftId != null && shiftId.isNotEmpty) {
+        activeShiftRef = firestore.collection('shifts').doc(shiftId);
+        final shiftDoc = await transaction.get(activeShiftRef);
+        if (!shiftDoc.exists || shiftDoc.data() == null) {
+          throw Exception('الوردية المرتبطة بالسداد غير موجودة.');
+        }
+        final shiftData = shiftDoc.data()!;
+        final shiftBranchId = shiftData['branchId']?.toString() ?? 'main';
+        if (shiftBranchId != branchId ||
+            shiftData['status']?.toString() != 'open' ||
+            shiftData['endTime'] != null) {
+          throw Exception('لا يمكن تسجيل التحصيل على وردية مغلقة أو فرع مختلف.');
+        }
+      }
+
+      final liveOrders = <MapEntry<DocumentReference<Map<String, dynamic>>, Map<String, dynamic>>>[];
+      for (final ref in orderRefs) {
+        final snap = await transaction.get(ref);
+        if (!snap.exists || snap.data() == null) continue;
+        final data = snap.data()!;
+        if (data['status']?.toString() == 'cancelled') continue;
+        final total = (data['total'] as num?)?.toDouble() ?? 0.0;
+        final paid = (data['paidAmount'] as num?)?.toDouble() ?? 0.0;
+        if (total - paid > 0.0001) liveOrders.add(MapEntry(ref, data));
+      }
+
+      liveOrders.sort((a, b) {
+        DateTime readDate(Map<String, dynamic> data) {
+          final value = data['createdAt'];
+          if (value is Timestamp) return value.toDate();
+          if (value is String) return DateTime.tryParse(value) ?? DateTime.fromMillisecondsSinceEpoch(0);
+          return DateTime.fromMillisecondsSinceEpoch(0);
+        }
+        return readDate(a.value).compareTo(readDate(b.value));
+      });
+
+      var remaining = amountPaid;
+      final allocations = <Map<String, dynamic>>[];
+      for (final entry in liveOrders) {
+        if (remaining <= 0.0001) break;
+        final total = (entry.value['total'] as num?)?.toDouble() ?? 0.0;
+        final alreadyPaid = (entry.value['paidAmount'] as num?)?.toDouble() ?? 0.0;
+        final outstanding = total - alreadyPaid;
+        if (outstanding <= 0) continue;
+        final applied = remaining >= outstanding ? outstanding : remaining;
+        transaction.update(entry.key, {'paidAmount': FieldValue.increment(applied)});
+        allocations.add({'orderId': entry.key.id, 'amount': applied});
+        remaining -= applied;
+      }
+
+      if (remaining > 0.0001) {
+        throw Exception('تعذر توزيع مبلغ السداد بالكامل على الفواتير الحالية. حدّث الصفحة وحاول مرة أخرى.');
+      }
+
+      transaction.update(customerRef, {
+        'totalDebt': FieldValue.increment(-amountPaid),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (activeShiftRef != null) {
+        if (paymentMethod == 'cash') {
+          transaction.update(activeShiftRef, {'debtCollectionsCash': FieldValue.increment(amountPaid)});
+        } else if (paymentMethod == 'card' || paymentMethod == 'mada') {
+          transaction.update(activeShiftRef, {'debtCollectionsCard': FieldValue.increment(amountPaid)});
+        } else if (paymentMethod == 'transfer') {
+          transaction.update(activeShiftRef, {'debtCollectionsTransfer': FieldValue.increment(amountPaid)});
+        }
+      }
+
+      transaction.set(paymentRef, {
+        'id': paymentRef.id,
+        'merchantId': merchantId,
+        'customerId': customerId,
+        'branchId': branchId,
+        'shiftId': shiftId,
+        'amount': amountPaid,
+        'paymentMethod': paymentMethod,
+        'allocations': allocations,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
+  @override
   Future<void> deleteOrder(AppOrder order) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
@@ -325,8 +440,7 @@ class BranchAwareOrderRepository extends OrderRepository {
       await batch.commit();
     } catch (_) {
       if (order.status != 'cancelled') {
-        await OrderBranchInventoryService(firestore)
-            .reDeductAfterCancellationReversal(order);
+        await OrderBranchInventoryService(firestore).reDeductAfterCancellationReversal(order);
       }
       rethrow;
     }
