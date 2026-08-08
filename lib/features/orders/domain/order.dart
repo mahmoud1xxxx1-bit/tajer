@@ -79,6 +79,9 @@ class AppOrder {
     );
   }
 
+  /// Public /orders payload. Sensitive historical COGS is deliberately not
+  /// serialized here because Firestore rules cannot redact fields in a readable
+  /// document. Cost snapshots live in a separately permissioned collection.
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -86,7 +89,7 @@ class AppOrder {
       'branchId': branchId,
       'customerId': customerId,
       'customerName': customerName,
-      'items': items.map((e) => e.toJson()).toList(),
+      'items': items.map((e) => e.toPublicJson()).toList(),
       'total': total,
       'status': status,
       'paidAmount': paidAmount,
