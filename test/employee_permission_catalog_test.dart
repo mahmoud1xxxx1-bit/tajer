@@ -13,14 +13,24 @@ void main() {
       expect(keys.toSet(), EmployeePermissionKeys.all);
     });
 
-    test('high-impact permissions are opt-in by default', () {
+    test('all high-impact permissions are opt-in by default', () {
       final defaults = EmployeePermissionCatalog.leastPrivilegeDefaults;
 
+      expect(defaults[EmployeePermissionKeys.receivePayments], isFalse);
+      expect(defaults[EmployeePermissionKeys.viewReports], isFalse);
+      expect(defaults[EmployeePermissionKeys.viewAllOrders], isFalse);
+      expect(defaults[EmployeePermissionKeys.manageProducts], isFalse);
       expect(defaults[EmployeePermissionKeys.manageInventory], isFalse);
       expect(defaults[EmployeePermissionKeys.viewCost], isFalse);
       expect(defaults[EmployeePermissionKeys.cancelOrders], isFalse);
       expect(defaults[EmployeePermissionKeys.sellOnCredit], isFalse);
       expect(defaults[EmployeePermissionKeys.manageExpenses], isFalse);
+    });
+
+    test('ordinary operating permissions remain available for a new cashier', () {
+      final defaults = EmployeePermissionCatalog.leastPrivilegeDefaults;
+      expect(defaults[EmployeePermissionKeys.createOrders], isTrue);
+      expect(defaults[EmployeePermissionKeys.manageCustomers], isTrue);
     });
 
     test('Firestore authorization references only known employee permission keys', () {
