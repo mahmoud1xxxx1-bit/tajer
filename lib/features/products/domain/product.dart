@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'raw_material.dart';
 
+enum TaxMode { store, custom, exempt }
+
 class Product {
   final String id;
   final String merchantId;
@@ -17,6 +19,7 @@ class Product {
   final bool isManufacturedOnDemand; // Task 2
   final double? costPrice; // Task 6
   final bool isArchived;
+  final TaxMode taxMode;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -35,6 +38,7 @@ class Product {
     this.isManufacturedOnDemand = false,
     this.costPrice,
     this.isArchived = false,
+    this.taxMode = TaxMode.store,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -55,9 +59,32 @@ class Product {
       isManufacturedOnDemand: json['isManufacturedOnDemand'] as bool? ?? false,
       costPrice: json['costPrice'] != null ? (json['costPrice'] as num).toDouble() : null,
       isArchived: json['isArchived'] as bool? ?? false,
+      taxMode: _parseTaxMode(json['taxMode']),
       createdAt: _parseDate(json['createdAt']),
       updatedAt: _parseDate(json['updatedAt']),
     );
+  }
+
+  static TaxMode _parseTaxMode(dynamic value) {
+    if (value == null) return TaxMode.store;
+    if (value is String) {
+      for (final mode in TaxMode.values) {
+        if (mode.name == value) return mode;
+      }
+    }
+    return TaxMode.store;
+  }
+
+  double getEffectiveTax(double storeDefaultTax) {
+    switch (taxMode) {
+      case TaxMode.exempt:
+        return 0.0;
+      case TaxMode.custom:
+        return taxPercentage ?? storeDefaultTax;
+      case TaxMode.store:
+      default:
+        return storeDefaultTax;
+    }
   }
 
   Map<String, dynamic> toJson() {
@@ -76,6 +103,7 @@ class Product {
       'isManufacturedOnDemand': isManufacturedOnDemand,
       'costPrice': costPrice,
       'isArchived': isArchived,
+      'taxMode': taxMode.name,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
     };
@@ -96,6 +124,7 @@ class Product {
     bool? isManufacturedOnDemand,
     double? costPrice,
     bool? isArchived,
+    TaxMode? taxMode,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -114,6 +143,7 @@ class Product {
       isManufacturedOnDemand: isManufacturedOnDemand ?? this.isManufacturedOnDemand,
       costPrice: costPrice ?? this.costPrice,
       isArchived: isArchived ?? this.isArchived,
+      taxMode: taxMode ?? this.taxMode,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

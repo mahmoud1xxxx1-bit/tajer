@@ -640,5 +640,9 @@
   "setupStep2": "Stock Shelves (Add Product)",
   "setupStep3": "Take Shift (Open Shift)",
   "setupStep4": "First Sale (Make Sale)",
-  "setupCompleted": "You are fully ready to sell! 🎉"
+  "setupCompleted": "You are fully ready to sell! 🎉",
+  "taxModeTitle": "Tax",
+  "taxModeStore": "Use store tax",
+  "taxModeCustom": "Custom tax",
+  "taxModeExempt": "Tax exempt"
 }

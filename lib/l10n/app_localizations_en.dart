@@ -1510,4 +1510,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get setupCompleted => 'You are fully ready to sell! 🎉';
+
+  @override
+  String get taxModeTitle => 'Tax';
+
+  @override
+  String get taxModeStore => 'Use store tax';
+
+  @override
+  String get taxModeCustom => 'Custom tax';
+
+  @override
+  String get taxModeExempt => 'Tax exempt';
 }

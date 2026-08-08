@@ -34,6 +34,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
   final _costPriceController = TextEditingController();
   bool _isManufacturedOnDemand = false;
   bool? _isTaxInclusive;
+  TaxMode _taxMode = TaxMode.store;
   String? _selectedCategoryId;
   String? _selectedRawMaterialId;
   bool _isLoading = false;
@@ -51,6 +52,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       _costPriceController.text = widget.productToEdit!.costPrice?.toString() ?? '';
       _isManufacturedOnDemand = widget.productToEdit!.isManufacturedOnDemand;
       _isTaxInclusive = widget.productToEdit!.isTaxInclusive;
+      _taxMode = widget.productToEdit!.taxMode;
       _selectedCategoryId = widget.productToEdit!.categoryId;
       if (widget.productToEdit!.recipe.isNotEmpty) {
         _selectedRawMaterialId = widget.productToEdit!.recipe.first.rawMaterialId;
@@ -123,7 +125,8 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
         modifiers: _modifiersController.text.trim().isEmpty ? [] : _modifiersController.text.split('،').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
         recipe: updatedRecipe,
         isTaxInclusive: _isTaxInclusive,
-        taxPercentage: _taxPercentageController.text.trim().isEmpty ? null : double.tryParse(_taxPercentageController.text.trim()),
+        taxPercentage: _taxMode == TaxMode.custom ? (double.tryParse(_taxPercentageController.text.trim()) ?? 0.0) : null,
+        taxMode: _taxMode,
         isManufacturedOnDemand: _isManufacturedOnDemand,
         costPrice: _costPriceController.text.trim().isEmpty ? null : double.tryParse(_costPriceController.text.trim()),
         createdAt: isEditing ? widget.productToEdit!.createdAt : DateTime.now(),
@@ -377,13 +380,11 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                     style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Theme.of(context).brightness == Brightness.dark ? Colors.orange.shade300 : Colors.orange.shade900),
                   ),
                   const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _taxPercentageController,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontFamily: 'Tajawal'),
+                  DropdownButtonFormField<TaxMode>(
+                    value: _taxMode,
                     decoration: InputDecoration(
-                      labelText: isAr ? 'نسبة الضريبة الخاصة بالمنتج (%)' : 'Product Tax Percentage (%)',
-                      labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                      labelText: isAr ? 'نظام الضريبة' : 'Tax Mode',
+                      labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), fontFamily: 'Tajawal'),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -392,14 +393,55 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                       filled: true,
                       fillColor: Theme.of(context).colorScheme.surface,
                     ),
+                    items: [
+                      DropdownMenuItem(value: TaxMode.store, child: Text(isAr ? 'استخدام ضريبة المتجر' : 'Use store tax', style: const TextStyle(fontFamily: 'Tajawal'))),
+                      DropdownMenuItem(value: TaxMode.custom, child: Text(isAr ? 'ضريبة مخصصة' : 'Custom tax', style: const TextStyle(fontFamily: 'Tajawal'))),
+                      DropdownMenuItem(value: TaxMode.exempt, child: Text(isAr ? 'معفى من الضريبة' : 'Tax exempt', style: const TextStyle(fontFamily: 'Tajawal'))),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) {
+                        setState(() => _taxMode = val);
+                      }
+                    },
                   ),
-                  const SizedBox(height: 12),
-                  SwitchListTile(
-                    title: Text(isAr ? 'السعر المحدد يشمل الضريبة' : 'Price is Tax Inclusive', style: const TextStyle(fontFamily: 'Tajawal')),
-                    value: _isTaxInclusive ?? false,
-                    onChanged: (val) => setState(() => _isTaxInclusive = val),
-                    contentPadding: EdgeInsets.zero,
-                  ),
+                  if (_taxMode == TaxMode.custom) ...[
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _taxPercentageController,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontFamily: 'Tajawal'),
+                      decoration: InputDecoration(
+                        labelText: isAr ? 'نسبة الضريبة الخاصة بالمنتج (%)' : 'Product Tax Percentage (%)',
+                        labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent.withOpacity(0.5) : Colors.orange.shade300),
+                        ),
+                        filled: true,
+                        fillColor: Theme.of(context).colorScheme.surface,
+                      ),
+                      validator: (val) {
+                        if (val == null || val.trim().isEmpty) {
+                          return isAr ? 'يجب إدخال نسبة الضريبة' : 'Tax percentage is required';
+                        }
+                        final parsed = double.tryParse(val.trim());
+                        if (parsed == null || parsed < 0) {
+                          return isAr ? 'نسبة الضريبة غير صالحة' : 'Invalid tax percentage';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                  if (_taxMode != TaxMode.exempt) ...[
+                    const SizedBox(height: 12),
+                    SwitchListTile(
+                      title: Text(isAr ? 'السعر المحدد يشمل الضريبة' : 'Price is Tax Inclusive', style: const TextStyle(fontFamily: 'Tajawal')),
+                      value: _isTaxInclusive ?? false,
+                      onChanged: (val) => setState(() => _isTaxInclusive = val),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ],
                 ],
               ),
             ),

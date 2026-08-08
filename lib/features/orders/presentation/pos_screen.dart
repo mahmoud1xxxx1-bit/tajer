@@ -46,8 +46,8 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     final defaultTax = storeProfile?.defaultTaxPercentage ?? 0.0;
     final defaultIsInclusive = storeProfile?.defaultIsTaxInclusive ?? true;
 
-    final hasCustomTax = product.taxPercentage != null && product.taxPercentage! > 0;
-    final finalTax = hasCustomTax ? product.taxPercentage : (defaultTax > 0 ? defaultTax : null);
+    final finalTax = product.getEffectiveTax(defaultTax);
+    final hasCustomTax = product.taxMode == TaxMode.custom;
     final finalIsInclusive = hasCustomTax ? product.isTaxInclusive : defaultIsInclusive;
 
     setState(() {
@@ -216,8 +216,8 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     final defaultIsTaxInclusive = storeProfile?.defaultIsTaxInclusive ?? false;
     double gt = 0.0;
     for (var item in _cart) {
-      final itemTax = item.taxPercentage ?? defaultTaxPercentage;
-      final itemInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
+      final itemTax = item.getEffectiveTax(defaultTaxPercentage);
+      final itemInclusive = item.taxMode == TaxMode.custom ? (item.isTaxInclusive ?? defaultIsTaxInclusive) : defaultIsTaxInclusive;
       if (itemInclusive) {
         gt += item.total;
       } else {
@@ -829,8 +829,8 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
     
     double grandTotal = 0.0;
     for (var item in widget.cart) {
-      final itemTax = item.taxPercentage ?? defaultTaxPercentage;
-      final isInclusive = (item.taxPercentage != null && item.taxPercentage! > 0) ? (item.isTaxInclusive ?? defaultIsTaxInclusive) : defaultIsTaxInclusive;
+      final itemTax = item.getEffectiveTax(defaultTaxPercentage);
+      final isInclusive = item.taxMode == TaxMode.custom ? (item.isTaxInclusive ?? defaultIsTaxInclusive) : defaultIsTaxInclusive;
       if (isInclusive) {
         grandTotal += item.total;
       } else {

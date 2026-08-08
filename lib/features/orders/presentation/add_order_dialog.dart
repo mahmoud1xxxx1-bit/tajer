@@ -164,8 +164,8 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       final defaultTax = storeProfile?.defaultTaxPercentage ?? 0.0;
       final defaultIsInclusive = storeProfile?.defaultIsTaxInclusive ?? true;
       
-      final hasCustomTax = selectedProduct.taxPercentage != null && selectedProduct.taxPercentage! > 0;
-      final finalTax = hasCustomTax ? selectedProduct.taxPercentage : (defaultTax > 0 ? defaultTax : null);
+      final finalTax = selectedProduct.getEffectiveTax(defaultTax);
+      final hasCustomTax = selectedProduct.taxMode == TaxMode.custom;
       final finalIsInclusive = hasCustomTax ? selectedProduct.isTaxInclusive : defaultIsInclusive;
 
       final newOrder = AppOrder(

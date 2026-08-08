@@ -640,5 +640,9 @@
   "setupStep2": "تجهيز الرفوف (أضف منتج)",
   "setupStep3": "استلام العهدة (افتح وردية)",
   "setupStep4": "أول غيث (أنشئ مبيعة)",
-  "setupCompleted": "أنت جاهز تماماً للبيع! 🎉"
+  "setupCompleted": "أنت جاهز تماماً للبيع! 🎉",
+  "taxModeTitle": "الضريبة",
+  "taxModeStore": "استخدام ضريبة المتجر",
+  "taxModeCustom": "ضريبة مخصصة",
+  "taxModeExempt": "معفى من الضريبة"
 }

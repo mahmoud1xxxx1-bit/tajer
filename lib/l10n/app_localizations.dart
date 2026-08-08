@@ -2947,6 +2947,30 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'أنت جاهز تماماً للبيع! 🎉'**
   String get setupCompleted;
+
+  /// No description provided for @taxModeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الضريبة'**
+  String get taxModeTitle;
+
+  /// No description provided for @taxModeStore.
+  ///
+  /// In ar, this message translates to:
+  /// **'استخدام ضريبة المتجر'**
+  String get taxModeStore;
+
+  /// No description provided for @taxModeCustom.
+  ///
+  /// In ar, this message translates to:
+  /// **'ضريبة مخصصة'**
+  String get taxModeCustom;
+
+  /// No description provided for @taxModeExempt.
+  ///
+  /// In ar, this message translates to:
+  /// **'معفى من الضريبة'**
+  String get taxModeExempt;
 }
 
 class _AppLocalizationsDelegate

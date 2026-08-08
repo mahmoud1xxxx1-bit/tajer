@@ -1509,4 +1509,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get setupCompleted => 'أنت جاهز تماماً للبيع! 🎉';
+
+  @override
+  String get taxModeTitle => 'الضريبة';
+
+  @override
+  String get taxModeStore => 'استخدام ضريبة المتجر';
+
+  @override
+  String get taxModeCustom => 'ضريبة مخصصة';
+
+  @override
+  String get taxModeExempt => 'معفى من الضريبة';
 }
