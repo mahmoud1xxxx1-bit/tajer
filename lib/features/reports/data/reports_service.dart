@@ -3,16 +3,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/store_profile_provider.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../customers/data/customer_debt_payment_repository.dart';
+import '../../customers/data/customer_repository.dart';
+import '../../customers/domain/customer.dart';
+import '../../customers/domain/customer_debt_payment.dart';
+import '../../expenses/data/expense_repository.dart';
+import '../../expenses/domain/expense.dart';
 import '../../orders/data/order_repository.dart';
 import '../../orders/domain/order.dart';
 import '../../products/data/product_repository.dart';
 import '../../products/domain/product.dart';
-import '../../expenses/data/expense_repository.dart';
-import '../../expenses/domain/expense.dart';
-import '../../customers/domain/customer.dart';
-import '../../suppliers/domain/supplier.dart';
-import '../../customers/data/customer_repository.dart';
 import '../../suppliers/data/supplier_repository.dart';
+import '../../suppliers/domain/supplier.dart';
+import 'report_cashflow_ledger.dart';
 
 enum ReportsScope {
   branch,
@@ -44,6 +47,7 @@ class ReportsService {
   final List<Expense> expenses;
   final List<Customer> customers;
   final List<Supplier> suppliers;
+  final List<CustomerDebtPayment> debtPayments;
   final double defaultTaxPercentage;
   final bool defaultIsTaxInclusive;
 
@@ -53,6 +57,7 @@ class ReportsService {
     this.expenses,
     this.customers,
     this.suppliers, {
+    this.debtPayments = const [],
     this.defaultTaxPercentage = 0.0,
     this.defaultIsTaxInclusive = true,
   });
@@ -65,6 +70,9 @@ class ReportsService {
         orders.where((order) => withinRange(order.createdAt)).toList();
     final filteredExpenses =
         expenses.where((expense) => withinRange(expense.date)).toList();
+    final filteredDebtPayments = debtPayments
+        .where((payment) => withinRange(payment.createdAt))
+        .toList();
 
     return ReportsService(
       filteredOrders,
@@ -72,11 +80,14 @@ class ReportsService {
       filteredExpenses,
       customers,
       suppliers,
+      debtPayments: filteredDebtPayments,
       defaultTaxPercentage: defaultTaxPercentage,
       defaultIsTaxInclusive: defaultIsTaxInclusive,
     );
   }
 
+  /// Accrual sales revenue. Credit sales belong here at invoice time even when
+  /// the cash is collected later.
   double get totalRevenue => orders
       .where((order) =>
           order.status != 'cancelled' && order.status != 'debt_repayment')
@@ -84,6 +95,9 @@ class ReportsService {
 
   double get netSalesRevenue => totalRevenue - totalTaxCollected;
 
+  /// Outstanding credit created by the orders in this report scope.
+  /// In a branch report this is branch-originated receivables, not the merchant-
+  /// wide customer balance shown on the customer account.
   double get totalDebt => orders
       .where((order) => order.status != 'cancelled' && order.isCredit)
       .fold(0.0, (sum, order) => sum + (order.total - order.paidAmount));
@@ -191,55 +205,32 @@ class ReportsService {
     return expensesByCategory;
   }
 
-  Map<String, double> get paymentMethodsBreakdown {
-    final Map<String, double> breakdown = {};
-
-    void add(String method, double amount) {
-      if (amount <= 0) return;
-      breakdown[method] = (breakdown[method] ?? 0.0) + amount;
-    }
-
-    for (final order in orders) {
-      if (order.status == 'cancelled') continue;
-
-      final method = order.paymentMethod ?? 'cash';
-
-      // Split payments must be reported by their actual cash/network portions,
-      // never as one synthetic payment-method bucket.
-      if (method == 'split' ||
-          order.splitCashAmount != null ||
-          order.splitNetworkAmount != null) {
-        add('cash', order.splitCashAmount ?? 0.0);
-        add('card', order.splitNetworkAmount ?? 0.0);
-        continue;
-      }
-
-      double amount = order.total;
-      if (order.isCredit || order.status == 'debt_repayment') {
-        amount = order.paidAmount;
-      }
-      add(method, amount);
-    }
-
-    return breakdown;
-  }
+  /// Actual money received during the report period. This is deliberately not
+  /// the same as revenue: credit collections are included when received while
+  /// the original credit sale remains revenue at invoice time.
+  Map<String, double> get paymentMethodsBreakdown =>
+      ReportCashflowLedger.paymentMethods(
+        orders: orders,
+        debtPayments: debtPayments,
+      );
 }
 
 /// Branch-scoped report used by the normal report screen.
-/// Orders and expenses are already scoped by selectedBranchIdProvider upstream.
 final reportsServiceProvider = Provider<ReportsService?>((ref) {
   final ordersState = ref.watch(ordersStreamProvider);
   final productsState = ref.watch(productsStreamProvider);
   final expensesState = ref.watch(expensesStreamProvider);
   final customersState = ref.watch(customersStreamProvider);
   final suppliersState = ref.watch(suppliersStreamProvider);
+  final debtPaymentsState = ref.watch(branchCustomerDebtPaymentsProvider);
   final storeProfileState = ref.watch(storeProfileProvider);
 
   if (ordersState.value == null ||
       productsState.value == null ||
       expensesState.value == null ||
       customersState.value == null ||
-      suppliersState.value == null) {
+      suppliersState.value == null ||
+      debtPaymentsState.value == null) {
     return null;
   }
 
@@ -249,6 +240,7 @@ final reportsServiceProvider = Provider<ReportsService?>((ref) {
     expensesState.value!,
     customersState.value!,
     suppliersState.value!,
+    debtPayments: debtPaymentsState.value!,
     defaultTaxPercentage:
         storeProfileState.value?.defaultTaxPercentage ?? 0.0,
     defaultIsTaxInclusive:
@@ -257,8 +249,6 @@ final reportsServiceProvider = Provider<ReportsService?>((ref) {
 });
 
 /// Merchant-wide orders intentionally bypass the branch-aware UI stream.
-/// The base repository query reads all merchant orders while AppOrder preserves
-/// each order's branchId (legacy orders fall back to `main`).
 final merchantWideOrdersStreamProvider = StreamProvider<List<AppOrder>>((ref) {
   final appUser = ref.watch(appUserProvider).value;
   if (appUser == null) return const Stream.empty();
@@ -273,7 +263,6 @@ final merchantWideOrdersStreamProvider = StreamProvider<List<AppOrder>>((ref) {
 });
 
 /// Merchant-wide expense source for consolidated reports only.
-/// Normal expense screens remain branch-scoped.
 final merchantWideExpensesStreamProvider = StreamProvider<List<Expense>>((ref) {
   final appUser = ref.watch(appUserProvider).value;
   if (appUser == null) return const Stream.empty();
@@ -298,21 +287,23 @@ final merchantWideExpensesStreamProvider = StreamProvider<List<Expense>>((ref) {
   });
 });
 
-/// Consolidated merchant report: all branches for sales/expenses, while shared
-/// master data (products/customers/suppliers) remains merchant-wide as before.
+/// Consolidated merchant report: all branches for sales, expenses, and debt
+/// collections. Shared master data remains merchant-wide as before.
 final consolidatedReportsServiceProvider = Provider<ReportsService?>((ref) {
   final ordersState = ref.watch(merchantWideOrdersStreamProvider);
   final productsState = ref.watch(productsStreamProvider);
   final expensesState = ref.watch(merchantWideExpensesStreamProvider);
   final customersState = ref.watch(customersStreamProvider);
   final suppliersState = ref.watch(suppliersStreamProvider);
+  final debtPaymentsState = ref.watch(merchantCustomerDebtPaymentsProvider);
   final storeProfileState = ref.watch(storeProfileProvider);
 
   if (ordersState.value == null ||
       productsState.value == null ||
       expensesState.value == null ||
       customersState.value == null ||
-      suppliersState.value == null) {
+      suppliersState.value == null ||
+      debtPaymentsState.value == null) {
     return null;
   }
 
@@ -322,6 +313,7 @@ final consolidatedReportsServiceProvider = Provider<ReportsService?>((ref) {
     expensesState.value!,
     customersState.value!,
     suppliersState.value!,
+    debtPayments: debtPaymentsState.value!,
     defaultTaxPercentage:
         storeProfileState.value?.defaultTaxPercentage ?? 0.0,
     defaultIsTaxInclusive:
