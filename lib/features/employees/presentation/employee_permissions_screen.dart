@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../authentication/data/auth_repository.dart';
+import '../data/employee_permission_repository.dart';
 import '../domain/employee_permission_catalog.dart';
 import '../domain/employee_permission_presentation.dart';
 
@@ -209,9 +210,9 @@ class _EmployeePermissionCardState extends ConsumerState<_EmployeePermissionCard
     if (saving) return;
     setState(() => saving = true);
     try {
-      await ref.read(authRepositoryProvider).updateEmployeePermissions(
-            widget.employeeId,
-            Map<String, dynamic>.from(permissions),
+      await ref.read(employeePermissionRepositoryProvider).updatePermissions(
+            employeeId: widget.employeeId,
+            permissions: Map<String, bool>.from(permissions),
           );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -226,8 +227,8 @@ class _EmployeePermissionCardState extends ConsumerState<_EmployeePermissionCard
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(widget.isAr
-              ? 'تعذر حفظ الصلاحيات. حاول مرة أخرى.'
-              : 'Could not save permissions. Please try again.'),
+              ? 'تعذر حفظ الصلاحيات. لم يتم تطبيق أي تغيير جزئي، حاول مرة أخرى.'
+              : 'Could not save permissions. No partial change was applied; please try again.'),
         ),
       );
     } finally {
