@@ -48,6 +48,20 @@ void main() {
       expect(rules, contains("request.resource.data.get('branchId', 'main') == resource.data.get('branchId', 'main')"));
     });
 
+    test('product cost is isolated from normal product documents', () {
+      expect(rules, contains('match /products/{productId}'));
+      expect(rules, contains("resource.data.get('costPrice', null) == null"));
+      expect(rules, contains("hasPermission(resource.data.get('merchantId', ''), 'can_view_cost')"));
+      expect(rules, contains("request.resource.data.get('costPrice', null) == null"));
+    });
+
+    test('protected product cost collection requires explicit permissions', () {
+      expect(rules, contains('match /product_costs/{productId}'));
+      expect(rules, contains("allow read: if hasPermission(merchantId, 'can_view_cost');"));
+      expect(rules, contains("allow create, update, delete: if hasPermission(merchantId, 'can_manage_products') &&"));
+      expect(rules, contains("hasPermission(merchantId, 'can_view_cost');"));
+    });
+
     test('customer debt provenance is explicitly permissioned and branch scoped', () {
       expect(rules, contains('match /customer_debt_payments/{paymentId}'));
       expect(rules, contains("hasPermission(merchantId, 'can_receive_payments') && hasDataBranchAccess(merchantId, request.resource.data)"));
