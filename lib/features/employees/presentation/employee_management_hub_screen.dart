@@ -13,10 +13,7 @@ class EmployeeManagementHubScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           isAr ? 'إدارة الموظفين' : 'Employee Management',
-          style: const TextStyle(
-            fontFamily: 'Tajawal',
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
         ),
         backgroundColor: theme.colorScheme.primaryContainer,
       ),
@@ -32,21 +29,27 @@ class EmployeeManagementHubScreen extends StatelessWidget {
                   children: [
                     _ManagementCard(
                       icon: Icons.people_alt_rounded,
-                      title: isAr
-                          ? 'الموظفون والصلاحيات والأداء'
-                          : 'Employees, Permissions & Performance',
+                      title: isAr ? 'الموظفون والأداء' : 'Employees & Performance',
                       description: isAr
-                          ? 'إضافة الموظفين، تعديل الصلاحيات، مشاركة بيانات الدخول، ومراجعة أداء كل موظف.'
-                          : 'Add employees, edit permissions, share login details, and review each employee’s performance.',
+                          ? 'إضافة الموظفين، مشاركة بيانات الدخول، ومراجعة أداء كل موظف وسجل نشاطه.'
+                          : 'Add employees, share login details, and review each employee’s performance and activity.',
                       buttonText: isAr ? 'إدارة الموظفين' : 'Manage employees',
                       onPressed: () => context.push('/employees/manage'),
                     ),
                     const SizedBox(height: 14),
                     _ManagementCard(
+                      icon: Icons.admin_panel_settings_rounded,
+                      title: isAr ? 'الصلاحيات المتقدمة' : 'Advanced Permissions',
+                      description: isAr
+                          ? 'إدارة الصلاحيات ضمن مجموعات واضحة للمبيعات والعملاء والمخزون والمالية والتقارير، مع تمييز الصلاحيات الحساسة والمالية.'
+                          : 'Manage permissions in clear sales, customer, inventory, finance, and reporting groups, with sensitive and financial permissions clearly marked.',
+                      buttonText: isAr ? 'إدارة الصلاحيات' : 'Manage permissions',
+                      onPressed: () => context.push('/employee_permissions'),
+                    ),
+                    const SizedBox(height: 14),
+                    _ManagementCard(
                       icon: Icons.account_tree_rounded,
-                      title: isAr
-                          ? 'تعيين الموظفين للفروع'
-                          : 'Assign Employees to Branches',
+                      title: isAr ? 'تعيين الموظفين للفروع' : 'Assign Employees to Branches',
                       description: isAr
                           ? 'حدد الفروع التي يستطيع كل موظف العمل بها. يتم تطبيق هذا التقييد في الواجهة وفي قواعد الأمان.'
                           : 'Choose which branches each employee can work in. The restriction is enforced in both the UI and security rules.',
@@ -60,20 +63,14 @@ class EmployeeManagementHubScreen extends StatelessWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Icon(
-                              Icons.shield_outlined,
-                              color: theme.colorScheme.primary,
-                            ),
+                            Icon(Icons.shield_outlined, color: theme.colorScheme.primary),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
                                 isAr
                                     ? 'صلاحية الميزة وحدها لا تمنح الوصول لكل الفروع. يجب أن يملك الموظف الصلاحية المطلوبة وأن يكون الفرع معيّنًا له.'
                                     : 'A feature permission alone does not grant access to every branch. The employee must have both the required permission and an explicit branch assignment.',
-                                style: const TextStyle(
-                                  fontFamily: 'Tajawal',
-                                  height: 1.5,
-                                ),
+                                style: const TextStyle(fontFamily: 'Tajawal', height: 1.5),
                               ),
                             ),
                           ],
@@ -151,10 +148,7 @@ class _ManagementCard extends StatelessWidget {
             FilledButton.icon(
               onPressed: onPressed,
               icon: const Icon(Icons.arrow_forward_rounded),
-              label: Text(
-                buttonText,
-                style: const TextStyle(fontFamily: 'Tajawal'),
-              ),
+              label: Text(buttonText, style: const TextStyle(fontFamily: 'Tajawal')),
             ),
           ],
         ),
