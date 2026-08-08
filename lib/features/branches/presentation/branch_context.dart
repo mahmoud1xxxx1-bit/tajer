@@ -8,10 +8,7 @@ class BranchContextState {
   final String branchId;
   final bool isReady;
 
-  const BranchContextState({
-    required this.branchId,
-    required this.isReady,
-  });
+  const BranchContextState({required this.branchId, required this.isReady});
 
   const BranchContextState.loading()
       : branchId = BranchIds.main,
@@ -31,10 +28,7 @@ class BranchContextNotifier extends StateNotifier<BranchContextState> {
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(_prefsKey);
-    state = BranchContextState(
-      branchId: resolveBranchId(saved),
-      isReady: true,
-    );
+    state = BranchContextState(branchId: resolveBranchId(saved), isReady: true);
   }
 
   Future<void> selectBranch(String branchId) async {
@@ -55,5 +49,24 @@ final branchContextProvider =
 });
 
 final selectedBranchIdProvider = Provider<String>((ref) {
-  return ref.watch(branchContextProvider).branchId;
+  final requested = ref.watch(branchContextProvider).branchId;
+  final user = ref.watch(appUserProvider).value;
+  if (user == null || user.role == 'merchant' || user.role == 'admin') {
+    return requested;
+  }
+
+  final allowed = user.assignedBranchIds.isEmpty
+      ? const <String>[BranchIds.main]
+      : user.assignedBranchIds;
+  return allowed.contains(requested) ? requested : allowed.first;
+});
+
+final employeeAllowedBranchIdsProvider = Provider<List<String>>((ref) {
+  final user = ref.watch(appUserProvider).value;
+  if (user == null || user.role == 'merchant' || user.role == 'admin') {
+    return const <String>[]; // Empty means unrestricted for owner/admin.
+  }
+  return user.assignedBranchIds.isEmpty
+      ? const <String>[BranchIds.main]
+      : List<String>.unmodifiable(user.assignedBranchIds);
 });
