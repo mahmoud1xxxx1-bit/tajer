@@ -32,6 +32,12 @@ jobs:
         cache: 'npm'
         cache-dependency-path: functions/package-lock.json
 
+    - name: Set up Java for Firebase emulator
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+
     - name: Decode Android release keystore
       run: |
         echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
@@ -54,6 +60,9 @@ jobs:
 
     - name: Validate trusted backend syntax
       run: node --check functions/index.js
+
+    - name: Run Firestore rules emulator tests
+      run: npx firebase-tools emulators:exec --project demo-tajer-rules --only firestore "npm --prefix functions run test:rules"
 
     - name: Run regression tests
       run: flutter test

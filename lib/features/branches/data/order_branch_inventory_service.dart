@@ -10,7 +10,24 @@ class OrderBranchInventoryService {
   OrderBranchInventoryService(this.firestore);
 
   Future<void> applySale(AppOrder order, {required int queueNumber}) {
-    return _apply(order, sign: -1, reasonPrefix: 'فاتورة مبيعات #$queueNumber');
+    return _apply(
+      order,
+      sign: -1,
+      reasonPrefix: 'Sales invoice #$queueNumber',
+    );
+  }
+
+  Future<void> applySaleInTransaction(
+    Transaction tx,
+    AppOrder order, {
+    required int queueNumber,
+  }) {
+    return _applyInTransaction(
+      tx,
+      order,
+      sign: -1,
+      reasonPrefix: 'Sales invoice #$queueNumber',
+    );
   }
 
   Future<void> restoreForCancellation(AppOrder order) {
@@ -18,7 +35,20 @@ class OrderBranchInventoryService {
       order,
       sign: 1,
       reasonPrefix:
-          'استرجاع مخزون بسبب إلغاء فاتورة #${order.queueNumber ?? order.id}',
+          'Inventory restored for cancelled invoice #${order.queueNumber ?? order.id}',
+    );
+  }
+
+  Future<void> restoreForCancellationInTransaction(
+    Transaction tx,
+    AppOrder order,
+  ) {
+    return _applyInTransaction(
+      tx,
+      order,
+      sign: 1,
+      reasonPrefix:
+          'Inventory restored for cancelled invoice #${order.queueNumber ?? order.id}',
     );
   }
 
@@ -27,7 +57,7 @@ class OrderBranchInventoryService {
       order,
       sign: 1,
       reasonPrefix:
-          'استرجاع مخزون بسبب حذف نهائي لفاتورة #${order.queueNumber ?? order.id}',
+          'Inventory restored for deleted invoice #${order.queueNumber ?? order.id}',
     );
   }
 
@@ -36,11 +66,40 @@ class OrderBranchInventoryService {
       order,
       sign: -1,
       reasonPrefix:
-          'خصم مخزون بسبب التراجع عن إلغاء الفاتورة #${order.queueNumber ?? order.id}',
+          'Inventory deducted after cancellation reversal #${order.queueNumber ?? order.id}',
+    );
+  }
+
+  Future<void> reDeductAfterCancellationReversalInTransaction(
+    Transaction tx,
+    AppOrder order,
+  ) {
+    return _applyInTransaction(
+      tx,
+      order,
+      sign: -1,
+      reasonPrefix:
+          'Inventory deducted after cancellation reversal #${order.queueNumber ?? order.id}',
     );
   }
 
   Future<void> _apply(
+    AppOrder order, {
+    required int sign,
+    required String reasonPrefix,
+  }) {
+    return firestore.runTransaction<void>((tx) {
+      return _applyInTransaction(
+        tx,
+        order,
+        sign: sign,
+        reasonPrefix: reasonPrefix,
+      );
+    });
+  }
+
+  Future<void> _applyInTransaction(
+    Transaction tx,
     AppOrder order, {
     required int sign,
     required String reasonPrefix,
@@ -55,14 +114,10 @@ class OrderBranchInventoryService {
         .toSet()
         .toList();
 
-    final productSnaps = await Future.wait(
-      productIds.map(
-        (id) => firestore
-            .collection('products')
-            .doc(id)
-            .get(const GetOptions(source: Source.serverAndCache)),
-      ),
-    );
+    final productSnaps = <DocumentSnapshot<Map<String, dynamic>>>[];
+    for (final id in productIds) {
+      productSnaps.add(await tx.get(firestore.collection('products').doc(id)));
+    }
 
     final products = <String, Map<String, dynamic>>{};
     final rawMaterialIds = <String>{};
@@ -77,14 +132,10 @@ class OrderBranchInventoryService {
       }
     }
 
-    final rawSnaps = await Future.wait(
-      rawMaterialIds.map(
-        (id) => firestore
-            .collection('raw_materials')
-            .doc(id)
-            .get(const GetOptions(source: Source.serverAndCache)),
-      ),
-    );
+    final rawSnaps = <DocumentSnapshot<Map<String, dynamic>>>[];
+    for (final id in rawMaterialIds) {
+      rawSnaps.add(await tx.get(firestore.collection('raw_materials').doc(id)));
+    }
 
     final rawMaterials = <String, Map<String, dynamic>>{
       for (final snap in rawSnaps)
@@ -117,7 +168,7 @@ class OrderBranchInventoryService {
         rawDeltas[rawId] =
             (rawDeltas[rawId] ?? 0) + sign * amount * item.quantity;
         rawNames[rawId] =
-            rawMaterials[rawId]?['name']?.toString() ?? 'مادة خام';
+            rawMaterials[rawId]?['name']?.toString() ?? 'Raw material';
         rawParentNames[rawId] = productName;
       }
     }
@@ -141,8 +192,7 @@ class OrderBranchInventoryService {
           itemId: entry.key,
           delta: entry.value,
           legacyMainQuantity:
-              (rawMaterials[entry.key]?['quantity'] as num?)?.toDouble() ??
-                  0.0,
+              (rawMaterials[entry.key]?['quantity'] as num?)?.toDouble() ?? 0.0,
         ),
       );
     }
@@ -167,88 +217,82 @@ class OrderBranchInventoryService {
           .doc();
     }
 
+    final snapshots = <String, DocumentSnapshot<Map<String, dynamic>>>{};
+    for (final entry in inventoryRefs.entries) {
+      snapshots[entry.key] = await tx.get(entry.value);
+    }
+
+    final previous = <String, double>{};
+    final next = <String, double>{};
+
+    for (final mutation in mutations) {
+      final key = repository.docId(
+        order.branchId,
+        mutation.itemType,
+        mutation.itemId,
+      );
+      final snap = snapshots[key]!;
+      final current = snap.exists
+          ? (snap.data()?['quantity'] as num?)?.toDouble() ?? 0.0
+          : (order.branchId == 'main' ? mutation.legacyMainQuantity : 0.0);
+      final calculated = current + mutation.delta;
+
+      if (calculated < -0.000001) {
+        throw Exception(
+          'Insufficient branch inventory: ${mutation.itemId}',
+        );
+      }
+
+      previous[key] = current;
+      next[key] = calculated < 0 ? 0.0 : calculated;
+    }
+
     final userEmail = FirebaseAuth.instance.currentUser?.email ?? 'Unknown';
+    for (final mutation in mutations) {
+      final key = repository.docId(
+        order.branchId,
+        mutation.itemType,
+        mutation.itemId,
+      );
+      final snap = snapshots[key]!;
+      final isRaw = mutation.itemType == 'raw_material';
 
-    // Stock and its audit log are committed in one Firestore transaction.
-    // There is no post-commit rollback window: either every stock change and
-    // every corresponding log is committed, or none of them are.
-    await firestore.runTransaction<void>((tx) async {
-      final snapshots = <String, DocumentSnapshot<Map<String, dynamic>>>{};
-      for (final entry in inventoryRefs.entries) {
-        snapshots[entry.key] = await tx.get(entry.value);
-      }
-
-      final previous = <String, double>{};
-      final next = <String, double>{};
-
-      for (final mutation in mutations) {
-        final key = repository.docId(
-          order.branchId,
-          mutation.itemType,
-          mutation.itemId,
-        );
-        final snap = snapshots[key]!;
-        final current = snap.exists
-            ? (snap.data()?['quantity'] as num?)?.toDouble() ?? 0.0
-            : (order.branchId == 'main' ? mutation.legacyMainQuantity : 0.0);
-        final calculated = current + mutation.delta;
-
-        if (calculated < -0.000001) {
-          throw Exception(
-            'Insufficient branch inventory: ${mutation.itemId}',
-          );
-        }
-
-        previous[key] = current;
-        next[key] = calculated < 0 ? 0.0 : calculated;
-      }
-
-      for (final mutation in mutations) {
-        final key = repository.docId(
-          order.branchId,
-          mutation.itemType,
-          mutation.itemId,
-        );
-        final snap = snapshots[key]!;
-        final isRaw = mutation.itemType == 'raw_material';
-
-        tx.set(
-          inventoryRefs[key]!,
-          {
-            'id': key,
-            'merchantId': order.merchantId,
-            'branchId': order.branchId,
-            'itemId': mutation.itemId,
-            'itemType': mutation.itemType,
-            'quantity': next[key],
-            'initialQuantity': snap.exists
-                ? ((snap.data()?['initialQuantity'] as num?)?.toDouble() ??
-                    previous[key])
-                : previous[key],
-            'updatedAt': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true),
-        );
-
-        final logRef = logRefs[key]!;
-        tx.set(logRef, {
-          'id': logRef.id,
+      tx.set(
+        inventoryRefs[key]!,
+        {
+          'id': key,
           'merchantId': order.merchantId,
           'branchId': order.branchId,
-          'productId': mutation.itemId,
-          'productName': isRaw
-              ? (rawNames[mutation.itemId] ?? 'مادة خام')
-              : (productNames[mutation.itemId] ?? 'منتج'),
-          'changeQuantity': mutation.delta,
-          'previousQuantity': previous[key] ?? 0.0,
-          'newQuantity': next[key] ?? 0.0,
-          'reason': isRaw
-              ? '$reasonPrefix — ${rawParentNames[mutation.itemId] ?? ''}'
-              : reasonPrefix,
-          'date': FieldValue.serverTimestamp(),
-          'userEmail': userEmail,
-        });
-      }
-    });
+          'itemId': mutation.itemId,
+          'itemType': mutation.itemType,
+          'quantity': next[key],
+          'initialQuantity': snap.exists
+              ? ((snap.data()?['initialQuantity'] as num?)?.toDouble() ??
+                  previous[key])
+              : previous[key],
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+
+      final logRef = logRefs[key]!;
+      tx.set(logRef, {
+        'id': logRef.id,
+        'merchantId': order.merchantId,
+        'branchId': order.branchId,
+        'productId': mutation.itemId,
+        'productName': isRaw
+            ? (rawNames[mutation.itemId] ?? 'Raw material')
+            : (productNames[mutation.itemId] ?? 'Product'),
+        'changeQuantity': mutation.delta,
+        'previousQuantity': previous[key] ?? 0.0,
+        'newQuantity': next[key] ?? 0.0,
+        'reason': isRaw
+            ? '$reasonPrefix - ${rawParentNames[mutation.itemId] ?? ''}'
+            : reasonPrefix,
+        'date': FieldValue.serverTimestamp(),
+        'userEmail': userEmail,
+      });
+    }
   }
 }

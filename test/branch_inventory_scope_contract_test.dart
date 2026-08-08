@@ -10,7 +10,8 @@ void main() {
       ).readAsStringSync();
 
       expect(source, contains('OrderBranchInventoryService(firestore)'));
-      expect(source, contains('.applySale(orderWithQueue'));
+      expect(source, contains('.applySaleInTransaction('));
+      expect(source, contains('runTransaction<AppOrder>'));
       expect(source, isNot(contains('super.createOrder(')));
     });
 

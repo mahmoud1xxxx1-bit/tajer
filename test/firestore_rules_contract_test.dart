@@ -175,13 +175,14 @@ void main() {
       expect(rules,
           contains('hasDataBranchAccess(merchantId, request.resource.data)'));
       expect(
+          rules, contains("hasPermission(merchantId, 'can_manage_inventory')"));
+      expect(
           rules,
-          contains(
-              "hasPermission(merchantId, 'can_manage_inventory') || hasPermission(merchantId, 'can_create_orders')"));
+          contains('isCheckoutInventoryLogCreate'));
       expect(
           rules,
           contains(
-              "request.resource.data.get('branchId', 'main') == resource.data.get('branchId', 'main')"));
+              "hasPermission(merchantId, 'can_cancel_orders')"));
     });
 
     test('inventory transfer requires access to source and destination', () {
@@ -215,9 +216,25 @@ void main() {
       expect(rules,
           contains('hasDataBranchAccess(merchantId, request.resource.data)'));
       expect(
+          rules, contains("hasPermission(merchantId, 'can_manage_inventory')"));
+      expect(
+          rules,
+          contains('isCheckoutInventoryUpdate'));
+      expect(
+          rules,
+          contains('isCancellationInventoryUpdate'));
+      expect(
           rules,
           contains(
-              "hasPermission(merchantId, 'can_manage_inventory') || hasPermission(merchantId, 'can_create_orders')"));
+              "request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity', 'updatedAt'])"));
+      expect(
+          rules,
+          contains(
+              "request.resource.data.get('quantity', -1) <= resource.data.get('quantity', -1)"));
+      expect(
+          rules,
+          contains(
+              "request.resource.data.get('quantity', -1) >= resource.data.get('quantity', -1)"));
       expect(
           rules,
           contains(
@@ -234,6 +251,7 @@ void main() {
 
     test('unknown merchant subcollection writes are owner only', () {
       expect(rules, contains('match /{subcollection=**}'));
+      expect(rules, contains('allow read: if isOwner(merchantId);'));
       expect(rules, contains('allow write: if isOwner(merchantId);'));
     });
   });

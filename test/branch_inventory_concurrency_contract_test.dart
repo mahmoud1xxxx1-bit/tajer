@@ -20,7 +20,7 @@ void main() {
       'lib/features/branches/data/order_branch_inventory_service.dart',
     ).readAsStringSync();
 
-    expect(source, contains('await firestore.runTransaction<void>'));
+    expect(source, contains('firestore.runTransaction<void>'));
     expect(source, contains('snapshots[entry.key] = await tx.get'));
     expect(source, contains('calculated < -0.000001'));
     expect(source, contains('Insufficient branch inventory'));

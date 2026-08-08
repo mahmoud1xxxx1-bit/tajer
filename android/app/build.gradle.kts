@@ -8,6 +8,36 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+val signingProperties = Properties()
+val signingPropertiesFile = rootProject.file("key.properties")
+if (signingPropertiesFile.exists()) {
+    signingPropertiesFile.reader().use { reader ->
+        signingProperties.load(reader)
+    }
+}
+
+fun signingValue(name: String): String? =
+    (System.getenv("TAJER_${name.uppercase()}") ?: signingProperties.getProperty(name))
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+
+val releaseSigningComplete = listOf("storeFile", "storePassword", "keyAlias", "keyPassword")
+    .all { signingValue(it) != null }
+
+gradle.taskGraph.whenReady {
+    val releaseTaskRequested = allTasks.any { task ->
+        task.name == "assembleRelease" ||
+            task.name == "bundleRelease" ||
+            task.name == "packageReleaseBundle"
+    }
+    if (releaseTaskRequested && !releaseSigningComplete) {
+        throw GradleException(
+            "Missing release signing credentials. Provide TAJER_STOREFILE, " +
+                "TAJER_STOREPASSWORD, TAJER_KEYALIAS and TAJER_KEYPASSWORD or key.properties."
+        )
+    }
+}
+
 android {
     namespace = "com.allldown.tajer"
 
@@ -23,19 +53,6 @@ android {
     val flutterVersionName = localProperties.getProperty("flutter.versionName") ?: "1.0"
     val flutterCompileSdk = localProperties.getProperty("flutter.compileSdkVersion")?.toIntOrNull() ?: 36
     val flutterTargetSdk = localProperties.getProperty("flutter.targetSdkVersion")?.toIntOrNull() ?: 36
-    val signingProperties = Properties()
-    val signingPropertiesFile = rootProject.file("key.properties")
-    if (signingPropertiesFile.exists()) {
-        signingPropertiesFile.reader().use { reader ->
-            signingProperties.load(reader)
-        }
-    }
-
-    fun signingValue(name: String): String? =
-        (System.getenv("TAJER_${name.uppercase()}") ?: signingProperties.getProperty(name))
-            ?.trim()
-            ?.takeIf { it.isNotEmpty() }
-
     compileSdk = 36
     ndkVersion = "28.2.13676358"
 
@@ -56,22 +73,21 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            val storeFilePath = signingValue("storeFile")
-                ?: throw GradleException("Missing release signing storeFile. Provide TAJER_STOREFILE or key.properties.")
-            storeFile = file(storeFilePath)
-            storePassword = signingValue("storePassword")
-                ?: throw GradleException("Missing release signing storePassword.")
-            keyAlias = signingValue("keyAlias")
-                ?: throw GradleException("Missing release signing keyAlias.")
-            keyPassword = signingValue("keyPassword")
-                ?: throw GradleException("Missing release signing keyPassword.")
+        if (releaseSigningComplete) {
+            create("release") {
+                storeFile = file(signingValue("storeFile")!!)
+                storePassword = signingValue("storePassword")!!
+                keyAlias = signingValue("keyAlias")!!
+                keyPassword = signingValue("keyPassword")!!
+            }
         }
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("release")
+            if (releaseSigningComplete) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(

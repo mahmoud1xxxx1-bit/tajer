@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/utils/date_parser.dart';
-import '../../products/domain/product.dart'; // For TimestampConverter
 import 'cart_item.dart';
 
 class AppOrder {
@@ -19,6 +18,7 @@ class AppOrder {
   final String? creatorName;
   final String? paymentMethod;
   final DateTime? scheduledDate;
+  final String? shiftId;
   final int? queueNumber;
   final double? tenderedAmount;
   final double? changeAmount;
@@ -42,6 +42,7 @@ class AppOrder {
     this.creatorName,
     this.paymentMethod,
     this.scheduledDate,
+    this.shiftId,
     this.queueNumber,
     this.tenderedAmount,
     this.changeAmount,
@@ -58,7 +59,8 @@ class AppOrder {
       customerId: json['customerId'] as String,
       customerName: json['customerName'] as String,
       items: (json['items'] as List<dynamic>?)
-              ?.map((e) => CartItem.fromJson(Map<String, dynamic>.from(e as Map)))
+              ?.map(
+                  (e) => CartItem.fromJson(Map<String, dynamic>.from(e as Map)))
               .toList() ??
           const [],
       total: (json['total'] as num).toDouble(),
@@ -70,6 +72,7 @@ class AppOrder {
       creatorName: json['creatorName'] as String?,
       paymentMethod: json['paymentMethod'] as String? ?? 'cash',
       scheduledDate: safeParseNullableDate(json['scheduledDate']),
+      shiftId: json['shiftId'] as String?,
       queueNumber: (json['queueNumber'] as num?)?.toInt(),
       tenderedAmount: (json['tenderedAmount'] as num?)?.toDouble(),
       changeAmount: (json['changeAmount'] as num?)?.toDouble(),
@@ -98,7 +101,9 @@ class AppOrder {
       'creatorId': creatorId,
       'creatorName': creatorName,
       'paymentMethod': paymentMethod ?? 'cash',
-      'scheduledDate': scheduledDate != null ? Timestamp.fromDate(scheduledDate!) : null,
+      'scheduledDate':
+          scheduledDate != null ? Timestamp.fromDate(scheduledDate!) : null,
+      'shiftId': shiftId,
       'queueNumber': queueNumber,
       'tenderedAmount': tenderedAmount,
       'changeAmount': changeAmount,
@@ -124,6 +129,7 @@ class AppOrder {
     String? creatorName,
     String? paymentMethod,
     DateTime? scheduledDate,
+    String? shiftId,
     int? queueNumber,
     double? tenderedAmount,
     double? changeAmount,
@@ -147,6 +153,7 @@ class AppOrder {
       creatorName: creatorName ?? this.creatorName,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       scheduledDate: scheduledDate ?? this.scheduledDate,
+      shiftId: shiftId ?? this.shiftId,
       queueNumber: queueNumber ?? this.queueNumber,
       tenderedAmount: tenderedAmount ?? this.tenderedAmount,
       changeAmount: changeAmount ?? this.changeAmount,

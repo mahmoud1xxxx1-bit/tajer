@@ -19,98 +19,111 @@ class BranchAwareOrderRepository extends OrderRepository {
     return value == null || value.isEmpty ? 'main' : value;
   }
 
-  Future<int> _nextBranchQueueNumber(String merchantId, String branchId) async {
-    final now = DateTime.now();
-    final date = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final prefs = await SharedPreferences.getInstance();
-    final dateKey = 'queue_date_${merchantId}_$branchId';
-    final numKey = 'queue_num_${merchantId}_$branchId';
-
-    var localNumber = prefs.getString(dateKey) == date ? (prefs.getInt(numKey) ?? 0) : 0;
-    final counterRef = firestore
-        .collection('merchants')
-        .doc(merchantId)
-        .collection('counters')
-        .doc('daily_orders_$branchId');
-
-    try {
-      localNumber = await firestore.runTransaction<int>((tx) async {
-        final snap = await tx.get(counterRef);
-        final data = snap.data();
-        final current = data?['date'] == date
-            ? (data?['lastNumber'] as num?)?.toInt() ?? 0
-            : 0;
-        final next = (current > localNumber ? current : localNumber) + 1;
-        tx.set(counterRef, {
-          'date': date,
-          'lastNumber': next,
-          'branchId': branchId,
-          'updatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
-        return next;
-      });
-    } catch (_) {
-      localNumber += 1;
-    }
-
-    await prefs.setString(dateKey, date);
-    await prefs.setInt(numKey, localNumber);
-    return localNumber;
-  }
-
   @override
   Future<AppOrder> createOrder(AppOrder order, {String? shiftId}) async {
     final branchId = await _selectedBranch(order.merchantId);
-    final queueNumber = await _nextBranchQueueNumber(order.merchantId, branchId);
-    final orderWithQueue = order.copyWith(branchId: branchId, queueNumber: queueNumber);
+    final now = DateTime.now();
+    final date =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final prefs = await SharedPreferences.getInstance();
+    final dateKey = 'queue_date_${order.merchantId}_$branchId';
+    final numKey = 'queue_num_${order.merchantId}_$branchId';
+    final localNumber =
+        prefs.getString(dateKey) == date ? (prefs.getInt(numKey) ?? 0) : 0;
 
-    await OrderBranchInventoryService(firestore)
-        .applySale(orderWithQueue, queueNumber: queueNumber);
+    final orderRef = firestore.collection('orders').doc(order.id);
+    final counterRef = firestore
+        .collection('merchants')
+        .doc(order.merchantId)
+        .collection('counters')
+        .doc('daily_orders_$branchId');
 
-    final batch = firestore.batch();
-    final orderRef = firestore.collection('orders').doc(orderWithQueue.id);
+    final createdOrder = await firestore.runTransaction<AppOrder>((tx) async {
+      final existingOrder = await tx.get(orderRef);
+      if (existingOrder.exists && existingOrder.data() != null) {
+        final existingData = Map<String, dynamic>.from(existingOrder.data()!);
+        existingData['id'] = existingOrder.id;
+        return AppOrder.fromJson(existingData);
+      }
 
-    if (orderWithQueue.customerId != 'walk_in' && orderWithQueue.customerId.isNotEmpty) {
-      final customerRef = firestore.collection('customers').doc(orderWithQueue.customerId);
-      final customerDoc = await customerRef.get(const GetOptions(source: Source.serverAndCache));
-      if (customerDoc.exists) {
+      final counterSnap = await tx.get(counterRef);
+      final counterData = counterSnap.data();
+      final current = counterData?['date'] == date
+          ? (counterData?['lastNumber'] as num?)?.toInt() ?? 0
+          : 0;
+      final queueNumber = (current > localNumber ? current : localNumber) + 1;
+      final orderWithQueue = order.copyWith(
+        branchId: branchId,
+        shiftId: shiftId,
+        queueNumber: queueNumber,
+      );
+
+      DocumentReference<Map<String, dynamic>>? customerRef;
+      DocumentSnapshot<Map<String, dynamic>>? customerDoc;
+      if (orderWithQueue.customerId != 'walk_in' &&
+          orderWithQueue.customerId.isNotEmpty) {
+        customerRef =
+            firestore.collection('customers').doc(orderWithQueue.customerId);
+        customerDoc = await tx.get(customerRef);
+      }
+
+      DocumentReference<Map<String, dynamic>>? shiftRef;
+      if (shiftId != null && shiftId.isNotEmpty) {
+        shiftRef = firestore.collection('shifts').doc(shiftId);
+        final shiftSnap = await tx.get(shiftRef);
+        if (!shiftSnap.exists) {
+          throw Exception('Shift not found');
+        }
+        final shiftBranchId =
+            shiftSnap.data()?['branchId']?.toString() ?? 'main';
+        final shiftStatus = shiftSnap.data()?['status']?.toString();
+        if (shiftBranchId != branchId || shiftStatus != 'open') {
+          throw Exception('Order branch does not match the active shift');
+        }
+      }
+
+      await OrderBranchInventoryService(firestore).applySaleInTransaction(
+        tx,
+        orderWithQueue,
+        queueNumber: queueNumber,
+      );
+
+      tx.set(
+          counterRef,
+          {
+            'date': date,
+            'lastNumber': queueNumber,
+            'branchId': branchId,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
+
+      if (customerRef != null && customerDoc?.exists == true) {
         final debtIncrease = orderWithQueue.isCredit
             ? (orderWithQueue.total - orderWithQueue.paidAmount)
             : 0.0;
-        batch.update(customerRef, {
+        tx.update(customerRef, {
           'totalPurchases': FieldValue.increment(orderWithQueue.total),
           'orderCount': FieldValue.increment(1),
           'totalDebt': FieldValue.increment(debtIncrease),
           'lastPurchaseDate': FieldValue.serverTimestamp(),
         });
       }
-    }
 
-    if (shiftId != null && shiftId.isNotEmpty) {
-      final shiftRef = firestore.collection('shifts').doc(shiftId);
-      final shiftSnap = await shiftRef.get(const GetOptions(source: Source.serverAndCache));
-      if (!shiftSnap.exists) {
-        await OrderBranchInventoryService(firestore).restoreForDeletion(orderWithQueue);
-        throw Exception('Shift not found');
+      if (shiftRef != null) {
+        final updates = _saleShiftUpdates(orderWithQueue);
+        if (updates.isNotEmpty) tx.update(shiftRef, updates);
       }
-      final shiftBranchId = shiftSnap.data()?['branchId']?.toString() ?? 'main';
-      final shiftStatus = shiftSnap.data()?['status']?.toString();
-      if (shiftBranchId != branchId || shiftStatus != 'open') {
-        await OrderBranchInventoryService(firestore).restoreForDeletion(orderWithQueue);
-        throw Exception('Order branch does not match the active shift');
-      }
-      final updates = _saleShiftUpdates(orderWithQueue);
-      if (updates.isNotEmpty) batch.update(shiftRef, updates);
-    }
 
-    batch.set(orderRef, orderWithQueue.toJson());
-    try {
-      await batch.commit();
+      tx.set(orderRef, orderWithQueue.toJson());
       return orderWithQueue;
-    } catch (_) {
-      await OrderBranchInventoryService(firestore).restoreForDeletion(orderWithQueue);
-      rethrow;
+    });
+
+    await prefs.setString(dateKey, date);
+    if (createdOrder.queueNumber != null) {
+      await prefs.setInt(numKey, createdOrder.queueNumber!);
     }
+    return createdOrder;
   }
 
   Map<String, dynamic> _saleShiftUpdates(AppOrder order) {
@@ -135,7 +148,8 @@ class BranchAwareOrderRepository extends OrderRepository {
           updates['cashSales'] = FieldValue.increment(order.splitCashAmount!);
         }
         if ((order.splitNetworkAmount ?? 0) > 0) {
-          updates['cardTotal'] = FieldValue.increment(order.splitNetworkAmount!);
+          updates['cardTotal'] =
+              FieldValue.increment(order.splitNetworkAmount!);
         }
         break;
     }
@@ -155,125 +169,111 @@ class BranchAwareOrderRepository extends OrderRepository {
     return orderTax;
   }
 
-  Future<bool> _claimStatusTransition(AppOrder order, String newStatus) {
-    final orderRef = firestore.collection('orders').doc(order.id);
-    return firestore.runTransaction<bool>((tx) async {
-      final snap = await tx.get(orderRef);
-      if (!snap.exists) return false;
-      final data = snap.data()!;
-      final currentStatus = data['status']?.toString() ?? 'pending';
-      if (currentStatus == newStatus) return false;
-      if (currentStatus != order.status || data['statusTransition'] != null) {
-        throw Exception('Order status changed on another device. Please refresh.');
-      }
-      tx.update(orderRef, {
-        'statusTransition': {
-          'from': currentStatus,
-          'to': newStatus,
-          'startedAt': FieldValue.serverTimestamp(),
-        },
-      });
-      return true;
-    });
-  }
-
-  Future<void> _clearStatusTransition(String orderId) async {
-    await firestore.collection('orders').doc(orderId).update({
-      'statusTransition': FieldValue.delete(),
-    });
-  }
-
-  void _guardPaidCreditInvoiceMutation(AppOrder order, String targetAction) {
-    if (!order.isCredit || order.paidAmount <= 0.01) return;
-    throw Exception(
-      'لا يمكن $targetAction فاتورة آجلة تم تحصيل مبلغ منها. يجب معالجة/عكس التحصيل أولاً حفاظاً على تطابق دين العميل وسجل الوردية. '
-      'A paid or partially-paid credit invoice cannot be $targetAction until its debt payment is reversed.',
-    );
-  }
-
   @override
   Future<void> updateOrderStatus(AppOrder order, String newStatus) async {
     if (order.status == newStatus) return;
-    if (newStatus == 'cancelled' && order.status != 'cancelled') {
-      _guardPaidCreditInvoiceMutation(order, 'إلغاء');
-    }
 
-    final claimed = await _claimStatusTransition(order, newStatus);
-    if (!claimed) return;
+    final orderRef = firestore.collection('orders').doc(order.id);
+    await firestore.runTransaction<void>((tx) async {
+      final snap = await tx.get(orderRef);
+      if (!snap.exists || snap.data() == null) return;
 
-    var inventoryChanged = false;
-    try {
-      if (newStatus == 'cancelled' && order.status != 'cancelled') {
-        await OrderBranchInventoryService(firestore).restoreForCancellation(order);
-        inventoryChanged = true;
-      } else if (order.status == 'cancelled' && newStatus != 'cancelled') {
-        await OrderBranchInventoryService(firestore).reDeductAfterCancellationReversal(order);
-        inventoryChanged = true;
+      final data = snap.data()!;
+      final canonicalData = Map<String, dynamic>.from(data);
+      canonicalData['id'] = snap.id;
+      final canonicalOrder = AppOrder.fromJson(canonicalData);
+      final currentStatus = data['status']?.toString() ?? 'pending';
+      if (currentStatus == newStatus) return;
+      if (currentStatus != order.status || data['statusTransition'] != null) {
+        throw Exception(
+            'Order status changed on another device. Please refresh.');
       }
-      await _applyStatusFinancials(order, newStatus);
-    } catch (_) {
-      if (inventoryChanged) {
-        if (newStatus == 'cancelled' && order.status != 'cancelled') {
-          await OrderBranchInventoryService(firestore).reDeductAfterCancellationReversal(order);
-        } else if (order.status == 'cancelled' && newStatus != 'cancelled') {
-          await OrderBranchInventoryService(firestore).restoreForCancellation(order);
+      if (newStatus == 'cancelled' &&
+          canonicalOrder.isCredit &&
+          canonicalOrder.paidAmount > 0.01) {
+        throw Exception(
+          'A paid or partially-paid credit invoice cannot be cancelled until its debt payment is reversed.',
+        );
+      }
+
+      DocumentReference<Map<String, dynamic>>? refundShiftRef;
+      Map<String, dynamic>? refundShiftUpdates;
+      if (newStatus == 'cancelled' &&
+          canonicalOrder.status != 'cancelled' &&
+          canonicalOrder.paidAmount > 0 &&
+          canonicalOrder.shiftId != null &&
+          canonicalOrder.shiftId!.isNotEmpty) {
+        final shiftRef =
+            firestore.collection('shifts').doc(canonicalOrder.shiftId);
+        final shiftSnap = await tx.get(shiftRef);
+        final shiftData = shiftSnap.data();
+        if (!shiftSnap.exists ||
+            shiftData == null ||
+            shiftData['merchantId'] != canonicalOrder.merchantId ||
+            (shiftData['branchId']?.toString() ?? 'main') !=
+                canonicalOrder.branchId) {
+          throw Exception(
+              'Order refund shift does not match the order merchant and branch.');
+        }
+        refundShiftRef = shiftRef;
+        final updates = _refundShiftUpdates(canonicalOrder);
+        if (updates.isNotEmpty) refundShiftUpdates = updates;
+      }
+
+      if (newStatus == 'cancelled' && canonicalOrder.status != 'cancelled') {
+        await OrderBranchInventoryService(firestore)
+            .restoreForCancellationInTransaction(tx, canonicalOrder);
+      } else if (canonicalOrder.status == 'cancelled' &&
+          newStatus != 'cancelled') {
+        await OrderBranchInventoryService(firestore)
+            .reDeductAfterCancellationReversalInTransaction(tx, canonicalOrder);
+      }
+
+      if (newStatus == 'cancelled' && canonicalOrder.status != 'cancelled') {
+        if (canonicalOrder.customerId != 'walk_in' &&
+            canonicalOrder.customerId.isNotEmpty) {
+          final customerRef =
+              firestore.collection('customers').doc(canonicalOrder.customerId);
+          final debtDecrease = canonicalOrder.isCredit
+              ? (canonicalOrder.total - canonicalOrder.paidAmount)
+              : 0.0;
+          tx.update(customerRef, {
+            'totalPurchases': FieldValue.increment(-canonicalOrder.total),
+            'orderCount': FieldValue.increment(-1),
+            'totalDebt': FieldValue.increment(-debtDecrease),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+        if (refundShiftRef != null && refundShiftUpdates != null) {
+          tx.update(refundShiftRef, refundShiftUpdates);
+        }
+      } else if (canonicalOrder.status == 'cancelled' &&
+          newStatus != 'cancelled') {
+        if (canonicalOrder.customerId != 'walk_in' &&
+            canonicalOrder.customerId.isNotEmpty) {
+          final customerRef =
+              firestore.collection('customers').doc(canonicalOrder.customerId);
+          final debtIncrease = canonicalOrder.isCredit
+              ? (canonicalOrder.total - canonicalOrder.paidAmount)
+              : 0.0;
+          tx.update(customerRef, {
+            'totalPurchases': FieldValue.increment(canonicalOrder.total),
+            'orderCount': FieldValue.increment(1),
+            'totalDebt': FieldValue.increment(debtIncrease),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
         }
       }
-      await _clearStatusTransition(order.id).catchError((_) {});
-      rethrow;
-    }
-  }
 
-  Future<void> _applyStatusFinancials(AppOrder order, String newStatus) async {
-    final orderRef = firestore.collection('orders').doc(order.id);
-    final batch = firestore.batch();
-
-    if (newStatus == 'cancelled' && order.status != 'cancelled') {
-      if (order.customerId != 'walk_in' && order.customerId.isNotEmpty) {
-        final customerRef = firestore.collection('customers').doc(order.customerId);
-        final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
-        batch.update(customerRef, {
-          'totalPurchases': FieldValue.increment(-order.total),
-          'orderCount': FieldValue.increment(-1),
-          'totalDebt': FieldValue.increment(-debtDecrease),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      }
-      await _appendRefundToOpenBranchShift(batch, order);
-    } else if (order.status == 'cancelled' && newStatus != 'cancelled') {
-      if (order.customerId != 'walk_in' && order.customerId.isNotEmpty) {
-        final customerRef = firestore.collection('customers').doc(order.customerId);
-        final debtIncrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
-        batch.update(customerRef, {
-          'totalPurchases': FieldValue.increment(order.total),
-          'orderCount': FieldValue.increment(1),
-          'totalDebt': FieldValue.increment(debtIncrease),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      }
-    }
-
-    batch.update(orderRef, {
-      'status': newStatus,
-      'statusTransition': FieldValue.delete(),
-      'updatedAt': FieldValue.serverTimestamp(),
+      tx.update(orderRef, {
+        'status': newStatus,
+        'statusTransition': FieldValue.delete(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
     });
-    await batch.commit();
   }
 
-  Future<void> _appendRefundToOpenBranchShift(WriteBatch batch, AppOrder order) async {
-    if (order.paidAmount <= 0) return;
-    final snap = await firestore
-        .collection('shifts')
-        .where('merchantId', isEqualTo: order.merchantId)
-        .where('status', isEqualTo: 'open')
-        .get();
-    final matching = snap.docs.where((doc) {
-      final value = doc.data()['branchId']?.toString() ?? 'main';
-      return value == order.branchId;
-    }).toList();
-    if (matching.isEmpty) return;
-
+  Map<String, dynamic> _refundShiftUpdates(AppOrder order) {
     final updates = <String, dynamic>{};
     final orderTax = _orderTax(order);
     if (orderTax > 0) updates['totalTax'] = FieldValue.increment(-orderTax);
@@ -295,11 +295,12 @@ class BranchAwareOrderRepository extends OrderRepository {
           updates['refundsCash'] = FieldValue.increment(order.splitCashAmount!);
         }
         if ((order.splitNetworkAmount ?? 0) > 0) {
-          updates['refundsCard'] = FieldValue.increment(order.splitNetworkAmount!);
+          updates['refundsCard'] =
+              FieldValue.increment(order.splitNetworkAmount!);
         }
         break;
     }
-    if (updates.isNotEmpty) batch.update(matching.first.reference, updates);
+    return updates;
   }
 
   @override
@@ -320,7 +321,8 @@ class BranchAwareOrderRepository extends OrderRepository {
         .where('isCredit', isEqualTo: true)
         .get();
 
-    final orderRefs = creditOrdersSnapshot.docs.map((doc) => doc.reference).toList();
+    final orderRefs =
+        creditOrdersSnapshot.docs.map((doc) => doc.reference).toList();
     final paymentRef = firestore
         .collection('merchants')
         .doc(merchantId)
@@ -334,7 +336,8 @@ class BranchAwareOrderRepository extends OrderRepository {
         throw Exception('العميل غير موجود.');
       }
 
-      final currentDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
+      final currentDebt =
+          (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
       if (amountPaid > currentDebt) {
         throw Exception('مبلغ السداد لا يمكن أن يتجاوز الدين المستحق.');
       }
@@ -351,11 +354,13 @@ class BranchAwareOrderRepository extends OrderRepository {
         if (shiftBranchId != branchId ||
             shiftData['status']?.toString() != 'open' ||
             shiftData['endTime'] != null) {
-          throw Exception('لا يمكن تسجيل التحصيل على وردية مغلقة أو فرع مختلف.');
+          throw Exception(
+              'لا يمكن تسجيل التحصيل على وردية مغلقة أو فرع مختلف.');
         }
       }
 
-      final liveOrders = <MapEntry<DocumentReference<Map<String, dynamic>>, Map<String, dynamic>>>[];
+      final liveOrders = <MapEntry<DocumentReference<Map<String, dynamic>>,
+          Map<String, dynamic>>>[];
       for (final ref in orderRefs) {
         final snap = await transaction.get(ref);
         if (!snap.exists || snap.data() == null) continue;
@@ -370,9 +375,13 @@ class BranchAwareOrderRepository extends OrderRepository {
         DateTime readDate(Map<String, dynamic> data) {
           final value = data['createdAt'];
           if (value is Timestamp) return value.toDate();
-          if (value is String) return DateTime.tryParse(value) ?? DateTime.fromMillisecondsSinceEpoch(0);
+          if (value is String) {
+            return DateTime.tryParse(value) ??
+                DateTime.fromMillisecondsSinceEpoch(0);
+          }
           return DateTime.fromMillisecondsSinceEpoch(0);
         }
+
         return readDate(a.value).compareTo(readDate(b.value));
       });
 
@@ -381,17 +390,20 @@ class BranchAwareOrderRepository extends OrderRepository {
       for (final entry in liveOrders) {
         if (remaining <= 0.0001) break;
         final total = (entry.value['total'] as num?)?.toDouble() ?? 0.0;
-        final alreadyPaid = (entry.value['paidAmount'] as num?)?.toDouble() ?? 0.0;
+        final alreadyPaid =
+            (entry.value['paidAmount'] as num?)?.toDouble() ?? 0.0;
         final outstanding = total - alreadyPaid;
         if (outstanding <= 0) continue;
         final applied = remaining >= outstanding ? outstanding : remaining;
-        transaction.update(entry.key, {'paidAmount': FieldValue.increment(applied)});
+        transaction
+            .update(entry.key, {'paidAmount': FieldValue.increment(applied)});
         allocations.add({'orderId': entry.key.id, 'amount': applied});
         remaining -= applied;
       }
 
       if (remaining > 0.0001) {
-        throw Exception('تعذر توزيع مبلغ السداد بالكامل على الفواتير الحالية. حدّث الصفحة وحاول مرة أخرى.');
+        throw Exception(
+            'تعذر توزيع مبلغ السداد بالكامل على الفواتير الحالية. حدّث الصفحة وحاول مرة أخرى.');
       }
 
       transaction.update(customerRef, {
@@ -401,11 +413,14 @@ class BranchAwareOrderRepository extends OrderRepository {
 
       if (activeShiftRef != null) {
         if (paymentMethod == 'cash') {
-          transaction.update(activeShiftRef, {'debtCollectionsCash': FieldValue.increment(amountPaid)});
+          transaction.update(activeShiftRef,
+              {'debtCollectionsCash': FieldValue.increment(amountPaid)});
         } else if (paymentMethod == 'card' || paymentMethod == 'mada') {
-          transaction.update(activeShiftRef, {'debtCollectionsCard': FieldValue.increment(amountPaid)});
+          transaction.update(activeShiftRef,
+              {'debtCollectionsCard': FieldValue.increment(amountPaid)});
         } else if (paymentMethod == 'transfer') {
-          transaction.update(activeShiftRef, {'debtCollectionsTransfer': FieldValue.increment(amountPaid)});
+          transaction.update(activeShiftRef,
+              {'debtCollectionsTransfer': FieldValue.increment(amountPaid)});
         }
       }
 
@@ -421,6 +436,13 @@ class BranchAwareOrderRepository extends OrderRepository {
         'createdAt': FieldValue.serverTimestamp(),
       });
     });
+  }
+
+  void _guardPaidCreditInvoiceMutation(AppOrder order, String targetAction) {
+    if (!order.isCredit || order.paidAmount <= 0.01) return;
+    throw Exception(
+      'A paid or partially-paid credit invoice cannot be $targetAction until its debt payment is reversed.',
+    );
   }
 
   @override
@@ -440,9 +462,13 @@ class BranchAwareOrderRepository extends OrderRepository {
     }
     try {
       final batch = firestore.batch();
-      if (order.status != 'cancelled' && order.customerId != 'walk_in' && order.customerId.isNotEmpty) {
-        final customerRef = firestore.collection('customers').doc(order.customerId);
-        final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
+      if (order.status != 'cancelled' &&
+          order.customerId != 'walk_in' &&
+          order.customerId.isNotEmpty) {
+        final customerRef =
+            firestore.collection('customers').doc(order.customerId);
+        final debtDecrease =
+            order.isCredit ? (order.total - order.paidAmount) : 0.0;
         batch.update(customerRef, {
           'totalPurchases': FieldValue.increment(-order.total),
           'orderCount': FieldValue.increment(-1),
@@ -454,7 +480,8 @@ class BranchAwareOrderRepository extends OrderRepository {
       await batch.commit();
     } catch (_) {
       if (order.status != 'cancelled') {
-        await OrderBranchInventoryService(firestore).reDeductAfterCancellationReversal(order);
+        await OrderBranchInventoryService(firestore)
+            .reDeductAfterCancellationReversal(order);
       }
       rethrow;
     }
