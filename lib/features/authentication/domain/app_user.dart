@@ -19,6 +19,7 @@ class AppUser with _$AppUser {
     String? merchantId,
     String? deviceId,
     @Default({}) Map<String, dynamic> permissions,
+    @Default(<String>[]) List<String> assignedBranchIds,
     String? vatNumber,
     String? crNumber,
     String? nationalAddress,
@@ -27,10 +28,18 @@ class AppUser with _$AppUser {
   factory AppUser.fromJson(Map<String, dynamic> json) => _$AppUserFromJson(json);
 
   bool hasPermission(String permissionName) {
-    // Merchant owners and the internal admin role are full-access roles. Keeping
-    // this centralized prevents individual screens from disagreeing about admin
-    // capabilities while employees remain strictly permission-scoped.
     if (role == 'merchant' || role == 'admin') return true;
     return permissions[permissionName] == true;
+  }
+
+  /// Owners/admins can operate every branch. Legacy employees created before
+  /// multi-branch support are intentionally scoped to Main Branch until the
+  /// merchant explicitly assigns them elsewhere.
+  bool canAccessBranch(String branchId) {
+    if (role == 'merchant' || role == 'admin') return true;
+    final normalized = assignedBranchIds.isEmpty
+        ? const <String>['main']
+        : assignedBranchIds;
+    return normalized.contains(branchId);
   }
 }
