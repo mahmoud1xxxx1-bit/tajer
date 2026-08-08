@@ -93,7 +93,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       final orderRepo = ref.read(orderRepositoryProvider);
       final logRepo = ref.read(inventoryLogRepositoryProvider);
 
-      final customers = ref.read(customersStreamProvider).value ?? [];
+      final customers = (ref.read(customersStreamProvider).value ?? []).where((c) => c.isActive).toList();
 
       final selectedProduct = _products.firstWhere((p) => p.id == _selectedProductId);
       

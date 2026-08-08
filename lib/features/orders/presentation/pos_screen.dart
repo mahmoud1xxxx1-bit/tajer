@@ -310,7 +310,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       return;
     }
 
-    final customers = ref.read(customersStreamProvider).value ?? [];
+    final customers = (ref.read(customersStreamProvider).value ?? []).where((c) => c.isActive).toList();
     
     showModalBottomSheet(
       context: context,

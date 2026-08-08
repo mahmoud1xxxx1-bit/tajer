@@ -13,6 +13,7 @@ class Customer {
   final DateTime createdAt;
   final String? creatorName;
   final String? folderName;
+  final bool isActive;
 
   const Customer({
     required this.id,
@@ -26,6 +27,7 @@ class Customer {
     required this.createdAt,
     this.creatorName,
     this.folderName,
+    this.isActive = true,
   });
 
   Customer copyWith({
@@ -40,6 +42,7 @@ class Customer {
     DateTime? createdAt,
     String? creatorName,
     String? folderName,
+    bool? isActive,
   }) {
     return Customer(
       id: id ?? this.id,
@@ -53,6 +56,7 @@ class Customer {
       createdAt: createdAt ?? this.createdAt,
       creatorName: creatorName ?? this.creatorName,
       folderName: folderName ?? this.folderName,
+      isActive: isActive ?? this.isActive,
     );
   }
 
@@ -73,6 +77,7 @@ class Customer {
           : DateTime.now(),
       creatorName: json['creatorName'] as String?,
       folderName: json['folderName'] as String?,
+      isActive: json['isActive'] as bool? ?? true,
     );
   }
 
@@ -89,6 +94,7 @@ class Customer {
       'createdAt': Timestamp.fromDate(createdAt),
       'creatorName': creatorName,
       'folderName': folderName,
+      'isActive': isActive,
     };
   }
 }

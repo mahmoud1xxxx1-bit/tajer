@@ -323,8 +323,13 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                 children: [
                   Text(
                     customer.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 18),
-                    maxLines: 1,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold, 
+                      fontFamily: 'Tajawal', 
+                      fontSize: 18,
+                      decoration: !customer.isActive ? TextDecoration.lineThrough : null,
+                      color: !customer.isActive ? Colors.grey : null,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 6),
@@ -448,12 +453,12 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                       } else if (value == 'pay_debt') {
                         _showPayDebtDialog(context, ref, customer);
                       } else if (value == 'delete') {
-                        if (customer.totalDebt.abs() > 0.01) {
+                        if (customer.isActive && customer.totalDebt.abs() > 0.01) {
                           showDialog(
                             context: context,
                             builder: (ctx) => AlertDialog(
                               title: Text(Localizations.localeOf(ctx).languageCode == 'ar' ? 'تنبيه' : 'Warning', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
-                              content: Text(Localizations.localeOf(ctx).languageCode == 'ar' ? 'لا يمكن حذف عميل لديه رصيد ديون أو رصيد دائن. يرجى تصفية الحساب أولاً.' : 'Cannot delete a customer with an active balance. Please settle the account first.', style: const TextStyle(fontFamily: 'Tajawal')),
+                              content: Text(Localizations.localeOf(ctx).languageCode == 'ar' ? 'يجب تسديد الدين اولا لشطب العميل' : 'Debt must be settled first to cancel the customer.', style: const TextStyle(fontFamily: 'Tajawal')),
                               actions: [
                                 TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('حسناً', style: TextStyle(fontFamily: 'Tajawal')))
                               ],
@@ -464,16 +469,25 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
 
                         final appUser = ref.read(appUserProvider).value;
                         if (appUser != null) {
+                          final isAr = Localizations.localeOf(context).languageCode == 'ar';
+                          final title = customer.isActive 
+                              ? (isAr ? 'تأكيد: إلغاء العميل' : 'Warning: Cancel Customer')
+                              : (isAr ? 'تأكيد: استعادة العميل' : 'Confirm: Restore Customer');
+                          final warning = customer.isActive
+                              ? (isAr ? 'سيتم شطب العميل من القائمة. لن يتم مسح بياناته السابقة.' : 'Customer will be crossed out. Data will remain.')
+                              : (isAr ? 'سيتم استعادة العميل وإزالة الشطب.' : 'Customer will be restored.');
+                          
                           final success = await PinConfirmationDialog.requirePinOrSetup(
                             context, 
                             appUser,
-                            title: l10n.warningDeleteCustomer,
-                            warning: l10n.deleteCustomerWarningText,
+                            title: title,
+                            warning: warning,
                           );
                           if (!success) return;
                         }
                         try {
-                          await ref.read(customerRepositoryProvider).deleteCustomer(customer.id);
+                          final updatedCustomer = customer.copyWith(isActive: !customer.isActive);
+                          await ref.read(customerRepositoryProvider).updateCustomer(updatedCustomer);
                         } catch (e) {
                           if (context.mounted) {
                             showDialog(
@@ -539,9 +553,9 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                           value: 'delete',
                           child: Row(
                             children: [
-                              const Icon(Icons.delete, color: Colors.red, size: 20),
+                              Icon(customer.isActive ? Icons.cancel_outlined : Icons.restore, color: customer.isActive ? Colors.red : Colors.green, size: 20),
                               const SizedBox(width: 8),
-                              Text(AppLocalizations.of(context)!.text59, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                              Text(customer.isActive ? (Localizations.localeOf(context).languageCode == 'ar' ? 'إلغاء العميل' : 'Cancel Customer') : (Localizations.localeOf(context).languageCode == 'ar' ? 'استعادة العميل' : 'Restore Customer'), style: TextStyle(color: customer.isActive ? Colors.red : Colors.green, fontFamily: 'Tajawal')),
                             ],
                           ),
                         ),
