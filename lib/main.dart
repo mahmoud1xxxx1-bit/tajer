@@ -17,6 +17,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'core/services/backup_service.dart';
 import 'core/services/subscription_service.dart';
+import 'features/orders/data/order_repository.dart';
+import 'features/orders/data/branch_aware_order_repository.dart';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -27,27 +29,23 @@ void callbackDispatcher() {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize Firebase
+
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  
+
   const bool useEmulator = bool.fromEnvironment('USE_EMULATOR', defaultValue: false);
   if (useEmulator) {
-    // Safety check ensuring we only use the emulator for tests
     String emulatorHost = !kIsWeb && Platform.isAndroid ? '10.0.2.2' : '127.0.0.1';
     FirebaseFirestore.instance.useFirestoreEmulator(emulatorHost, 8080);
     await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
   }
 
-  // Enable Offline Persistence
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: true,
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
 
-  // Initialize Workmanager
   if (!kIsWeb) {
     await Workmanager().initialize(
       callbackDispatcher,
@@ -55,19 +53,19 @@ void main() async {
     );
   }
 
-  // Initialize Hive
   await Hive.initFlutter();
-
-  // Keep screen awake
   WakelockPlus.enable();
 
-  // Initialize SharedPreferences
   final prefs = await SharedPreferences.getInstance();
 
-  // Initialize RevenueCat Subscription Service
   final container = ProviderContainer(
     overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
+      // All order entry/status/deletion call sites keep using the original
+      // provider API, while the implementation safely scopes non-main branches.
+      orderRepositoryProvider.overrideWithValue(
+        BranchAwareOrderRepository(FirebaseFirestore.instance),
+      ),
     ],
   );
   try {
@@ -103,7 +101,7 @@ class TajerApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: [
+      supportedLocales: const [
         Locale('ar'),
         Locale('en'),
       ],
