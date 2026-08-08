@@ -7,18 +7,16 @@ import '../domain/supplier_transaction.dart';
 class SupplierTransactionRepository {
   final FirebaseFirestore _firestore;
   final String _merchantId;
+  final String _branchId;
 
-  SupplierTransactionRepository(this._firestore, this._merchantId);
+  SupplierTransactionRepository(this._firestore, this._merchantId, this._branchId);
 
   CollectionReference<Map<String, dynamic>> _transactionsRef(String supplierId) =>
       _firestore.collection('merchants').doc(_merchantId)
           .collection('suppliers').doc(supplierId)
           .collection('transactions');
 
-  Stream<List<SupplierTransaction>> watchTransactions(
-    String supplierId, {
-    String branchId = 'main',
-  }) {
+  Stream<List<SupplierTransaction>> watchTransactions(String supplierId) {
     return _transactionsRef(supplierId).withConverter(
       fromFirestore: (snapshot, _) {
         final data = snapshot.data()!;
@@ -30,29 +28,41 @@ class SupplierTransactionRepository {
     ).orderBy('date', descending: true).snapshots().map((snapshot) {
       return snapshot.docs
           .map((doc) => doc.data())
-          .where((transaction) => transaction.branchId == branchId)
+          .where((transaction) => transaction.branchId == _branchId)
           .toList();
     });
   }
 
   Future<void> addTransaction(SupplierTransaction transaction) async {
-    await _transactionsRef(transaction.supplierId).doc(transaction.id).set(transaction.toJson());
+    final normalized = transaction.copyWith(branchId: _branchId);
+    await _transactionsRef(normalized.supplierId)
+        .doc(normalized.id)
+        .set(normalized.toJson());
   }
 
   Future<void> updateTransaction(SupplierTransaction transaction) async {
-    await _transactionsRef(transaction.supplierId).doc(transaction.id).update(transaction.toJson());
+    if (transaction.branchId != _branchId) {
+      throw Exception('لا يمكن تعديل حركة مورد تابعة لفرع مختلف.');
+    }
+    await _transactionsRef(transaction.supplierId)
+        .doc(transaction.id)
+        .update(transaction.toJson());
   }
 }
 
 final supplierTransactionRepositoryProvider = Provider<SupplierTransactionRepository?>((ref) {
   final appUser = ref.watch(appUserProvider).value;
   if (appUser == null) return null;
-  return SupplierTransactionRepository(FirebaseFirestore.instance, appUser.merchantId ?? appUser.id);
+  final branchId = ref.watch(selectedBranchIdProvider);
+  return SupplierTransactionRepository(
+    FirebaseFirestore.instance,
+    appUser.merchantId ?? appUser.id,
+    branchId,
+  );
 });
 
 final supplierTransactionsStreamProvider = StreamProvider.family<List<SupplierTransaction>, String>((ref, supplierId) {
   final repo = ref.watch(supplierTransactionRepositoryProvider);
   if (repo == null) return Stream.value([]);
-  final branchId = ref.watch(selectedBranchIdProvider);
-  return repo.watchTransactions(supplierId, branchId: branchId);
+  return repo.watchTransactions(supplierId);
 });
