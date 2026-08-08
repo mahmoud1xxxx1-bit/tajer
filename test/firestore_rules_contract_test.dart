@@ -34,6 +34,20 @@ void main() {
       expect(rules, contains("hasDataBranchAccess(request.resource.data.get('merchantId', ''), request.resource.data)"));
     });
 
+    test('order visibility respects view-all permission or creator ownership', () {
+      expect(rules, contains('function canReadOrder(merchantId, data)'));
+      expect(rules, contains("hasPermission(merchantId, 'can_view_all_orders')"));
+      expect(rules, contains("data.get('creatorId', '') == request.auth.uid"));
+      expect(rules, contains("allow read: if resource != null && canReadOrder(resource.data.get('merchantId', ''), resource.data);"));
+    });
+
+    test('order cancellation requires dedicated cancellation permission', () {
+      expect(rules, contains('function isOrderCancellation(merchantId)'));
+      expect(rules, contains("request.resource.data.get('status', '') == 'cancelled'"));
+      expect(rules, contains("hasPermission(merchantId, 'can_cancel_orders')"));
+      expect(rules, contains("request.resource.data.get('branchId', 'main') == resource.data.get('branchId', 'main')"));
+    });
+
     test('customer debt provenance is explicitly permissioned and branch scoped', () {
       expect(rules, contains('match /customer_debt_payments/{paymentId}'));
       expect(rules, contains("hasPermission(merchantId, 'can_receive_payments') && hasDataBranchAccess(merchantId, request.resource.data)"));
