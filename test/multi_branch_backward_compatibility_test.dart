@@ -59,6 +59,22 @@ void main() {
       expect(shift.toJson()['branchId'], BranchIds.main);
     });
 
+    test('new shift preserves explicit branchId snapshot', () {
+      final shift = Shift(
+        id: 'shift-2',
+        merchantId: 'merchant-1',
+        branchId: 'branch-2',
+        employeeId: 'owner',
+        employeeName: 'Owner',
+        startTime: DateTime(2026, 8, 8, 9),
+        startCash: 200,
+        status: 'open',
+      );
+      final json = shift.toJson();
+      expect(json['branchId'], 'branch-2');
+      expect(Shift.fromJson(json).branchId, 'branch-2');
+    });
+
     test('legacy expense without branchId and shiftId remains readable', () {
       final now = DateTime(2026, 8, 8);
       final expense = Expense.fromJson({
@@ -72,6 +88,26 @@ void main() {
       expect(expense.branchId, BranchIds.main);
       expect(expense.shiftId, isNull);
       expect(expense.toJson()['branchId'], BranchIds.main);
+    });
+
+    test('new expense preserves exact branch and shift snapshots', () {
+      final now = DateTime(2026, 8, 8, 11);
+      final expense = Expense(
+        id: 'expense-2',
+        merchantId: 'merchant-1',
+        branchId: 'branch-2',
+        shiftId: 'shift-2',
+        title: 'Branch supplies',
+        amount: 75,
+        date: now,
+        createdAt: now,
+      );
+      final json = expense.toJson();
+      expect(json['branchId'], 'branch-2');
+      expect(json['shiftId'], 'shift-2');
+      final decoded = Expense.fromJson(json);
+      expect(decoded.branchId, 'branch-2');
+      expect(decoded.shiftId, 'shift-2');
     });
 
     test('legacy inventory log without branchId belongs to main branch', () {
