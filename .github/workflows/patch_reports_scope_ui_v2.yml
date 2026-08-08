@@ -1,0 +1,93 @@
+name: Patch Reports Scope UI V2
+
+on:
+  push:
+    branches: [ "feature/multi-branch-v1" ]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/multi-branch-v1
+          fetch-depth: 0
+
+      - name: Apply guarded report scope UI patch
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('lib/features/reports/presentation/reports_screen.dart')
+          text = path.read_text(encoding='utf-8')
+
+          replacements = []
+
+          old = "final baseReportsService = ref.watch(reportsServiceProvider);"
+          new = "final baseReportsService = ref.watch(activeReportsServiceProvider);"
+          if text.count(old) != 1:
+              raise SystemExit(f'Expected exactly one base report provider marker, found {text.count(old)}')
+          text = text.replace(old, new, 1)
+
+          old = "final isAr = Localizations.localeOf(context).languageCode == 'ar';"
+          new = """final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final reportScope = ref.watch(reportsScopeProvider);"""
+          if text.count(old) < 1:
+              raise SystemExit('Locale marker not found')
+          text = text.replace(old, new, 1)
+
+          old = """              children: [
+                DropdownButton<String>(
+                  value: _selectedFilter,"""
+          new = """              children: [
+                DropdownButton<ReportsScope>(
+                  value: reportScope,
+                  items: [
+                    DropdownMenuItem<ReportsScope>(
+                      value: ReportsScope.branch,
+                      child: Text(
+                        isAr ? 'الفرع الحالي' : 'Current branch',
+                        style: const TextStyle(fontFamily: 'Tajawal'),
+                      ),
+                    ),
+                    DropdownMenuItem<ReportsScope>(
+                      value: ReportsScope.merchant,
+                      child: Text(
+                        isAr ? 'جميع الفروع' : 'All branches',
+                        style: const TextStyle(fontFamily: 'Tajawal'),
+                      ),
+                    ),
+                  ],
+                  onChanged: (scope) {
+                    if (scope != null) {
+                      ref.read(reportsScopeProvider.notifier).state = scope;
+                    }
+                  },
+                ),
+                const SizedBox(width: 12),
+                DropdownButton<String>(
+                  value: _selectedFilter,"""
+          if text.count(old) != 1:
+              raise SystemExit(f'Expected exactly one report date dropdown marker, found {text.count(old)}')
+          text = text.replace(old, new, 1)
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Verify only intended screen changed
+        run: |
+          git diff --check
+          CHANGED=$(git diff --name-only)
+          test "$CHANGED" = "lib/features/reports/presentation/reports_screen.dart"
+
+      - name: Commit guarded UI patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lib/features/reports/presentation/reports_screen.dart
+          git commit -m "feat(reports): add bilingual branch vs all-branches selector"
+          git push origin HEAD:feature/multi-branch-v1
