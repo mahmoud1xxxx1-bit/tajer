@@ -92,7 +92,16 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(isAr ? 'جاري تجهيز التقرير (إكسل)...' : 'Preparing Excel report...', style: const TextStyle(fontFamily: 'Tajawal'))),
                 );
-                await ExcelService.exportToExcel(reportsService, currentCurrency.code);
+                await ExcelService.exportToExcel(
+        reportsService,
+        currentCurrency.code,
+        isAr: isAr,
+        scopeLabel: reportScope == ReportsScope.merchant
+            ? (isAr ? 'جميع الفروع' : 'All branches')
+            : (isAr ? 'الفرع الحالي' : 'Current branch'),
+        isConsolidated: reportScope == ReportsScope.merchant,
+        canViewCost: canViewCost,
+      );
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(isAr ? 'حدث خطأ أثناء تصدير إكسل: $e' : 'Error exporting to Excel: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
@@ -133,6 +142,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   isInclusive: isInclusive,
                   vatNumber: vatNumber,
                   isAr: isAr,
+                  scopeLabel: reportScope == ReportsScope.merchant
+            ? (isAr ? 'جميع الفروع' : 'All branches')
+            : (isAr ? 'الفرع الحالي' : 'Current branch'),
+        canViewCost: canViewCost,
                 );
                 await Printing.sharePdf(bytes: pdfData, filename: 'report.pdf');
               } catch (e) {
