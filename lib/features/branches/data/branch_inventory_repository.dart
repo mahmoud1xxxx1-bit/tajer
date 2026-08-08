@@ -29,6 +29,9 @@ class BranchInventoryRepository {
   CollectionReference<Map<String, dynamic>> get _logsRef =>
       firestore.collection('merchants').doc(merchantId).collection('inventory_logs');
 
+  CollectionReference<Map<String, dynamic>> get _transfersRef =>
+      firestore.collection('merchants').doc(merchantId).collection('inventory_transfers');
+
   String docId(String branchId, String itemType, String itemId) =>
       '${branchId}_${itemType}_$itemId';
 
@@ -146,6 +149,148 @@ class BranchInventoryRepository {
 
       return normalizedQuantity;
     });
+  }
+
+  /// Transfers stock between two branches atomically. Source decrement,
+  /// destination increment, both audit entries and the immutable transfer record
+  /// commit together. This is the canonical inter-branch transfer path.
+  Future<String> transferQuantity({
+    required String fromBranchId,
+    required String toBranchId,
+    required String itemType,
+    required String itemId,
+    required String itemName,
+    required double quantity,
+    double legacySourceMainQuantity = 0.0,
+    double legacyDestinationMainQuantity = 0.0,
+    String? userEmail,
+    String? userName,
+    String? note,
+  }) async {
+    if (fromBranchId == toBranchId) {
+      throw Exception('Source and destination branches must be different');
+    }
+    if (quantity <= 0.000001) {
+      throw Exception('Transfer quantity must be greater than zero');
+    }
+    if (itemType != 'product' && itemType != 'raw_material') {
+      throw Exception('Unsupported inventory item type');
+    }
+
+    final fromId = docId(fromBranchId, itemType, itemId);
+    final toId = docId(toBranchId, itemType, itemId);
+    final fromRef = ref.doc(fromId);
+    final toRef = ref.doc(toId);
+    final transferRef = _transfersRef.doc();
+    final sourceLogRef = _logsRef.doc();
+    final destinationLogRef = _logsRef.doc();
+
+    await firestore.runTransaction<void>((tx) async {
+      // Firestore transaction best practice: all reads happen before writes.
+      final fromSnap = await tx.get(fromRef);
+      final toSnap = await tx.get(toRef);
+
+      final fromCurrent = fromSnap.exists
+          ? (fromSnap.data()?['quantity'] as num?)?.toDouble() ?? 0.0
+          : (fromBranchId == 'main' ? legacySourceMainQuantity : 0.0);
+      final toCurrent = toSnap.exists
+          ? (toSnap.data()?['quantity'] as num?)?.toDouble() ?? 0.0
+          : (toBranchId == 'main' ? legacyDestinationMainQuantity : 0.0);
+
+      final fromNext = fromCurrent - quantity;
+      if (fromNext < -0.000001) {
+        throw Exception('Insufficient source branch inventory');
+      }
+      final normalizedFromNext = fromNext < 0 ? 0.0 : fromNext;
+      final toNext = toCurrent + quantity;
+
+      final fromInitial = fromSnap.exists
+          ? ((fromSnap.data()?['initialQuantity'] as num?)?.toDouble() ?? fromCurrent)
+          : fromCurrent;
+      final toInitial = toSnap.exists
+          ? ((toSnap.data()?['initialQuantity'] as num?)?.toDouble() ?? toCurrent)
+          : toCurrent;
+
+      tx.set(fromRef, {
+        'id': fromId,
+        'merchantId': merchantId,
+        'branchId': fromBranchId,
+        'itemId': itemId,
+        'itemType': itemType,
+        'quantity': normalizedFromNext,
+        'initialQuantity': fromInitial,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      tx.set(toRef, {
+        'id': toId,
+        'merchantId': merchantId,
+        'branchId': toBranchId,
+        'itemId': itemId,
+        'itemType': itemType,
+        'quantity': toNext,
+        'initialQuantity': toSnap.exists ? toInitial : toNext,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      tx.set(sourceLogRef, {
+        'id': sourceLogRef.id,
+        'merchantId': merchantId,
+        'branchId': fromBranchId,
+        'productId': itemId,
+        'productName': itemName,
+        'itemType': itemType,
+        'changeQuantity': -quantity,
+        'previousQuantity': fromCurrent,
+        'newQuantity': normalizedFromNext,
+        'reason': 'تحويل مخزون إلى فرع $toBranchId / Stock transfer to $toBranchId',
+        'date': FieldValue.serverTimestamp(),
+        'userEmail': userEmail,
+        'userName': userName,
+        'isReverted': false,
+        'transferId': transferRef.id,
+      });
+
+      tx.set(destinationLogRef, {
+        'id': destinationLogRef.id,
+        'merchantId': merchantId,
+        'branchId': toBranchId,
+        'productId': itemId,
+        'productName': itemName,
+        'itemType': itemType,
+        'changeQuantity': quantity,
+        'previousQuantity': toCurrent,
+        'newQuantity': toNext,
+        'reason': 'تحويل مخزون من فرع $fromBranchId / Stock transfer from $fromBranchId',
+        'date': FieldValue.serverTimestamp(),
+        'userEmail': userEmail,
+        'userName': userName,
+        'isReverted': false,
+        'transferId': transferRef.id,
+      });
+
+      tx.set(transferRef, {
+        'id': transferRef.id,
+        'merchantId': merchantId,
+        'fromBranchId': fromBranchId,
+        'toBranchId': toBranchId,
+        'itemId': itemId,
+        'itemName': itemName,
+        'itemType': itemType,
+        'quantity': quantity,
+        'sourceQuantityBefore': fromCurrent,
+        'sourceQuantityAfter': normalizedFromNext,
+        'destinationQuantityBefore': toCurrent,
+        'destinationQuantityAfter': toNext,
+        'status': 'completed',
+        'note': note,
+        'createdByEmail': userEmail,
+        'createdByName': userName,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    });
+
+    return transferRef.id;
   }
 
   Future<double> changeQuantity({
