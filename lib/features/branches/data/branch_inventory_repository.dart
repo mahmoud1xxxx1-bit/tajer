@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../domain/branch_inventory.dart';
+import '../domain/inventory_transfer.dart';
 
 class BranchInventoryMutation {
   final String itemType;
@@ -45,6 +46,16 @@ class BranchInventoryRepository {
     );
   }
 
+  Stream<List<InventoryTransfer>> watchTransfers() {
+    return _transfersRef.orderBy('createdAt', descending: true).snapshots().map(
+      (snapshot) => snapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data());
+        data['id'] = doc.id;
+        return InventoryTransfer.fromJson(data);
+      }).toList(),
+    );
+  }
+
   Future<BranchInventory?> getItem({
     required String branchId,
     required String itemType,
@@ -78,9 +89,6 @@ class BranchInventoryRepository {
     }, SetOptions(merge: true));
   }
 
-  /// Sets an exact branch quantity and writes the corresponding audit record in
-  /// the same Firestore transaction. This is the canonical path for manual
-  /// stock counts/corrections from product and raw-material screens.
   Future<double> setQuantityWithAudit({
     required String branchId,
     required String itemType,
@@ -92,10 +100,7 @@ class BranchInventoryRepository {
     String? userEmail,
     String? userName,
   }) async {
-    if (quantity < -0.000001) {
-      throw Exception('Branch inventory cannot be negative');
-    }
-
+    if (quantity < -0.000001) throw Exception('Branch inventory cannot be negative');
     final normalizedQuantity = quantity < 0 ? 0.0 : quantity;
     final id = docId(branchId, itemType, itemId);
     final inventoryRef = ref.doc(id);
@@ -106,54 +111,28 @@ class BranchInventoryRepository {
       final current = snap.exists
           ? (snap.data()?['quantity'] as num?)?.toDouble() ?? 0.0
           : (branchId == 'main' ? legacyMainQuantity : 0.0);
-
       if ((normalizedQuantity - current).abs() <= 0.000001) return current;
-
       final initial = snap.exists
           ? ((snap.data()?['initialQuantity'] as num?)?.toDouble() ?? current)
           : current;
-
-      tx.set(
-        inventoryRef,
-        {
-          'id': id,
-          'merchantId': merchantId,
-          'branchId': branchId,
-          'itemId': itemId,
-          'itemType': itemType,
-          'quantity': normalizedQuantity,
-          'initialQuantity': initial == 0.0 && current == 0.0
-              ? normalizedQuantity
-              : initial,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
-
+      tx.set(inventoryRef, {
+        'id': id, 'merchantId': merchantId, 'branchId': branchId,
+        'itemId': itemId, 'itemType': itemType, 'quantity': normalizedQuantity,
+        'initialQuantity': initial == 0.0 && current == 0.0 ? normalizedQuantity : initial,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
       tx.set(logRef, {
-        'id': logRef.id,
-        'merchantId': merchantId,
-        'branchId': branchId,
-        'productId': itemId,
-        'productName': itemName,
-        'itemType': itemType,
-        'changeQuantity': normalizedQuantity - current,
-        'previousQuantity': current,
-        'newQuantity': normalizedQuantity,
-        'reason': reason,
-        'date': FieldValue.serverTimestamp(),
-        'userEmail': userEmail,
-        'userName': userName,
-        'isReverted': false,
+        'id': logRef.id, 'merchantId': merchantId, 'branchId': branchId,
+        'productId': itemId, 'productName': itemName, 'itemType': itemType,
+        'changeQuantity': normalizedQuantity - current, 'previousQuantity': current,
+        'newQuantity': normalizedQuantity, 'reason': reason,
+        'date': FieldValue.serverTimestamp(), 'userEmail': userEmail,
+        'userName': userName, 'isReverted': false,
       });
-
       return normalizedQuantity;
     });
   }
 
-  /// Transfers stock between two branches atomically. Source decrement,
-  /// destination increment, both audit entries and the immutable transfer record
-  /// commit together. This is the canonical inter-branch transfer path.
   Future<String> transferQuantity({
     required String fromBranchId,
     required String toBranchId,
@@ -167,15 +146,9 @@ class BranchInventoryRepository {
     String? userName,
     String? note,
   }) async {
-    if (fromBranchId == toBranchId) {
-      throw Exception('Source and destination branches must be different');
-    }
-    if (quantity <= 0.000001) {
-      throw Exception('Transfer quantity must be greater than zero');
-    }
-    if (itemType != 'product' && itemType != 'raw_material') {
-      throw Exception('Unsupported inventory item type');
-    }
+    if (fromBranchId == toBranchId) throw Exception('Source and destination branches must be different');
+    if (quantity <= 0.000001) throw Exception('Transfer quantity must be greater than zero');
+    if (itemType != 'product' && itemType != 'raw_material') throw Exception('Unsupported inventory item type');
 
     final fromId = docId(fromBranchId, itemType, itemId);
     final toId = docId(toBranchId, itemType, itemId);
@@ -186,24 +159,18 @@ class BranchInventoryRepository {
     final destinationLogRef = _logsRef.doc();
 
     await firestore.runTransaction<void>((tx) async {
-      // Firestore transaction best practice: all reads happen before writes.
       final fromSnap = await tx.get(fromRef);
       final toSnap = await tx.get(toRef);
-
       final fromCurrent = fromSnap.exists
           ? (fromSnap.data()?['quantity'] as num?)?.toDouble() ?? 0.0
           : (fromBranchId == 'main' ? legacySourceMainQuantity : 0.0);
       final toCurrent = toSnap.exists
           ? (toSnap.data()?['quantity'] as num?)?.toDouble() ?? 0.0
           : (toBranchId == 'main' ? legacyDestinationMainQuantity : 0.0);
-
       final fromNext = fromCurrent - quantity;
-      if (fromNext < -0.000001) {
-        throw Exception('Insufficient source branch inventory');
-      }
+      if (fromNext < -0.000001) throw Exception('Insufficient source branch inventory');
       final normalizedFromNext = fromNext < 0 ? 0.0 : fromNext;
       final toNext = toCurrent + quantity;
-
       final fromInitial = fromSnap.exists
           ? ((fromSnap.data()?['initialQuantity'] as num?)?.toDouble() ?? fromCurrent)
           : fromCurrent;
@@ -212,84 +179,44 @@ class BranchInventoryRepository {
           : toCurrent;
 
       tx.set(fromRef, {
-        'id': fromId,
-        'merchantId': merchantId,
-        'branchId': fromBranchId,
-        'itemId': itemId,
-        'itemType': itemType,
-        'quantity': normalizedFromNext,
-        'initialQuantity': fromInitial,
-        'updatedAt': FieldValue.serverTimestamp(),
+        'id': fromId, 'merchantId': merchantId, 'branchId': fromBranchId,
+        'itemId': itemId, 'itemType': itemType, 'quantity': normalizedFromNext,
+        'initialQuantity': fromInitial, 'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-
       tx.set(toRef, {
-        'id': toId,
-        'merchantId': merchantId,
-        'branchId': toBranchId,
-        'itemId': itemId,
-        'itemType': itemType,
-        'quantity': toNext,
+        'id': toId, 'merchantId': merchantId, 'branchId': toBranchId,
+        'itemId': itemId, 'itemType': itemType, 'quantity': toNext,
         'initialQuantity': toSnap.exists ? toInitial : toNext,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
-
       tx.set(sourceLogRef, {
-        'id': sourceLogRef.id,
-        'merchantId': merchantId,
-        'branchId': fromBranchId,
-        'productId': itemId,
-        'productName': itemName,
-        'itemType': itemType,
-        'changeQuantity': -quantity,
-        'previousQuantity': fromCurrent,
+        'id': sourceLogRef.id, 'merchantId': merchantId, 'branchId': fromBranchId,
+        'productId': itemId, 'productName': itemName, 'itemType': itemType,
+        'changeQuantity': -quantity, 'previousQuantity': fromCurrent,
         'newQuantity': normalizedFromNext,
         'reason': 'تحويل مخزون إلى فرع $toBranchId / Stock transfer to $toBranchId',
-        'date': FieldValue.serverTimestamp(),
-        'userEmail': userEmail,
-        'userName': userName,
-        'isReverted': false,
-        'transferId': transferRef.id,
+        'date': FieldValue.serverTimestamp(), 'userEmail': userEmail,
+        'userName': userName, 'isReverted': false, 'transferId': transferRef.id,
       });
-
       tx.set(destinationLogRef, {
-        'id': destinationLogRef.id,
-        'merchantId': merchantId,
-        'branchId': toBranchId,
-        'productId': itemId,
-        'productName': itemName,
-        'itemType': itemType,
-        'changeQuantity': quantity,
-        'previousQuantity': toCurrent,
-        'newQuantity': toNext,
+        'id': destinationLogRef.id, 'merchantId': merchantId, 'branchId': toBranchId,
+        'productId': itemId, 'productName': itemName, 'itemType': itemType,
+        'changeQuantity': quantity, 'previousQuantity': toCurrent, 'newQuantity': toNext,
         'reason': 'تحويل مخزون من فرع $fromBranchId / Stock transfer from $fromBranchId',
-        'date': FieldValue.serverTimestamp(),
-        'userEmail': userEmail,
-        'userName': userName,
-        'isReverted': false,
-        'transferId': transferRef.id,
+        'date': FieldValue.serverTimestamp(), 'userEmail': userEmail,
+        'userName': userName, 'isReverted': false, 'transferId': transferRef.id,
       });
-
       tx.set(transferRef, {
-        'id': transferRef.id,
-        'merchantId': merchantId,
-        'fromBranchId': fromBranchId,
-        'toBranchId': toBranchId,
-        'itemId': itemId,
-        'itemName': itemName,
-        'itemType': itemType,
-        'quantity': quantity,
-        'sourceQuantityBefore': fromCurrent,
+        'id': transferRef.id, 'merchantId': merchantId,
+        'fromBranchId': fromBranchId, 'toBranchId': toBranchId,
+        'itemId': itemId, 'itemName': itemName, 'itemType': itemType,
+        'quantity': quantity, 'sourceQuantityBefore': fromCurrent,
         'sourceQuantityAfter': normalizedFromNext,
-        'destinationQuantityBefore': toCurrent,
-        'destinationQuantityAfter': toNext,
-        'status': 'completed',
-        'note': note,
-        'createdByEmail': userEmail,
-        'createdByName': userName,
-        'createdAt': FieldValue.serverTimestamp(),
+        'destinationQuantityBefore': toCurrent, 'destinationQuantityAfter': toNext,
+        'status': 'completed', 'note': note, 'createdByEmail': userEmail,
+        'createdByName': userName, 'createdAt': FieldValue.serverTimestamp(),
       });
     });
-
     return transferRef.id;
   }
 
@@ -302,47 +229,29 @@ class BranchInventoryRepository {
   }) async {
     final result = await changeQuantities(
       branchId: branchId,
-      mutations: [
-        BranchInventoryMutation(
-          itemType: itemType,
-          itemId: itemId,
-          delta: delta,
-          legacyMainQuantity: legacyMainQuantity,
-        ),
-      ],
+      mutations: [BranchInventoryMutation(itemType: itemType, itemId: itemId, delta: delta, legacyMainQuantity: legacyMainQuantity)],
     );
     return result[docId(branchId, itemType, itemId)]!;
   }
 
-  /// Applies a complete sale/void inventory effect in one Firestore transaction.
-  /// Every document is read before any write, so concurrent cashiers cannot
-  /// oversell the same branch inventory and a failed item rolls back all items.
   Future<Map<String, double>> changeQuantities({
     required String branchId,
     required List<BranchInventoryMutation> mutations,
   }) async {
     if (mutations.isEmpty) return const {};
-
     final merged = <String, BranchInventoryMutation>{};
     for (final mutation in mutations) {
       final key = docId(branchId, mutation.itemType, mutation.itemId);
       final existing = merged[key];
       merged[key] = existing == null
           ? mutation
-          : BranchInventoryMutation(
-              itemType: mutation.itemType,
-              itemId: mutation.itemId,
-              delta: existing.delta + mutation.delta,
-              legacyMainQuantity: mutation.legacyMainQuantity,
-            );
+          : BranchInventoryMutation(itemType: mutation.itemType, itemId: mutation.itemId, delta: existing.delta + mutation.delta, legacyMainQuantity: mutation.legacyMainQuantity);
     }
-
     return firestore.runTransaction<Map<String, double>>((tx) async {
       final snapshots = <String, DocumentSnapshot<Map<String, dynamic>>>{};
       for (final entry in merged.entries) {
         snapshots[entry.key] = await tx.get(ref.doc(entry.key));
       }
-
       final nextQuantities = <String, double>{};
       for (final entry in merged.entries) {
         final mutation = entry.value;
@@ -351,12 +260,9 @@ class BranchInventoryRepository {
             ? (snap.data()?['quantity'] as num?)?.toDouble() ?? 0.0
             : (branchId == 'main' ? mutation.legacyMainQuantity : 0.0);
         final next = current + mutation.delta;
-        if (next < -0.000001) {
-          throw Exception('Insufficient branch inventory: ${mutation.itemId}');
-        }
+        if (next < -0.000001) throw Exception('Insufficient branch inventory: ${mutation.itemId}');
         nextQuantities[entry.key] = next < 0 ? 0.0 : next;
       }
-
       for (final entry in merged.entries) {
         final mutation = entry.value;
         final snap = snapshots[entry.key]!;
@@ -364,15 +270,10 @@ class BranchInventoryRepository {
             ? (snap.data()?['quantity'] as num?)?.toDouble() ?? 0.0
             : (branchId == 'main' ? mutation.legacyMainQuantity : 0.0);
         tx.set(ref.doc(entry.key), {
-          'id': entry.key,
-          'merchantId': merchantId,
-          'branchId': branchId,
-          'itemId': mutation.itemId,
-          'itemType': mutation.itemType,
+          'id': entry.key, 'merchantId': merchantId, 'branchId': branchId,
+          'itemId': mutation.itemId, 'itemType': mutation.itemType,
           'quantity': nextQuantities[entry.key],
-          'initialQuantity': snap.exists
-              ? ((snap.data()?['initialQuantity'] as num?)?.toDouble() ?? current)
-              : current,
+          'initialQuantity': snap.exists ? ((snap.data()?['initialQuantity'] as num?)?.toDouble() ?? current) : current,
           'updatedAt': FieldValue.serverTimestamp(),
         }, SetOptions(merge: true));
       }
@@ -391,4 +292,10 @@ final branchInventoryStreamProvider = StreamProvider.family<List<BranchInventory
   final repository = ref.watch(branchInventoryRepositoryProvider);
   if (repository == null) return Stream.value(const []);
   return repository.watch(branchId);
+});
+
+final inventoryTransfersStreamProvider = StreamProvider<List<InventoryTransfer>>((ref) {
+  final repository = ref.watch(branchInventoryRepositoryProvider);
+  if (repository == null) return Stream.value(const <InventoryTransfer>[]);
+  return repository.watchTransfers();
 });
