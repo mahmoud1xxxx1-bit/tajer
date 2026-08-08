@@ -51,15 +51,12 @@ class CartItem {
   }
 
   double getEffectiveTax(double storeDefaultTax) {
-    switch (taxMode) {
-      case TaxMode.exempt:
-        return 0.0;
-      case TaxMode.custom:
-        return taxPercentage ?? storeDefaultTax;
-      case TaxMode.store:
-      default:
-        return storeDefaultTax;
+    if (taxMode == TaxMode.exempt) {
+      return 0.0;
     }
+    // Safe fallback for both new and legacy orders:
+    // Uses the saved snapshot percentage if it exists, otherwise falls back to store default.
+    return taxPercentage ?? storeDefaultTax;
   }
 
   Map<String, dynamic> toJson() {
