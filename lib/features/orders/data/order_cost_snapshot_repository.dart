@@ -14,7 +14,9 @@ class OrderCostSnapshotRepository {
   Stream<Map<String, double>> watchOrderCosts(String merchantId) {
     return _ref(merchantId).snapshots().map((snapshot) => {
           for (final doc in snapshot.docs)
-            doc.id: (doc.data()['totalCost'] as num?)?.toDouble() ?? 0.0,
+            if (doc.data()['totalCost'] is num &&
+                doc.data()['isComplete'] != false)
+              doc.id: (doc.data()['totalCost'] as num).toDouble(),
         });
   }
 
@@ -27,7 +29,9 @@ class OrderCostSnapshotRepository {
         .snapshots()
         .map((snapshot) => {
               for (final doc in snapshot.docs)
-                doc.id: (doc.data()['totalCost'] as num?)?.toDouble() ?? 0.0,
+                if (doc.data()['totalCost'] is num &&
+                    doc.data()['isComplete'] != false)
+                  doc.id: (doc.data()['totalCost'] as num).toDouble(),
             });
   }
 
@@ -59,7 +63,8 @@ class OrderCostSnapshotRepository {
         final rawItems = (data['items'] as List<dynamic>? ?? const []);
         final protectedItems = <Map<String, dynamic>>[];
         final publicItems = <Map<String, dynamic>>[];
-        double totalCost = 0.0;
+        double calculatedTotalCost = 0.0;
+        var complete = true;
 
         for (final raw in rawItems) {
           final item = Map<String, dynamic>.from(raw as Map);
@@ -74,7 +79,16 @@ class OrderCostSnapshotRepository {
               'unitCost': unitCost,
               'lineCost': unitCost * quantity,
             });
-            totalCost += unitCost * quantity;
+            calculatedTotalCost += unitCost * quantity;
+          } else {
+            complete = false;
+            protectedItems.add({
+              'productId': item['productId']?.toString() ?? '',
+              'productName': item['productName']?.toString() ?? '',
+              'quantity': quantity,
+              'unitCost': null,
+              'lineCost': null,
+            });
           }
           item.remove('costPrice');
           publicItems.add(item);
@@ -85,7 +99,8 @@ class OrderCostSnapshotRepository {
           'orderId': orderDoc.id,
           'branchId': data['branchId']?.toString() ?? 'main',
           'items': protectedItems,
-          'totalCost': totalCost,
+          'totalCost': complete ? calculatedTotalCost : null,
+          'isComplete': complete,
           'createdAt': data['createdAt'],
           'migratedFromLegacyOrder': true,
           'updatedAt': FieldValue.serverTimestamp(),
