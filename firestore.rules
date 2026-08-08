@@ -141,6 +141,13 @@ service cloud.firestore {
         allow create, update, delete: if hasPermission(merchantId, 'can_manage_products') &&
           hasPermission(merchantId, 'can_view_cost');
       }
+      match /order_cost_snapshots/{orderId} {
+        allow read: if resource != null &&
+          hasPermission(merchantId, 'can_view_cost') &&
+          hasPermission(merchantId, 'can_view_reports') &&
+          hasDataBranchAccess(merchantId, resource.data);
+        allow create, update, delete: if isOwner(merchantId);
+      }
       match /categories/{categoryId} {
         allow read: if hasAccess(merchantId);
         allow create, update, delete: if hasPermission(merchantId, 'can_manage_products');
