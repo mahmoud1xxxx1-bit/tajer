@@ -22,6 +22,7 @@ import '../features/settings/presentation/audit_log_screen.dart';
 import '../features/settings/presentation/user_guide_screen.dart';
 import '../features/shifts/presentation/end_shift_screen.dart';
 import '../features/shifts/presentation/shifts_archive_screen.dart';
+import '../features/branches/presentation/inventory_transfer_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateChangesProvider);
@@ -29,101 +30,35 @@ final goRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     redirect: (context, state) {
-      if (authState.isLoading) return null; // Wait for auth to resolve before redirecting
+      if (authState.isLoading) return null;
       final isAuthenticated = authState.value != null && !authState.hasError;
       final isStartupRoute = state.uri.path == '/';
-
-      if (!isAuthenticated && !isStartupRoute) {
-        return '/';
-      }
-
-      if (isAuthenticated && isStartupRoute) {
-        return '/dashboard';
-      }
-
+      if (!isAuthenticated && !isStartupRoute) return '/';
+      if (isAuthenticated && isStartupRoute) return '/dashboard';
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const StartupScreen(),
-      ),
-      GoRoute(
-        path: '/dashboard',
-        builder: (context, state) => const DashboardScreen(),
-      ),
-      GoRoute(
-        path: '/settings',
-        builder: (context, state) => const SettingsScreen(),
-      ),
-      GoRoute(
-        path: '/user_guide',
-        builder: (context, state) => const UserGuideScreen(),
-      ),
-      GoRoute(
-        path: '/upgrade',
-        builder: (context, state) => const UpgradeAccountScreen(),
-      ),
-      GoRoute(
-        path: '/paywall',
-        builder: (context, state) => const PaywallScreen(),
-      ),
-      GoRoute(
-        path: '/expenses',
-        builder: (context, state) => const ExpensesScreen(),
-      ),
-      GoRoute(
-        path: '/suppliers',
-        builder: (context, state) => const SuppliersScreen(),
-      ),
-      GoRoute(
-        path: '/categories',
-        builder: (context, state) => const CategoriesScreen(),
-      ),
-      GoRoute(
-        path: '/inventory_logs',
-        builder: (context, state) => const InventoryLogsScreen(),
-      ),
-      GoRoute(
-        path: '/employees',
-        builder: (context, state) => const EmployeesScreen(),
-      ),
-      GoRoute(
-        path: '/profile',
-        builder: (context, state) => const ProfileScreen(),
-      ),
-      GoRoute(
-        path: '/subscription',
-        builder: (context, state) => const SubscriptionScreen(),
-      ),
-      GoRoute(
-        path: '/backup_security',
-        builder: (context, state) => const BackupSecurityScreen(),
-      ),
-      GoRoute(
-        path: '/printer_settings',
-        builder: (context, state) => const PrinterSettingsScreen(),
-      ),
-      GoRoute(
-        path: '/store_branding',
-        builder: (context, state) => const StoreBrandingScreen(),
-      ),
-      GoRoute(
-        path: '/end_shift',
-        builder: (context, state) => const EndShiftScreen(),
-      ),
-      GoRoute(
-        path: '/shifts_archive',
-        builder: (context, state) => const ShiftsArchiveScreen(),
-      ),
-      GoRoute(
-        path: '/raw_materials',
-        builder: (context, state) => const RawMaterialsScreen(),
-      ),
-      GoRoute(
-        path: '/audit_log',
-        builder: (context, state) => const AuditLogScreen(),
-      ),
+      GoRoute(path: '/', builder: (context, state) => const StartupScreen()),
+      GoRoute(path: '/dashboard', builder: (context, state) => const DashboardScreen()),
+      GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
+      GoRoute(path: '/user_guide', builder: (context, state) => const UserGuideScreen()),
+      GoRoute(path: '/upgrade', builder: (context, state) => const UpgradeAccountScreen()),
+      GoRoute(path: '/paywall', builder: (context, state) => const PaywallScreen()),
+      GoRoute(path: '/expenses', builder: (context, state) => const ExpensesScreen()),
+      GoRoute(path: '/suppliers', builder: (context, state) => const SuppliersScreen()),
+      GoRoute(path: '/categories', builder: (context, state) => const CategoriesScreen()),
+      GoRoute(path: '/inventory_logs', builder: (context, state) => const InventoryLogsScreen()),
+      GoRoute(path: '/inventory_transfer', builder: (context, state) => const InventoryTransferScreen()),
+      GoRoute(path: '/employees', builder: (context, state) => const EmployeesScreen()),
+      GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
+      GoRoute(path: '/subscription', builder: (context, state) => const SubscriptionScreen()),
+      GoRoute(path: '/backup_security', builder: (context, state) => const BackupSecurityScreen()),
+      GoRoute(path: '/printer_settings', builder: (context, state) => const PrinterSettingsScreen()),
+      GoRoute(path: '/store_branding', builder: (context, state) => const StoreBrandingScreen()),
+      GoRoute(path: '/end_shift', builder: (context, state) => const EndShiftScreen()),
+      GoRoute(path: '/shifts_archive', builder: (context, state) => const ShiftsArchiveScreen()),
+      GoRoute(path: '/raw_materials', builder: (context, state) => const RawMaterialsScreen()),
+      GoRoute(path: '/audit_log', builder: (context, state) => const AuditLogScreen()),
     ],
   );
 });
