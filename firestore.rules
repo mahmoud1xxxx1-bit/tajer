@@ -2,75 +2,39 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
+    function isAuthenticated() { return request.auth != null; }
     function getUserData() {
       let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
       return userDoc != null ? userDoc.data : null;
     }
-
-    function isAdmin() {
-      return isAuthenticated() && request.auth.token.email == 'dotkxxx1@gmail.com';
-    }
-
-    // Basic access (read-only for employees usually, full access for merchants)
+    function isAdmin() { return isAuthenticated() && request.auth.token.email == 'dotkxxx1@gmail.com'; }
     function hasAccess(merchantId) {
       let data = getUserData();
       return isAdmin() || (isAuthenticated() && data != null && data.get('isRevoked', false) == false && (
-        request.auth.uid == merchantId ||
-        data.get('merchantId', '') == merchantId
-      ));
+        request.auth.uid == merchantId || data.get('merchantId', '') == merchantId));
     }
-
     function isOwner(merchantId) {
       let data = getUserData();
       return isAdmin() || (isAuthenticated() && data != null && data.get('isRevoked', false) == false && data.get('role', '') == 'merchant' && request.auth.uid == merchantId);
     }
-
-    // Permission based access for employees
     function hasPermission(merchantId, permission) {
       let data = getUserData();
       return isAdmin() || (isAuthenticated() && data != null && data.get('isRevoked', false) == false && (
         (data.get('role', '') == 'merchant' && request.auth.uid == merchantId) ||
-        (data.get('role', '') == 'employee' && data.get('merchantId', '') == merchantId && data.get('permissions', {}).get(permission, false) == true)
-      ));
+        (data.get('role', '') == 'employee' && data.get('merchantId', '') == merchantId && data.get('permissions', {}).get(permission, false) == true)));
     }
-
-    // A cashier may change only the customer accounting snapshot produced by
-    // creating/cancelling an order. Customer identity/profile fields stay locked.
     function isCustomerOrderAccountingUpdate(merchantId) {
-      return hasPermission(merchantId, 'can_create_orders') &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'totalPurchases',
-          'orderCount',
-          'totalDebt',
-          'lastPurchaseDate',
-          'updatedAt'
-        ]);
+      return hasPermission(merchantId, 'can_create_orders') && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalPurchases','orderCount','totalDebt','lastPurchaseDate','updatedAt']);
     }
-
-    // Debt collectors may only change the outstanding balance metadata. They do
-    // not gain permission to edit the customer profile itself.
     function isCustomerDebtAccountingUpdate(merchantId) {
-      return hasPermission(merchantId, 'can_receive_payments') &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'totalDebt',
-          'updatedAt'
-        ]);
+      return hasPermission(merchantId, 'can_receive_payments') && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalDebt','updatedAt']);
     }
 
-    // Users Collection (AppUser profile)
     match /users/{userId} {
       allow read: if isAuthenticated() && (request.auth.uid == userId || hasAccess(userId) || hasAccess(resource.data.get('merchantId', '')));
       allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && (request.auth.uid == userId || hasAccess(resource.data.get('merchantId', '')))
-                    && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['plan']));
+      allow update: if isAuthenticated() && (request.auth.uid == userId || hasAccess(resource.data.get('merchantId', ''))) && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['plan']));
       allow delete: if isAuthenticated() && hasAccess(resource.data.get('merchantId', ''));
-
-      // Users Subcollections (Employees, Notifications)
       match /employees/{employeeId} {
         allow read: if hasAccess(userId);
         allow create, update, delete: if isAuthenticated() && request.auth.uid == userId;
@@ -81,124 +45,87 @@ service cloud.firestore {
       }
     }
 
-    // Device Registry (Anti-abuse)
     match /device_registry/{deviceId} {
       allow get, write: if isAuthenticated();
       allow list, delete: if false;
     }
 
-    // --- ROOT COLLECTIONS ---
     match /products/{productId} {
       allow read: if resource == null || hasAccess(resource.data.get('merchantId', ''));
       allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_manage_products');
       allow update, delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_products');
     }
-
     match /customers/{customerId} {
       allow read: if resource == null || hasAccess(resource.data.get('merchantId', ''));
       allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_manage_customers');
-      allow update: if resource != null && (
-        hasPermission(resource.data.get('merchantId', ''), 'can_manage_customers') ||
-        isCustomerOrderAccountingUpdate(resource.data.get('merchantId', '')) ||
-        isCustomerDebtAccountingUpdate(resource.data.get('merchantId', ''))
-      );
+      allow update: if resource != null && (hasPermission(resource.data.get('merchantId', ''), 'can_manage_customers') || isCustomerOrderAccountingUpdate(resource.data.get('merchantId', '')) || isCustomerDebtAccountingUpdate(resource.data.get('merchantId', '')));
       allow delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_customers');
     }
-
     match /orders/{orderId} {
       allow read: if resource == null || hasAccess(resource.data.get('merchantId', '')) || resource.data.get('creatorId', '') == request.auth.uid;
       allow update: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_create_orders');
       allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_create_orders');
       allow delete: if resource == null || isOwner(resource.data.get('merchantId', ''));
     }
-
     match /shifts/{shiftId} {
       allow read, update: if resource == null || hasAccess(resource.data.get('merchantId', ''));
       allow delete: if resource == null || isOwner(resource.data.get('merchantId', ''));
       allow create: if hasAccess(request.resource.data.get('merchantId', ''));
     }
-
     match /raw_materials/{materialId} {
       allow read: if resource == null || hasAccess(resource.data.get('merchantId', ''));
       allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_manage_products');
       allow update, delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_products');
     }
 
-    // --- MERCHANT SUB-COLLECTIONS ---
     match /merchants/{merchantId} {
       match /categories/{categoryId} {
         allow read: if hasAccess(merchantId);
         allow create, update, delete: if hasPermission(merchantId, 'can_manage_products');
       }
-
       match /expenses/{expenseId} {
         allow read: if hasAccess(merchantId);
-        allow create: if hasPermission(merchantId, 'can_manage_expenses') ||
-          (hasPermission(merchantId, 'can_manage_inventory') && request.resource.data.get('isSupplierPayment', false) == true);
-        allow update: if hasPermission(merchantId, 'can_manage_expenses') ||
-          (hasPermission(merchantId, 'can_manage_inventory') && resource.data.get('isSupplierPayment', false) == true &&
-            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isCancelled', 'cancelledAt']));
+        allow create: if hasPermission(merchantId, 'can_manage_expenses') || (hasPermission(merchantId, 'can_manage_inventory') && request.resource.data.get('isSupplierPayment', false) == true);
+        allow update: if hasPermission(merchantId, 'can_manage_expenses') || (hasPermission(merchantId, 'can_manage_inventory') && resource.data.get('isSupplierPayment', false) == true && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isCancelled', 'cancelledAt']));
         allow delete: if hasPermission(merchantId, 'can_manage_expenses');
       }
-
       match /suppliers/{supplierId} {
         allow read: if hasAccess(merchantId);
         allow create, update, delete: if hasPermission(merchantId, 'can_manage_inventory');
-
         match /transactions/{transactionId} {
           allow read: if hasAccess(merchantId);
           allow write: if hasPermission(merchantId, 'can_manage_inventory');
         }
       }
-
-      // Inventory history is append-only for cashiers. POS operations may append
-      // their own audit rows, but only inventory managers/owners may mutate an
-      // existing audit record (for example an authorized reversal). This keeps
-      // the stock ledger tamper-resistant for ordinary employees.
       match /inventory_logs/{logId} {
         allow read: if hasAccess(merchantId);
         allow create: if hasPermission(merchantId, 'can_manage_inventory') || hasPermission(merchantId, 'can_create_orders');
         allow update, delete: if hasPermission(merchantId, 'can_manage_inventory');
       }
-
-      // Branch definitions are business configuration. Only the owner may add,
-      // rename, disable or otherwise mutate non-main branches. A signed-in team
-      // member may bootstrap only the missing legacy Main Branch during rollout.
       match /branches/{branchId} {
         allow read: if hasAccess(merchantId);
-        allow create: if isOwner(merchantId) ||
-          (hasAccess(merchantId) && branchId == 'main' && request.resource.data.get('isMain', false) == true);
+        allow create: if isOwner(merchantId) || (hasAccess(merchantId) && branchId == 'main' && request.resource.data.get('isMain', false) == true);
         allow update, delete: if isOwner(merchantId);
       }
-
-      // POS sales must be able to decrement branch inventory, while inventory
-      // managers also need manual stock adjustments. Deletion remains owner-only.
       match /branch_inventory/{inventoryId} {
         allow read: if hasAccess(merchantId);
         allow create, update: if hasPermission(merchantId, 'can_manage_inventory') || hasPermission(merchantId, 'can_create_orders');
         allow delete: if isOwner(merchantId);
       }
-
-      // Debt-payment provenance is append-only for employees. This preserves the
-      // audit trail that links customer, branch, shift, method and allocations.
+      // Transfer records are operational provenance. Inventory managers may
+      // create them, but ordinary employees cannot rewrite completed history.
+      match /inventory_transfers/{transferId} {
+        allow read: if hasAccess(merchantId);
+        allow create: if hasPermission(merchantId, 'can_manage_inventory');
+        allow update, delete: if isOwner(merchantId);
+      }
       match /customer_debt_payments/{paymentId} {
         allow read: if hasAccess(merchantId);
         allow create: if hasPermission(merchantId, 'can_receive_payments');
         allow update, delete: if isOwner(merchantId);
       }
-
-      match /counters/{counterId} {
-        allow read, write: if hasAccess(merchantId);
-      }
-
-      match /employee_actions/{actionId} {
-        allow read, write: if hasAccess(merchantId);
-      }
-
-      // Unknown/future merchant subcollections stay readable by the merchant's
-      // team, but employee writes are denied unless an explicit rule is added.
-      // This prevents the old catch-all from silently bypassing branch/accounting
-      // permissions for newly introduced financial collections.
+      match /counters/{counterId} { allow read, write: if hasAccess(merchantId); }
+      match /employee_actions/{actionId} { allow read, write: if hasAccess(merchantId); }
       match /{subcollection=**} {
         allow read: if hasAccess(merchantId);
         allow write: if isOwner(merchantId);
