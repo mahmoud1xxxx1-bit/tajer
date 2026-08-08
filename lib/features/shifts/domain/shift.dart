@@ -1,33 +1,34 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/utils/date_parser.dart';
 
 class Shift {
   final String id;
   final String merchantId;
+  final String branchId;
   final String employeeId;
   final String employeeName;
   final DateTime startTime;
   final DateTime? endTime;
-  final double startCash; // العهدة الافتتاحية
-  final double? expectedCash; // الكاش المتوقع عند الإغلاق
-  final double? actualCash; // الكاش الفعلي المدخل من قبل الموظف
-  final double? actualCard; // مبيعات مدى الفعلية
-  final double? actualTransfer; // مبيعات التحويل الفعلية
-  final double? cardTotal; // إجمالي مبيعات مدى وغيرها
-  final double? transferTotal; // إجمالي مبيعات التحويل
-  final double? cashSales; // المبيعات النقدية فقط خلال الوردية
-  final double? debtCollectionsCash; // الديون المحصلة كاش خلال الوردية
-  final double? debtCollectionsCard; // الديون المحصلة مدى خلال الوردية
-  final double? debtCollectionsTransfer; // الديون المحصلة حوالة بنكية خلال الوردية
-  final double? refundsCash; // إجمالي المرتجعات نقداً
-  final double? refundsCard; // إجمالي المرتجعات مدى
-  final double? refundsTransfer; // إجمالي المرتجعات تحويل
-  final double? totalTax; // إجمالي الضريبة المحصلة
-  final String status; // 'open', 'closed'
+  final double startCash;
+  final double? expectedCash;
+  final double? actualCash;
+  final double? actualCard;
+  final double? actualTransfer;
+  final double? cardTotal;
+  final double? transferTotal;
+  final double? cashSales;
+  final double? debtCollectionsCash;
+  final double? debtCollectionsCard;
+  final double? debtCollectionsTransfer;
+  final double? refundsCash;
+  final double? refundsCard;
+  final double? refundsTransfer;
+  final double? totalTax;
+  final String status;
 
-  Shift({
+  const Shift({
     required this.id,
     required this.merchantId,
+    this.branchId = 'main',
     required this.employeeId,
     required this.employeeName,
     required this.startTime,
@@ -54,6 +55,7 @@ class Shift {
     return {
       'id': id,
       'merchantId': merchantId,
+      'branchId': branchId,
       'employeeId': employeeId,
       'employeeName': employeeName,
       'startTime': startTime,
@@ -79,34 +81,36 @@ class Shift {
 
   factory Shift.fromJson(Map<String, dynamic> json) {
     return Shift(
-      id: json['id'] ?? '',
-      merchantId: json['merchantId'] ?? '',
-      employeeId: json['employeeId'] ?? '',
-      employeeName: json['employeeName'] ?? '',
+      id: json['id']?.toString() ?? '',
+      merchantId: json['merchantId']?.toString() ?? '',
+      branchId: json['branchId']?.toString() ?? 'main',
+      employeeId: json['employeeId']?.toString() ?? '',
+      employeeName: json['employeeName']?.toString() ?? '',
       startTime: safeParseDate(json['startTime']),
       endTime: safeParseNullableDate(json['endTime']),
-      startCash: (json['startCash'] ?? 0.0).toDouble(),
-      expectedCash: json['expectedCash']?.toDouble(),
-      actualCash: json['actualCash']?.toDouble(),
-      actualCard: json['actualCard']?.toDouble(),
-      actualTransfer: json['actualTransfer']?.toDouble(),
-      cardTotal: json['cardTotal']?.toDouble(),
-      transferTotal: json['transferTotal']?.toDouble(),
-      cashSales: json['cashSales']?.toDouble(),
-      debtCollectionsCash: json['debtCollectionsCash']?.toDouble(),
-      debtCollectionsCard: json['debtCollectionsCard']?.toDouble(),
-      debtCollectionsTransfer: json['debtCollectionsTransfer']?.toDouble(),
-      refundsCash: json['refundsCash']?.toDouble(),
-      refundsCard: json['refundsCard']?.toDouble(),
-      refundsTransfer: json['refundsTransfer']?.toDouble(),
-      totalTax: json['totalTax']?.toDouble(),
-      status: json['status'] ?? 'open',
+      startCash: (json['startCash'] as num? ?? 0.0).toDouble(),
+      expectedCash: (json['expectedCash'] as num?)?.toDouble(),
+      actualCash: (json['actualCash'] as num?)?.toDouble(),
+      actualCard: (json['actualCard'] as num?)?.toDouble(),
+      actualTransfer: (json['actualTransfer'] as num?)?.toDouble(),
+      cardTotal: (json['cardTotal'] as num?)?.toDouble(),
+      transferTotal: (json['transferTotal'] as num?)?.toDouble(),
+      cashSales: (json['cashSales'] as num?)?.toDouble(),
+      debtCollectionsCash: (json['debtCollectionsCash'] as num?)?.toDouble(),
+      debtCollectionsCard: (json['debtCollectionsCard'] as num?)?.toDouble(),
+      debtCollectionsTransfer: (json['debtCollectionsTransfer'] as num?)?.toDouble(),
+      refundsCash: (json['refundsCash'] as num?)?.toDouble(),
+      refundsCard: (json['refundsCard'] as num?)?.toDouble(),
+      refundsTransfer: (json['refundsTransfer'] as num?)?.toDouble(),
+      totalTax: (json['totalTax'] as num?)?.toDouble(),
+      status: json['status']?.toString() ?? 'open',
     );
   }
 
   Shift copyWith({
     String? id,
     String? merchantId,
+    String? branchId,
     String? employeeId,
     String? employeeName,
     DateTime? startTime,
@@ -131,6 +135,7 @@ class Shift {
     return Shift(
       id: id ?? this.id,
       merchantId: merchantId ?? this.merchantId,
+      branchId: branchId ?? this.branchId,
       employeeId: employeeId ?? this.employeeId,
       employeeName: employeeName ?? this.employeeName,
       startTime: startTime ?? this.startTime,
