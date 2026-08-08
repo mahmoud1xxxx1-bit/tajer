@@ -62,6 +62,14 @@ void main() {
       expect(rules, contains("hasPermission(merchantId, 'can_view_cost');"));
     });
 
+    test('historical order cost snapshots require reports, cost and branch access', () {
+      expect(rules, contains('match /order_cost_snapshots/{orderId}'));
+      expect(rules, contains("hasPermission(merchantId, 'can_view_cost')"));
+      expect(rules, contains("hasPermission(merchantId, 'can_view_reports')"));
+      expect(rules, contains('hasDataBranchAccess(merchantId, resource.data)'));
+      expect(rules, contains('allow create, update, delete: if isOwner(merchantId);'));
+    });
+
     test('customer debt provenance is explicitly permissioned and branch scoped', () {
       expect(rules, contains('match /customer_debt_payments/{paymentId}'));
       expect(rules, contains("hasPermission(merchantId, 'can_receive_payments') && hasDataBranchAccess(merchantId, request.resource.data)"));
