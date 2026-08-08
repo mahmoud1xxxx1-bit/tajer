@@ -42,6 +42,7 @@ jobs:
           flutter test test/multi_branch_backward_compatibility_test.dart
           flutter test test/customer_debt_payment_test.dart
           flutter test test/firestore_rules_contract_test.dart
+          flutter test test/reports_service_test.dart
 
       - name: Build Web
         run: flutter build web --release --base-href /taj/
