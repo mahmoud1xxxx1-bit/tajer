@@ -183,9 +183,21 @@ class BranchAwareOrderRepository extends OrderRepository {
     });
   }
 
+  void _guardPaidCreditInvoiceMutation(AppOrder order, String targetAction) {
+    if (!order.isCredit || order.paidAmount <= 0.01) return;
+    throw Exception(
+      'لا يمكن $targetAction فاتورة آجلة تم تحصيل مبلغ منها. يجب معالجة/عكس التحصيل أولاً حفاظاً على تطابق دين العميل وسجل الوردية. '
+      'A paid or partially-paid credit invoice cannot be $targetAction until its debt payment is reversed.',
+    );
+  }
+
   @override
   Future<void> updateOrderStatus(AppOrder order, String newStatus) async {
     if (order.status == newStatus) return;
+    if (newStatus == 'cancelled' && order.status != 'cancelled') {
+      _guardPaidCreditInvoiceMutation(order, 'إلغاء');
+    }
+
     final claimed = await _claimStatusTransition(order, newStatus);
     if (!claimed) return;
 
@@ -413,6 +425,8 @@ class BranchAwareOrderRepository extends OrderRepository {
 
   @override
   Future<void> deleteOrder(AppOrder order) async {
+    _guardPaidCreditInvoiceMutation(order, 'حذف');
+
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
       final userDoc = await firestore.collection('users').doc(uid).get();
