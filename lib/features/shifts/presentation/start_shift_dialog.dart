@@ -5,6 +5,7 @@ import '../domain/shift.dart';
 import '../data/shift_repository.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../authentication/domain/app_user.dart';
+import '../../branches/presentation/branch_context.dart';
 import '../../../core/services/activity_logger.dart';
 
 class StartShiftDialog extends ConsumerStatefulWidget {
@@ -31,9 +32,11 @@ class _StartShiftDialogState extends ConsumerState<StartShiftDialog> {
 
     setState(() => _isLoading = true);
     try {
+      final branchId = ref.read(selectedBranchIdProvider);
       final shift = Shift(
         id: const Uuid().v4(),
         merchantId: user.merchantId ?? user.id,
+        branchId: branchId,
         employeeId: user.id,
         employeeName: user.name ?? 'Unknown',
         startTime: DateTime.now(),
@@ -44,7 +47,7 @@ class _StartShiftDialogState extends ConsumerState<StartShiftDialog> {
       ActivityLogger.log(
         user: user,
         actionType: 'Start Shift|بدء وردية',
-        description: 'Started a new shift with cash $cash|بدأ وردية جديدة بعهدة $cash',
+        description: 'Started a new shift with cash $cash in branch $branchId|بدأ وردية جديدة بعهدة $cash في الفرع $branchId',
       );
     } catch (e) {
       if (mounted) {
@@ -81,7 +84,7 @@ class _StartShiftDialogState extends ConsumerState<StartShiftDialog> {
                 border: Border.all(color: Colors.indigo.withOpacity(0.3)),
               ),
               child: Text(
-                isAr 
+                isAr
                   ? '💡 لماذا نفتح وردية؟\nنظام الورديات يحمي أموالك! أدخل المبلغ الموجود في الدرج قبل بدء البيع، وسيقوم النظام بحساب مبيعات اليوم ومقارنتها تلقائياً بالدرج لكشف أي عجز أو تلاعب نهاية الوردية.'
                   : '💡 Why open a shift?\nThe shift system protects your money! Enter the amount in the drawer before selling, and the system will calculate today\'s sales and automatically compare it with the drawer to detect any shortage at the end of the shift.',
                 style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.5, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
@@ -105,7 +108,7 @@ class _StartShiftDialogState extends ConsumerState<StartShiftDialog> {
         ),
       ),
       actions: [
-        _isLoading 
+        _isLoading
           ? const Center(child: CircularProgressIndicator())
           : ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
@@ -122,4 +125,3 @@ class _StartShiftDialogState extends ConsumerState<StartShiftDialog> {
     );
   }
 }
-
