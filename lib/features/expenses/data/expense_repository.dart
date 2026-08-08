@@ -36,16 +36,44 @@ class ExpenseRepository {
   }
 
   Future<void> cancelExpense(Expense expense) async {
-    // BUG #2 FIX: Verify referenced shift exists and is still open
-    if (expense.shiftId != null && expense.shiftId!.isNotEmpty) {
-      final shiftRef = _firestore.collection('shifts').doc(expense.shiftId);
-      final shiftDoc = await shiftRef.get();
-      if (!shiftDoc.exists) {
-        throw Exception('الوردية المرتبطة بهذا المصروف غير موجودة.');
+    // BUG #2 FIX: Verify expense is not part of a closed shift.
+    // Since Expense doesn't store shiftId, we check against the shifts collection by time.
+    
+    final openShifts = await _firestore
+        .collection('shifts')
+        .where('merchantId', isEqualTo: expense.merchantId)
+        .where('status', isEqualTo: 'open')
+        .limit(1)
+        .get();
+        
+    final hasOpenShift = openShifts.docs.isNotEmpty;
+    
+    if (hasOpenShift) {
+      final currentShiftData = openShifts.docs.first.data();
+      final startTime = (currentShiftData['startTime'] as Timestamp).toDate();
+      // If expense was created BEFORE this open shift, it belongs to a past CLOSED shift
+      if (expense.createdAt.isBefore(startTime.subtract(const Duration(minutes: 1)))) {
+         throw Exception('لا يمكن إلغاء هذا المصروف لأنه يخص وردية سابقة ومغلقة.');
       }
-      final data = shiftDoc.data();
-      if (data != null && data['endTime'] != null) {
-        throw Exception('لا يمكن إلغاء هذا المصروف لأن الوردية المرتبطة به مغلقة.');
+    } else {
+      // No open shift. Check if the merchant uses shifts by looking for closed shifts.
+      final recentShifts = await _firestore
+          .collection('shifts')
+          .where('merchantId', isEqualTo: expense.merchantId)
+          .where('status', isEqualTo: 'closed')
+          .limit(1)
+          .get();
+          
+      if (recentShifts.docs.isNotEmpty) {
+          throw Exception('لا توجد وردية مفتوحة حالياً. لا يمكن إلغاء المصروفات لورديات مغلقة.');
+      } else {
+          // Merchant never used shifts (fallback)
+          final now = DateTime.now();
+          bool isSameDay = now.year == expense.date.year && now.month == expense.date.month && now.day == expense.date.day;
+          bool isRecent = now.difference(expense.date).inHours < 16;
+          if (!isSameDay && !isRecent) {
+             throw Exception('المصروف قديم جداً ولا يمكن إلغاؤه.');
+          }
       }
     }
     

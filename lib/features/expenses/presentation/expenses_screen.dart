@@ -468,9 +468,9 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                               final currentShift = await ref.read(currentShiftProvider(appUser.merchantId ?? appUser.id).future);
                               bool canCancel = false;
                               
-                              if (expense.shiftId != null && expense.shiftId!.isNotEmpty) {
-                                // If the expense is attached to a shift, we can only cancel if it matches the current OPEN shift
-                                if (currentShift != null && currentShift.endTime == null && currentShift.id == expense.shiftId) {
+                              if (currentShift != null && currentShift.endTime == null) {
+                                // Shift is open, allow if expense was made during this shift (with 1-min buffer for clock diffs)
+                                if (expense.createdAt.isAfter(currentShift.startTime.subtract(const Duration(minutes: 1)))) {
                                   canCancel = true;
                                 }
                               } else {
