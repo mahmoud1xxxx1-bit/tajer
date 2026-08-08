@@ -18,6 +18,19 @@ class OrderCostSnapshotRepository {
         });
   }
 
+  Stream<Map<String, double>> watchBranchOrderCosts(
+    String merchantId,
+    String branchId,
+  ) {
+    return _ref(merchantId)
+        .where('branchId', isEqualTo: branchId)
+        .snapshots()
+        .map((snapshot) => {
+              for (final doc in snapshot.docs)
+                doc.id: (doc.data()['totalCost'] as num?)?.toDouble() ?? 0.0,
+            });
+  }
+
   /// One-way v107 compatibility migration. It preserves the per-item historical
   /// cost snapshot in the protected collection, then strips costPrice from the
   /// public order items in the same batch. Run only as merchant/admin.
