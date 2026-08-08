@@ -6,6 +6,7 @@ import 'cart_item.dart';
 class AppOrder {
   final String id;
   final String merchantId;
+  final String branchId;
   final String customerId;
   final String customerName;
   final List<CartItem> items;
@@ -28,6 +29,7 @@ class AppOrder {
   const AppOrder({
     required this.id,
     required this.merchantId,
+    this.branchId = 'main',
     required this.customerId,
     required this.customerName,
     this.items = const [],
@@ -52,6 +54,7 @@ class AppOrder {
     return AppOrder(
       id: json['id'] as String,
       merchantId: json['merchantId'] as String,
+      branchId: json['branchId']?.toString() ?? 'main',
       customerId: json['customerId'] as String,
       customerName: json['customerName'] as String,
       items: (json['items'] as List<dynamic>?)
@@ -67,7 +70,7 @@ class AppOrder {
       creatorName: json['creatorName'] as String?,
       paymentMethod: json['paymentMethod'] as String? ?? 'cash',
       scheduledDate: safeParseNullableDate(json['scheduledDate']),
-      queueNumber: json['queueNumber'] as int?,
+      queueNumber: (json['queueNumber'] as num?)?.toInt(),
       tenderedAmount: (json['tenderedAmount'] as num?)?.toDouble(),
       changeAmount: (json['changeAmount'] as num?)?.toDouble(),
       splitCashAmount: (json['splitCashAmount'] as num?)?.toDouble(),
@@ -80,6 +83,7 @@ class AppOrder {
     return {
       'id': id,
       'merchantId': merchantId,
+      'branchId': branchId,
       'customerId': customerId,
       'customerName': customerName,
       'items': items.map((e) => e.toJson()).toList(),
@@ -104,6 +108,7 @@ class AppOrder {
   AppOrder copyWith({
     String? id,
     String? merchantId,
+    String? branchId,
     String? customerId,
     String? customerName,
     List<CartItem>? items,
@@ -126,6 +131,7 @@ class AppOrder {
     return AppOrder(
       id: id ?? this.id,
       merchantId: merchantId ?? this.merchantId,
+      branchId: branchId ?? this.branchId,
       customerId: customerId ?? this.customerId,
       customerName: customerName ?? this.customerName,
       items: items ?? this.items,
