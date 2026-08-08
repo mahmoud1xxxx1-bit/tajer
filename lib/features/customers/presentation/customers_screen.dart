@@ -503,8 +503,14 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                           }
                         }
                       } else if (value == 'print') {
-                        final orders = ref.read(ordersStreamProvider).value ?? [];
                         try {
+                          final appUser = ref.read(appUserProvider).value;
+                          final merchantId = appUser?.merchantId ?? appUser?.id ?? customer.merchantId;
+                          final orders = await ref.read(customerRepositoryProvider).getCustomerOrdersAcrossBranches(
+                            merchantId: merchantId,
+                            customerId: customer.id,
+                          );
+                          if (!context.mounted) return;
                           await PdfService.printCustomerStatement(context, customer, orders, currency);
                         } catch (e) {
                           if (context.mounted) {
