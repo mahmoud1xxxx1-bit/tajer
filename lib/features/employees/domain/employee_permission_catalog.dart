@@ -47,8 +47,9 @@ class EmployeePermissionDefinition {
 
 /// Least-privilege defaults used when creating a new employee.
 ///
-/// Sensitive actions such as cost visibility, stock administration, order
-/// cancellation and expense administration are deliberately opt-in.
+/// Only ordinary day-to-day operating permissions are enabled by default.
+/// Financial visibility, collections, historical order visibility, cost data,
+/// inventory administration and destructive actions are deliberately opt-in.
 abstract final class EmployeePermissionCatalog {
   static const definitions = <EmployeePermissionDefinition>[
     EmployeePermissionDefinition(
@@ -64,17 +65,17 @@ abstract final class EmployeePermissionCatalog {
     EmployeePermissionDefinition(
       key: EmployeePermissionKeys.receivePayments,
       risk: EmployeePermissionRisk.financial,
-      defaultEnabled: true,
+      defaultEnabled: false,
     ),
     EmployeePermissionDefinition(
       key: EmployeePermissionKeys.viewReports,
       risk: EmployeePermissionRisk.sensitive,
-      defaultEnabled: true,
+      defaultEnabled: false,
     ),
     EmployeePermissionDefinition(
       key: EmployeePermissionKeys.viewAllOrders,
       risk: EmployeePermissionRisk.sensitive,
-      defaultEnabled: true,
+      defaultEnabled: false,
     ),
     EmployeePermissionDefinition(
       key: EmployeePermissionKeys.manageProducts,
