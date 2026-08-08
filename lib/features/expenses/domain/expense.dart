@@ -4,6 +4,8 @@ import '../../products/domain/product.dart'; // For TimestampConverter
 class Expense {
   final String id;
   final String merchantId;
+  final String branchId;
+  final String? shiftId;
   final String title;
   final double amount;
   final String? category;
@@ -20,6 +22,8 @@ class Expense {
   const Expense({
     required this.id,
     required this.merchantId,
+    this.branchId = 'main',
+    this.shiftId,
     required this.title,
     required this.amount,
     this.category,
@@ -30,7 +34,7 @@ class Expense {
     this.paymentMethod = 'cash',
     required this.date,
     required this.createdAt,
-    this.isFromShiftDrawer = true, // Default to true for backward compatibility
+    this.isFromShiftDrawer = true,
     this.isCancelled = false,
   });
 
@@ -38,6 +42,8 @@ class Expense {
     return Expense(
       id: json['id'] as String? ?? '',
       merchantId: json['merchantId'] as String? ?? '',
+      branchId: json['branchId']?.toString() ?? 'main',
+      shiftId: json['shiftId']?.toString(),
       title: json['title'] as String? ?? '',
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
       category: json['category'] as String?,
@@ -57,6 +63,8 @@ class Expense {
     return {
       'id': id,
       'merchantId': merchantId,
+      'branchId': branchId,
+      'shiftId': shiftId,
       'title': title,
       'amount': amount,
       'category': category,
@@ -75,6 +83,8 @@ class Expense {
   Expense copyWith({
     String? id,
     String? merchantId,
+    String? branchId,
+    String? shiftId,
     String? title,
     double? amount,
     String? category,
@@ -91,6 +101,8 @@ class Expense {
     return Expense(
       id: id ?? this.id,
       merchantId: merchantId ?? this.merchantId,
+      branchId: branchId ?? this.branchId,
+      shiftId: shiftId ?? this.shiftId,
       title: title ?? this.title,
       amount: amount ?? this.amount,
       category: category ?? this.category,
