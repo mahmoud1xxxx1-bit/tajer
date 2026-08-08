@@ -160,7 +160,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       }
 
       final appUser = ref.read(appUserProvider).value;
-      final storeProfile = ref.read(storeProfileStreamProvider).value;
+      final storeProfile = ref.read(storeProfileProvider).value;
       final defaultTax = storeProfile?.defaultTaxPercentage ?? 0.0;
       final defaultIsInclusive = storeProfile?.defaultIsTaxInclusive ?? true;
       

@@ -42,7 +42,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   String? _selectedCategoryId;
 
   void _addToCart(Product product, {List<String> selectedModifiers = const []}) {
-    final storeProfile = ref.read(storeProfileStreamProvider).value;
+    final storeProfile = ref.read(storeProfileProvider).value;
     final defaultTax = storeProfile?.defaultTaxPercentage ?? 0.0;
     final defaultIsInclusive = storeProfile?.defaultIsTaxInclusive ?? true;
 
