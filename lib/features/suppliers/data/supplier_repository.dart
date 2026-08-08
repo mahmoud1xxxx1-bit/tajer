@@ -41,9 +41,6 @@ class SupplierRepository {
     await _suppliersRef.doc(supplier.id).update(supplier.toJson());
   }
 
-  /// Legacy-compatible debt-only payment primitive. New multi-branch UI flows
-  /// should prefer [settleSupplierDebt] so debt, supplier transaction and
-  /// expense are committed atomically.
   Future<void> paySupplierDebt({
     required String supplierId,
     required double amountPaid,
@@ -68,12 +65,6 @@ class SupplierRepository {
     });
   }
 
-  /// Atomic accounting boundary for a supplier payment.
-  ///
-  /// Invariant: supplier debt, supplier ledger transaction and expense either
-  /// all succeed together or none of them is persisted. If cash is taken from
-  /// the shift drawer, the supplied shift must be open and belong to the same
-  /// branch at commit time.
   Future<void> settleSupplierDebt({
     required String supplierId,
     required String supplierName,
@@ -174,6 +165,90 @@ class SupplierRepository {
         'isCancelled': false,
         'supplierTransactionId': transactionId,
       });
+    });
+  }
+
+  Future<void> reverseSupplierPayment({
+    required String supplierId,
+    required String transactionId,
+  }) async {
+    final supplierRef = _suppliersRef.doc(supplierId);
+    final supplierTxRef = supplierRef.collection('transactions').doc(transactionId);
+
+    await _firestore.runTransaction((transaction) async {
+      final supplierSnapshot = await transaction.get(supplierRef);
+      final txSnapshot = await transaction.get(supplierTxRef);
+      if (!supplierSnapshot.exists || supplierSnapshot.data() == null) {
+        throw Exception('المورد غير موجود.');
+      }
+      if (!txSnapshot.exists || txSnapshot.data() == null) {
+        throw Exception('عملية السداد غير موجودة.');
+      }
+
+      final txData = txSnapshot.data()!;
+      if (txData['type']?.toString() != 'payment') {
+        throw Exception('هذه العملية ليست عملية سداد مورد.');
+      }
+      if (txData['isCancelled'] == true) {
+        throw Exception('عملية السداد ملغاة بالفعل.');
+      }
+
+      final amount = (txData['amount'] as num?)?.toDouble() ?? 0.0;
+      if (amount <= 0) {
+        throw Exception('قيمة عملية السداد غير صالحة للإلغاء.');
+      }
+
+      final expenseId = txData['expenseId']?.toString();
+      DocumentReference<Map<String, dynamic>>? expenseRef;
+      DocumentSnapshot<Map<String, dynamic>>? expenseSnapshot;
+      if (expenseId != null && expenseId.isNotEmpty) {
+        expenseRef = _firestore
+            .collection('merchants')
+            .doc(_merchantId)
+            .collection('expenses')
+            .doc(expenseId);
+        expenseSnapshot = await transaction.get(expenseRef);
+      }
+
+      if (expenseSnapshot != null &&
+          expenseSnapshot.exists &&
+          expenseSnapshot.data() != null) {
+        final expenseData = expenseSnapshot.data()!;
+        final shiftId = expenseData['shiftId']?.toString();
+        if (shiftId != null && shiftId.isNotEmpty) {
+          final shiftRef = _firestore.collection('shifts').doc(shiftId);
+          final shiftSnapshot = await transaction.get(shiftRef);
+          if (!shiftSnapshot.exists || shiftSnapshot.data() == null) {
+            throw Exception('تعذر التحقق من الوردية المرتبطة بالسداد.');
+          }
+          final shiftData = shiftSnapshot.data()!;
+          if (shiftData['status']?.toString() != 'open' ||
+              shiftData['endTime'] != null) {
+            throw Exception('لا يمكن إلغاء سداد مورد مرتبط بورديه مغلقة.');
+          }
+          final txBranchId = txData['branchId']?.toString() ?? 'main';
+          final shiftBranchId = shiftData['branchId']?.toString() ?? 'main';
+          if (txBranchId != shiftBranchId) {
+            throw Exception('عملية السداد مرتبطة بفرع مختلف عن الوردية.');
+          }
+        }
+      }
+
+      transaction.update(supplierRef, {
+        'totalDebt': FieldValue.increment(amount),
+      });
+      transaction.update(supplierTxRef, {
+        'isCancelled': true,
+        'cancelledAt': FieldValue.serverTimestamp(),
+      });
+      if (expenseRef != null &&
+          expenseSnapshot != null &&
+          expenseSnapshot.exists) {
+        transaction.update(expenseRef, {
+          'isCancelled': true,
+          'cancelledAt': FieldValue.serverTimestamp(),
+        });
+      }
     });
   }
 
