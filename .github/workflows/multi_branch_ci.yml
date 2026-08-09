@@ -83,6 +83,33 @@ jobs:
       - name: Build Web
         run: flutter build web --release --base-href /taj/
 
+      - name: Build installable Android test APK
+        run: flutter build apk --debug
+
+      - name: Verify test APK
+        shell: bash
+        run: |
+          test -s build/app/outputs/flutter-apk/app-debug.apk
+          sha256sum build/app/outputs/flutter-apk/app-debug.apk > build/app/outputs/flutter-apk/app-debug.apk.sha256
+
+      - name: Upload installable Android test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tajer-1.1.108-android-test-apk
+          path: |
+            build/app/outputs/flutter-apk/app-debug.apk
+            build/app/outputs/flutter-apk/app-debug.apk.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload validated Web artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tajer-multi-branch-development-web
+          path: build/web
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Build Android APK
         run: flutter build apk --release
         env:
@@ -112,13 +139,5 @@ jobs:
         with:
           name: tajer-multi-branch-development-aab
           path: build/app/outputs/bundle/release/app-release.aab
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Upload Web artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: tajer-multi-branch-development-web
-          path: build/web
           if-no-files-found: error
           retention-days: 14
