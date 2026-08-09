@@ -116,9 +116,16 @@ class ReportsService {
 
   double get netSalesRevenue => totalRevenue - totalTaxCollected;
 
-  double get totalDebt => orders
-      .where((order) => order.status != 'cancelled' && order.isCredit)
-      .fold(0.0, (sum, order) => sum + (order.total - order.paidAmount));
+  double get totalDebt {
+    final orderOutstanding = orders
+        .where((order) => order.status != 'cancelled' && order.isCredit)
+        .fold(0.0, (sum, order) => sum + (order.total - order.paidAmount));
+    final standaloneCollections = debtPayments
+        .where((payment) => payment.allocations.isEmpty)
+        .fold(0.0, (sum, payment) => sum + payment.amount);
+    final reconciled = orderOutstanding - standaloneCollections;
+    return reconciled > 0 ? reconciled : 0.0;
+  }
 
   double get totalExpenses => expenses
       .where((expense) => !expense.isSupplierPayment && !expense.isCancelled)
