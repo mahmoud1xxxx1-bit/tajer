@@ -44,6 +44,23 @@ async function main() {
           can_receive_payments: true,
         },
       });
+      await setDoc(doc(db, 'customers', 'customer-a'), {
+        merchantId: 'merchant-a',
+        branchId: 'branch-a',
+        name: 'Customer A',
+        totalDebt: 30,
+      });
+      await setDoc(doc(db, 'customers', 'customer-b'), {
+        merchantId: 'merchant-a',
+        branchId: 'branch-b',
+        name: 'Customer B',
+        totalDebt: 50,
+      });
+      await setDoc(doc(db, 'shifts', 'shift-a'), {
+        merchantId: 'merchant-a',
+        branchId: 'branch-a',
+        status: 'open',
+      });
       await setDoc(doc(db, 'users', 'stock-a'), {
         role: 'employee',
         merchantId: 'merchant-a',
@@ -161,6 +178,36 @@ async function main() {
     await assertSucceeds(getDoc(doc(auditor, 'merchants', 'merchant-a', 'order_cost_snapshots', 'order-a')));
     await assertFails(getDoc(doc(cashier, 'merchants', 'merchant-a', 'product_costs', 'prod-1')));
     await assertSucceeds(getDoc(doc(auditor, 'merchants', 'merchant-a', 'product_costs', 'prod-1')));
+
+    await assertFails(
+      setDoc(doc(cashier, 'merchants', 'merchant-a', 'customer_debt_payments', 'wrong-branch'), {
+        id: 'wrong-branch',
+        merchantId: 'merchant-a',
+        customerId: 'customer-a',
+        branchId: 'branch-b',
+        shiftId: 'shift-a',
+        amount: 10,
+        paymentMethod: 'cash',
+        allocations: [],
+        createdAt: new Date(),
+      }),
+    );
+    await assertFails(
+      setDoc(doc(cashier, 'merchants', 'merchant-a', 'customer_debt_payments', 'wrong-customer-branch'), {
+        id: 'wrong-customer-branch',
+        merchantId: 'merchant-a',
+        customerId: 'customer-b',
+        branchId: 'branch-a',
+        shiftId: 'shift-a',
+        amount: 10,
+        paymentMethod: 'cash',
+        allocations: [],
+        createdAt: new Date(),
+      }),
+    );
+    await assertFails(
+      getDoc(doc(cashier, 'merchants', 'merchant-a', 'customer_debt_payments', 'wrong-branch')),
+    );
 
     await assertFails(
       setDoc(doc(cashier, 'merchants', 'merchant-a', 'product_costs', 'prod-1'), {

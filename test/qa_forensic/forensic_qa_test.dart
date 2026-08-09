@@ -142,6 +142,23 @@ class QaEvidence {
     ));
   }
 
+  void blocked(
+    String id,
+    String category,
+    String name,
+    String reason,
+  ) {
+    rows.add(QaResult(
+      id: id,
+      category: category,
+      name: name,
+      expected: 'executed assertion',
+      actual: 'blocked',
+      status: 'BLOCKED',
+      failureReason: reason,
+    ));
+  }
+
   Future<void> write() async {
     final dir = Directory('qa_evidence');
     if (!dir.existsSync()) dir.createSync(recursive: true);
@@ -668,12 +685,6 @@ void main() {
     await evidence.checkNum('QA-022-MAIN-UNCHANGED', 'inventory',
         'invalid transfer leaves source unchanged',
         expected: 85, actual: await qty(db, mainBranch, 'product', readyA));
-    evidence.notExecuted(
-        'QA-023-IDEMPOTENCY',
-        'inventory',
-        'transfer idempotency retry',
-        'current transfer API generates a new id and has no caller-supplied operation id');
-
     await invRepo.setQuantityWithAudit(
       branchId: mainBranch,
       itemType: 'product',
@@ -703,6 +714,62 @@ void main() {
         expected: 35, actual: await qty(db, branchB, 'product', readyA));
   });
 
+  test('remaining forensic atomicity and adversarial items', () async {
+    final npx = Platform.isWindows ? 'npx.cmd' : 'npx';
+    final env = Map<String, String>.from(Platform.environment);
+    if (Platform.isWindows && Directory(r'C:\dev-tools\jdk-21').existsSync()) {
+      env['JAVA_HOME'] = r'C:\dev-tools\jdk-21';
+      env['PATH'] = "${env['JAVA_HOME']}\\bin;${env['PATH']}";
+    }
+    final result = await Process.run(
+      npx,
+      [
+        'firebase-tools',
+        'emulators:exec',
+        '--only',
+        'firestore',
+        'node functions/forensic_remaining_emulator_test.js',
+      ],
+      environment: env,
+    );
+    final outputFile = File('qa_evidence/remaining_emulator_results.json');
+    if (result.exitCode != 0 || !outputFile.existsSync()) {
+      for (final id in [
+        'QA-018-EMULATOR-CONCURRENCY',
+        'QA-019-EMULATOR-RAW-CONCURRENCY',
+        'QA-037-RULE-BYPASS-CUSTOMER-DEBT',
+        'QA-076-ATOMIC-INJECTED-WRITE-FAILURE',
+        'QA-077-ATOMIC-CANCEL-FAILURE',
+      ]) {
+        evidence.checkBool(
+          id,
+          id == 'QA-037-RULE-BYPASS-CUSTOMER-DEBT' ? 'security' : 'atomicity',
+          'Firestore Emulator remaining QA item',
+          input: {
+            'exit_code': result.exitCode,
+            'stdout': result.stdout.toString(),
+            'stderr': result.stderr.toString(),
+          },
+          expected: true,
+          actual: false,
+        );
+      }
+      return;
+    }
+
+    final rows = (jsonDecode(outputFile.readAsStringSync()) as List<dynamic>)
+        .cast<Map<String, dynamic>>();
+    for (final row in rows) {
+      evidence.checkBool(
+        row['id'].toString(),
+        row['category'].toString(),
+        row['name'].toString(),
+        input: row['input'],
+        expected: row['expected'] == true,
+        actual: row['actual'] == true,
+      );
+    }
+  }, timeout: const Timeout(Duration(minutes: 2)));
   test('forensic accounting reference model vs ReportsService', () async {
     final orders = [
       order(
@@ -1111,32 +1178,12 @@ void main() {
         expected: true, actual: operations == 5000 && failingSeeds.isEmpty);
   });
 
-  test('not executed capability register', () {
-    evidence.notExecuted(
-        'QA-018-EMULATOR-CONCURRENCY',
-        'atomicity',
-        'real Firestore concurrent last-stock checkout',
-        'Dart app repository was exercised with FakeFirebaseFirestore; no production-safe Dart Firebase app/emulator harness exists in this repo yet.');
-    evidence.notExecuted(
-        'QA-019-EMULATOR-RAW-CONCURRENCY',
-        'atomicity',
-        'real Firestore concurrent raw material checkout',
-        'Same blocker as QA-018.');
-    evidence.notExecuted(
-        'QA-037-RULE-BYPASS-CUSTOMER-DEBT',
-        'security',
-        'cross-branch debt payment repository and rule bypass combined test',
-        'Repository behavior covered elsewhere; no combined Dart+rules emulator harness in this QA pass.');
-    evidence.notExecuted(
-        'QA-076-ATOMIC-INJECTED-WRITE-FAILURE',
-        'atomicity',
-        'forced checkout write failure inside transaction',
-        'No testability hook added because this is a no-production-code-change diagnostic pass.');
-    evidence.notExecuted(
-        'QA-077-ATOMIC-CANCEL-FAILURE',
-        'atomicity',
-        'forced cancellation write failure inside transaction',
-        'No testability hook added because this is a no-production-code-change diagnostic pass.');
+  test('blocked capability register', () {
+    evidence.blocked(
+        'QA-023-IDEMPOTENCY',
+        'inventory',
+        'transfer idempotency retry',
+        'BranchInventoryRepository.transferQuantity always creates a new transfer document id and exposes no caller-supplied idempotency key; retry semantics cannot be asserted without a production API change.');
   });
 
   test('forensic matrix has no executed failures', () {
