@@ -57,7 +57,11 @@ void main() {
       expect(
           rules,
           contains(
-              "allow read: if resource != null && canReadOrder(resource.data.get('merchantId', ''), resource.data);"));
+              "allow get: if (resource == null && isAuthenticated()) || canReadOrder(resource.data.get('merchantId', ''), resource.data);"));
+      expect(
+          rules,
+          contains(
+              "allow list: if resource != null && canReadOrder(resource.data.get('merchantId', ''), resource.data);"));
     });
 
     test('order cancellation requires dedicated cancellation permission', () {

@@ -6,11 +6,15 @@ const {
   initializeTestEnvironment,
 } = require('@firebase/rules-unit-testing');
 const {
+  collection,
   doc,
   getDoc,
+  getDocs,
+  query,
   runTransaction,
   setDoc,
   updateDoc,
+  where,
   serverTimestamp,
 } = require('firebase/firestore');
 
@@ -119,6 +123,11 @@ function checkout(db, uid, targetBranchId = branchId) {
   const shiftRef = doc(db, 'shifts', shiftId);
 
   return runTransaction(db, async (tx) => {
+    const existingOrder = await tx.get(orderRef);
+    if (existingOrder.exists()) {
+      return;
+    }
+
     const productSnap = await tx.get(doc(db, 'products', productId));
     if (!productSnap.exists()) throw new Error('missing product');
     const inventorySnap = await tx.get(inventoryRef);
@@ -207,6 +216,7 @@ async function main() {
     }).firestore();
 
     await assertSucceeds(checkout(ownerDb, merchantId));
+    await assertSucceeds(checkout(ownerDb, merchantId));
 
     const inventoryAfterOwner = await getDoc(
       doc(ownerDb, 'merchants', merchantId, 'branch_inventory', inventoryId),
@@ -224,8 +234,17 @@ async function main() {
     if (shift.data().cashSales !== 40) {
       throw new Error(`expected shift cashSales to be 40, got ${shift.data().cashSales}`);
     }
+    const retryOrders = await getDocs(query(
+      collection(ownerDb, 'orders'),
+      where('merchantId', '==', merchantId),
+      where('branchId', '==', branchId),
+    ));
+    if (retryOrders.size !== 1) {
+      throw new Error(`expected retry to leave exactly 1 branch order, got ${retryOrders.size}`);
+    }
 
     await seed(testEnv);
+    await assertSucceeds(checkout(ownerDb, merchantId, 'main'));
     await assertSucceeds(checkout(ownerDb, merchantId, 'main'));
     const mainInventoryAfterOwner = await getDoc(
       doc(ownerDb, 'merchants', merchantId, 'branch_inventory', 'main_product_pepsi'),
@@ -239,12 +258,21 @@ async function main() {
     if (branchInventoryAfterMain.data().quantity !== 10) {
       throw new Error(`expected branch 2 stock to remain 10, got ${branchInventoryAfterMain.data().quantity}`);
     }
+    const retryMainOrders = await getDocs(query(
+      collection(ownerDb, 'orders'),
+      where('merchantId', '==', merchantId),
+      where('branchId', '==', 'main'),
+    ));
+    if (retryMainOrders.size !== 1) {
+      throw new Error(`expected retry to leave exactly 1 main order, got ${retryMainOrders.size}`);
+    }
 
     await seed(testEnv);
     await assertSucceeds(checkout(branchCashierDb, 'cashier-branch-2'));
 
     await seed(testEnv);
     await assertFails(checkout(mainOnlyCashierDb, 'cashier-main-only'));
+    await assertFails(getDocs(collection(mainOnlyCashierDb, 'orders')));
   } finally {
     await testEnv.cleanup();
   }
