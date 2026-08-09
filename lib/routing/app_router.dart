@@ -27,6 +27,7 @@ import '../features/shifts/presentation/end_shift_screen.dart';
 import '../features/shifts/presentation/shifts_archive_screen.dart';
 import '../features/branches/presentation/inventory_transfer_screen.dart';
 import '../features/branches/presentation/inventory_management_screen.dart';
+import '../features/branches/presentation/branches_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateChangesProvider);
@@ -54,6 +55,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/inventory_logs', builder: (context, state) => const InventoryManagementScreen()),
       GoRoute(path: '/inventory_history', builder: (context, state) => const InventoryLogsScreen()),
       GoRoute(path: '/inventory_transfer', builder: (context, state) => const InventoryTransferScreen()),
+      GoRoute(path: '/branches', builder: (context, state) => const BranchesScreen()),
       GoRoute(path: '/employees', builder: (context, state) => const EmployeeManagementHubScreen()),
       GoRoute(path: '/employees/manage', builder: (context, state) => const EmployeesScreen()),
       GoRoute(path: '/employee_branches', builder: (context, state) => const EmployeeBranchAssignmentsScreen()),

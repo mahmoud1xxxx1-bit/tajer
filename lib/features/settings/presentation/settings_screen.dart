@@ -65,6 +65,17 @@ class SettingsScreen extends ConsumerWidget {
                   const _CustomDivider(),
                   _buildSettingsTile(
                     context: context,
+                    icon: Icons.account_tree_rounded,
+                    iconColor: Colors.indigoAccent,
+                    title: isAr ? 'الفروع' : 'Branches',
+                    subtitle: isAr
+                        ? 'إدارة الفروع واختيار الفرع الحالي'
+                        : 'Manage branches and choose the active branch',
+                    onTap: () => context.push('/branches'),
+                  ),
+                  const _CustomDivider(),
+                  _buildSettingsTile(
+                    context: context,
                     icon: Icons.history_edu_rounded,
                     iconColor: Colors.teal,
                     title: l10n.settingsCentralizedAuditLog,
@@ -333,7 +344,7 @@ class SettingsScreen extends ConsumerWidget {
                 Image.asset('assets/images/logo.png', width: 48, height: 48, errorBuilder: (_,__,___) => const SizedBox()),
                 const SizedBox(height: 12),
                 Text(
-                  'Tajer POS v1.0.42\nMade with 💛',
+                  'Tajer 1.1.108\nTajer POS',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontFamily: 'Tajawal', color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4), fontSize: 13, letterSpacing: 1.1),
                 ),

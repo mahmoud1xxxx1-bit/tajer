@@ -19,6 +19,7 @@ import '../../authentication/data/auth_repository.dart';
 import '../../authentication/domain/app_user.dart';
 import '../../../core/services/app_review_service.dart';
 import '../../../core/widgets/app_drawer.dart';
+import '../../branches/presentation/active_branch_selector.dart';
 import 'setup_checklist_card.dart';
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -159,6 +160,13 @@ class DashboardHome extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.dashboard, style: TextStyle(fontFamily: 'Tajawal')),
         actions: [
+          IconButton(
+            tooltip: Localizations.localeOf(context).languageCode == 'ar'
+                ? 'الفروع'
+                : 'Branches',
+            icon: const Icon(Icons.account_tree_rounded),
+            onPressed: () => context.push('/branches'),
+          ),
           if (appUser?.role != 'employee')
           IconButton(
             icon: Icon(Icons.settings),
@@ -233,6 +241,24 @@ class DashboardHome extends ConsumerWidget {
             padding: EdgeInsets.all(16.0),
             child: ListView(
               children: [
+                const ActiveBranchSelector(),
+                if (appUser?.role != 'employee') ...[
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: OutlinedButton.icon(
+                      onPressed: () => context.push('/branches'),
+                      icon: const Icon(Icons.account_tree_rounded),
+                      label: Text(
+                        Localizations.localeOf(context).languageCode == 'ar'
+                            ? 'إدارة الفروع'
+                            : 'Manage branches',
+                        style: const TextStyle(fontFamily: 'Tajawal'),
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 16),
                 if (storeProfile?.storeName.isEmpty ?? true) ...[
                   Container(
                     margin: EdgeInsets.only(bottom: 16),

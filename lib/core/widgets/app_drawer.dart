@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../../features/authentication/data/auth_repository.dart';
+import '../../features/branches/presentation/active_branch_selector.dart';
 import '../providers/store_profile_provider.dart';
 
 class AppDrawer extends ConsumerWidget {
@@ -120,6 +121,24 @@ class AppDrawer extends ConsumerWidget {
                 ],
               ),
             ),
+          ),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 6),
+            child: ActiveBranchSelector(compact: true),
+          ),
+          if (appUser?.role != 'employee')
+          ListTile(
+            leading: const Icon(Icons.account_tree_rounded),
+            title: Text(
+              Localizations.localeOf(context).languageCode == 'ar'
+                  ? 'الفروع'
+                  : 'Branches',
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+            onTap: () {
+              Navigator.pop(context);
+              context.push('/branches');
+            },
           ),
           if (appUser?.hasPermission('can_manage_expenses') ?? false)
           ListTile(

@@ -13,6 +13,8 @@ class BranchRepository {
   CollectionReference<Map<String, dynamic>> get _ref =>
       _firestore.collection('merchants').doc(merchantId).collection('branches');
 
+  String newBranchId() => _ref.doc().id;
+
   Stream<List<Branch>> watchBranches() {
     return _ref.orderBy('createdAt').snapshots().map((snapshot) {
       final branches = snapshot.docs.map((doc) {
@@ -52,6 +54,7 @@ class BranchRepository {
     if (branch.merchantId != merchantId) {
       throw StateError('Branch merchant mismatch');
     }
+    await _guardDuplicateName(branch.name);
     await _ref.doc(branch.id).set(branch.toJson());
   }
 
@@ -59,6 +62,7 @@ class BranchRepository {
     if (branch.merchantId != merchantId) {
       throw StateError('Branch merchant mismatch');
     }
+    await _guardDuplicateName(branch.name, exceptId: branch.id);
     await _ref.doc(branch.id).update(branch.toJson());
   }
 
@@ -70,6 +74,21 @@ class BranchRepository {
       'isActive': isActive,
       'updatedAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  Future<void> _guardDuplicateName(String name, {String? exceptId}) async {
+    final normalizedName = name.trim().toLowerCase();
+    final snapshot = await _ref.get();
+    final duplicate = snapshot.docs.any((doc) {
+      final data = doc.data();
+      final active = data['isActive'] as bool? ?? true;
+      return doc.id != exceptId &&
+          active &&
+          data['name']?.toString().trim().toLowerCase() == normalizedName;
+    });
+    if (duplicate) {
+      throw StateError('A branch with this name already exists');
+    }
   }
 }
 
