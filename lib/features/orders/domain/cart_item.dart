@@ -76,7 +76,7 @@ class CartItem {
   }
 
   /// Safe payload used for /orders. Firestore cannot redact individual fields,
-  /// so sensitive COGS is stored separately in a protected collection.
+  /// so this preserves the v107 historical cost snapshot at sale time.
   Map<String, dynamic> toPublicJson() {
     return {
       'productId': productId,
@@ -89,6 +89,7 @@ class CartItem {
       'taxPercentage': taxPercentage,
       'taxMode': taxMode.name,
       'isManufacturedOnDemand': isManufacturedOnDemand,
+      'costPrice': costPrice,
     };
   }
 

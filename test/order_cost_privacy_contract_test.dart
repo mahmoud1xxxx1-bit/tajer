@@ -5,7 +5,7 @@ import 'package:tajer/features/orders/domain/cart_item.dart';
 import 'package:tajer/features/orders/domain/order.dart';
 
 void main() {
-  test('public cart/order serialization never exposes costPrice', () {
+  test('cart/order serialization preserves v107 historical cost snapshot', () {
     const item = CartItem(
       productId: 'p1',
       productName: 'Coffee',
@@ -17,7 +17,7 @@ void main() {
     );
 
     expect(item.toJson()['costPrice'], 7.5);
-    expect(item.toPublicJson().containsKey('costPrice'), isFalse);
+    expect(item.toPublicJson()['costPrice'], 7.5);
     expect(item.toPublicJson()['isManufacturedOnDemand'], isTrue);
 
     final order = AppOrder(
@@ -32,7 +32,7 @@ void main() {
     );
 
     final serializedItems = order.toJson()['items'] as List<dynamic>;
-    expect((serializedItems.single as Map).containsKey('costPrice'), isFalse);
+    expect((serializedItems.single as Map)['costPrice'], 7.5);
     expect((serializedItems.single as Map)['isManufacturedOnDemand'], isTrue);
   });
 

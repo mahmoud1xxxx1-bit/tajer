@@ -33,8 +33,11 @@ void main() {
     expect(
         repository, contains('final existingOrder = await tx.get(orderRef)'));
     expect(repository, contains('return AppOrder.fromJson(existingData)'));
+    expect(repository,
+        contains('await _attachHistoricalCosts(tx, orderWithQueue)'));
     expect(repository, contains('applySaleInTransaction('));
-    expect(repository, contains('tx.set(orderRef, orderWithQueue.toJson())'));
+    expect(repository,
+        contains('tx.set(orderRef, orderWithCostSnapshot.toJson())'));
     expect(repository, contains("order.copyWith("));
     expect(repository, contains("shiftId: shiftId"));
 

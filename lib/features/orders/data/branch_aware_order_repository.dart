@@ -57,6 +57,8 @@ class BranchAwareOrderRepository extends OrderRepository {
         shiftId: shiftId,
         queueNumber: queueNumber,
       );
+      final orderWithCostSnapshot =
+          await _attachHistoricalCosts(tx, orderWithQueue);
 
       DocumentReference<Map<String, dynamic>>? customerRef;
       DocumentSnapshot<Map<String, dynamic>>? customerDoc;
@@ -91,7 +93,7 @@ class BranchAwareOrderRepository extends OrderRepository {
 
       await OrderBranchInventoryService(firestore).applySaleInTransaction(
         tx,
-        orderWithQueue,
+        orderWithCostSnapshot,
         queueNumber: queueNumber,
       );
 
@@ -118,12 +120,12 @@ class BranchAwareOrderRepository extends OrderRepository {
       }
 
       if (shiftRef != null) {
-        final updates = _saleShiftUpdates(orderWithQueue);
+        final updates = _saleShiftUpdates(orderWithCostSnapshot);
         if (updates.isNotEmpty) tx.update(shiftRef, updates);
       }
 
-      tx.set(orderRef, orderWithQueue.toJson());
-      return orderWithQueue;
+      tx.set(orderRef, orderWithCostSnapshot.toJson());
+      return orderWithCostSnapshot;
     });
 
     await prefs.setString(dateKey, date);
@@ -131,6 +133,81 @@ class BranchAwareOrderRepository extends OrderRepository {
       await prefs.setInt(numKey, createdOrder.queueNumber!);
     }
     return createdOrder;
+  }
+
+  Future<AppOrder> _attachHistoricalCosts(
+    Transaction tx,
+    AppOrder order,
+  ) async {
+    final productIds = order.items
+        .map((item) => item.productId)
+        .where((id) => id.isNotEmpty)
+        .toSet()
+        .toList();
+    if (productIds.isEmpty) return order;
+
+    final products = <String, Map<String, dynamic>>{};
+    final rawMaterialIds = <String>{};
+    for (final productId in productIds) {
+      final snap =
+          await tx.get(firestore.collection('products').doc(productId));
+      if (!snap.exists || snap.data() == null) continue;
+      final data = snap.data()!;
+      products[productId] = data;
+      for (final raw in (data['recipe'] as List<dynamic>? ?? const [])) {
+        final map = Map<String, dynamic>.from(raw as Map);
+        final rawId = map['rawMaterialId']?.toString();
+        if (rawId != null && rawId.isNotEmpty) rawMaterialIds.add(rawId);
+      }
+    }
+
+    final costIds = {...productIds, ...rawMaterialIds};
+    final costs = <String, double>{};
+    for (final id in costIds) {
+      final snap = await tx.get(firestore
+          .collection('merchants')
+          .doc(order.merchantId)
+          .collection('product_costs')
+          .doc(id));
+      final value = snap.data()?['costPrice'];
+      if (value is num && value >= 0) costs[id] = value.toDouble();
+    }
+
+    final items = order.items.map((item) {
+      final product = products[item.productId];
+      final isManufacturedOnDemand = item.isManufacturedOnDemand ||
+          (product?['isManufacturedOnDemand'] as bool? ?? false);
+      double? unitCost = costs[item.productId] ?? item.costPrice;
+
+      if (isManufacturedOnDemand && product != null) {
+        var recipeComplete = true;
+        var recipeUnitCost = 0.0;
+        final recipe = product['recipe'] as List<dynamic>? ?? const [];
+        if (recipe.isEmpty) recipeComplete = false;
+        for (final raw in recipe) {
+          final map = Map<String, dynamic>.from(raw as Map);
+          final rawId = map['rawMaterialId']?.toString() ?? '';
+          final amount = (map['amountRequired'] as num?)?.toDouble();
+          final rawCost = costs[rawId];
+          if (rawId.isEmpty ||
+              amount == null ||
+              amount <= 0 ||
+              rawCost == null) {
+            recipeComplete = false;
+            continue;
+          }
+          recipeUnitCost += rawCost * amount;
+        }
+        unitCost = recipeComplete ? recipeUnitCost : unitCost;
+      }
+
+      return item.copyWith(
+        costPrice: unitCost,
+        isManufacturedOnDemand: isManufacturedOnDemand,
+      );
+    }).toList();
+
+    return order.copyWith(items: items);
   }
 
   Map<String, dynamic> _saleShiftUpdates(AppOrder order) {

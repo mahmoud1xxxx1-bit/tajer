@@ -25,15 +25,10 @@ void main() {
       expect(functionSource, contains('costs.get(productId)'));
     });
 
-    test('made-to-order COGS is derived from trusted recipe raw-material costs',
+    test('made-to-order COGS is not dependent on an undeployed backend change',
         () {
-      expect(functionSource, contains('isManufacturedOnDemand'));
-      expect(functionSource, contains('product.recipe'));
-      expect(functionSource, contains('rawMaterialId'));
-      expect(functionSource, contains('amountRequired'));
-      expect(functionSource, contains('rawUnitCost * amountRequired'));
-      expect(
-          functionSource, contains("costSource = 'recipe_raw_material_costs'"));
+      expect(functionSource, isNot(contains('recipe_raw_material_costs')));
+      expect(functionSource, isNot(contains('rawUnitCost * amountRequired')));
     });
 
     test(

@@ -5,11 +5,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tajer/features/orders/data/branch_aware_order_repository.dart';
 import 'package:tajer/features/orders/domain/cart_item.dart';
 import 'package:tajer/features/orders/domain/order.dart';
+import 'package:tajer/features/reports/data/reports_service.dart';
 
 void main() {
   const merchantId = 'merchant-made-to-order';
   const productId = 'burger';
+  const readyProductId = 'pepsi';
   const rawId = 'bun';
+  const rawId2 = 'patty';
   const shiftId = 'shift-open';
 
   Future<void> seedMadeToOrderProduct(
@@ -26,6 +29,7 @@ void main() {
       'quantity': 0,
       'recipe': [
         {'rawMaterialId': rawId, 'amountRequired': 2.0},
+        {'rawMaterialId': rawId2, 'amountRequired': 1.0},
       ],
       'isManufacturedOnDemand': productMasterFlag,
       'isArchived': false,
@@ -42,6 +46,39 @@ void main() {
       'unit': 'piece',
       'isArchived': false,
       'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+      'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+    });
+    await firestore.collection('raw_materials').doc(rawId2).set({
+      'id': rawId2,
+      'merchantId': merchantId,
+      'name': 'Patty',
+      'quantity': mainRaw,
+      'initialQuantity': mainRaw,
+      'unit': 'piece',
+      'isArchived': false,
+      'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+      'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+    });
+    await firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection('product_costs')
+        .doc(rawId)
+        .set({
+      'merchantId': merchantId,
+      'productId': rawId,
+      'costPrice': 3.0,
+      'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+    });
+    await firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection('product_costs')
+        .doc(rawId2)
+        .set({
+      'merchantId': merchantId,
+      'productId': rawId2,
+      'costPrice': 4.0,
       'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
     });
     await firestore
@@ -69,6 +106,36 @@ void main() {
       'merchantId': merchantId,
       'branchId': 'branch-2',
       'itemId': rawId,
+      'itemType': 'raw_material',
+      'quantity': branch2Raw,
+      'initialQuantity': branch2Raw,
+      'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+    });
+    await firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection('branch_inventory')
+        .doc('main_raw_material_$rawId2')
+        .set({
+      'id': 'main_raw_material_$rawId2',
+      'merchantId': merchantId,
+      'branchId': 'main',
+      'itemId': rawId2,
+      'itemType': 'raw_material',
+      'quantity': mainRaw,
+      'initialQuantity': mainRaw,
+      'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+    });
+    await firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection('branch_inventory')
+        .doc('branch-2_raw_material_$rawId2')
+        .set({
+      'id': 'branch-2_raw_material_$rawId2',
+      'merchantId': merchantId,
+      'branchId': 'branch-2',
+      'itemId': rawId2,
       'itemType': 'raw_material',
       'quantity': branch2Raw,
       'initialQuantity': branch2Raw,
@@ -109,11 +176,118 @@ void main() {
     );
   }
 
+  AppOrder readyOrder(String id, {int quantity = 2}) {
+    return AppOrder(
+      id: id,
+      merchantId: merchantId,
+      customerId: 'walk_in',
+      customerName: 'Walk in',
+      items: [
+        CartItem(
+          productId: readyProductId,
+          productName: 'Pepsi',
+          quantity: quantity,
+          price: 20.0,
+          total: 20.0 * quantity,
+        ),
+      ],
+      total: 20.0 * quantity,
+      paidAmount: 20.0 * quantity,
+      paymentMethod: 'cash',
+      createdAt: DateTime(2026, 1, 1),
+    );
+  }
+
+  Future<void> seedReadyProduct(
+    FakeFirebaseFirestore firestore, {
+    required double quantity,
+    required double cost,
+  }) async {
+    await firestore.collection('products').doc(readyProductId).set({
+      'id': readyProductId,
+      'merchantId': merchantId,
+      'name': 'Pepsi',
+      'price': 20.0,
+      'quantity': quantity,
+      'recipe': [],
+      'isManufacturedOnDemand': false,
+      'isArchived': false,
+      'taxMode': 'store',
+      'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+      'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+    });
+    await firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection('product_costs')
+        .doc(readyProductId)
+        .set({
+      'merchantId': merchantId,
+      'productId': readyProductId,
+      'costPrice': cost,
+      'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+    });
+    await firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection('branch_inventory')
+        .doc('main_product_$readyProductId')
+        .set({
+      'id': 'main_product_$readyProductId',
+      'merchantId': merchantId,
+      'branchId': 'main',
+      'itemId': readyProductId,
+      'itemType': 'product',
+      'quantity': quantity,
+      'initialQuantity': quantity,
+      'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+    });
+  }
+
   Future<void> selectBranch(String branchId) async {
     SharedPreferences.setMockInitialValues({
       'selected_branch_$merchantId': branchId,
     });
   }
+
+  test('ready product stores historical COGS and ignores later cost edits',
+      () async {
+    final firestore = FakeFirebaseFirestore();
+    await selectBranch('main');
+    await seedReadyProduct(firestore, quantity: 10, cost: 5);
+    await seedShift(firestore, 'main');
+    final repository = BranchAwareOrderRepository(firestore);
+
+    final oldSale = await repository.createOrder(
+      readyOrder('ready-old', quantity: 2),
+      shiftId: shiftId,
+    );
+    expect(oldSale.items.single.costPrice, 5.0);
+
+    await firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection('product_costs')
+        .doc(readyProductId)
+        .update({'costPrice': 8.0});
+    final newSale = await repository.createOrder(
+      readyOrder('ready-new', quantity: 2),
+      shiftId: shiftId,
+    );
+
+    final service = ReportsService(
+      [oldSale, newSale],
+      const [],
+      const [],
+      const [],
+      const [],
+      canViewCost: true,
+    );
+    expect(newSale.items.single.costPrice, 8.0);
+    expect(service.totalRevenue, 80.0);
+    expect(service.totalCOGS, 26.0);
+    expect(service.netProfit, 54.0);
+  });
 
   test(
       'main branch succeeds with sufficient raw materials and no finished stock',
@@ -132,6 +306,7 @@ void main() {
         .createOrder(madeToOrder('order-main'), shiftId: shiftId);
 
     expect(saved.id, 'order-main');
+    expect(saved.items.single.costPrice, 10.0);
     expect(
       (await firestore.collection('orders').doc('order-main').get()).exists,
       isTrue,
@@ -143,6 +318,13 @@ void main() {
         .doc('main_raw_material_$rawId')
         .get();
     expect(mainRaw.data()?['quantity'], 8.0);
+    final mainRaw2 = await firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection('branch_inventory')
+        .doc('main_raw_material_$rawId2')
+        .get();
+    expect(mainRaw2.data()?['quantity'], 9.0);
     final finished = await firestore
         .collection('merchants')
         .doc(merchantId)

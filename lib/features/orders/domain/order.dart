@@ -82,9 +82,9 @@ class AppOrder {
     );
   }
 
-  /// Public /orders payload. Sensitive historical COGS is deliberately not
-  /// serialized here because Firestore rules cannot redact fields in a readable
-  /// document. Cost snapshots live in a separately permissioned collection.
+  /// Public /orders payload. Tajer 107 stored historical COGS on each order item
+  /// at sale time; 108 keeps that snapshot so accounting works without a paid
+  /// backend trigger and does not recompute old invoices from edited costs.
   Map<String, dynamic> toJson() {
     return {
       'id': id,
