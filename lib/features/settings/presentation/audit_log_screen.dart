@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/utils/date_parser.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../authentication/application/access_policy.dart';
 import '../../orders/data/order_repository.dart';
 import '../../orders/domain/order.dart';
 import '../../orders/presentation/order_details_screen.dart';
@@ -168,11 +169,10 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final currency = ref.watch(currencyProvider);
     final appUser = ref.watch(appUserProvider).value;
-    final isMerchant = appUser?.role == 'admin' || appUser?.role != 'employee';
+    final policy = ref.watch(accessPolicyProvider);
+    final isMerchant = policy.canViewAuditLog;
     final merchantId =
         appUser == null ? null : currentEffectiveMerchantId(appUser);
-    final ordersAsync = ref.watch(ordersStreamProvider);
-    final expensesAsync = ref.watch(expensesStreamProvider);
 
     if (!isMerchant) {
       return Scaffold(
@@ -204,6 +204,9 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
         ),
       );
     }
+
+    final ordersAsync = ref.watch(ordersStreamProvider);
+    final expensesAsync = ref.watch(expensesStreamProvider);
 
     return Scaffold(
       appBar: AppBar(

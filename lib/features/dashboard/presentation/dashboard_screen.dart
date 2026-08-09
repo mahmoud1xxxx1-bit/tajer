@@ -14,6 +14,8 @@ import '../../../core/providers/store_profile_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../authentication/application/access_policy.dart';
+import '../../authentication/application/session_identity.dart';
 import '../../../core/services/app_review_service.dart';
 import '../../../core/widgets/app_drawer.dart';
 import '../../branches/presentation/active_branch_selector.dart';
@@ -44,15 +46,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final appUser = ref.watch(appUserProvider).value;
     final appUserState = ref.watch(appUserProvider);
     final branchContext = ref.watch(branchContextProvider);
+    final identityReady = ref.watch(sessionIdentityReadyProvider);
+    final policy = ref.watch(accessPolicyProvider);
     ref.watch(themeProvider); // Force rebuild on theme change
 
-    if (appUserState.isLoading || appUser == null || !branchContext.isReady) {
+    if (appUserState.isLoading ||
+        appUser == null ||
+        !branchContext.isReady ||
+        !identityReady ||
+        !policy.isReady) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
       );
     }
 
-    if (appUser.role == 'employee' && appUser.assignedBranchIds.isEmpty) {
+    if (policy.isEmployee && appUser.assignedBranchIds.isEmpty) {
       final isAr = Localizations.localeOf(context).languageCode == 'ar';
       return Scaffold(
         body: Center(
@@ -70,10 +78,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       );
     }
 
-    final bool canManageCustomers =
-        appUser.hasPermission('can_manage_customers');
-    final bool canViewReports = appUser.hasPermission('can_view_reports');
-    final bool canCreateOrders = appUser.hasPermission('can_create_orders');
+    final bool canManageCustomers = policy.canManageCustomers;
+    final bool canViewReports = policy.canViewReports;
+    final bool canCreateOrders = policy.canCreateOrders;
 
     final List<Widget> screens = [
       DashboardHome(
@@ -192,13 +199,14 @@ class DashboardHome extends ConsumerWidget {
     final productsAsync = ref.watch(productsStreamProvider);
     final currentCurrency = ref.watch(currencyProvider);
     final appUser = ref.watch(appUserProvider).value;
+    final policy = ref.watch(accessPolicyProvider);
     final storeProfile = ref.watch(storeProfileProvider).value;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.dashboard, style: TextStyle(fontFamily: 'Tajawal')),
         actions: [
-          if (appUser?.role != 'employee')
+          if (policy.canManageBranches)
             IconButton(
               tooltip: Localizations.localeOf(context).languageCode == 'ar'
                   ? '\u0627\u0644\u0641\u0631\u0648\u0639'
@@ -206,7 +214,7 @@ class DashboardHome extends ConsumerWidget {
               icon: const Icon(Icons.account_tree_rounded),
               onPressed: () => context.push('/branches'),
             ),
-          if (appUser?.role != 'employee')
+          if (policy.canAccessMerchantSettings)
             IconButton(
               icon: const Icon(Icons.settings),
               onPressed: () {
@@ -298,7 +306,7 @@ class DashboardHome extends ConsumerWidget {
             child: ListView(
               children: [
                 const ActiveBranchSelector(),
-                if (appUser?.role != 'employee') ...[
+                if (policy.canManageBranches) ...[
                   const SizedBox(height: 10),
                   Align(
                     alignment: AlignmentDirectional.centerStart,
@@ -453,7 +461,7 @@ class DashboardHome extends ConsumerWidget {
                   spacing: 8,
                   runSpacing: 16,
                   children: [
-                    if (appUser?.hasPermission('can_manage_expenses') ?? false)
+                    if (policy.canManageExpenses)
                       _QuickAction(
                         icon: Icons.money_off,
                         label: l10n.expenses,
@@ -462,9 +470,7 @@ class DashboardHome extends ConsumerWidget {
                           context.push('/expenses');
                         },
                       ),
-                    if (appUser?.role != 'employee' &&
-                        (appUser?.hasPermission('can_manage_inventory') ??
-                            false))
+                    if (policy.canManageSuppliers)
                       _QuickAction(
                         icon: Icons.business,
                         label: l10n.suppliers,
@@ -473,7 +479,7 @@ class DashboardHome extends ConsumerWidget {
                           context.push('/suppliers');
                         },
                       ),
-                    if (appUser?.hasPermission('can_manage_products') ?? false)
+                    if (policy.canManageProducts)
                       _QuickAction(
                         icon: Icons.category,
                         label: l10n.categories,
@@ -482,7 +488,7 @@ class DashboardHome extends ConsumerWidget {
                           context.push('/categories');
                         },
                       ),
-                    if (appUser?.hasPermission('can_manage_inventory') ?? false)
+                    if (policy.canManageInventory)
                       _QuickAction(
                         icon: Icons.history,
                         label: l10n.inventoryLog,
@@ -493,7 +499,7 @@ class DashboardHome extends ConsumerWidget {
                       ),
                   ],
                 ),
-                if (appUser?.role != 'employee') ...[
+                if (policy.canViewShiftArchive) ...[
                   SizedBox(height: 16),
                   Wrap(
                     alignment: WrapAlignment.spaceEvenly,

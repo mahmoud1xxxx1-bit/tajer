@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/store_profile_provider.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../authentication/application/access_policy.dart';
 import '../../../core/providers/effective_merchant.dart';
 import '../../branches/presentation/branch_context.dart';
 import '../../customers/data/customer_debt_payment_repository.dart';
@@ -248,15 +249,13 @@ class ReportsService {
 }
 
 bool _canViewReports(ref) {
-  final appUser = ref.watch(appUserProvider).value;
-  return appUser != null && appUser.hasPermission('can_view_reports');
+  return ref.watch(accessPolicyProvider).canViewReports;
 }
 
 final branchOrderCostsProvider = StreamProvider<Map<String, double>>((ref) {
   final appUser = ref.watch(appUserProvider).value;
-  if (appUser == null ||
-      !appUser.hasPermission('can_view_reports') ||
-      !appUser.hasPermission('can_view_cost')) {
+  final policy = ref.watch(accessPolicyProvider);
+  if (appUser == null || !policy.canViewCosts) {
     return Stream.value(const <String, double>{});
   }
   final merchantId = currentEffectiveMerchantId(appUser);
@@ -267,10 +266,8 @@ final branchOrderCostsProvider = StreamProvider<Map<String, double>>((ref) {
 
 final merchantOrderCostsProvider = StreamProvider<Map<String, double>>((ref) {
   final appUser = ref.watch(appUserProvider).value;
-  if (appUser == null ||
-      (appUser.role != 'merchant' && appUser.role != 'admin') ||
-      !appUser.hasPermission('can_view_reports') ||
-      !appUser.hasPermission('can_view_cost')) {
+  final policy = ref.watch(accessPolicyProvider);
+  if (appUser == null || !policy.isOwnerLike || !policy.canViewCosts) {
     return Stream.value(const <String, double>{});
   }
   final merchantId = currentEffectiveMerchantId(appUser);
@@ -285,11 +282,14 @@ final reportsServiceProvider = Provider<ReportsService?>((ref) {
   final productsState = ref.watch(productsStreamProvider);
   final expensesState = ref.watch(expensesStreamProvider);
   final customersState = ref.watch(customersStreamProvider);
-  final suppliersState = ref.watch(suppliersStreamProvider);
+  final policy = ref.watch(accessPolicyProvider);
+  final suppliersState = policy.canManageSuppliers
+      ? ref.watch(suppliersStreamProvider)
+      : const AsyncValue.data(<Supplier>[]);
   final debtPaymentsState = ref.watch(branchCustomerDebtPaymentsProvider);
   final storeProfileState = ref.watch(storeProfileProvider);
   final costsState = ref.watch(branchOrderCostsProvider);
-  final canViewCost = appUser.hasPermission('can_view_cost');
+  final canViewCost = policy.canViewCosts;
 
   if (ordersState.value == null ||
       productsState.value == null ||
@@ -318,8 +318,8 @@ final reportsServiceProvider = Provider<ReportsService?>((ref) {
 
 final merchantWideOrdersStreamProvider = StreamProvider<List<AppOrder>>((ref) {
   final appUser = ref.watch(appUserProvider).value;
-  if (appUser == null ||
-      (appUser.role != 'merchant' && appUser.role != 'admin')) {
+  final policy = ref.watch(accessPolicyProvider);
+  if (appUser == null || !policy.isOwnerLike) {
     return Stream.value(const <AppOrder>[]);
   }
   final merchantId = currentEffectiveMerchantId(appUser);
@@ -333,8 +333,8 @@ final merchantWideOrdersStreamProvider = StreamProvider<List<AppOrder>>((ref) {
 
 final merchantWideExpensesStreamProvider = StreamProvider<List<Expense>>((ref) {
   final appUser = ref.watch(appUserProvider).value;
-  if (appUser == null ||
-      (appUser.role != 'merchant' && appUser.role != 'admin')) {
+  final policy = ref.watch(accessPolicyProvider);
+  if (appUser == null || !policy.isOwnerLike) {
     return Stream.value(const <Expense>[]);
   }
   final merchantId = currentEffectiveMerchantId(appUser);
@@ -359,9 +359,8 @@ final merchantWideExpensesStreamProvider = StreamProvider<List<Expense>>((ref) {
 
 final consolidatedReportsServiceProvider = Provider<ReportsService?>((ref) {
   final appUser = ref.watch(appUserProvider).value;
-  if (appUser == null ||
-      (appUser.role != 'merchant' && appUser.role != 'admin') ||
-      !appUser.hasPermission('can_view_reports')) {
+  final policy = ref.watch(accessPolicyProvider);
+  if (appUser == null || !policy.isOwnerLike || !policy.canViewReports) {
     return null;
   }
 
@@ -369,11 +368,13 @@ final consolidatedReportsServiceProvider = Provider<ReportsService?>((ref) {
   final productsState = ref.watch(productsStreamProvider);
   final expensesState = ref.watch(merchantWideExpensesStreamProvider);
   final customersState = ref.watch(customersStreamProvider);
-  final suppliersState = ref.watch(suppliersStreamProvider);
+  final suppliersState = policy.canManageSuppliers
+      ? ref.watch(suppliersStreamProvider)
+      : const AsyncValue.data(<Supplier>[]);
   final debtPaymentsState = ref.watch(merchantCustomerDebtPaymentsProvider);
   final storeProfileState = ref.watch(storeProfileProvider);
   final costsState = ref.watch(merchantOrderCostsProvider);
-  final canViewCost = appUser.hasPermission('can_view_cost');
+  final canViewCost = policy.canViewCosts;
 
   if (ordersState.value == null ||
       productsState.value == null ||

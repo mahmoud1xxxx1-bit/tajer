@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../authentication/application/access_policy.dart';
 import '../data/inventory_log_repository.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../domain/inventory_log.dart';
@@ -61,11 +62,33 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final policy = ref.watch(accessPolicyProvider);
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+
+    if (!policy.canManageInventory) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(AppLocalizations.of(context)!.text73,
+              style: const TextStyle(
+                  fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              isAr
+                  ? 'Ù„ÙŠØ³ Ù„Ø¯ÙŠÙƒ ØµÙ„Ø§Ø­ÙŠØ© Ø¹Ø±Ø¶ Ø³Ø¬Ù„ Ø§Ù„Ù…Ø®Ø²ÙˆÙ†.'
+                  : 'You do not have permission to view inventory logs.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
+        ),
+      );
+    }
+
     final logsAsync = ref.watch(inventoryLogsStreamProvider);
     final branchesAsync = ref.watch(branchesStreamProvider);
-    final appUser = ref.watch(appUserProvider).value;
-    final isMerchant = appUser?.role == 'admin' || appUser?.role != 'employee';
-    final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
     return Scaffold(
       appBar: AppBar(
@@ -467,7 +490,8 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                                                   fontSize: 20,
                                                 ),
                                               ),
-                                              if (isMerchant) ...[
+                                              if (policy
+                                                  .canManageInventory) ...[
                                                 const SizedBox(height: 8),
                                                 if (!log.isReverted)
                                                   Row(

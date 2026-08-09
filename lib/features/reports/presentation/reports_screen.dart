@@ -5,12 +5,12 @@ import 'package:fl_chart/fl_chart.dart';
 import '../data/reports_service.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
-import '../../authentication/data/auth_repository.dart';
 import '../data/pdf_service.dart';
 import 'package:printing/printing.dart';
 import '../../../core/services/excel_service.dart';
 import '../../../core/widgets/tax_dialog.dart';
 import '../../../core/providers/store_profile_provider.dart';
+import '../../authentication/application/access_policy.dart';
 import '../../branches/presentation/active_branch_selector.dart';
 
 class ReportsScreen extends ConsumerStatefulWidget {
@@ -61,14 +61,34 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final baseReportsService = ref.watch(activeReportsServiceProvider);
     final currentCurrency = ref.watch(currencyProvider);
-    final appUser = ref.watch(appUserProvider).value;
-    final canViewCost = appUser?.hasPermission('can_view_cost') ?? false;
-
+    final policy = ref.watch(accessPolicyProvider);
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    if (!policy.canViewReports) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(AppLocalizations.of(context)!.text104,
+              style: const TextStyle(fontFamily: 'Tajawal')),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              isAr
+                  ? 'Ù„ÙŠØ³ Ù„Ø¯ÙŠÙƒ ØµÙ„Ø§Ø­ÙŠØ© Ø¹Ø±Ø¶ Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ±.'
+                  : 'You do not have permission to view reports.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
+        ),
+      );
+    }
+
+    final baseReportsService = ref.watch(activeReportsServiceProvider);
+    final canViewCost = policy.canViewCosts;
     final reportScope = ref.watch(effectiveReportsScopeProvider);
-    final canViewAllBranches = appUser?.role == 'merchant';
+    final canViewAllBranches = policy.isOwnerLike;
 
     if (baseReportsService == null) {
       return const Scaffold(

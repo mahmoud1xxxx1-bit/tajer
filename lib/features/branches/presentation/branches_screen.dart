@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../authentication/application/access_policy.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../../core/providers/effective_merchant.dart';
 import '../../../core/providers/store_profile_provider.dart';
@@ -23,10 +24,8 @@ class _BranchesScreenState extends ConsumerState<BranchesScreen> {
   @override
   Widget build(BuildContext context) {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
-    final appUser = ref.watch(appUserProvider).value;
-    final canManage = appUser?.role == 'merchant' || appUser?.role == 'admin';
-    final branchesAsync = ref.watch(branchesStreamProvider);
-    final selectedBranchId = ref.watch(selectedBranchIdProvider);
+    final policy = ref.watch(accessPolicyProvider);
+    final canManage = policy.canManageBranches;
     final theme = Theme.of(context);
 
     if (!canManage) {
@@ -46,6 +45,9 @@ class _BranchesScreenState extends ConsumerState<BranchesScreen> {
         ),
       );
     }
+
+    final branchesAsync = ref.watch(branchesStreamProvider);
+    final selectedBranchId = ref.watch(selectedBranchIdProvider);
 
     return Scaffold(
       appBar: AppBar(

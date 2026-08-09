@@ -71,7 +71,11 @@ void main() {
           contains('ownerOnly: true, child: EmployeePermissionsScreen'));
       expect(router, contains("permission: 'can_view_reports'"));
       expect(router, contains("permission: 'can_manage_inventory'"));
-      expect(drawer, contains("appUser?.role != 'employee'"));
+      expect(router, contains('accessPolicyProvider'));
+      expect(router, contains('policy.allowsRoutePermission'));
+      expect(drawer, contains('accessPolicyProvider'));
+      expect(drawer, contains('policy.canManageBranches'));
+      expect(drawer, contains('policy.canManageEmployees'));
     });
 
     test('add employee dialog uses clean single-source permission copy', () {

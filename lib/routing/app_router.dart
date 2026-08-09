@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../features/authentication/data/auth_repository.dart';
+import '../features/authentication/application/access_policy.dart';
+import '../features/authentication/application/session_identity.dart';
 import '../features/authentication/presentation/startup_screen.dart';
 import '../features/authentication/presentation/upgrade_account_screen.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
@@ -31,6 +33,7 @@ import '../features/branches/presentation/branches_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateChangesProvider);
+  final identityReady = ref.watch(sessionIdentityReadyProvider);
 
   return GoRouter(
     initialLocation: '/',
@@ -39,7 +42,9 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       final isAuthenticated = authState.value != null && !authState.hasError;
       final isStartupRoute = state.uri.path == '/';
       if (!isAuthenticated && !isStartupRoute) return '/';
-      if (isAuthenticated && isStartupRoute) return '/dashboard';
+      if (isAuthenticated && isStartupRoute && identityReady) {
+        return '/dashboard';
+      }
       return null;
     },
     routes: [
@@ -128,7 +133,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               ownerOnly: true, child: StoreBrandingScreen())),
       GoRoute(
           path: '/end_shift',
-          builder: (context, state) => const EndShiftScreen()),
+          builder: (context, state) => const _RouteAccess(
+              permission: 'can_close_shift', child: EndShiftScreen())),
       GoRoute(
           path: '/shifts_archive',
           builder: (context, state) => const _RouteAccess(
@@ -159,14 +165,14 @@ class _RouteAccess extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final appUserState = ref.watch(appUserProvider);
-    final appUser = appUserState.value;
-    if (appUserState.isLoading || appUser == null) {
+    final policy = ref.watch(accessPolicyProvider);
+    final identityReady = ref.watch(sessionIdentityReadyProvider);
+    if (appUserState.isLoading || !identityReady || !policy.isReady) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    final isOwner = appUser.role == 'merchant' || appUser.role == 'admin';
-    if (ownerOnly && !isOwner) return const DashboardScreen();
-    if (permission != null && !appUser.hasPermission(permission!)) {
+    if (ownerOnly && !policy.isOwnerLike) return const DashboardScreen();
+    if (permission != null && !policy.allowsRoutePermission(permission!)) {
       return const DashboardScreen();
     }
     return child;

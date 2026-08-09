@@ -36,14 +36,16 @@ void main() {
     test('report aggregation has a permission gate at provider boundary', () {
       final source = File('lib/features/reports/data/reports_service.dart')
           .readAsStringSync();
-      expect(source, contains("appUser.hasPermission('can_view_reports')"));
+      expect(source, contains('accessPolicyProvider'));
+      expect(source, contains('canViewReports'));
       expect(source, contains('if (!_canViewReports(ref)) return null;'));
     });
 
-    test('merchant-wide report sources cannot be opened by employee accounts', () {
+    test('merchant-wide report sources cannot be opened by employee accounts',
+        () {
       final source = File('lib/features/reports/data/reports_service.dart')
           .readAsStringSync();
-      expect(source, contains("appUser.role != 'merchant' && appUser.role != 'admin'"));
+      expect(source, contains('!policy.isOwnerLike'));
       expect(source, contains('merchantWideOrdersStreamProvider'));
       expect(source, contains('merchantWideExpensesStreamProvider'));
     });

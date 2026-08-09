@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../../features/authentication/data/auth_repository.dart';
+import '../../features/authentication/application/access_policy.dart';
 import '../../features/authentication/application/session_controller.dart';
 import '../../features/branches/presentation/active_branch_selector.dart';
 import '../providers/store_profile_provider.dart';
@@ -15,6 +16,7 @@ class AppDrawer extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final appUser = ref.watch(appUserProvider).value;
+    final policy = ref.watch(accessPolicyProvider);
     final storeProfile = ref.watch(storeProfileProvider).value;
 
     return Drawer(
@@ -144,7 +146,7 @@ class AppDrawer extends ConsumerWidget {
             padding: EdgeInsets.fromLTRB(16, 8, 16, 6),
             child: ActiveBranchSelector(compact: true),
           ),
-          if (appUser?.role != 'employee')
+          if (policy.canManageBranches)
             ListTile(
               leading: const Icon(Icons.account_tree_rounded),
               title: Text(
@@ -158,7 +160,7 @@ class AppDrawer extends ConsumerWidget {
                 context.push('/branches');
               },
             ),
-          if (appUser?.hasPermission('can_manage_expenses') ?? false)
+          if (policy.canManageExpenses)
             ListTile(
               leading: const Icon(Icons.money_off),
               title: Text(l10n.expenses,
@@ -168,8 +170,7 @@ class AppDrawer extends ConsumerWidget {
                 context.push('/expenses');
               },
             ),
-          if (appUser?.role != 'employee' &&
-              (appUser?.hasPermission('can_manage_inventory') ?? false))
+          if (policy.canViewRawMaterials)
             ListTile(
               leading: const Icon(Icons.inventory_2),
               title: Text(l10n.rawMaterials,
@@ -179,8 +180,7 @@ class AppDrawer extends ConsumerWidget {
                 context.push('/raw_materials');
               },
             ),
-          if (appUser?.role != 'employee' &&
-              (appUser?.hasPermission('can_manage_inventory') ?? false))
+          if (policy.canManageSuppliers)
             ListTile(
               leading: const Icon(Icons.business),
               title: Text(l10n.suppliers,
@@ -190,7 +190,7 @@ class AppDrawer extends ConsumerWidget {
                 context.push('/suppliers');
               },
             ),
-          if (appUser?.hasPermission('can_manage_products') ?? false)
+          if (policy.canManageProducts)
             ListTile(
               leading: const Icon(Icons.category),
               title: Text(l10n.categories,
@@ -200,7 +200,7 @@ class AppDrawer extends ConsumerWidget {
                 context.push('/categories');
               },
             ),
-          if (appUser?.hasPermission('can_manage_inventory') ?? false)
+          if (policy.canManageInventory)
             ListTile(
               leading: const Icon(Icons.history),
               title: Text(l10n.inventoryLog,
@@ -210,7 +210,7 @@ class AppDrawer extends ConsumerWidget {
                 context.push('/inventory_logs');
               },
             ),
-          if (appUser?.role != 'employee')
+          if (policy.canManageEmployees)
             ListTile(
               leading: const Icon(Icons.manage_accounts),
               title: Text(l10n.employeesPermissionsPro,
@@ -221,7 +221,7 @@ class AppDrawer extends ConsumerWidget {
                 context.push('/employees');
               },
             ),
-          if (appUser?.role != 'employee')
+          if (policy.canAccessMerchantSettings)
             ListTile(
               leading: const Icon(Icons.settings),
               title: Text(l10n.settings,
@@ -231,15 +231,16 @@ class AppDrawer extends ConsumerWidget {
                 context.push('/settings');
               },
             ),
-          ListTile(
-            leading: const Icon(Icons.lock_clock),
-            title: Text(l10n.closeShiftZReport,
-                style: const TextStyle(fontFamily: 'Tajawal')),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/end_shift');
-            },
-          ),
+          if (policy.canCloseShift)
+            ListTile(
+              leading: const Icon(Icons.lock_clock),
+              title: Text(l10n.closeShiftZReport,
+                  style: const TextStyle(fontFamily: 'Tajawal')),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/end_shift');
+              },
+            ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),

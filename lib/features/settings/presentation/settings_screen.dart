@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../authentication/application/access_policy.dart';
 import '../../authentication/application/session_controller.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../authentication/domain/app_user.dart';
@@ -19,6 +20,7 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final appUser = ref.watch(appUserProvider).value;
+    final policy = ref.watch(accessPolicyProvider);
     final isAnonymous = appUser?.isAnonymous ?? true;
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
@@ -54,7 +56,7 @@ class SettingsScreen extends ConsumerWidget {
                   subtitle: appUser?.name ?? (l10n.settingsUnknown),
                   onTap: () => context.push('/profile'),
                 ),
-                if (appUser?.role == 'merchant' || appUser?.role == 'admin') ...[
+                if (policy.canManageEmployees) ...[
                   const _CustomDivider(),
                   _buildSettingsTile(
                     context: context,
@@ -93,7 +95,7 @@ class SettingsScreen extends ConsumerWidget {
             context: context,
             title: l10n.settingsStoreSettings,
             children: [
-              if (appUser?.role == 'merchant' || appUser?.role == 'admin') ...[
+              if (policy.canAccessSubscription) ...[
                 _buildSettingsTile(
                   context: context,
                   icon: Icons.workspace_premium_rounded,
@@ -103,15 +105,17 @@ class SettingsScreen extends ConsumerWidget {
                 ),
                 const _CustomDivider(),
               ],
-              _buildSettingsTile(
-                context: context,
-                icon: Icons.security_rounded,
-                iconColor: Colors.blueGrey,
-                title: l10n.settingsBackupSecurity,
-                onTap: () => context.push('/backup_security'),
-              ),
-              const _CustomDivider(),
-              if (appUser != null && (appUser.role == 'merchant' || appUser.role == 'admin')) ...[
+              if (policy.canAccessBackupSecurity) ...[
+                _buildSettingsTile(
+                  context: context,
+                  icon: Icons.security_rounded,
+                  iconColor: Colors.blueGrey,
+                  title: l10n.settingsBackupSecurity,
+                  onTap: () => context.push('/backup_security'),
+                ),
+                const _CustomDivider(),
+              ],
+              if (appUser != null && policy.canAccessMerchantSettings) ...[
                 _PinSettingsTile(appUser: appUser),
                 const _CustomDivider(),
               ],
@@ -123,13 +127,14 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () => context.push('/printer_settings'),
               ),
               const _CustomDivider(),
-              _buildSettingsTile(
-                context: context,
-                icon: Icons.storefront_rounded,
-                iconColor: Colors.deepOrangeAccent,
-                title: l10n.settingsStoreBranding,
-                onTap: () => context.push('/store_branding'),
-              ),
+              if (policy.canAccessBranding)
+                _buildSettingsTile(
+                  context: context,
+                  icon: Icons.storefront_rounded,
+                  iconColor: Colors.deepOrangeAccent,
+                  title: l10n.settingsStoreBranding,
+                  onTap: () => context.push('/store_branding'),
+                ),
             ],
           ),
 
