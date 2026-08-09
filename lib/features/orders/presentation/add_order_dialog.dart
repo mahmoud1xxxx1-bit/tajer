@@ -203,6 +203,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
             taxPercentage: finalTax,
             taxMode: selectedProduct.taxMode,
             costPrice: selectedProduct.costPrice,
+            isManufacturedOnDemand: selectedProduct.isManufacturedOnDemand,
           )
         ],
         total: total,

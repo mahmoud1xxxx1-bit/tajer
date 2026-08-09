@@ -51,6 +51,33 @@ exports.captureOrderCostSnapshot = onDocumentCreated(
       }
     }
 
+    const productRefs = productIds.map((productId) =>
+      db.collection('products').doc(productId),
+    );
+    const productDocs = productRefs.length > 0 ? await db.getAll(...productRefs) : [];
+    const products = new Map();
+    const rawMaterialIds = new Set();
+    for (const productDoc of productDocs) {
+      if (!productDoc.exists) continue;
+      const product = productDoc.data() || {};
+      products.set(productDoc.id, product);
+      for (const recipeItem of Array.isArray(product.recipe) ? product.recipe : []) {
+        const rawMaterialId = String(recipeItem?.rawMaterialId || '').trim();
+        if (rawMaterialId) rawMaterialIds.add(rawMaterialId);
+      }
+    }
+
+    const rawCostRefs = [...rawMaterialIds].map((rawMaterialId) =>
+      db.collection('merchants').doc(merchantId).collection('product_costs').doc(rawMaterialId),
+    );
+    const rawCostDocs = rawCostRefs.length > 0 ? await db.getAll(...rawCostRefs) : [];
+    for (const costDoc of rawCostDocs) {
+      const value = costDoc.data()?.costPrice;
+      if (typeof value === 'number' && Number.isFinite(value) && value >= 0) {
+        costs.set(costDoc.id, value);
+      }
+    }
+
     let calculatedTotalCost = 0;
     let complete = true;
     const protectedItems = rawItems.map((item) => {
@@ -58,9 +85,37 @@ exports.captureOrderCostSnapshot = onDocumentCreated(
       const quantity = Number.isFinite(Number(item?.quantity))
         ? Math.max(0, Number(item.quantity))
         : 0;
-      const unitCost = costs.get(productId);
+      const product = products.get(productId) || {};
+      const isManufacturedOnDemand =
+        item?.isManufacturedOnDemand === true || product.isManufacturedOnDemand === true;
+      let unitCost = costs.get(productId);
+      let lineCost = unitCost === undefined ? null : unitCost * quantity;
+      let costSource = 'product_costs';
+
+      if (isManufacturedOnDemand) {
+        let recipeUnitCost = 0;
+        let recipeComplete = true;
+        const recipe = Array.isArray(product.recipe) ? product.recipe : [];
+        if (recipe.length === 0) recipeComplete = false;
+        for (const recipeItem of recipe) {
+          const rawMaterialId = String(recipeItem?.rawMaterialId || '').trim();
+          const amountRequired = Number(recipeItem?.amountRequired);
+          const rawUnitCost = costs.get(rawMaterialId);
+          if (!rawMaterialId ||
+              !Number.isFinite(amountRequired) ||
+              amountRequired <= 0 ||
+              rawUnitCost === undefined) {
+            recipeComplete = false;
+            continue;
+          }
+          recipeUnitCost += rawUnitCost * amountRequired;
+        }
+        unitCost = recipeComplete ? recipeUnitCost : undefined;
+        lineCost = recipeComplete ? recipeUnitCost * quantity : null;
+        costSource = 'recipe_raw_material_costs';
+      }
+
       if (unitCost === undefined) complete = false;
-      const lineCost = unitCost === undefined ? null : unitCost * quantity;
       if (lineCost !== null) calculatedTotalCost += lineCost;
       return {
         productId,
@@ -68,6 +123,7 @@ exports.captureOrderCostSnapshot = onDocumentCreated(
         quantity,
         unitCost: unitCost ?? null,
         lineCost,
+        costSource,
       };
     });
 

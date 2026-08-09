@@ -25,6 +25,17 @@ void main() {
       expect(functionSource, contains('costs.get(productId)'));
     });
 
+    test('made-to-order COGS is derived from trusted recipe raw-material costs',
+        () {
+      expect(functionSource, contains('isManufacturedOnDemand'));
+      expect(functionSource, contains('product.recipe'));
+      expect(functionSource, contains('rawMaterialId'));
+      expect(functionSource, contains('amountRequired'));
+      expect(functionSource, contains('rawUnitCost * amountRequired'));
+      expect(
+          functionSource, contains("costSource = 'recipe_raw_material_costs'"));
+    });
+
     test(
         'incomplete authoritative cost fails closed instead of reporting partial profit',
         () {

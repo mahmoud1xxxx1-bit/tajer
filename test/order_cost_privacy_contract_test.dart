@@ -13,10 +13,12 @@ void main() {
       price: 20,
       total: 40,
       costPrice: 7.5,
+      isManufacturedOnDemand: true,
     );
 
     expect(item.toJson()['costPrice'], 7.5);
     expect(item.toPublicJson().containsKey('costPrice'), isFalse);
+    expect(item.toPublicJson()['isManufacturedOnDemand'], isTrue);
 
     final order = AppOrder(
       id: 'o1',
@@ -31,19 +33,24 @@ void main() {
 
     final serializedItems = order.toJson()['items'] as List<dynamic>;
     expect((serializedItems.single as Map).containsKey('costPrice'), isFalse);
+    expect((serializedItems.single as Map)['isManufacturedOnDemand'], isTrue);
   });
 
-  test('legacy order cost migration is separate, fail-closed and removes public field', () {
+  test(
+      'legacy order cost migration is separate, fail-closed and removes public field',
+      () {
     final source = File(
       'lib/features/orders/data/order_cost_snapshot_repository.dart',
     ).readAsStringSync();
 
     expect(source, contains("collection('order_cost_snapshots')"));
     expect(source, contains("item.remove('costPrice')"));
-    expect(source, contains("batch.update(orderDoc.reference, {'items': publicItems})"));
+    expect(source,
+        contains("batch.update(orderDoc.reference, {'items': publicItems})"));
 
     // Migration must not publish a partial COGS total as if it were complete.
-    expect(source, contains("'totalCost': complete ? calculatedTotalCost : null"));
+    expect(
+        source, contains("'totalCost': complete ? calculatedTotalCost : null"));
     expect(source, contains("'isComplete': complete"));
     expect(source, contains("'unitCost': null"));
     expect(source, contains("'lineCost': null"));

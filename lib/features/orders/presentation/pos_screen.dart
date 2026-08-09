@@ -81,6 +81,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
             taxPercentage: finalTax,
             taxMode: product.taxMode,
             costPrice: product.costPrice,
+            isManufacturedOnDemand: product.isManufacturedOnDemand,
           ));
         } else {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(

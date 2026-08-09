@@ -11,6 +11,7 @@ class CartItem {
   final double? taxPercentage;
   final TaxMode taxMode;
   final double? costPrice;
+  final bool isManufacturedOnDemand;
 
   const CartItem({
     required this.productId,
@@ -23,6 +24,7 @@ class CartItem {
     this.taxPercentage,
     this.taxMode = TaxMode.store,
     this.costPrice,
+    this.isManufacturedOnDemand = false,
   });
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
@@ -32,13 +34,21 @@ class CartItem {
       quantity: (json['quantity'] ?? 0).toInt(),
       price: (json['price'] ?? 0.0).toDouble(),
       total: (json['total'] ?? 0.0).toDouble(),
-      selectedModifiers: (json['selectedModifiers'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
+      selectedModifiers: (json['selectedModifiers'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
       isTaxInclusive: json['isTaxInclusive'] as bool?,
-      taxPercentage: json['taxPercentage'] != null ? (json['taxPercentage'] as num).toDouble() : null,
+      taxPercentage: json['taxPercentage'] != null
+          ? (json['taxPercentage'] as num).toDouble()
+          : null,
       taxMode: _parseTaxMode(json['taxMode']),
+      isManufacturedOnDemand: json['isManufacturedOnDemand'] as bool? ?? false,
       // Legacy v107 orders may still contain this field until the protected
       // historical-cost migration removes it. New public order writes never do.
-      costPrice: json['costPrice'] != null ? (json['costPrice'] as num).toDouble() : null,
+      costPrice: json['costPrice'] != null
+          ? (json['costPrice'] as num).toDouble()
+          : null,
     );
   }
 
@@ -78,6 +88,7 @@ class CartItem {
       'isTaxInclusive': isTaxInclusive,
       'taxPercentage': taxPercentage,
       'taxMode': taxMode.name,
+      'isManufacturedOnDemand': isManufacturedOnDemand,
     };
   }
 
@@ -91,6 +102,7 @@ class CartItem {
     double? taxPercentage,
     TaxMode? taxMode,
     double? costPrice,
+    bool? isManufacturedOnDemand,
   }) {
     return CartItem(
       productId: productId ?? this.productId,
@@ -102,6 +114,8 @@ class CartItem {
       taxPercentage: taxPercentage ?? this.taxPercentage,
       taxMode: taxMode ?? this.taxMode,
       costPrice: costPrice ?? this.costPrice,
+      isManufacturedOnDemand:
+          isManufacturedOnDemand ?? this.isManufacturedOnDemand,
     );
   }
 }

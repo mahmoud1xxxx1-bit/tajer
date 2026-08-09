@@ -153,7 +153,9 @@ class OrderBranchInventoryService {
       if (data == null) continue;
 
       final productName = data['name']?.toString() ?? item.productName;
-      if (!(data['isManufacturedOnDemand'] as bool? ?? false)) {
+      final isManufacturedOnDemand = item.isManufacturedOnDemand ||
+          (data['isManufacturedOnDemand'] as bool? ?? false);
+      if (!isManufacturedOnDemand) {
         productDeltas[item.productId] =
             (productDeltas[item.productId] ?? 0) + sign * item.quantity;
         productNames[item.productId] = productName;
@@ -238,6 +240,11 @@ class OrderBranchInventoryService {
       final calculated = current + mutation.delta;
 
       if (calculated < -0.000001) {
+        if (mutation.itemType == 'raw_material') {
+          throw Exception(
+            'Insufficient raw material inventory: ${mutation.itemId}',
+          );
+        }
         throw Exception(
           'Insufficient branch inventory: ${mutation.itemId}',
         );
@@ -247,7 +254,7 @@ class OrderBranchInventoryService {
       next[key] = calculated < 0 ? 0.0 : calculated;
     }
 
-    final userEmail = FirebaseAuth.instance.currentUser?.email ?? 'Unknown';
+    final userEmail = _currentUserEmail();
     for (final mutation in mutations) {
       final key = repository.docId(
         order.branchId,
@@ -293,6 +300,14 @@ class OrderBranchInventoryService {
         'date': FieldValue.serverTimestamp(),
         'userEmail': userEmail,
       });
+    }
+  }
+
+  String _currentUserEmail() {
+    try {
+      return FirebaseAuth.instance.currentUser?.email ?? 'Unknown';
+    } catch (_) {
+      return 'Unknown';
     }
   }
 }
