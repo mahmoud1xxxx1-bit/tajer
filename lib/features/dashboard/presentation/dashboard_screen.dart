@@ -52,6 +52,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       );
     }
 
+    if (appUser.role == 'employee' && appUser.assignedBranchIds.isEmpty) {
+      final isAr = Localizations.localeOf(context).languageCode == 'ar';
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              isAr
+                  ? '\u0644\u0645 \u064a\u062a\u0645 \u062a\u0639\u064a\u064a\u0646\u0643 \u0625\u0644\u0649 \u0623\u064a \u0641\u0631\u0639. \u064a\u0631\u062c\u0649 \u0627\u0644\u062a\u0648\u0627\u0635\u0644 \u0645\u0639 \u0627\u0644\u062a\u0627\u062c\u0631.'
+                  : 'You are not assigned to a branch. Please contact the merchant.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16),
+            ),
+          ),
+        ),
+      );
+    }
+
     final bool canManageCustomers =
         appUser.hasPermission('can_manage_customers');
     final bool canViewReports = appUser.hasPermission('can_view_reports');
@@ -180,16 +198,17 @@ class DashboardHome extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l10n.dashboard, style: TextStyle(fontFamily: 'Tajawal')),
         actions: [
-          IconButton(
-            tooltip: Localizations.localeOf(context).languageCode == 'ar'
-                ? 'الفروع'
-                : 'Branches',
-            icon: const Icon(Icons.account_tree_rounded),
-            onPressed: () => context.push('/branches'),
-          ),
           if (appUser?.role != 'employee')
             IconButton(
-              icon: Icon(Icons.settings),
+              tooltip: Localizations.localeOf(context).languageCode == 'ar'
+                  ? '\u0627\u0644\u0641\u0631\u0648\u0639'
+                  : 'Branches',
+              icon: const Icon(Icons.account_tree_rounded),
+              onPressed: () => context.push('/branches'),
+            ),
+          if (appUser?.role != 'employee')
+            IconButton(
+              icon: const Icon(Icons.settings),
               onPressed: () {
                 context.push('/settings');
               },
@@ -409,14 +428,15 @@ class DashboardHome extends ConsumerWidget {
                         onNavigateToTab(2);
                       },
                     ),
-                    _QuickAction(
-                      icon: Icons.person_outline,
-                      label: l10n.customers,
-                      color: Theme.of(context).colorScheme.secondary,
-                      onTap: () {
-                        onNavigateToTab(3);
-                      },
-                    ),
+                    if (canManageCustomers)
+                      _QuickAction(
+                        icon: Icons.person_outline,
+                        label: l10n.customers,
+                        color: Theme.of(context).colorScheme.secondary,
+                        onTap: () {
+                          onNavigateToTab(3);
+                        },
+                      ),
                   ],
                 ),
                 SizedBox(height: 24),
@@ -433,38 +453,44 @@ class DashboardHome extends ConsumerWidget {
                   spacing: 8,
                   runSpacing: 16,
                   children: [
-                    _QuickAction(
-                      icon: Icons.money_off,
-                      label: l10n.expenses,
-                      color: Colors.redAccent,
-                      onTap: () {
-                        context.push('/expenses');
-                      },
-                    ),
-                    _QuickAction(
-                      icon: Icons.business,
-                      label: l10n.suppliers,
-                      color: Colors.blueAccent,
-                      onTap: () {
-                        context.push('/suppliers');
-                      },
-                    ),
-                    _QuickAction(
-                      icon: Icons.category,
-                      label: l10n.categories,
-                      color: Colors.orangeAccent,
-                      onTap: () {
-                        context.push('/categories');
-                      },
-                    ),
-                    _QuickAction(
-                      icon: Icons.history,
-                      label: l10n.inventoryLog,
-                      color: Colors.purpleAccent,
-                      onTap: () {
-                        context.push('/inventory_logs');
-                      },
-                    ),
+                    if (appUser?.hasPermission('can_manage_expenses') ?? false)
+                      _QuickAction(
+                        icon: Icons.money_off,
+                        label: l10n.expenses,
+                        color: Colors.redAccent,
+                        onTap: () {
+                          context.push('/expenses');
+                        },
+                      ),
+                    if (appUser?.role != 'employee' &&
+                        (appUser?.hasPermission('can_manage_inventory') ??
+                            false))
+                      _QuickAction(
+                        icon: Icons.business,
+                        label: l10n.suppliers,
+                        color: Colors.blueAccent,
+                        onTap: () {
+                          context.push('/suppliers');
+                        },
+                      ),
+                    if (appUser?.hasPermission('can_manage_products') ?? false)
+                      _QuickAction(
+                        icon: Icons.category,
+                        label: l10n.categories,
+                        color: Colors.orangeAccent,
+                        onTap: () {
+                          context.push('/categories');
+                        },
+                      ),
+                    if (appUser?.hasPermission('can_manage_inventory') ?? false)
+                      _QuickAction(
+                        icon: Icons.history,
+                        label: l10n.inventoryLog,
+                        color: Colors.purpleAccent,
+                        onTap: () {
+                          context.push('/inventory_logs');
+                        },
+                      ),
                   ],
                 ),
                 if (appUser?.role != 'employee') ...[

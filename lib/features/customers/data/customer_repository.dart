@@ -13,27 +13,30 @@ class CustomerRepository {
 
   CustomerRepository(this._firestore);
 
-  Query<Customer> queryCustomers(String merchantId) {
-    return _firestore
+  Query<Customer> queryCustomers(String merchantId, {String? branchId}) {
+    var query = _firestore
         .collection('customers')
-        .where('merchantId', isEqualTo: merchantId)
-        .withConverter(
-          fromFirestore: (snapshot, _) {
-            final data = snapshot.data()!;
-            data['id'] = snapshot.id;
-            data['merchantId'] = data['merchantId']?.toString() ?? '';
-            data['branchId'] =
-                data['branchId']?.toString().trim().isNotEmpty == true
-                    ? data['branchId'].toString()
-                    : 'main';
-            data['name'] = data['name']?.toString() ?? '';
-            data['phone'] = data['phone']?.toString() ?? '';
-            data['totalPurchases'] = (data['totalPurchases'] ?? 0.0).toDouble();
-            data['orderCount'] = (data['orderCount'] ?? 0).toInt();
-            return Customer.fromJson(data);
-          },
-          toFirestore: (customer, _) => customer.toJson(),
-        );
+        .where('merchantId', isEqualTo: merchantId);
+    if (branchId != null && branchId.isNotEmpty) {
+      query = query.where('branchId', isEqualTo: branchId);
+    }
+    return query.withConverter(
+      fromFirestore: (snapshot, _) {
+        final data = snapshot.data()!;
+        data['id'] = snapshot.id;
+        data['merchantId'] = data['merchantId']?.toString() ?? '';
+        data['branchId'] =
+            data['branchId']?.toString().trim().isNotEmpty == true
+                ? data['branchId'].toString()
+                : 'main';
+        data['name'] = data['name']?.toString() ?? '';
+        data['phone'] = data['phone']?.toString() ?? '';
+        data['totalPurchases'] = (data['totalPurchases'] ?? 0.0).toDouble();
+        data['orderCount'] = (data['orderCount'] ?? 0).toInt();
+        return Customer.fromJson(data);
+      },
+      toFirestore: (customer, _) => customer.toJson(),
+    );
   }
 
   Future<void> addCustomer(Customer customer) async {
@@ -56,11 +59,15 @@ class CustomerRepository {
     required String customerId,
     String? branchId,
   }) async {
-    final snapshot = await _firestore
+    var query = _firestore
         .collection('orders')
         .where('merchantId', isEqualTo: merchantId)
-        .where('customerId', isEqualTo: customerId)
-        .get(const GetOptions(source: Source.serverAndCache));
+        .where('customerId', isEqualTo: customerId);
+    if (branchId != null) {
+      query = query.where('branchId', isEqualTo: branchId);
+    }
+    final snapshot =
+        await query.get(const GetOptions(source: Source.serverAndCache));
 
     final orders = snapshot.docs
         .map((doc) {
@@ -182,8 +189,9 @@ Stream<List<Customer>> customersStream(CustomersStreamRef ref) {
 
   final repository = ref.watch(customerRepositoryProvider);
   final branchId = ref.watch(selectedBranchIdProvider);
+  if (branchId.isEmpty) return const Stream.empty();
   return repository
-      .queryCustomers(currentEffectiveMerchantId(appUser))
+      .queryCustomers(currentEffectiveMerchantId(appUser), branchId: branchId)
       .snapshots()
       .map(
     (snapshot) {

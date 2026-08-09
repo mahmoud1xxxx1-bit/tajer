@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../domain/branch.dart';
+import '../presentation/branch_context.dart';
 
 class BranchRepository {
   final FirebaseFirestore _firestore;
@@ -16,8 +17,14 @@ class BranchRepository {
 
   String newBranchId() => _ref.doc().id;
 
-  Stream<List<Branch>> watchBranches() {
-    return _ref.orderBy('createdAt').snapshots().map((snapshot) {
+  Stream<List<Branch>> watchBranches({List<String>? allowedBranchIds}) {
+    if (allowedBranchIds != null && allowedBranchIds.isEmpty) {
+      return Stream.value(const <Branch>[]);
+    }
+    final query = allowedBranchIds == null
+        ? _ref.orderBy('createdAt')
+        : _ref.where(FieldPath.documentId, whereIn: allowedBranchIds);
+    return query.snapshots().map((snapshot) {
       final branches = snapshot.docs.map((doc) {
         final data = Map<String, dynamic>.from(doc.data());
         data['id'] = doc.id;
@@ -104,6 +111,12 @@ final branchRepositoryProvider = Provider<BranchRepository?>((ref) {
 
 final branchesStreamProvider = StreamProvider<List<Branch>>((ref) {
   final repository = ref.watch(branchRepositoryProvider);
+  final user = ref.watch(appUserProvider).value;
   if (repository == null) return Stream.value(const <Branch>[]);
-  return repository.watchBranches();
+  if (user == null || user.role == 'merchant' || user.role == 'admin') {
+    return repository.watchBranches();
+  }
+  return repository.watchBranches(
+    allowedBranchIds: ref.watch(employeeAllowedBranchIdsProvider),
+  );
 });

@@ -70,8 +70,9 @@ final selectedBranchIdProvider = Provider<String>((ref) {
   }
 
   final allowed = user.assignedBranchIds.isEmpty
-      ? const <String>[BranchIds.main]
+      ? const <String>[]
       : user.assignedBranchIds;
+  if (allowed.isEmpty) return '';
   return resolveAllowedBranchId(requested, allowed);
 });
 
@@ -80,9 +81,9 @@ final employeeAllowedBranchIdsProvider = Provider<List<String>>((ref) {
   if (user == null || user.role == 'merchant' || user.role == 'admin') {
     return const <String>[]; // Empty means unrestricted for owner/admin.
   }
-  return user.assignedBranchIds.isEmpty
-      ? const <String>[BranchIds.main]
-      : List<String>.unmodifiable(user.assignedBranchIds);
+  return List<String>.unmodifiable(effectiveEmployeeBranchIds(
+    user.assignedBranchIds,
+  ));
 });
 
 List<String> effectiveEmployeeBranchIds(List<String> assignedBranchIds) {
@@ -91,7 +92,7 @@ List<String> effectiveEmployeeBranchIds(List<String> assignedBranchIds) {
       .where((branchId) => branchId.isNotEmpty)
       .toSet()
       .toList(growable: false);
-  return normalized.isEmpty ? const <String>[BranchIds.main] : normalized;
+  return normalized;
 }
 
 String resolveAllowedBranchId(

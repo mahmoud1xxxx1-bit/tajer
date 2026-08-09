@@ -24,7 +24,13 @@ class ActiveBranchSelector extends ConsumerWidget {
         if (activeBranches.isEmpty) {
           return _BranchPill(
             icon: Icons.storefront_rounded,
-            label: isAr ? 'الفرع الحالي: الرئيسي' : 'Active branch: Main',
+            label: selectedBranchId.isEmpty
+                ? (isAr
+                    ? '\u0644\u0645 \u064a\u062a\u0645 \u062a\u0639\u064a\u064a\u0646\u0643 \u0625\u0644\u0649 \u0623\u064a \u0641\u0631\u0639'
+                    : 'No branch assigned')
+                : (isAr
+                    ? '\u0627\u0644\u0641\u0631\u0639 \u0627\u0644\u062d\u0627\u0644\u064a: \u0627\u0644\u0631\u0626\u064a\u0633\u064a'
+                    : 'Active branch: Main'),
             compact: compact,
           );
         }
@@ -62,7 +68,7 @@ class ActiveBranchSelector extends ConsumerWidget {
                         child: Text(
                           compact
                               ? branch.name
-                              : '${isAr ? 'الفرع الحالي' : 'Active branch'}: ${branch.name}',
+                              : '${isAr ? '\u0627\u0644\u0641\u0631\u0639 \u0627\u0644\u062d\u0627\u0644\u064a' : 'Active branch'}: ${branch.name}',
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
                             fontFamily: 'Tajawal',

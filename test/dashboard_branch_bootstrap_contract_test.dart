@@ -35,7 +35,7 @@ void main() {
           resolveAllowedBranchId('branch-2', const ['branch-2']), 'branch-2');
     }
 
-    expect(effectiveEmployeeBranchIds(const []), const [BranchIds.main]);
+    expect(effectiveEmployeeBranchIds(const []), const <String>[]);
     expect(effectiveEmployeeBranchIds(const ['branch-2', 'branch-2']),
         const ['branch-2']);
   });

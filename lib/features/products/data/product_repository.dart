@@ -152,6 +152,7 @@ Stream<List<Product>> productsStream(ProductsStreamRef ref) {
   final costRepository = ref.watch(productCostRepositoryProvider);
   final merchantId = currentEffectiveMerchantId(appUser);
   final branchId = ref.watch(selectedBranchIdProvider);
+  if (branchId.isEmpty) return const Stream.empty();
   final branchInventory = ref.watch(branchInventoryStreamProvider(branchId));
   final canViewCost = appUser.hasPermission('can_view_cost');
 

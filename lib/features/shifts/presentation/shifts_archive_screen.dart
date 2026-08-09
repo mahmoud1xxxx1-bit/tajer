@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../data/shift_repository.dart';
 import '../domain/shift.dart';
 import '../../../core/theme/glass_card.dart';
+import '../../branches/data/branch_repository.dart';
 import 'shift_details_screen.dart';
 
 class ShiftsArchiveScreen extends ConsumerWidget {
@@ -14,6 +15,7 @@ class ShiftsArchiveScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final shiftsAsync = ref.watch(shiftsStreamProvider);
+    final branchesAsync = ref.watch(branchesStreamProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -25,6 +27,10 @@ class ShiftsArchiveScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(child: Text('Error: $error')),
         data: (shifts) {
+          final branchNames = {
+            for (final branch in branchesAsync.valueOrNull ?? const [])
+              branch.id: branch.name,
+          };
           final closedShifts =
               shifts.where((s) => s.status == 'closed').toList();
           closedShifts.sort((a, b) =>
@@ -45,7 +51,11 @@ class ShiftsArchiveScreen extends ConsumerWidget {
             itemCount: closedShifts.length,
             itemBuilder: (context, index) {
               final shift = closedShifts[index];
-              return _buildShiftCard(context, shift, isAr);
+              final branchName = branchNames[shift.branchId] ??
+                  (isAr
+                      ? '\u0641\u0631\u0639 \u0645\u062d\u0630\u0648\u0641'
+                      : 'Deleted branch');
+              return _buildShiftCard(context, shift, isAr, branchName);
             },
           );
         },
@@ -53,7 +63,8 @@ class ShiftsArchiveScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildShiftCard(BuildContext context, Shift shift, bool isAr) {
+  Widget _buildShiftCard(
+      BuildContext context, Shift shift, bool isAr, String branchName) {
     final dateFormat = DateFormat('yyyy-MM-dd HH:mm');
 
     // Check all three for summary
@@ -71,7 +82,8 @@ class ShiftsArchiveScreen extends ConsumerWidget {
           Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) => ShiftDetailsScreen(shift: shift)));
+                  builder: (context) => ShiftDetailsScreen(
+                      shift: shift, branchName: branchName)));
         },
         child: GlassCard(
           child: Padding(
@@ -95,7 +107,7 @@ class ShiftsArchiveScreen extends ConsumerWidget {
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          shift.branchId,
+                          branchName,
                           style: const TextStyle(
                               fontFamily: 'Tajawal',
                               color: Colors.grey,

@@ -44,31 +44,131 @@ final goRouterProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/', builder: (context, state) => const StartupScreen()),
-      GoRoute(path: '/dashboard', builder: (context, state) => const DashboardScreen()),
-      GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
-      GoRoute(path: '/user_guide', builder: (context, state) => const UserGuideScreen()),
-      GoRoute(path: '/upgrade', builder: (context, state) => const UpgradeAccountScreen()),
-      GoRoute(path: '/paywall', builder: (context, state) => const PaywallScreen()),
-      GoRoute(path: '/expenses', builder: (context, state) => const ExpensesScreen()),
-      GoRoute(path: '/suppliers', builder: (context, state) => const SuppliersScreen()),
-      GoRoute(path: '/categories', builder: (context, state) => const CategoriesScreen()),
-      GoRoute(path: '/inventory_logs', builder: (context, state) => const InventoryManagementScreen()),
-      GoRoute(path: '/inventory_history', builder: (context, state) => const InventoryLogsScreen()),
-      GoRoute(path: '/inventory_transfer', builder: (context, state) => const InventoryTransferScreen()),
-      GoRoute(path: '/branches', builder: (context, state) => const BranchesScreen()),
-      GoRoute(path: '/employees', builder: (context, state) => const EmployeeManagementHubScreen()),
-      GoRoute(path: '/employees/manage', builder: (context, state) => const EmployeesScreen()),
-      GoRoute(path: '/employee_branches', builder: (context, state) => const EmployeeBranchAssignmentsScreen()),
-      GoRoute(path: '/employee_permissions', builder: (context, state) => const EmployeePermissionsScreen()),
-      GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
-      GoRoute(path: '/subscription', builder: (context, state) => const SubscriptionScreen()),
-      GoRoute(path: '/backup_security', builder: (context, state) => const BackupSecurityScreen()),
-      GoRoute(path: '/printer_settings', builder: (context, state) => const PrinterSettingsScreen()),
-      GoRoute(path: '/store_branding', builder: (context, state) => const StoreBrandingScreen()),
-      GoRoute(path: '/end_shift', builder: (context, state) => const EndShiftScreen()),
-      GoRoute(path: '/shifts_archive', builder: (context, state) => const ShiftsArchiveScreen()),
-      GoRoute(path: '/raw_materials', builder: (context, state) => const RawMaterialsScreen()),
-      GoRoute(path: '/audit_log', builder: (context, state) => const AuditLogScreen()),
+      GoRoute(
+          path: '/dashboard',
+          builder: (context, state) => const DashboardScreen()),
+      GoRoute(
+          path: '/settings',
+          builder: (context, state) =>
+              const _RouteAccess(ownerOnly: true, child: SettingsScreen())),
+      GoRoute(
+          path: '/user_guide',
+          builder: (context, state) => const UserGuideScreen()),
+      GoRoute(
+          path: '/upgrade',
+          builder: (context, state) => const UpgradeAccountScreen()),
+      GoRoute(
+          path: '/paywall',
+          builder: (context, state) =>
+              const _RouteAccess(ownerOnly: true, child: PaywallScreen())),
+      GoRoute(
+          path: '/expenses',
+          builder: (context, state) => const _RouteAccess(
+              permission: 'can_manage_expenses', child: ExpensesScreen())),
+      GoRoute(
+          path: '/suppliers',
+          builder: (context, state) =>
+              const _RouteAccess(ownerOnly: true, child: SuppliersScreen())),
+      GoRoute(
+          path: '/categories',
+          builder: (context, state) => const _RouteAccess(
+              permission: 'can_manage_products', child: CategoriesScreen())),
+      GoRoute(
+          path: '/inventory_logs',
+          builder: (context, state) => const _RouteAccess(
+              permission: 'can_manage_inventory',
+              child: InventoryManagementScreen())),
+      GoRoute(
+          path: '/inventory_history',
+          builder: (context, state) => const _RouteAccess(
+              permission: 'can_manage_inventory',
+              child: InventoryLogsScreen())),
+      GoRoute(
+          path: '/inventory_transfer',
+          builder: (context, state) => const _RouteAccess(
+              ownerOnly: true, child: InventoryTransferScreen())),
+      GoRoute(
+          path: '/branches',
+          builder: (context, state) =>
+              const _RouteAccess(ownerOnly: true, child: BranchesScreen())),
+      GoRoute(
+          path: '/employees',
+          builder: (context, state) => const _RouteAccess(
+              ownerOnly: true, child: EmployeeManagementHubScreen())),
+      GoRoute(
+          path: '/employees/manage',
+          builder: (context, state) =>
+              const _RouteAccess(ownerOnly: true, child: EmployeesScreen())),
+      GoRoute(
+          path: '/employee_branches',
+          builder: (context, state) => const _RouteAccess(
+              ownerOnly: true, child: EmployeeBranchAssignmentsScreen())),
+      GoRoute(
+          path: '/employee_permissions',
+          builder: (context, state) => const _RouteAccess(
+              ownerOnly: true, child: EmployeePermissionsScreen())),
+      GoRoute(
+          path: '/profile',
+          builder: (context, state) =>
+              const _RouteAccess(ownerOnly: true, child: ProfileScreen())),
+      GoRoute(
+          path: '/subscription',
+          builder: (context, state) =>
+              const _RouteAccess(ownerOnly: true, child: SubscriptionScreen())),
+      GoRoute(
+          path: '/backup_security',
+          builder: (context, state) => const _RouteAccess(
+              ownerOnly: true, child: BackupSecurityScreen())),
+      GoRoute(
+          path: '/printer_settings',
+          builder: (context, state) => const PrinterSettingsScreen()),
+      GoRoute(
+          path: '/store_branding',
+          builder: (context, state) => const _RouteAccess(
+              ownerOnly: true, child: StoreBrandingScreen())),
+      GoRoute(
+          path: '/end_shift',
+          builder: (context, state) => const EndShiftScreen()),
+      GoRoute(
+          path: '/shifts_archive',
+          builder: (context, state) => const _RouteAccess(
+              permission: 'can_view_reports', child: ShiftsArchiveScreen())),
+      GoRoute(
+          path: '/raw_materials',
+          builder: (context, state) =>
+              const _RouteAccess(ownerOnly: true, child: RawMaterialsScreen())),
+      GoRoute(
+          path: '/audit_log',
+          builder: (context, state) =>
+              const _RouteAccess(ownerOnly: true, child: AuditLogScreen())),
     ],
   );
 });
+
+class _RouteAccess extends ConsumerWidget {
+  final Widget child;
+  final bool ownerOnly;
+  final String? permission;
+
+  const _RouteAccess({
+    required this.child,
+    this.ownerOnly = false,
+    this.permission,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final appUserState = ref.watch(appUserProvider);
+    final appUser = appUserState.value;
+    if (appUserState.isLoading || appUser == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    final isOwner = appUser.role == 'merchant' || appUser.role == 'admin';
+    if (ownerOnly && !isOwner) return const DashboardScreen();
+    if (permission != null && !appUser.hasPermission(permission!)) {
+      return const DashboardScreen();
+    }
+    return child;
+  }
+}

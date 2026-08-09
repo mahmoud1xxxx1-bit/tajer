@@ -25,6 +25,7 @@ class ShiftRepository {
     return _firestore
         .collection('shifts')
         .where('merchantId', isEqualTo: merchantId)
+        .where('branchId', isEqualTo: branchId)
         .where('status', isEqualTo: 'open')
         .snapshots()
         .map((snapshot) {
@@ -43,6 +44,7 @@ class ShiftRepository {
     final openShifts = await _firestore
         .collection('shifts')
         .where('merchantId', isEqualTo: shift.merchantId)
+        .where('branchId', isEqualTo: shift.branchId)
         .where('status', isEqualTo: 'open')
         .get();
 
@@ -142,6 +144,7 @@ class ShiftRepository {
     final snapshot = await _firestore
         .collection('shifts')
         .where('merchantId', isEqualTo: merchantId)
+        .where('branchId', isEqualTo: branchId)
         .where('status', isEqualTo: 'closed')
         .get();
 
@@ -176,10 +179,12 @@ Stream<List<Shift>> shiftsStream(ShiftsStreamRef ref) {
   if (appUser == null) return const Stream.empty();
 
   final branchId = ref.watch(selectedBranchIdProvider);
+  if (branchId.isEmpty) return const Stream.empty();
   final repository = ref.watch(shiftRepositoryProvider);
   return repository._firestore
       .collection('shifts')
       .where('merchantId', isEqualTo: currentEffectiveMerchantId(appUser))
+      .where('branchId', isEqualTo: branchId)
       .orderBy('startTime', descending: true)
       .limit(100)
       .snapshots()

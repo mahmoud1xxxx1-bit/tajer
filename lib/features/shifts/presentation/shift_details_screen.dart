@@ -5,12 +5,17 @@ import '../../../core/theme/glass_card.dart';
 
 class ShiftDetailsScreen extends StatelessWidget {
   final Shift shift;
-  const ShiftDetailsScreen({super.key, required this.shift});
+  final String? branchName;
+  const ShiftDetailsScreen({super.key, required this.shift, this.branchName});
 
   @override
   Widget build(BuildContext context) {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final dateFormat = DateFormat('yyyy-MM-dd HH:mm');
+    final displayBranchName = branchName ??
+        (isAr
+            ? '\u0641\u0631\u0639 \u0645\u062d\u0630\u0648\u0641'
+            : 'Deleted branch');
 
     // Cash
     final expectedCash = shift.expectedCash ?? 0.0;
@@ -33,7 +38,10 @@ class ShiftDetailsScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isAr ? 'تفاصيل الوردية' : 'Shift Details',
+        title: Text(
+            isAr
+                ? '\u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0648\u0631\u062f\u064a\u0629'
+                : 'Shift Details',
             style: const TextStyle(
                 fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
       ),
@@ -62,24 +70,40 @@ class ShiftDetailsScreen extends StatelessWidget {
                       ],
                     ),
                     const Divider(height: 24),
-                    _buildRow(isAr ? 'الفرع:' : 'Branch:', shift.branchId),
-                    _buildRow(isAr ? 'الفتح:' : 'Opened:',
+                    _buildRow(
+                        isAr ? '\u0627\u0644\u0641\u0631\u0639:' : 'Branch:',
+                        displayBranchName),
+                    _buildRow(
+                        isAr ? '\u0627\u0644\u0641\u062a\u062d:' : 'Opened:',
                         dateFormat.format(shift.startTime)),
                     _buildRow(
-                        isAr ? 'الإغلاق:' : 'Closed:',
+                        isAr
+                            ? '\u0627\u0644\u0625\u063a\u0644\u0627\u0642:'
+                            : 'Closed:',
                         shift.endTime != null
                             ? dateFormat.format(shift.endTime!)
                             : '-'),
                     const Divider(height: 24),
-                    _buildRow(isAr ? 'العهدة الافتتاحية:' : 'Opening Cash:',
-                        '${shift.startCash} ${isAr ? 'ر.س' : 'SAR'}'),
-                    _buildRow(isAr ? 'مبيعات الكاش:' : 'Cash Sales:',
-                        '${shift.cashSales ?? 0} ${isAr ? 'ر.س' : 'SAR'}'),
                     _buildRow(
-                        isAr ? 'ديون محصلة (كاش):' : 'Debts Collected (Cash):',
-                        '${shift.debtCollectionsCash ?? 0} ${isAr ? 'ر.س' : 'SAR'}'),
-                    _buildRow(isAr ? 'إجمالي الضريبة:' : 'Total Tax:',
-                        '${(shift.totalTax ?? 0).toStringAsFixed(2)} ${isAr ? 'ر.س' : 'SAR'}'),
+                        isAr
+                            ? '\u0627\u0644\u0639\u0647\u062f\u0629 \u0627\u0644\u0627\u0641\u062a\u062a\u0627\u062d\u064a\u0629:'
+                            : 'Opening Cash:',
+                        '${shift.startCash} ${isAr ? '\u0631.\u0633' : 'SAR'}'),
+                    _buildRow(
+                        isAr
+                            ? '\u0645\u0628\u064a\u0639\u0627\u062a \u0627\u0644\u0643\u0627\u0634:'
+                            : 'Cash Sales:',
+                        '${shift.cashSales ?? 0} ${isAr ? '\u0631.\u0633' : 'SAR'}'),
+                    _buildRow(
+                        isAr
+                            ? '\u062f\u064a\u0648\u0646 \u0645\u062d\u0635\u0644\u0629 (\u0643\u0627\u0634):'
+                            : 'Debts Collected (Cash):',
+                        '${shift.debtCollectionsCash ?? 0} ${isAr ? '\u0631.\u0633' : 'SAR'}'),
+                    _buildRow(
+                        isAr
+                            ? '\u0625\u062c\u0645\u0627\u0644\u064a \u0627\u0644\u0636\u0631\u064a\u0628\u0629:'
+                            : 'Total Tax:',
+                        '${(shift.totalTax ?? 0).toStringAsFixed(2)} ${isAr ? '\u0631.\u0633' : 'SAR'}'),
                   ],
                 ),
               ),
@@ -87,7 +111,10 @@ class ShiftDetailsScreen extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Payment Methods Comparison
-            Text(isAr ? 'تفاصيل المطابقة' : 'Matching Details',
+            Text(
+                isAr
+                    ? '\u062a\u0641\u0627\u0635\u064a\u0644 \u0627\u0644\u0645\u0637\u0627\u0628\u0642\u0629'
+                    : 'Matching Details',
                 style: const TextStyle(
                     fontFamily: 'Tajawal',
                     fontWeight: FontWeight.bold,
@@ -95,7 +122,9 @@ class ShiftDetailsScreen extends StatelessWidget {
             const SizedBox(height: 16),
 
             _buildComparisonCard(
-              title: isAr ? 'الكاش (النقد)' : 'Cash',
+              title: isAr
+                  ? '\u0627\u0644\u0643\u0627\u0634 (\u0627\u0644\u0646\u0642\u062f)'
+                  : 'Cash',
               expected: expectedCash,
               actual: actualCash,
               diff: diffCash,
@@ -105,7 +134,9 @@ class ShiftDetailsScreen extends StatelessWidget {
             const SizedBox(height: 12),
 
             _buildComparisonCard(
-              title: isAr ? 'مدى (البطاقة)' : 'Mada (Card)',
+              title: isAr
+                  ? '\u0645\u062f\u0649 (\u0627\u0644\u0628\u0637\u0627\u0642\u0629)'
+                  : 'Mada (Card)',
               expected: expectedCard,
               actual: actualCard,
               diff: diffCard,
@@ -115,7 +146,9 @@ class ShiftDetailsScreen extends StatelessWidget {
             const SizedBox(height: 12),
 
             _buildComparisonCard(
-              title: isAr ? 'التحويل البنكي' : 'Bank Transfer',
+              title: isAr
+                  ? '\u0627\u0644\u062a\u062d\u0648\u064a\u0644 \u0627\u0644\u0628\u0646\u0643\u064a'
+                  : 'Bank Transfer',
               expected: expectedTransfer,
               actual: actualTransfer,
               diff: diffTransfer,
@@ -187,13 +220,13 @@ class ShiftDetailsScreen extends StatelessWidget {
                   ),
                   child: Text(
                     isMatched
-                        ? (isAr ? 'مطابق' : 'Matched')
+                        ? (isAr ? '\u0645\u0637\u0627\u0628\u0642' : 'Matched')
                         : (hasShortage
                             ? (isAr
-                                ? 'عجز: ${diff.abs().toStringAsFixed(2)}'
+                                ? '\u0639\u062c\u0632: ${diff.abs().toStringAsFixed(2)}'
                                 : 'Short: ${diff.abs().toStringAsFixed(2)}')
                             : (isAr
-                                ? 'فائض: ${diff.toStringAsFixed(2)}'
+                                ? '\u0641\u0627\u0626\u0636: ${diff.toStringAsFixed(2)}'
                                 : 'Over: ${diff.toStringAsFixed(2)}')),
                     style: TextStyle(
                       fontFamily: 'Tajawal',
@@ -212,14 +245,17 @@ class ShiftDetailsScreen extends StatelessWidget {
               children: [
                 Column(
                   children: [
-                    Text(isAr ? 'المتوقع' : 'Expected',
+                    Text(
+                        isAr
+                            ? '\u0627\u0644\u0645\u062a\u0648\u0642\u0639'
+                            : 'Expected',
                         style: const TextStyle(
                             fontFamily: 'Tajawal',
                             fontSize: 12,
                             color: Colors.grey)),
                     const SizedBox(height: 4),
                     Text(
-                        '${expected.toStringAsFixed(2)} ${isAr ? 'ر.س' : 'SAR'}',
+                        '${expected.toStringAsFixed(2)} ${isAr ? '\u0631.\u0633' : 'SAR'}',
                         style: TextStyle(
                             fontFamily: 'Tajawal',
                             fontWeight: FontWeight.bold,
@@ -228,13 +264,17 @@ class ShiftDetailsScreen extends StatelessWidget {
                 ),
                 Column(
                   children: [
-                    Text(isAr ? 'الفعلي' : 'Actual',
+                    Text(
+                        isAr
+                            ? '\u0627\u0644\u0641\u0639\u0644\u064a'
+                            : 'Actual',
                         style: const TextStyle(
                             fontFamily: 'Tajawal',
                             fontSize: 12,
                             color: Colors.grey)),
                     const SizedBox(height: 4),
-                    Text('${actual.toStringAsFixed(2)} ${isAr ? 'ر.س' : 'SAR'}',
+                    Text(
+                        '${actual.toStringAsFixed(2)} ${isAr ? '\u0631.\u0633' : 'SAR'}',
                         style: TextStyle(
                             fontFamily: 'Tajawal',
                             fontWeight: FontWeight.bold,

@@ -95,8 +95,14 @@ void main() {
         File('lib/features/shifts/presentation/shifts_archive_screen.dart')
             .readAsStringSync();
 
-    expect(details, contains("shift.branchId"));
-    expect(archive, contains("shift.branchId"));
+    expect(details, contains("branchName"));
+    expect(details, contains("displayBranchName"));
+    expect(
+        details,
+        isNot(contains(
+            "_buildRow(isAr ? 'Ø§Ù„ÙØ±Ø¹:' : 'Branch:', shift.branchId)")));
+    expect(archive, contains("branchNames[shift.branchId]"));
+    expect(archive, contains("branchName"));
     expect(details, contains("shift.debtCollectionsCard ?? 0.0"));
     expect(details, contains("shift.refundsCard ?? 0.0"));
     expect(details, contains("shift.debtCollectionsTransfer ?? 0.0"));

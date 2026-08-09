@@ -278,13 +278,13 @@ class AuthRepository {
 
   List<String> _readAssignedBranchIds(Map<String, dynamic> data) {
     final raw = data['assignedBranchIds'];
-    if (raw is! List) return const ['main'];
+    if (raw is! List) return const [];
     final branches = raw
         .map((value) => value.toString().trim())
         .where((value) => value.isNotEmpty)
         .toSet()
         .toList(growable: false);
-    return branches.isEmpty ? const ['main'] : branches;
+    return branches;
   }
 
   Future<void> _syncEmployeeRootDocument({
@@ -339,7 +339,7 @@ class AuthRepository {
           }
 
           Map<String, dynamic> permissions = {};
-          List<String> assignedBranchIds = const ['main'];
+          List<String> assignedBranchIds = const [];
           String empName = 'موظف';
           if (merchantUid != null) {
             final empDoc = await _firestore

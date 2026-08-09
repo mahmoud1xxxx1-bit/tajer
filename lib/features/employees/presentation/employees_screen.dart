@@ -558,7 +558,10 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
                     helperStyle: const TextStyle(fontFamily: 'Tajawal')),
               ),
               const Divider(height: 32),
-              Text(isAr ? "صلاحيات الموظف:" : "Employee Permissions:",
+              Text(
+                  isAr
+                      ? '\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0645\u0648\u0638\u0641:'
+                      : 'Employee permissions:',
                   style: const TextStyle(
                       fontFamily: 'Tajawal',
                       fontWeight: FontWeight.bold,
@@ -566,8 +569,8 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
               const SizedBox(height: 8),
               Text(
                 isAr
-                    ? "ØªØ¯Ø§Ø± Ø§Ù„ØµÙ„Ø§Ø­ÙŠØ§Øª Ù…Ù† Ø´Ø§Ø´Ø© Ø§Ù„ØµÙ„Ø§Ø­ÙŠØ§Øª Ø§Ù„Ù…ØªÙ‚Ø¯Ù…Ø©"
-                    : "Permissions are managed from Advanced Permissions",
+                    ? '\u064a\u062a\u0645 \u062a\u062d\u062f\u064a\u062f \u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0628\u0639\u062f \u0625\u0646\u0634\u0627\u0621 \u0627\u0644\u0645\u0648\u0638\u0641 \u0645\u0646 \u0634\u0627\u0634\u0629 "\u0627\u0644\u0635\u0644\u0627\u062d\u064a\u0627\u062a \u0627\u0644\u0645\u062a\u0642\u062f\u0645\u0629".'
+                    : 'Configure permissions after creating the employee from "Advanced Permissions".',
                 style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14),
                 textAlign: TextAlign.center,
               ),

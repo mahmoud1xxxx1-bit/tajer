@@ -18,10 +18,12 @@ final branchOrdersStreamProvider =
 
   final merchantId = currentEffectiveMerchantId(appUser);
   final branchId = ref.watch(selectedBranchIdProvider);
+  if (branchId.isEmpty) return const Stream.empty();
 
   return FirebaseFirestore.instance
       .collection('orders')
       .where('merchantId', isEqualTo: merchantId)
+      .where('branchId', isEqualTo: branchId)
       .snapshots()
       .map((snapshot) {
     var orders = snapshot.docs

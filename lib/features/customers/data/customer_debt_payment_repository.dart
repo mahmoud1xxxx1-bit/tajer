@@ -32,8 +32,15 @@ class CustomerDebtPaymentRepository {
 
   /// Merchant-wide history for a customer. This is the authoritative view used
   /// when reconciling a merchant-wide customer balance across branches.
-  Stream<List<CustomerDebtPayment>> watchCustomerPayments(String customerId) {
-    return _paymentsRef.snapshots().map((snapshot) {
+  Stream<List<CustomerDebtPayment>> watchCustomerPayments(
+    String customerId, {
+    String? branchId,
+  }) {
+    Query<Map<String, dynamic>> query = _paymentsRef;
+    if (branchId != null && branchId.isNotEmpty) {
+      query = query.where('branchId', isEqualTo: branchId);
+    }
+    return query.snapshots().map((snapshot) {
       return _decode(snapshot)
           .where((payment) => payment.customerId == customerId)
           .toList();
@@ -43,11 +50,10 @@ class CustomerDebtPaymentRepository {
   /// Operational branch view for branch reports. The customer balance itself
   /// remains merchant-wide; only cash/card/transfer provenance is filtered.
   Stream<List<CustomerDebtPayment>> watchBranchPayments(String branchId) {
-    return _paymentsRef.snapshots().map((snapshot) {
-      return _decode(snapshot)
-          .where((payment) => payment.branchId == branchId)
-          .toList();
-    });
+    return _paymentsRef
+        .where('branchId', isEqualTo: branchId)
+        .snapshots()
+        .map(_decode);
   }
 
   /// Complete immutable collection history for consolidated cashflow reports.
@@ -70,7 +76,15 @@ final customerDebtPaymentsProvider = StreamProvider.family
     .autoDispose<List<CustomerDebtPayment>, String>((ref, customerId) {
   final repository = ref.watch(customerDebtPaymentRepositoryProvider);
   if (repository == null) return Stream.value(const []);
-  return repository.watchCustomerPayments(customerId);
+  final appUser = ref.watch(appUserProvider).value;
+  final branchId = ref.watch(selectedBranchIdProvider);
+  if (appUser?.role == 'employee' && branchId.isEmpty) {
+    return Stream.value(const []);
+  }
+  return repository.watchCustomerPayments(
+    customerId,
+    branchId: appUser?.role == 'employee' ? branchId : null,
+  );
 });
 
 final branchCustomerDebtPaymentsProvider =
@@ -78,12 +92,17 @@ final branchCustomerDebtPaymentsProvider =
   final repository = ref.watch(customerDebtPaymentRepositoryProvider);
   if (repository == null) return Stream.value(const []);
   final branchId = ref.watch(selectedBranchIdProvider);
+  if (branchId.isEmpty) return Stream.value(const []);
   return repository.watchBranchPayments(branchId);
 });
 
 final merchantCustomerDebtPaymentsProvider =
     StreamProvider.autoDispose<List<CustomerDebtPayment>>((ref) {
   final repository = ref.watch(customerDebtPaymentRepositoryProvider);
+  final appUser = ref.watch(appUserProvider).value;
   if (repository == null) return Stream.value(const []);
+  if (appUser == null || appUser.role == 'employee') {
+    return Stream.value(const []);
+  }
   return repository.watchAllPayments();
 });

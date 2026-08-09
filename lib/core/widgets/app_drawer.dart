@@ -35,7 +35,8 @@ class AppDrawer extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      if (storeProfile?.logoBase64 != null && storeProfile!.logoBase64.isNotEmpty) ...[
+                      if (storeProfile?.logoBase64 != null &&
+                          storeProfile!.logoBase64.isNotEmpty) ...[
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8),
                           child: Image.memory(
@@ -53,7 +54,8 @@ class AppDrawer extends ConsumerWidget {
                             color: Colors.white.withOpacity(0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(Icons.storefront, color: Colors.white, size: 32),
+                          child: const Icon(Icons.storefront,
+                              color: Colors.white, size: 32),
                         ),
                         const SizedBox(width: 12),
                       ],
@@ -76,12 +78,17 @@ class AppDrawer extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: appUser?.role == 'employee' ? Colors.amber.withOpacity(0.2) : Colors.green.withOpacity(0.2),
+                      color: appUser?.role == 'employee'
+                          ? Colors.amber.withOpacity(0.2)
+                          : Colors.green.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: appUser?.role == 'employee' ? Colors.amberAccent : Colors.greenAccent,
+                        color: appUser?.role == 'employee'
+                            ? Colors.amberAccent
+                            : Colors.greenAccent,
                         width: 1,
                       ),
                     ),
@@ -89,8 +96,12 @@ class AppDrawer extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          appUser?.role == 'employee' ? Icons.badge_outlined : Icons.admin_panel_settings_outlined,
-                          color: appUser?.role == 'employee' ? Colors.amberAccent : Colors.greenAccent,
+                          appUser?.role == 'employee'
+                              ? Icons.badge_outlined
+                              : Icons.admin_panel_settings_outlined,
+                          color: appUser?.role == 'employee'
+                              ? Colors.amberAccent
+                              : Colors.greenAccent,
                           size: 16,
                         ),
                         const SizedBox(width: 6),
@@ -100,7 +111,9 @@ class AppDrawer extends ConsumerWidget {
                                 ? l10n.employeePrefix(appUser?.name ?? "")
                                 : l10n.merchantAccount,
                             style: TextStyle(
-                              color: appUser?.role == 'employee' ? Colors.amberAccent : Colors.greenAccent,
+                              color: appUser?.role == 'employee'
+                                  ? Colors.amberAccent
+                                  : Colors.greenAccent,
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
                               fontFamily: 'Tajawal',
@@ -111,11 +124,15 @@ class AppDrawer extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  if (storeProfile?.phone != null && storeProfile!.phone.isNotEmpty) ...[
+                  if (storeProfile?.phone != null &&
+                      storeProfile!.phone.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Text(
                       '📞 ${storeProfile.phone}',
-                      style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12, fontFamily: 'Tajawal'),
+                      style: TextStyle(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 12,
+                          fontFamily: 'Tajawal'),
                     ),
                   ],
                 ],
@@ -127,86 +144,96 @@ class AppDrawer extends ConsumerWidget {
             child: ActiveBranchSelector(compact: true),
           ),
           if (appUser?.role != 'employee')
-          ListTile(
-            leading: const Icon(Icons.account_tree_rounded),
-            title: Text(
-              Localizations.localeOf(context).languageCode == 'ar'
-                  ? 'الفروع'
-                  : 'Branches',
-              style: const TextStyle(fontFamily: 'Tajawal'),
+            ListTile(
+              leading: const Icon(Icons.account_tree_rounded),
+              title: Text(
+                Localizations.localeOf(context).languageCode == 'ar'
+                    ? 'الفروع'
+                    : 'Branches',
+                style: const TextStyle(fontFamily: 'Tajawal'),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/branches');
+              },
             ),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/branches');
-            },
-          ),
           if (appUser?.hasPermission('can_manage_expenses') ?? false)
-          ListTile(
-            leading: const Icon(Icons.money_off),
-            title: Text(l10n.expenses, style: const TextStyle(fontFamily: 'Tajawal')),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/expenses');
-            },
-          ),
-          if (appUser?.hasPermission('can_manage_inventory') ?? false)
-          ListTile(
-            leading: const Icon(Icons.inventory_2),
-            title: Text(l10n.rawMaterials, style: const TextStyle(fontFamily: 'Tajawal')),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/raw_materials');
-            },
-          ),
-          if (appUser?.hasPermission('can_manage_inventory') ?? false)
-          ListTile(
-            leading: const Icon(Icons.business),
-            title: Text(l10n.suppliers, style: const TextStyle(fontFamily: 'Tajawal')),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/suppliers');
-            },
-          ),
+            ListTile(
+              leading: const Icon(Icons.money_off),
+              title: Text(l10n.expenses,
+                  style: const TextStyle(fontFamily: 'Tajawal')),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/expenses');
+              },
+            ),
+          if (appUser?.role != 'employee' &&
+              (appUser?.hasPermission('can_manage_inventory') ?? false))
+            ListTile(
+              leading: const Icon(Icons.inventory_2),
+              title: Text(l10n.rawMaterials,
+                  style: const TextStyle(fontFamily: 'Tajawal')),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/raw_materials');
+              },
+            ),
+          if (appUser?.role != 'employee' &&
+              (appUser?.hasPermission('can_manage_inventory') ?? false))
+            ListTile(
+              leading: const Icon(Icons.business),
+              title: Text(l10n.suppliers,
+                  style: const TextStyle(fontFamily: 'Tajawal')),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/suppliers');
+              },
+            ),
           if (appUser?.hasPermission('can_manage_products') ?? false)
-          ListTile(
-            leading: const Icon(Icons.category),
-            title: Text(l10n.categories, style: const TextStyle(fontFamily: 'Tajawal')),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/categories');
-            },
-          ),
+            ListTile(
+              leading: const Icon(Icons.category),
+              title: Text(l10n.categories,
+                  style: const TextStyle(fontFamily: 'Tajawal')),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/categories');
+              },
+            ),
           if (appUser?.hasPermission('can_manage_inventory') ?? false)
-          ListTile(
-            leading: const Icon(Icons.history),
-            title: Text(l10n.inventoryLog, style: const TextStyle(fontFamily: 'Tajawal')),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/inventory_logs');
-            },
-          ),
+            ListTile(
+              leading: const Icon(Icons.history),
+              title: Text(l10n.inventoryLog,
+                  style: const TextStyle(fontFamily: 'Tajawal')),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/inventory_logs');
+              },
+            ),
           if (appUser?.role != 'employee')
-          ListTile(
-            leading: const Icon(Icons.manage_accounts),
-            title: Text(l10n.employeesPermissionsPro, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.orange)),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/employees');
-            },
-          ),
+            ListTile(
+              leading: const Icon(Icons.manage_accounts),
+              title: Text(l10n.employeesPermissionsPro,
+                  style: const TextStyle(
+                      fontFamily: 'Tajawal', color: Colors.orange)),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/employees');
+              },
+            ),
           if (appUser?.role != 'employee')
-          ListTile(
-            leading: const Icon(Icons.settings),
-            title: Text(l10n.settings, style: const TextStyle(fontFamily: 'Tajawal')),
-            onTap: () {
-              Navigator.pop(context);
-              context.push('/settings');
-            },
-          ),
-
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: Text(l10n.settings,
+                  style: const TextStyle(fontFamily: 'Tajawal')),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/settings');
+              },
+            ),
           ListTile(
             leading: const Icon(Icons.lock_clock),
-            title: Text(l10n.closeShiftZReport, style: const TextStyle(fontFamily: 'Tajawal')),
+            title: Text(l10n.closeShiftZReport,
+                style: const TextStyle(fontFamily: 'Tajawal')),
             onTap: () {
               Navigator.pop(context);
               context.push('/end_shift');
@@ -215,7 +242,9 @@ class AppDrawer extends ConsumerWidget {
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),
-            title: Text(l10n.logout, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red)),
+            title: Text(l10n.logout,
+                style:
+                    const TextStyle(fontFamily: 'Tajawal', color: Colors.red)),
             onTap: () async {
               await ref.read(authRepositoryProvider).signOut();
               if (context.mounted) {

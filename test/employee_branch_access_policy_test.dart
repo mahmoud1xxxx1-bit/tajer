@@ -29,9 +29,9 @@ void main() {
       expect(user.canAccessBranch('branch-2'), isTrue);
     });
 
-    test('legacy employee without assignments is main-only', () {
+    test('employee without assignments cannot access branch data', () {
       final user = _user(role: 'employee');
-      expect(user.canAccessBranch('main'), isTrue);
+      expect(user.canAccessBranch('main'), isFalse);
       expect(user.canAccessBranch('branch-2'), isFalse);
     });
 

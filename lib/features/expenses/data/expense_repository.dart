@@ -29,6 +29,7 @@ class ExpenseRepository {
     final snap = await _firestore
         .collection('shifts')
         .where('merchantId', isEqualTo: _merchantId)
+        .where('branchId', isEqualTo: branchId)
         .where('status', isEqualTo: 'open')
         .get();
     for (final doc in snap.docs) {
@@ -40,6 +41,8 @@ class ExpenseRepository {
 
   Stream<List<Expense>> watchExpenses({String branchId = 'main'}) {
     return _expensesRef
+        .where('branchId', isEqualTo: branchId)
+        .orderBy('date', descending: true)
         .withConverter(
           fromFirestore: (snapshot, _) {
             final data = snapshot.data()!;
@@ -50,14 +53,8 @@ class ExpenseRepository {
           },
           toFirestore: (expense, _) => expense.toJson(),
         )
-        .orderBy('date', descending: true)
         .snapshots()
-        .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => doc.data())
-          .where((expense) => expense.branchId == branchId)
-          .toList();
-    });
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }
 
   Future<void> addExpense(Expense expense) async {
@@ -126,6 +123,7 @@ class ExpenseRepository {
       final openShifts = await _firestore
           .collection('shifts')
           .where('merchantId', isEqualTo: expense.merchantId)
+          .where('branchId', isEqualTo: expense.branchId)
           .where('status', isEqualTo: 'open')
           .get();
       final matchingOpen = openShifts.docs.where((doc) {
@@ -145,6 +143,7 @@ class ExpenseRepository {
         final closed = await _firestore
             .collection('shifts')
             .where('merchantId', isEqualTo: expense.merchantId)
+            .where('branchId', isEqualTo: expense.branchId)
             .where('status', isEqualTo: 'closed')
             .get();
         final hasClosedInBranch = closed.docs.any((doc) {
@@ -189,5 +188,6 @@ final expensesStreamProvider = StreamProvider<List<Expense>>((ref) {
   final repo = ref.watch(expenseRepositoryProvider);
   if (repo == null) return Stream.value([]);
   final branchId = ref.watch(selectedBranchIdProvider);
+  if (branchId.isEmpty) return Stream.value([]);
   return repo.watchExpenses(branchId: branchId);
 });

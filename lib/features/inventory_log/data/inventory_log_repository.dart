@@ -23,6 +23,8 @@ class InventoryLogRepository {
   Stream<List<InventoryLog>> watchLogs({String? branchId}) {
     final scope = branchId ?? _branchId;
     return _logsRef
+        .where('branchId', isEqualTo: scope)
+        .orderBy('date', descending: true)
         .withConverter<InventoryLog?>(
           fromFirestore: (snapshot, _) {
             try {
@@ -51,7 +53,6 @@ class InventoryLogRepository {
           },
           toFirestore: (log, _) => log?.toJson() ?? {},
         )
-        .orderBy('date', descending: true)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs
@@ -205,5 +206,6 @@ final inventoryLogsStreamProvider = StreamProvider<List<InventoryLog>>((ref) {
   final repo = ref.watch(inventoryLogRepositoryProvider);
   if (repo == null) return Stream.value([]);
   final branchId = ref.watch(selectedBranchIdProvider);
+  if (branchId.isEmpty) return Stream.value([]);
   return repo.watchLogs(branchId: branchId);
 });

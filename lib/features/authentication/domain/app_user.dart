@@ -25,21 +25,18 @@ class AppUser with _$AppUser {
     String? nationalAddress,
   }) = _AppUser;
 
-  factory AppUser.fromJson(Map<String, dynamic> json) => _$AppUserFromJson(json);
+  factory AppUser.fromJson(Map<String, dynamic> json) =>
+      _$AppUserFromJson(json);
 
   bool hasPermission(String permissionName) {
     if (role == 'merchant' || role == 'admin') return true;
     return permissions[permissionName] == true;
   }
 
-  /// Owners/admins can operate every branch. Legacy employees created before
-  /// multi-branch support are intentionally scoped to Main Branch until the
-  /// merchant explicitly assigns them elsewhere.
+  /// Owners/admins can operate every branch. Employees must be explicitly
+  /// assigned to a branch before branch-scoped protected reads are attempted.
   bool canAccessBranch(String branchId) {
     if (role == 'merchant' || role == 'admin') return true;
-    final normalized = assignedBranchIds.isEmpty
-        ? const <String>['main']
-        : assignedBranchIds;
-    return normalized.contains(branchId);
+    return assignedBranchIds.contains(branchId);
   }
 }

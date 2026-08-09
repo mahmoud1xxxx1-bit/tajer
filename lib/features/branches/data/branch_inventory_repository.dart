@@ -387,12 +387,17 @@ final branchInventoryStreamProvider =
     StreamProvider.family<List<BranchInventory>, String>((ref, branchId) {
   final repository = ref.watch(branchInventoryRepositoryProvider);
   if (repository == null) return Stream.value(const []);
+  if (branchId.isEmpty) return Stream.value(const []);
   return repository.watch(branchId);
 });
 
 final inventoryTransfersStreamProvider =
     StreamProvider<List<InventoryTransfer>>((ref) {
   final repository = ref.watch(branchInventoryRepositoryProvider);
+  final appUser = ref.watch(appUserProvider).value;
   if (repository == null) return Stream.value(const <InventoryTransfer>[]);
+  if (appUser?.role == 'employee') {
+    return Stream.value(const <InventoryTransfer>[]);
+  }
   return repository.watchTransfers();
 });
