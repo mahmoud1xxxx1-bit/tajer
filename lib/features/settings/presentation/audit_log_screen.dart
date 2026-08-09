@@ -9,6 +9,7 @@ import '../../orders/presentation/order_details_screen.dart';
 import '../../expenses/data/expense_repository.dart';
 import '../../expenses/domain/expense.dart';
 import '../../../core/providers/settings_provider.dart';
+import '../../../core/providers/effective_merchant.dart';
 import '../../../core/theme/glass_card.dart';
 
 class AuditLogItem {
@@ -45,72 +46,89 @@ class AuditLogScreen extends ConsumerStatefulWidget {
 }
 
 class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
-
-  Widget _buildLogItem(AuditLogItem item, ThemeData theme, AppCurrency currency, bool isAr) {
+  Widget _buildLogItem(
+      AuditLogItem item, ThemeData theme, AppCurrency currency, bool isAr) {
     try {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.05)),
-      ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: item.badgeColor.withOpacity(0.1),
-            shape: BoxShape.circle,
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border:
+              Border.all(color: theme.colorScheme.primary.withOpacity(0.05)),
+        ),
+        child: ListTile(
+          leading: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: item.badgeColor.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              _getIcon(item.type),
+              color: item.badgeColor,
+            ),
           ),
-          child: Icon(
-            _getIcon(item.type),
-            color: item.badgeColor,
+          title: Text(item.title,
+              style: const TextStyle(
+                  fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+          subtitle: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(item.subtitle,
+                  style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12)),
+              if (item.details.isNotEmpty)
+                Text(item.details,
+                    style: const TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontSize: 11,
+                        color: Colors.grey)),
+              Text(item.performedBy,
+                  style: const TextStyle(
+                      fontFamily: 'Tajawal', fontSize: 10, color: Colors.teal)),
+            ],
           ),
+          trailing: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text('${item.amount.toStringAsFixed(2)} ${currency.code}',
+                  style: TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontWeight: FontWeight.bold,
+                      color: item.badgeColor)),
+              Text(_formatTime(item.timestamp, isAr),
+                  style: const TextStyle(fontFamily: 'Tajawal', fontSize: 10)),
+            ],
+          ),
+          onTap: () {
+            if (item.order != null) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => OrderDetailsScreen(order: item.order!),
+                ),
+              );
+            }
+          },
         ),
-        title: Text(item.title, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-        subtitle: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(item.subtitle, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12)),
-            if (item.details.isNotEmpty)
-              Text(item.details, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 11, color: Colors.grey)),
-            Text(item.performedBy, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 10, color: Colors.teal)),
-          ],
-        ),
-        trailing: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text('${item.amount.toStringAsFixed(2)} ${currency.code}', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: item.badgeColor)),
-            Text(_formatTime(item.timestamp, isAr), style: const TextStyle(fontFamily: 'Tajawal', fontSize: 10)),
-          ],
-        ),
-        onTap: () {
-          if (item.order != null) {
-             Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => OrderDetailsScreen(order: item.order!),
-              ),
-            );
-          }
-        },
-      ),
-    );
+      );
     } catch (e, st) {
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         color: Colors.red.withOpacity(0.1),
-        child: Text('خطأ في العنصر: $e', style: const TextStyle(color: Colors.red)),
+        child: Text('خطأ في العنصر: $e',
+            style: const TextStyle(color: Colors.red)),
       );
     }
   }
 
   String _formatTime(DateTime dt, bool isAr) {
     int hour = dt.hour;
-    String period = isAr ? (hour >= 12 ? 'م' : 'ص') : (hour >= 12 ? 'PM' : 'AM');
+    String period =
+        isAr ? (hour >= 12 ? 'م' : 'ص') : (hour >= 12 ? 'PM' : 'AM');
     if (hour > 12) hour -= 12;
     if (hour == 0) hour = 12;
     String min = dt.minute.toString().padLeft(2, '0');
@@ -119,17 +137,28 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
 
   String _getPaymentName(String? method, bool isAr) {
     if (method == 'cash') return isAr ? 'نقداً (كاش)' : 'Cash';
-    if (method == 'card' || method == 'mada' || method == 'apple_pay') return isAr ? 'بطاقة شبكة' : 'Card';
-    if (method == 'debt') return isAr ? 'آجل / ذمم على العميل' : 'Credit / Debt';
+    if (method == 'card' || method == 'mada' || method == 'apple_pay')
+      return isAr ? 'بطاقة شبكة' : 'Card';
+    if (method == 'debt')
+      return isAr ? 'آجل / ذمم على العميل' : 'Credit / Debt';
     return method ?? (isAr ? 'نقدي' : 'Cash');
   }
 
   IconData _getIcon(String type) {
-    if (type.contains('مبيعات') || type.toLowerCase().contains('sale')) return Icons.point_of_sale;
-    if (type.contains('مخزون') || type.toLowerCase().contains('inventory') || type.contains('منتج')) return Icons.inventory_2_outlined;
-    if (type.contains('مصروف') || type.toLowerCase().contains('expense')) return Icons.account_balance_wallet_outlined;
-    if (type.contains('عميل') || type.toLowerCase().contains('customer')) return Icons.person_add_alt_1_outlined;
-    if (type.contains('حذف') || type.contains('إلغاء') || type.toLowerCase().contains('delete') || type.toLowerCase().contains('cancel')) return Icons.delete_forever_outlined;
+    if (type.contains('مبيعات') || type.toLowerCase().contains('sale'))
+      return Icons.point_of_sale;
+    if (type.contains('مخزون') ||
+        type.toLowerCase().contains('inventory') ||
+        type.contains('منتج')) return Icons.inventory_2_outlined;
+    if (type.contains('مصروف') || type.toLowerCase().contains('expense'))
+      return Icons.account_balance_wallet_outlined;
+    if (type.contains('عميل') || type.toLowerCase().contains('customer'))
+      return Icons.person_add_alt_1_outlined;
+    if (type.contains('حذف') ||
+        type.contains('إلغاء') ||
+        type.toLowerCase().contains('delete') ||
+        type.toLowerCase().contains('cancel'))
+      return Icons.delete_forever_outlined;
     return Icons.manage_history_outlined;
   }
 
@@ -140,14 +169,18 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
     final currency = ref.watch(currencyProvider);
     final appUser = ref.watch(appUserProvider).value;
     final isMerchant = appUser?.role == 'admin' || appUser?.role != 'employee';
-    final merchantId = appUser?.role == 'employee' ? appUser?.merchantId : appUser?.id;
+    final merchantId =
+        appUser == null ? null : currentEffectiveMerchantId(appUser);
     final ordersAsync = ref.watch(ordersStreamProvider);
     final expensesAsync = ref.watch(expensesStreamProvider);
 
     if (!isMerchant) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(isAr ? 'سجل الحركة الشامل (المراجعة)' : 'Centralized Audit Log', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+          title: Text(
+              isAr ? 'سجل الحركة الشامل (المراجعة)' : 'Centralized Audit Log',
+              style: const TextStyle(
+                  fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
           centerTitle: true,
         ),
         body: Center(
@@ -157,8 +190,13 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
               const Icon(Icons.lock_outline, size: 64, color: Colors.redAccent),
               const SizedBox(height: 16),
               Text(
-                isAr ? 'هذه الصفحة مخصصة للتاجر (صاحب المتجر) فقط' : 'This page is restricted to the merchant/admin only.',
-                style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold),
+                isAr
+                    ? 'هذه الصفحة مخصصة للتاجر (صاحب المتجر) فقط'
+                    : 'This page is restricted to the merchant/admin only.',
+                style: const TextStyle(
+                    fontFamily: 'Tajawal',
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -171,12 +209,15 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
       appBar: AppBar(
         title: Text(
           isAr ? 'سجل الحركة الشامل (المراجعة)' : 'Centralized Audit Log',
-          style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+          style: const TextStyle(
+              fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
       body: (merchantId == null || merchantId.isEmpty)
-          ? Center(child: Text(isAr ? 'لا يوجد تصريح' : 'No authorization', style: const TextStyle(fontFamily: 'Tajawal')))
+          ? Center(
+              child: Text(isAr ? 'لا يوجد تصريح' : 'No authorization',
+                  style: const TextStyle(fontFamily: 'Tajawal')))
           : StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('merchants')
@@ -185,234 +226,333 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                   .snapshots(),
               builder: (context, snapshot) {
                 try {
-                final isInventoryLoading = snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData;
-                final isOrdersLoading = ordersAsync.isLoading && !ordersAsync.hasValue;
-                final isExpensesLoading = expensesAsync.isLoading && !expensesAsync.hasValue;
+                  final isInventoryLoading =
+                      snapshot.connectionState == ConnectionState.waiting &&
+                          !snapshot.hasData;
+                  final isOrdersLoading =
+                      ordersAsync.isLoading && !ordersAsync.hasValue;
+                  final isExpensesLoading =
+                      expensesAsync.isLoading && !expensesAsync.hasValue;
 
-                if (isInventoryLoading || isOrdersLoading || isExpensesLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (snapshot.hasError) {
-                  return Center(child: Text('خطأ في جلب البيانات: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
-                }
-
-                final List<AuditLogItem> items = [];
-
-                // 1. Add All Orders (Active and Cancelled)
-                final orders = ordersAsync.value ?? [];
-                for (final o in orders) {
-                  try {
-                    final isCancelled = o.status == 'cancelled';
-                    final refNum = o.queueNumber != null ? '#${o.queueNumber}' : (o.id.length >= 6 ? '#${o.id.substring(0, 6).toUpperCase()}' : '#${o.id.toUpperCase()}');
-                    final payDesc = _getPaymentName(o.paymentMethod, isAr);
-                    final itemsSummary = o.items.map((i) => '${i.productName} (${i.quantity}x)').join('، ');
-                    
-                    items.add(
-                      AuditLogItem(
-                        id: o.id,
-                        title: isAr ? '🛒 فاتورة مبيعات $refNum ${isCancelled ? "[ملغى]" : ""}' : '🛒 Sales Order $refNum ${isCancelled ? "[Cancelled]" : ""}',
-                        subtitle: isAr ? '🤝 العميل: ${o.customerName} | 💵 الدفع: $payDesc' : '🤝 Customer: ${o.customerName} | 💵 Payment: $payDesc',
-                        details: isAr ? '📦 الأصناف: $itemsSummary' : '📦 Items: $itemsSummary',
-                        timestamp: o.createdAt,
-                        performedBy: o.creatorName != null && o.creatorName!.isNotEmpty ? o.creatorName! : (isAr ? 'التاجر' : 'Merchant'),
-                        type: 'مبيعات',
-                        amount: isCancelled ? 0.0 : o.total,
-                        order: o,
-                        badgeColor: isCancelled ? Colors.redAccent : Colors.green,
-                      ),
-                    );
-                  } catch (e) {
-                    // Safe skip on corrupted order item
+                  if (isInventoryLoading ||
+                      isOrdersLoading ||
+                      isExpensesLoading) {
+                    return const Center(child: CircularProgressIndicator());
                   }
-                }
-
-                // 2. Add All Expenses
-                final expenses = expensesAsync.value ?? [];
-                for (final exp in expenses) {
-                  try {
-                    final catStr = exp.category != null && exp.category!.isNotEmpty ? '[${exp.category}] ' : '';
-                    final noteStr = exp.notes ?? '';
-                    items.add(
-                      AuditLogItem(
-                        id: exp.id,
-                        title: isAr ? '💸 مصروف: ${exp.title}' : '💸 Expense: ${exp.title}',
-                        subtitle: isAr ? '📝 البيان: $catStr$noteStr' : '📝 Note: $catStr$noteStr',
-                        timestamp: exp.date,
-                        performedBy: exp.creatorName != null && exp.creatorName!.isNotEmpty ? exp.creatorName! : (isAr ? 'التاجر' : 'Merchant'),
-                        type: 'مصروفات',
-                        amount: -exp.amount,
-                        badgeColor: Colors.orangeAccent,
-                      ),
-                    );
-                  } catch (e) {
-                    // Safe skip
+                  if (snapshot.hasError) {
+                    return Center(
+                        child: Text('خطأ في جلب البيانات: ${snapshot.error}',
+                            style: const TextStyle(color: Colors.red)));
                   }
-                }
 
-                // 3. Add Activity & Inventory Logs from Firestore
-                if (snapshot.hasData && snapshot.data != null) {
-                  for (final doc in snapshot.data!.docs) {
+                  final List<AuditLogItem> items = [];
+
+                  // 1. Add All Orders (Active and Cancelled)
+                  final orders = ordersAsync.value ?? [];
+                  for (final o in orders) {
                     try {
-                      if (doc.id == 'store_profile_doc' || doc.id.startsWith('counter_')) continue;
-                      final data = doc.data() as Map<String, dynamic>? ?? {};
-                      
-                      if (doc.id.startsWith('act_')) {
-                        final ts = safeParseDate(data['timestamp']);
-                        final action = data['actionType']?.toString() ?? (isAr ? 'عملية' : 'Action');
-                        final desc = data['description']?.toString() ?? '';
-                        final empName = data['employeeName']?.toString() ?? (isAr ? 'التاجر' : 'Merchant');
-                        final amt = (data['amount'] as num? ?? 0.0).toDouble();
-                        
-                        items.add(
-                          AuditLogItem(
-                            id: doc.id,
-                            title: '⚙️ $action',
-                            subtitle: desc,
-                            timestamp: ts,
-                            performedBy: empName,
-                            type: action,
-                            amount: amt,
-                            badgeColor: action.contains('حذف') || action.contains('إلغاء') ? Colors.redAccent : Colors.blueAccent,
-                          ),
-                        );
-                      } else {
-                        // Inventory change log
-                        final ts = safeParseDate(data['date']);
-                        final pName = data['productName']?.toString() ?? (isAr ? 'صنف/منتج' : 'Product');
-                        final change = (data['changeQuantity'] as num? ?? 0).toInt();
-                        final prev = (data['previousQuantity'] as num? ?? 0).toInt();
-                        final next = (data['newQuantity'] as num? ?? 0).toInt();
-                        final reason = data['reason']?.toString() ?? (isAr ? 'تعديل أو حركة في المخزون' : 'Inventory movement');
-                        final userEmail = data['userEmail']?.toString() ?? (isAr ? 'التاجر' : 'Merchant');
-                        
-                        final changeStr = change > 0 ? '+$change' : '$change';
-                        items.add(
-                          AuditLogItem(
-                            id: doc.id,
-                            title: isAr ? '📦 مخزون: $pName ($changeStr)' : '📦 Inventory: $pName ($changeStr)',
-                            subtitle: isAr ? '🔄 من ($prev) إلى ($next) | 📝 السبب: $reason' : '🔄 From ($prev) to ($next) | 📝 Reason: $reason',
-                            timestamp: ts,
-                            performedBy: userEmail,
-                            type: 'مخزون',
-                            badgeColor: change > 0 ? Colors.teal : Colors.amber,
-                          ),
-                        );
-                      }
+                      final isCancelled = o.status == 'cancelled';
+                      final refNum = o.queueNumber != null
+                          ? '#${o.queueNumber}'
+                          : (o.id.length >= 6
+                              ? '#${o.id.substring(0, 6).toUpperCase()}'
+                              : '#${o.id.toUpperCase()}');
+                      final payDesc = _getPaymentName(o.paymentMethod, isAr);
+                      final itemsSummary = o.items
+                          .map((i) => '${i.productName} (${i.quantity}x)')
+                          .join('، ');
+
+                      items.add(
+                        AuditLogItem(
+                          id: o.id,
+                          title: isAr
+                              ? '🛒 فاتورة مبيعات $refNum ${isCancelled ? "[ملغى]" : ""}'
+                              : '🛒 Sales Order $refNum ${isCancelled ? "[Cancelled]" : ""}',
+                          subtitle: isAr
+                              ? '🤝 العميل: ${o.customerName} | 💵 الدفع: $payDesc'
+                              : '🤝 Customer: ${o.customerName} | 💵 Payment: $payDesc',
+                          details: isAr
+                              ? '📦 الأصناف: $itemsSummary'
+                              : '📦 Items: $itemsSummary',
+                          timestamp: o.createdAt,
+                          performedBy:
+                              o.creatorName != null && o.creatorName!.isNotEmpty
+                                  ? o.creatorName!
+                                  : (isAr ? 'التاجر' : 'Merchant'),
+                          type: 'مبيعات',
+                          amount: isCancelled ? 0.0 : o.total,
+                          order: o,
+                          badgeColor:
+                              isCancelled ? Colors.redAccent : Colors.green,
+                        ),
+                      );
                     } catch (e) {
-                      // Prevent type casting crash
+                      // Safe skip on corrupted order item
                     }
                   }
-                }
 
-                if (items.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.history_edu_outlined, size: 80, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
-                        const SizedBox(height: 20),
-                        Text(
-                          isAr ? 'لا توجد حركات أو مبيعات مسجلة في المتجر حتى الآن' : 'No store actions or sales recorded yet',
-                          style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          isAr ? 'أي فاتورة، مصروف، أو تعديل مخزون سيظهر هنا بالتفصيل التام' : 'Any order, expense, or inventory change will appear here in detail',
-                          style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                // Sort descending by timestamp
-                items.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-
-                // Group by day YYYY-MM-DD
-                final Map<String, List<AuditLogItem>> groupedByDay = {};
-                for (final item in items) {
-                  final dayStr = '${item.timestamp.year}-${item.timestamp.month.toString().padLeft(2, '0')}-${item.timestamp.day.toString().padLeft(2, '0')}';
-                  groupedByDay.putIfAbsent(dayStr, () => []).add(item);
-                }
-
-                final days = groupedByDay.keys.toList();
-                days.sort((a, b) => b.compareTo(a));
-
-                return ListView.builder(
-                  padding: const EdgeInsets.all(12),
-                  itemCount: days.length,
-                  itemBuilder: (context, index) {
+                  // 2. Add All Expenses
+                  final expenses = expensesAsync.value ?? [];
+                  for (final exp in expenses) {
                     try {
-                    final day = days[index];
-                    final dayItems = groupedByDay[day]!;
-                    final dailySales = dayItems.where((i) => i.type == 'مبيعات' && i.amount > 0).fold<double>(0.0, (sum, i) => sum + i.amount);
+                      final catStr =
+                          exp.category != null && exp.category!.isNotEmpty
+                              ? '[${exp.category}] '
+                              : '';
+                      final noteStr = exp.notes ?? '';
+                      items.add(
+                        AuditLogItem(
+                          id: exp.id,
+                          title: isAr
+                              ? '💸 مصروف: ${exp.title}'
+                              : '💸 Expense: ${exp.title}',
+                          subtitle: isAr
+                              ? '📝 البيان: $catStr$noteStr'
+                              : '📝 Note: $catStr$noteStr',
+                          timestamp: exp.date,
+                          performedBy: exp.creatorName != null &&
+                                  exp.creatorName!.isNotEmpty
+                              ? exp.creatorName!
+                              : (isAr ? 'التاجر' : 'Merchant'),
+                          type: 'مصروفات',
+                          amount: -exp.amount,
+                          badgeColor: Colors.orangeAccent,
+                        ),
+                      );
+                    } catch (e) {
+                      // Safe skip
+                    }
+                  }
 
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.1)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 4),
+                  // 3. Add Activity & Inventory Logs from Firestore
+                  if (snapshot.hasData && snapshot.data != null) {
+                    for (final doc in snapshot.data!.docs) {
+                      try {
+                        if (doc.id == 'store_profile_doc' ||
+                            doc.id.startsWith('counter_')) continue;
+                        final data = doc.data() as Map<String, dynamic>? ?? {};
+
+                        if (doc.id.startsWith('act_')) {
+                          final ts = safeParseDate(data['timestamp']);
+                          final action = data['actionType']?.toString() ??
+                              (isAr ? 'عملية' : 'Action');
+                          final desc = data['description']?.toString() ?? '';
+                          final empName = data['employeeName']?.toString() ??
+                              (isAr ? 'التاجر' : 'Merchant');
+                          final amt =
+                              (data['amount'] as num? ?? 0.0).toDouble();
+
+                          items.add(
+                            AuditLogItem(
+                              id: doc.id,
+                              title: '⚙️ $action',
+                              subtitle: desc,
+                              timestamp: ts,
+                              performedBy: empName,
+                              type: action,
+                              amount: amt,
+                              badgeColor: action.contains('حذف') ||
+                                      action.contains('إلغاء')
+                                  ? Colors.redAccent
+                                  : Colors.blueAccent,
+                            ),
+                          );
+                        } else {
+                          // Inventory change log
+                          final ts = safeParseDate(data['date']);
+                          final pName = data['productName']?.toString() ??
+                              (isAr ? 'صنف/منتج' : 'Product');
+                          final change =
+                              (data['changeQuantity'] as num? ?? 0).toInt();
+                          final prev =
+                              (data['previousQuantity'] as num? ?? 0).toInt();
+                          final next =
+                              (data['newQuantity'] as num? ?? 0).toInt();
+                          final reason = data['reason']?.toString() ??
+                              (isAr
+                                  ? 'تعديل أو حركة في المخزون'
+                                  : 'Inventory movement');
+                          final userEmail = data['userEmail']?.toString() ??
+                              (isAr ? 'التاجر' : 'Merchant');
+
+                          final changeStr = change > 0 ? '+$change' : '$change';
+                          items.add(
+                            AuditLogItem(
+                              id: doc.id,
+                              title: isAr
+                                  ? '📦 مخزون: $pName ($changeStr)'
+                                  : '📦 Inventory: $pName ($changeStr)',
+                              subtitle: isAr
+                                  ? '🔄 من ($prev) إلى ($next) | 📝 السبب: $reason'
+                                  : '🔄 From ($prev) to ($next) | 📝 Reason: $reason',
+                              timestamp: ts,
+                              performedBy: userEmail,
+                              type: 'مخزون',
+                              badgeColor:
+                                  change > 0 ? Colors.teal : Colors.amber,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        // Prevent type casting crash
+                      }
+                    }
+                  }
+
+                  if (items.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.history_edu_outlined,
+                              size: 80,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.4)),
+                          const SizedBox(height: 20),
+                          Text(
+                            isAr
+                                ? 'لا توجد حركات أو مبيعات مسجلة في المتجر حتى الآن'
+                                : 'No store actions or sales recorded yet',
+                            style: TextStyle(
+                                fontFamily: 'Tajawal',
+                                fontSize: 18,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.6),
+                                fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            isAr
+                                ? 'أي فاتورة، مصروف، أو تعديل مخزون سيظهر هنا بالتفصيل التام'
+                                : 'Any order, expense, or inventory change will appear here in detail',
+                            style: TextStyle(
+                                fontFamily: 'Tajawal',
+                                fontSize: 14,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.5)),
                           ),
                         ],
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: ExpansionTile(
-                          initiallyExpanded: index == 0,
-                          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          backgroundColor: theme.colorScheme.primary.withOpacity(0.08),
-                          collapsedBackgroundColor: theme.colorScheme.primary.withOpacity(0.04),
-                          leading: Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
+                    );
+                  }
+
+                  // Sort descending by timestamp
+                  items.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+
+                  // Group by day YYYY-MM-DD
+                  final Map<String, List<AuditLogItem>> groupedByDay = {};
+                  for (final item in items) {
+                    final dayStr =
+                        '${item.timestamp.year}-${item.timestamp.month.toString().padLeft(2, '0')}-${item.timestamp.day.toString().padLeft(2, '0')}';
+                    groupedByDay.putIfAbsent(dayStr, () => []).add(item);
+                  }
+
+                  final days = groupedByDay.keys.toList();
+                  days.sort((a, b) => b.compareTo(a));
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.all(12),
+                    itemCount: days.length,
+                    itemBuilder: (context, index) {
+                      try {
+                        final day = days[index];
+                        final dayItems = groupedByDay[day]!;
+                        final dailySales = dayItems
+                            .where((i) => i.type == 'مبيعات' && i.amount > 0)
+                            .fold<double>(0.0, (sum, i) => sum + i.amount);
+
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                                color:
+                                    theme.colorScheme.primary.withOpacity(0.1)),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
                               ),
-                            child: Icon(Icons.calendar_month_outlined, size: 24),
-                          ),
-                          title: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                '${isAr ? "تاريخ:" : "Date:"} $day',
-                                style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16),
-                              ),
-                              if (dailySales > 0)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(color: Colors.grey),
-                                  ),
-                                  child: Text('${dailySales.toStringAsFixed(2)} ${currency.code}', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold)),
-                                ),
                             ],
                           ),
-                          subtitle: Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              '${isAr ? "إجمالي الحركات والأنشطة في هذا اليوم:" : "Total activities today:"} ${dayItems.length}',
-                              style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: ExpansionTile(
+                              initiallyExpanded: index == 0,
+                              tilePadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 10),
+                              backgroundColor:
+                                  theme.colorScheme.primary.withOpacity(0.08),
+                              collapsedBackgroundColor:
+                                  theme.colorScheme.primary.withOpacity(0.04),
+                              leading: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(),
+                                child: Icon(Icons.calendar_month_outlined,
+                                    size: 24),
+                              ),
+                              title: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    '${isAr ? "تاريخ:" : "Date:"} $day',
+                                    style: const TextStyle(
+                                        fontFamily: 'Tajawal',
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16),
+                                  ),
+                                  if (dailySales > 0)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(color: Colors.grey),
+                                      ),
+                                      child: Text(
+                                          '${dailySales.toStringAsFixed(2)} ${currency.code}',
+                                          style: const TextStyle(
+                                              fontFamily: 'Tajawal',
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.bold)),
+                                    ),
+                                ],
+                              ),
+                              subtitle: Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  '${isAr ? "إجمالي الحركات والأنشطة في هذا اليوم:" : "Total activities today:"} ${dayItems.length}',
+                                  style: const TextStyle(
+                                      fontFamily: 'Tajawal', fontSize: 13),
+                                ),
+                              ),
+                              children: dayItems
+                                  .map((item) => _buildLogItem(
+                                      item, theme, currency, isAr))
+                                  .toList(),
                             ),
                           ),
-                          children: dayItems.map((item) => _buildLogItem(item, theme, currency, isAr)).toList(),
-                        ),
-                      ),
-                    );
-                    } catch (e, st) {
-                      return Container(
-                        margin: const EdgeInsets.all(16),
-                        padding: const EdgeInsets.all(16),
-                        color: Colors.red.withOpacity(0.1),
-                        child: Text('خطأ أثناء بناء قائمة اليوم:\n$e', style: const TextStyle(color: Colors.red)),
-                      );
-                    }
-                  },
-                );
+                        );
+                      } catch (e, st) {
+                        return Container(
+                          margin: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(16),
+                          color: Colors.red.withOpacity(0.1),
+                          child: Text('خطأ أثناء بناء قائمة اليوم:\n$e',
+                              style: const TextStyle(color: Colors.red)),
+                        );
+                      }
+                    },
+                  );
                 } catch (e, st) {
                   return Center(
                     child: SingleChildScrollView(
@@ -420,7 +560,8 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                         padding: const EdgeInsets.all(16.0),
                         child: Text(
                           'حدث خطأ غير متوقع أثناء بناء الواجهة:\n$e\n\n$st',
-                          style: const TextStyle(color: Colors.red, fontSize: 14),
+                          style:
+                              const TextStyle(color: Colors.red, fontSize: 14),
                         ),
                       ),
                     ),

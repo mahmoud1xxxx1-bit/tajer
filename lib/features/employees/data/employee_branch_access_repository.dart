@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../branches/domain/branch.dart';
 
@@ -112,7 +113,7 @@ final employeeBranchAccessRepositoryProvider =
   if (user == null) return null;
   return EmployeeBranchAccessRepository(
     FirebaseFirestore.instance,
-    user.merchantId ?? user.id,
+    currentEffectiveMerchantId(user),
   );
 });
 

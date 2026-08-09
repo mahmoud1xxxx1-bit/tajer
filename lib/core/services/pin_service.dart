@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:tajer/features/authentication/domain/app_user.dart';
+import '../providers/effective_merchant.dart';
 
 class PinService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -7,7 +8,7 @@ class PinService {
   /// Fetches the deletePin directly from Firestore for the given user/merchant.
   static Future<String?> getDeletePin(AppUser user) async {
     try {
-      final uid = user.merchantId ?? user.id; // Get the main merchant ID
+      final uid = currentEffectiveMerchantId(user);
       final doc = await _firestore.collection('users').doc(uid).get();
       if (doc.exists) {
         final data = doc.data();
@@ -26,7 +27,7 @@ class PinService {
   /// Sets or updates the deletePin for the given user/merchant.
   static Future<bool> setDeletePin(AppUser user, String? pin) async {
     try {
-      final uid = user.merchantId ?? user.id;
+      final uid = currentEffectiveMerchantId(user);
       if (pin == null) {
         await _firestore.collection('users').doc(uid).update({
           'deletePin': FieldValue.delete(),

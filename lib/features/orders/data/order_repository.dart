@@ -1,7 +1,7 @@
-import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/utils/date_parser.dart';
+import '../../../core/providers/effective_merchant.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -32,7 +32,7 @@ class OrderRepository {
             data['status'] = data['status']?.toString() ?? 'pending';
             data['paidAmount'] = (data['paidAmount'] ?? 0.0).toDouble();
             data['isCredit'] = data['isCredit'] ?? false;
-            
+
             // Backward compatibility: Convert old single product order to items list
             if (data['items'] == null && data['productId'] != null) {
               data['items'] = [
@@ -45,11 +45,12 @@ class OrderRepository {
                 }
               ];
             } else if (data['items'] != null) {
-              data['items'] = List<Map<String, dynamic>>.from(data['items'].map((x) => Map<String, dynamic>.from(x)));
+              data['items'] = List<Map<String, dynamic>>.from(
+                  data['items'].map((x) => Map<String, dynamic>.from(x)));
             } else {
               data['items'] = [];
             }
-            
+
             return AppOrder.fromJson(data);
           },
           toFirestore: (order, _) => order.toJson(),
@@ -58,17 +59,19 @@ class OrderRepository {
 
   Future<AppOrder> createOrder(AppOrder order, {String? shiftId}) async {
     final batch = _firestore.batch();
-    
-    final customerRef = _firestore.collection('customers').doc(order.customerId);
+
+    final customerRef =
+        _firestore.collection('customers').doc(order.customerId);
     final orderRef = _firestore.collection('orders').doc(order.id);
-    
+
     // Professional Triple-Shield Queue Number Architecture
     // Guarantees no duplicate order numbers on the same calendar day across merchants/employees, offline or online, even after logout or shift close!
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day, 0, 0, 0);
     final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
-    final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    
+    final todayStr =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
     int maxQueueToday = 0;
 
     // 1. Shield 1: Query existing orders for today from local Firestore cache (instant & works offline) and server
@@ -77,7 +80,10 @@ class OrderRepository {
           .collection('orders')
           .where('merchantId', isEqualTo: order.merchantId)
           .get(const GetOptions(source: Source.cache))
-          .catchError((_) => _firestore.collection('orders').where('merchantId', isEqualTo: order.merchantId).get());
+          .catchError((_) => _firestore
+              .collection('orders')
+              .where('merchantId', isEqualTo: order.merchantId)
+              .get());
       for (final doc in ordersSnap.docs) {
         final data = doc.data();
         final orderDate = safeParseNullableDate(data['createdAt']);
@@ -110,9 +116,15 @@ class OrderRepository {
     } catch (_) {}
 
     // 2. Shield 2: Check server daily counter document
-    final counterRef = _firestore.collection('merchants').doc(order.merchantId).collection('counters').doc('daily_orders');
+    final counterRef = _firestore
+        .collection('merchants')
+        .doc(order.merchantId)
+        .collection('counters')
+        .doc('daily_orders');
     try {
-      final counterSnap = await counterRef.get(const GetOptions(source: Source.serverAndCache)).timeout(const Duration(milliseconds: 1500));
+      final counterSnap = await counterRef
+          .get(const GetOptions(source: Source.serverAndCache))
+          .timeout(const Duration(milliseconds: 1500));
       if (counterSnap.exists) {
         final data = counterSnap.data()!;
         final lastDate = data['date'] as String?;
@@ -139,21 +151,31 @@ class OrderRepository {
     // Save synchronized state back to all storage layers
     await prefs.setString('queue_date_${order.merchantId}', todayStr);
     await prefs.setInt('queue_num_${order.merchantId}', nextQueueNumber);
-    
+
     counterRef.set({
       'date': todayStr,
       'lastNumber': nextQueueNumber,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true)).catchError((_) => <String, dynamic>{});
-    
+
     final orderWithQueue = order.copyWith(queueNumber: nextQueueNumber);
 
     // PRE-FETCH all needed products concurrently
-    final productIds = order.items.map((i) => i.productId).where((id) => id.isNotEmpty).toSet().toList();
-    final productFutures = productIds.map((id) => _firestore.collection('products').doc(id).get(const GetOptions(source: Source.serverAndCache)));
+    final productIds = order.items
+        .map((i) => i.productId)
+        .where((id) => id.isNotEmpty)
+        .toSet()
+        .toList();
+    final productFutures = productIds.map((id) => _firestore
+        .collection('products')
+        .doc(id)
+        .get(const GetOptions(source: Source.serverAndCache)));
     final productSnaps = await Future.wait(productFutures);
-    final Map<String, DocumentSnapshot> productsCache = { for (var snap in productSnaps) if (snap.exists) snap.id: snap };
-    
+    final Map<String, DocumentSnapshot> productsCache = {
+      for (var snap in productSnaps)
+        if (snap.exists) snap.id: snap
+    };
+
     // PRE-FETCH all raw materials concurrently based on recipes
     final Set<String> rawMaterialIds = {};
     for (final item in order.items) {
@@ -167,10 +189,16 @@ class OrderRepository {
         }
       }
     }
-    
-    final rmFutures = rawMaterialIds.map((id) => _firestore.collection('raw_materials').doc(id).get(const GetOptions(source: Source.serverAndCache)));
+
+    final rmFutures = rawMaterialIds.map((id) => _firestore
+        .collection('raw_materials')
+        .doc(id)
+        .get(const GetOptions(source: Source.serverAndCache)));
     final rmSnaps = await Future.wait(rmFutures);
-    final Map<String, DocumentSnapshot> rawMaterialsCache = { for (var snap in rmSnaps) if (snap.exists) snap.id: snap };
+    final Map<String, DocumentSnapshot> rawMaterialsCache = {
+      for (var snap in rmSnaps)
+        if (snap.exists) snap.id: snap
+    };
 
     final Map<String, double> productQtyToDeduct = {};
     final Map<String, double> rmQtyToDeduct = {};
@@ -179,24 +207,28 @@ class OrderRepository {
 
     for (final item in order.items) {
       if (item.productId.isEmpty) continue;
-      
+
       final productDoc = productsCache[item.productId];
       if (productDoc != null) {
         final data = productDoc.data() as Map<String, dynamic>;
         final recipeList = data['recipe'] as List<dynamic>? ?? [];
-        final isManufacturedOnDemand = data['isManufacturedOnDemand'] as bool? ?? false;
-        
+        final isManufacturedOnDemand =
+            data['isManufacturedOnDemand'] as bool? ?? false;
+
         if (!isManufacturedOnDemand) {
-          productQtyToDeduct[item.productId] = (productQtyToDeduct[item.productId] ?? 0.0) + item.quantity;
+          productQtyToDeduct[item.productId] =
+              (productQtyToDeduct[item.productId] ?? 0.0) + item.quantity;
           productNames[item.productId] = data['name'] ?? item.productName;
         }
-        
+
         if (recipeList.isNotEmpty) {
           for (final recipeItem in recipeList) {
             final rawMaterialId = recipeItem['rawMaterialId'] as String;
-            final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
+            final amountRequired =
+                (recipeItem['amountRequired'] as num).toDouble();
             final deducted = amountRequired * item.quantity;
-            rmQtyToDeduct[rawMaterialId] = (rmQtyToDeduct[rawMaterialId] ?? 0.0) + deducted;
+            rmQtyToDeduct[rawMaterialId] =
+                (rmQtyToDeduct[rawMaterialId] ?? 0.0) + deducted;
             rmNames[rawMaterialId] = data['name'] ?? item.productName;
           }
         }
@@ -209,13 +241,17 @@ class OrderRepository {
       final productRef = _firestore.collection('products').doc(productId);
       final productDoc = productsCache[productId];
       final data = productDoc?.data() as Map<String, dynamic>? ?? {};
-      
+
       batch.update(productRef, {
         'quantity': FieldValue.increment(-deducted),
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      
-      final logRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+
+      final logRef = _firestore
+          .collection('merchants')
+          .doc(order.merchantId)
+          .collection('inventory_logs')
+          .doc();
       batch.set(logRef, {
         'id': logRef.id,
         'merchantId': order.merchantId,
@@ -235,17 +271,21 @@ class OrderRepository {
       final deducted = entry.value;
       final productNameForLog = rmNames[rmId] ?? '';
       final rmDoc = rawMaterialsCache[rmId];
-      
+
       if (rmDoc != null) {
         final rawMaterialRef = _firestore.collection('raw_materials').doc(rmId);
         final rmData = rmDoc.data() as Map<String, dynamic>;
-        
+
         batch.update(rawMaterialRef, {
           'quantity': FieldValue.increment(-deducted),
           'updatedAt': FieldValue.serverTimestamp(),
         });
-        
-        final rmLogRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+
+        final rmLogRef = _firestore
+            .collection('merchants')
+            .doc(order.merchantId)
+            .collection('inventory_logs')
+            .doc();
         batch.set(rmLogRef, {
           'id': rmLogRef.id,
           'merchantId': order.merchantId,
@@ -264,7 +304,8 @@ class OrderRepository {
     if (order.customerId != 'walk_in' && order.customerId.isNotEmpty) {
       final customerDoc = await customerRef.get();
       if (customerDoc.exists) {
-        final debtIncrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
+        final debtIncrease =
+            order.isCredit ? (order.total - order.paidAmount) : 0.0;
         batch.update(customerRef, {
           'totalPurchases': FieldValue.increment(order.total),
           'orderCount': FieldValue.increment(1),
@@ -276,13 +317,14 @@ class OrderRepository {
 
     if (shiftId != null) {
       final shiftRef = _firestore.collection('shifts').doc(shiftId);
-      
+
       double orderTax = 0.0;
       for (final item in order.items) {
         if (item.taxPercentage != null && item.taxPercentage! > 0) {
           final isInclusive = item.isTaxInclusive ?? true;
           if (isInclusive) {
-            orderTax += item.total - (item.total / (1 + (item.taxPercentage! / 100)));
+            orderTax +=
+                item.total - (item.total / (1 + (item.taxPercentage! / 100)));
           } else {
             orderTax += item.total * (item.taxPercentage! / 100);
           }
@@ -295,7 +337,9 @@ class OrderRepository {
 
       if (order.paymentMethod == 'cash') {
         updates['cashSales'] = FieldValue.increment(order.paidAmount);
-      } else if (order.paymentMethod == 'card' || order.paymentMethod == 'mada' || order.paymentMethod == 'apple_pay') {
+      } else if (order.paymentMethod == 'card' ||
+          order.paymentMethod == 'mada' ||
+          order.paymentMethod == 'apple_pay') {
         updates['cardTotal'] = FieldValue.increment(order.paidAmount);
       } else if (order.paymentMethod == 'transfer') {
         updates['transferTotal'] = FieldValue.increment(order.paidAmount);
@@ -304,10 +348,11 @@ class OrderRepository {
           updates['cashSales'] = FieldValue.increment(order.splitCashAmount!);
         }
         if (order.splitNetworkAmount != null && order.splitNetworkAmount! > 0) {
-          updates['cardTotal'] = FieldValue.increment(order.splitNetworkAmount!);
+          updates['cardTotal'] =
+              FieldValue.increment(order.splitNetworkAmount!);
         }
       }
-      
+
       if (updates.isNotEmpty) {
         batch.update(shiftRef, updates);
       }
@@ -340,26 +385,34 @@ class OrderRepository {
 
       for (final item in order.items) {
         if (item.productId.isEmpty) continue;
-        final productRef = _firestore.collection('products').doc(item.productId);
-        final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
+        final productRef =
+            _firestore.collection('products').doc(item.productId);
+        final productDoc = await productRef
+            .get(const GetOptions(source: Source.serverAndCache));
         if (productDoc.exists) {
           final data = productDoc.data()!;
           final recipeList = data['recipe'] as List<dynamic>? ?? [];
-          final isManufacturedOnDemand = data['isManufacturedOnDemand'] as bool? ?? false;
+          final isManufacturedOnDemand =
+              data['isManufacturedOnDemand'] as bool? ?? false;
 
           if (!isManufacturedOnDemand) {
-            productQtyToAdd[item.productId] = (productQtyToAdd[item.productId] ?? 0.0) + item.quantity;
+            productQtyToAdd[item.productId] =
+                (productQtyToAdd[item.productId] ?? 0.0) + item.quantity;
             productNames[item.productId] = data['name'] ?? item.productName;
           }
 
           if (recipeList.isNotEmpty) {
             for (final recipeItem in recipeList) {
               final rawMaterialId = recipeItem['rawMaterialId'] as String;
-              final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
-              rmQtyToAdd[rawMaterialId] = (rmQtyToAdd[rawMaterialId] ?? 0.0) + (amountRequired * item.quantity);
-              
-              final rmRef = _firestore.collection('raw_materials').doc(rawMaterialId);
-              final rmDoc = await rmRef.get(const GetOptions(source: Source.serverAndCache));
+              final amountRequired =
+                  (recipeItem['amountRequired'] as num).toDouble();
+              rmQtyToAdd[rawMaterialId] = (rmQtyToAdd[rawMaterialId] ?? 0.0) +
+                  (amountRequired * item.quantity);
+
+              final rmRef =
+                  _firestore.collection('raw_materials').doc(rawMaterialId);
+              final rmDoc = await rmRef
+                  .get(const GetOptions(source: Source.serverAndCache));
               if (rmDoc.exists) {
                 rmNames[rawMaterialId] = rmDoc.data()!['name'] ?? 'مادة خام';
               }
@@ -372,15 +425,20 @@ class OrderRepository {
         final productId = entry.key;
         final added = entry.value;
         final productRef = _firestore.collection('products').doc(productId);
-        final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
+        final productDoc = await productRef
+            .get(const GetOptions(source: Source.serverAndCache));
         final data = productDoc.data() ?? {};
-        
+
         batch.update(productRef, {
           'quantity': FieldValue.increment(added),
           'updatedAt': FieldValue.serverTimestamp(),
         });
 
-        final logRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+        final logRef = _firestore
+            .collection('merchants')
+            .doc(order.merchantId)
+            .collection('inventory_logs')
+            .doc();
         batch.set(logRef, {
           'id': logRef.id,
           'merchantId': order.merchantId,
@@ -389,7 +447,8 @@ class OrderRepository {
           'changeQuantity': added,
           'previousQuantity': data['quantity'] ?? 0,
           'newQuantity': (data['quantity'] as num? ?? 0) + added,
-          'reason': 'استرجاع مخزون بسبب حذف نهائي لفاتورة #${order.queueNumber ?? order.id}',
+          'reason':
+              'استرجاع مخزون بسبب حذف نهائي لفاتورة #${order.queueNumber ?? order.id}',
           'date': FieldValue.serverTimestamp(),
           'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
         });
@@ -399,7 +458,8 @@ class OrderRepository {
         final rmId = entry.key;
         final added = entry.value;
         final rawMaterialRef = _firestore.collection('raw_materials').doc(rmId);
-        final rmDoc = await rawMaterialRef.get(const GetOptions(source: Source.serverAndCache));
+        final rmDoc = await rawMaterialRef
+            .get(const GetOptions(source: Source.serverAndCache));
         final rmData = rmDoc.data() ?? {};
 
         batch.update(rawMaterialRef, {
@@ -407,7 +467,11 @@ class OrderRepository {
           'updatedAt': FieldValue.serverTimestamp(),
         });
 
-        final rmLogRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+        final rmLogRef = _firestore
+            .collection('merchants')
+            .doc(order.merchantId)
+            .collection('inventory_logs')
+            .doc();
         batch.set(rmLogRef, {
           'id': rmLogRef.id,
           'merchantId': order.merchantId,
@@ -416,19 +480,23 @@ class OrderRepository {
           'changeQuantity': added,
           'previousQuantity': rmData['quantity'] ?? 0,
           'newQuantity': (rmData['quantity'] as num? ?? 0) + added,
-          'reason': 'استرجاع مادة بسبب حذف نهائي لفاتورة #${order.queueNumber ?? order.id}',
+          'reason':
+              'استرجاع مادة بسبب حذف نهائي لفاتورة #${order.queueNumber ?? order.id}',
           'date': FieldValue.serverTimestamp(),
           'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
         });
       }
 
       if (order.customerId.isNotEmpty && order.customerId != 'walk_in') {
-        final customerRef = _firestore.collection('customers').doc(order.customerId);
+        final customerRef =
+            _firestore.collection('customers').doc(order.customerId);
         final customerDoc = await customerRef.get();
         if (customerDoc.exists) {
-          final currentDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
-          
-          final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
+          final currentDebt =
+              (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
+
+          final debtDecrease =
+              order.isCredit ? (order.total - order.paidAmount) : 0.0;
           // TASK 5: Allow debt to go negative (Store Credit) by removing the clamp
           final actualDecrease = debtDecrease;
 
@@ -451,13 +519,14 @@ class OrderRepository {
             .get();
         if (openShiftsSnap.docs.isNotEmpty) {
           final shiftRef = openShiftsSnap.docs.first.reference;
-          
+
           double orderTax = 0.0;
           for (final item in order.items) {
             if (item.taxPercentage != null && item.taxPercentage! > 0) {
               final isInclusive = item.isTaxInclusive ?? true;
               if (isInclusive) {
-                orderTax += item.total - (item.total / (1 + (item.taxPercentage! / 100)));
+                orderTax += item.total -
+                    (item.total / (1 + (item.taxPercentage! / 100)));
               } else {
                 orderTax += item.total * (item.taxPercentage! / 100);
               }
@@ -473,19 +542,24 @@ class OrderRepository {
           // TASK 4: Cross-Shift Corruption - Add to refunds instead of subtracting from sales
           if (order.paymentMethod == 'cash') {
             updates['refundsCash'] = FieldValue.increment(order.paidAmount);
-          } else if (order.paymentMethod == 'card' || order.paymentMethod == 'mada' || order.paymentMethod == 'apple_pay') {
+          } else if (order.paymentMethod == 'card' ||
+              order.paymentMethod == 'mada' ||
+              order.paymentMethod == 'apple_pay') {
             updates['refundsCard'] = FieldValue.increment(order.paidAmount);
           } else if (order.paymentMethod == 'transfer') {
             updates['refundsTransfer'] = FieldValue.increment(order.paidAmount);
           } else if (order.paymentMethod == 'split') {
             if (order.splitCashAmount != null && order.splitCashAmount! > 0) {
-              updates['refundsCash'] = FieldValue.increment(order.splitCashAmount!);
+              updates['refundsCash'] =
+                  FieldValue.increment(order.splitCashAmount!);
             }
-            if (order.splitNetworkAmount != null && order.splitNetworkAmount! > 0) {
-              updates['refundsCard'] = FieldValue.increment(order.splitNetworkAmount!);
+            if (order.splitNetworkAmount != null &&
+                order.splitNetworkAmount! > 0) {
+              updates['refundsCard'] =
+                  FieldValue.increment(order.splitNetworkAmount!);
             }
           }
-          
+
           if (updates.isNotEmpty) {
             batch.update(shiftRef, updates);
           }
@@ -503,18 +577,19 @@ class OrderRepository {
     final orderRef = _firestore.collection('orders').doc(order.id);
 
     // 1. Transaction to prevent double cancellations (Race condition lock)
-    final canProceed = await _firestore.runTransaction<bool>((transaction) async {
-       final snapshot = await transaction.get(orderRef);
-       if (!snapshot.exists) return false;
-       final currentStatus = snapshot.data()?['status'] as String?;
-       if (currentStatus == newStatus) {
-         return false;
-       }
-       transaction.update(orderRef, {
-         'status': newStatus,
-         'updatedAt': FieldValue.serverTimestamp(),
-       });
-       return true;
+    final canProceed =
+        await _firestore.runTransaction<bool>((transaction) async {
+      final snapshot = await transaction.get(orderRef);
+      if (!snapshot.exists) return false;
+      final currentStatus = snapshot.data()?['status'] as String?;
+      if (currentStatus == newStatus) {
+        return false;
+      }
+      transaction.update(orderRef, {
+        'status': newStatus,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      return true;
     });
 
     if (!canProceed) return;
@@ -532,30 +607,39 @@ class OrderRepository {
 
       for (final item in order.items) {
         if (item.productId.isEmpty) continue;
-        final productRef = _firestore.collection('products').doc(item.productId);
-        final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
+        final productRef =
+            _firestore.collection('products').doc(item.productId);
+        final productDoc = await productRef
+            .get(const GetOptions(source: Source.serverAndCache));
 
         if (productDoc.exists) {
           final data = productDoc.data()!;
           final recipeList = data['recipe'] as List<dynamic>? ?? [];
-          final isManufacturedOnDemand = data['isManufacturedOnDemand'] as bool? ?? false;
+          final isManufacturedOnDemand =
+              data['isManufacturedOnDemand'] as bool? ?? false;
 
           if (!isManufacturedOnDemand) {
-            productQtyToAdd[item.productId] = (productQtyToAdd[item.productId] ?? 0.0) + item.quantity;
+            productQtyToAdd[item.productId] =
+                (productQtyToAdd[item.productId] ?? 0.0) + item.quantity;
             productNames[item.productId] = data['name'] ?? item.productName;
           }
 
           if (recipeList.isNotEmpty) {
             for (final recipeItem in recipeList) {
               final rawMaterialId = recipeItem['rawMaterialId'] as String;
-              final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
-              rmQtyToAdd[rawMaterialId] = (rmQtyToAdd[rawMaterialId] ?? 0.0) + (amountRequired * item.quantity);
-              
-              final rawMaterialRef = _firestore.collection('raw_materials').doc(rawMaterialId);
-              final rmDoc = await rawMaterialRef.get(const GetOptions(source: Source.serverAndCache));
+              final amountRequired =
+                  (recipeItem['amountRequired'] as num).toDouble();
+              rmQtyToAdd[rawMaterialId] = (rmQtyToAdd[rawMaterialId] ?? 0.0) +
+                  (amountRequired * item.quantity);
+
+              final rawMaterialRef =
+                  _firestore.collection('raw_materials').doc(rawMaterialId);
+              final rmDoc = await rawMaterialRef
+                  .get(const GetOptions(source: Source.serverAndCache));
               if (rmDoc.exists) {
                 rmNames[rawMaterialId] = rmDoc.data()!['name'] ?? 'مادة خام';
-                rmParentProductNames[rawMaterialId] = data['name'] ?? item.productName;
+                rmParentProductNames[rawMaterialId] =
+                    data['name'] ?? item.productName;
               }
             }
           }
@@ -566,15 +650,20 @@ class OrderRepository {
         final productId = entry.key;
         final added = entry.value;
         final productRef = _firestore.collection('products').doc(productId);
-        final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
+        final productDoc = await productRef
+            .get(const GetOptions(source: Source.serverAndCache));
         final data = productDoc.data() ?? {};
-        
+
         batch.update(productRef, {
           'quantity': FieldValue.increment(added),
           'updatedAt': FieldValue.serverTimestamp(),
         });
-        
-        final logRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+
+        final logRef = _firestore
+            .collection('merchants')
+            .doc(order.merchantId)
+            .collection('inventory_logs')
+            .doc();
         batch.set(logRef, {
           'id': logRef.id,
           'merchantId': order.merchantId,
@@ -583,7 +672,8 @@ class OrderRepository {
           'changeQuantity': added,
           'previousQuantity': data['quantity'] ?? 0,
           'newQuantity': (data['quantity'] as num? ?? 0) + added,
-          'reason': 'استرجاع مخزون بسبب إلغاء فاتورة #${order.queueNumber ?? order.id}',
+          'reason':
+              'استرجاع مخزون بسبب إلغاء فاتورة #${order.queueNumber ?? order.id}',
           'date': FieldValue.serverTimestamp(),
           'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
         });
@@ -593,15 +683,20 @@ class OrderRepository {
         final rmId = entry.key;
         final added = entry.value;
         final rawMaterialRef = _firestore.collection('raw_materials').doc(rmId);
-        final rmDoc = await rawMaterialRef.get(const GetOptions(source: Source.serverAndCache));
+        final rmDoc = await rawMaterialRef
+            .get(const GetOptions(source: Source.serverAndCache));
         final rmData = rmDoc.data() ?? {};
-        
+
         batch.update(rawMaterialRef, {
           'quantity': FieldValue.increment(added),
           'updatedAt': FieldValue.serverTimestamp(),
         });
-        
-        final rmLogRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+
+        final rmLogRef = _firestore
+            .collection('merchants')
+            .doc(order.merchantId)
+            .collection('inventory_logs')
+            .doc();
         batch.set(rmLogRef, {
           'id': rmLogRef.id,
           'merchantId': order.merchantId,
@@ -610,17 +705,20 @@ class OrderRepository {
           'changeQuantity': added,
           'previousQuantity': rmData['quantity'] ?? 0,
           'newQuantity': (rmData['quantity'] as num? ?? 0) + added,
-          'reason': 'استرجاع مادة لمنتج: ${rmParentProductNames[rmId]} (إلغاء فاتورة #${order.queueNumber ?? order.id})',
+          'reason':
+              'استرجاع مادة لمنتج: ${rmParentProductNames[rmId]} (إلغاء فاتورة #${order.queueNumber ?? order.id})',
           'date': FieldValue.serverTimestamp(),
           'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
         });
       }
 
       if (order.customerId != 'walk_in' && order.customerId.isNotEmpty) {
-        final customerRef = _firestore.collection('customers').doc(order.customerId);
+        final customerRef =
+            _firestore.collection('customers').doc(order.customerId);
         final customerDoc = await customerRef.get();
         if (customerDoc.exists) {
-          final debtDecrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
+          final debtDecrease =
+              order.isCredit ? (order.total - order.paidAmount) : 0.0;
           // TASK 5: Allow debt to go negative (Store Credit) by removing the clamp
           final actualDecrease = debtDecrease;
 
@@ -649,7 +747,8 @@ class OrderRepository {
             if (item.taxPercentage != null && item.taxPercentage! > 0) {
               final isInclusive = item.isTaxInclusive ?? true;
               if (isInclusive) {
-                orderTax += item.total - (item.total / (1 + (item.taxPercentage! / 100)));
+                orderTax += item.total -
+                    (item.total / (1 + (item.taxPercentage! / 100)));
               } else {
                 orderTax += item.total * (item.taxPercentage! / 100);
               }
@@ -665,19 +764,24 @@ class OrderRepository {
           // TASK 4: Cross-Shift Corruption - Add to refunds instead of subtracting from sales
           if (order.paymentMethod == 'cash') {
             updates['refundsCash'] = FieldValue.increment(order.paidAmount);
-          } else if (order.paymentMethod == 'card' || order.paymentMethod == 'mada' || order.paymentMethod == 'apple_pay') {
+          } else if (order.paymentMethod == 'card' ||
+              order.paymentMethod == 'mada' ||
+              order.paymentMethod == 'apple_pay') {
             updates['refundsCard'] = FieldValue.increment(order.paidAmount);
           } else if (order.paymentMethod == 'transfer') {
             updates['refundsTransfer'] = FieldValue.increment(order.paidAmount);
           } else if (order.paymentMethod == 'split') {
             if (order.splitCashAmount != null && order.splitCashAmount! > 0) {
-              updates['refundsCash'] = FieldValue.increment(order.splitCashAmount!);
+              updates['refundsCash'] =
+                  FieldValue.increment(order.splitCashAmount!);
             }
-            if (order.splitNetworkAmount != null && order.splitNetworkAmount! > 0) {
-              updates['refundsCard'] = FieldValue.increment(order.splitNetworkAmount!);
+            if (order.splitNetworkAmount != null &&
+                order.splitNetworkAmount! > 0) {
+              updates['refundsCard'] =
+                  FieldValue.increment(order.splitNetworkAmount!);
             }
           }
-          
+
           if (updates.isNotEmpty) {
             batch.update(shiftRef, updates);
           }
@@ -693,30 +797,40 @@ class OrderRepository {
 
       for (final item in order.items) {
         if (item.productId.isEmpty) continue;
-        final productRef = _firestore.collection('products').doc(item.productId);
-        final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
+        final productRef =
+            _firestore.collection('products').doc(item.productId);
+        final productDoc = await productRef
+            .get(const GetOptions(source: Source.serverAndCache));
 
         if (productDoc.exists) {
           final data = productDoc.data()!;
           final recipeList = data['recipe'] as List<dynamic>? ?? [];
-          final isManufacturedOnDemand = data['isManufacturedOnDemand'] as bool? ?? false;
+          final isManufacturedOnDemand =
+              data['isManufacturedOnDemand'] as bool? ?? false;
 
           if (!isManufacturedOnDemand) {
-            productQtyToDeduct[item.productId] = (productQtyToDeduct[item.productId] ?? 0.0) + item.quantity;
+            productQtyToDeduct[item.productId] =
+                (productQtyToDeduct[item.productId] ?? 0.0) + item.quantity;
             productNames[item.productId] = data['name'] ?? item.productName;
           }
 
           if (recipeList.isNotEmpty) {
             for (final recipeItem in recipeList) {
               final rawMaterialId = recipeItem['rawMaterialId'] as String;
-              final amountRequired = (recipeItem['amountRequired'] as num).toDouble();
-              rmQtyToDeduct[rawMaterialId] = (rmQtyToDeduct[rawMaterialId] ?? 0.0) + (amountRequired * item.quantity);
-              
-              final rawMaterialRef = _firestore.collection('raw_materials').doc(rawMaterialId);
-              final rmDoc = await rawMaterialRef.get(const GetOptions(source: Source.serverAndCache));
+              final amountRequired =
+                  (recipeItem['amountRequired'] as num).toDouble();
+              rmQtyToDeduct[rawMaterialId] =
+                  (rmQtyToDeduct[rawMaterialId] ?? 0.0) +
+                      (amountRequired * item.quantity);
+
+              final rawMaterialRef =
+                  _firestore.collection('raw_materials').doc(rawMaterialId);
+              final rmDoc = await rawMaterialRef
+                  .get(const GetOptions(source: Source.serverAndCache));
               if (rmDoc.exists) {
                 rmNames[rawMaterialId] = rmDoc.data()!['name'] ?? 'مادة خام';
-                rmParentProductNames[rawMaterialId] = data['name'] ?? item.productName;
+                rmParentProductNames[rawMaterialId] =
+                    data['name'] ?? item.productName;
               }
             }
           }
@@ -727,15 +841,20 @@ class OrderRepository {
         final productId = entry.key;
         final deducted = entry.value;
         final productRef = _firestore.collection('products').doc(productId);
-        final productDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
+        final productDoc = await productRef
+            .get(const GetOptions(source: Source.serverAndCache));
         final data = productDoc.data() ?? {};
-        
+
         batch.update(productRef, {
           'quantity': FieldValue.increment(-deducted),
           'updatedAt': FieldValue.serverTimestamp(),
         });
-        
-        final logRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+
+        final logRef = _firestore
+            .collection('merchants')
+            .doc(order.merchantId)
+            .collection('inventory_logs')
+            .doc();
         batch.set(logRef, {
           'id': logRef.id,
           'merchantId': order.merchantId,
@@ -744,7 +863,8 @@ class OrderRepository {
           'changeQuantity': -deducted,
           'previousQuantity': data['quantity'] ?? 0,
           'newQuantity': (data['quantity'] as num? ?? 0) - deducted,
-          'reason': 'خصم مخزون بسبب التراجع عن إلغاء الفاتورة #${order.queueNumber ?? order.id}',
+          'reason':
+              'خصم مخزون بسبب التراجع عن إلغاء الفاتورة #${order.queueNumber ?? order.id}',
           'date': FieldValue.serverTimestamp(),
           'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
         });
@@ -754,15 +874,20 @@ class OrderRepository {
         final rmId = entry.key;
         final deducted = entry.value;
         final rawMaterialRef = _firestore.collection('raw_materials').doc(rmId);
-        final rmDoc = await rawMaterialRef.get(const GetOptions(source: Source.serverAndCache));
+        final rmDoc = await rawMaterialRef
+            .get(const GetOptions(source: Source.serverAndCache));
         final rmData = rmDoc.data() ?? {};
-        
+
         batch.update(rawMaterialRef, {
           'quantity': FieldValue.increment(-deducted),
           'updatedAt': FieldValue.serverTimestamp(),
         });
-        
-        final rmLogRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
+
+        final rmLogRef = _firestore
+            .collection('merchants')
+            .doc(order.merchantId)
+            .collection('inventory_logs')
+            .doc();
         batch.set(rmLogRef, {
           'id': rmLogRef.id,
           'merchantId': order.merchantId,
@@ -771,17 +896,20 @@ class OrderRepository {
           'changeQuantity': -deducted,
           'previousQuantity': rmData['quantity'] ?? 0,
           'newQuantity': (rmData['quantity'] as num? ?? 0) - deducted,
-          'reason': 'خصم مادة لمنتج: ${rmParentProductNames[rmId]} (التراجع عن إلغاء فاتورة #${order.queueNumber ?? order.id})',
+          'reason':
+              'خصم مادة لمنتج: ${rmParentProductNames[rmId]} (التراجع عن إلغاء فاتورة #${order.queueNumber ?? order.id})',
           'date': FieldValue.serverTimestamp(),
           'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
         });
       }
 
       if (order.customerId != 'walk_in' && order.customerId.isNotEmpty) {
-        final customerRef = _firestore.collection('customers').doc(order.customerId);
+        final customerRef =
+            _firestore.collection('customers').doc(order.customerId);
         final customerDoc = await customerRef.get();
         if (customerDoc.exists) {
-          final debtIncrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
+          final debtIncrease =
+              order.isCredit ? (order.total - order.paidAmount) : 0.0;
           batch.update(customerRef, {
             'totalPurchases': FieldValue.increment(order.total),
             'orderCount': FieldValue.increment(1),
@@ -806,16 +934,18 @@ class OrderRepository {
     if (amountPaid <= 0) return;
 
     // Concurrency Lock: Read current debt using a transaction
-    final canProceed = await _firestore.runTransaction<bool>((transaction) async {
+    final canProceed =
+        await _firestore.runTransaction<bool>((transaction) async {
       final customerRef = _firestore.collection('customers').doc(customerId);
       final customerDoc = await transaction.get(customerRef);
       if (!customerDoc.exists) return false;
 
-      final currentDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
+      final currentDebt =
+          (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
       if (amountPaid > currentDebt) {
         throw Exception('مبلغ السداد لا يمكن أن يتجاوز الدين المستحق.');
       }
-      
+
       transaction.update(customerRef, {
         'totalDebt': FieldValue.increment(-amountPaid),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -827,7 +957,6 @@ class OrderRepository {
 
     final batch = _firestore.batch();
 
-
     // 2. Fetch all unpaid credit orders for this customer to distribute the payment
     final allCreditOrdersSnapshot = await _firestore
         .collection('orders')
@@ -835,16 +964,16 @@ class OrderRepository {
         .where('customerId', isEqualTo: customerId)
         .where('isCredit', isEqualTo: true)
         .get();
-        
+
     var orders = allCreditOrdersSnapshot.docs
         .map((d) {
-        final data = d.data();
-        data['id'] = d.id;
-        return AppOrder.fromJson(data);
-      })
+          final data = d.data();
+          data['id'] = d.id;
+          return AppOrder.fromJson(data);
+        })
         .where((o) => o.status != 'cancelled' && (o.total - o.paidAmount) > 0)
         .toList();
-    
+
     orders.sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
     double remainingToDistribute = amountPaid;
@@ -852,7 +981,9 @@ class OrderRepository {
       if (remainingToDistribute <= 0) break;
       final unpaidForOrder = order.total - order.paidAmount;
       if (unpaidForOrder > 0) {
-        final amountToApply = remainingToDistribute >= unpaidForOrder ? unpaidForOrder : remainingToDistribute;
+        final amountToApply = remainingToDistribute >= unpaidForOrder
+            ? unpaidForOrder
+            : remainingToDistribute;
         batch.update(_firestore.collection('orders').doc(order.id), {
           'paidAmount': FieldValue.increment(amountToApply),
         });
@@ -902,21 +1033,22 @@ Stream<List<AppOrder>> ordersStream(OrdersStreamRef ref) {
   if (appUser == null) return const Stream.empty();
 
   final repository = ref.watch(orderRepositoryProvider);
-  
-  return repository.queryOrders(appUser.merchantId ?? appUser.id)
+
+  return repository
+      .queryOrders(currentEffectiveMerchantId(appUser))
       .snapshots()
       .map(
-        (snapshot) {
-          var orders = snapshot.docs.map((doc) => doc.data()).toList();
-          
-          if (!appUser.hasPermission('can_view_all_orders')) {
-            final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
-            orders = orders.where((o) => o.createdAt.isAfter(sevenDaysAgo)).toList();
-          }
-          
-          orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-          return orders;
-        },
-      );
-}
+    (snapshot) {
+      var orders = snapshot.docs.map((doc) => doc.data()).toList();
 
+      if (!appUser.hasPermission('can_view_all_orders')) {
+        final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
+        orders =
+            orders.where((o) => o.createdAt.isAfter(sevenDaysAgo)).toList();
+      }
+
+      orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return orders;
+    },
+  );
+}

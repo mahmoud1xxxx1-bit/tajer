@@ -1,8 +1,8 @@
-import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../domain/employee.dart';
 
@@ -32,7 +32,8 @@ class EmployeeRepository {
     );
     try {
       final userCred = await FirebaseAuth.instanceFor(app: secondaryApp)
-          .createUserWithEmailAndPassword(email: employee.email, password: password);
+          .createUserWithEmailAndPassword(
+              email: employee.email, password: password);
       final newUid = userCred.user!.uid;
       final branches = employee.assignedBranchIds.isEmpty
           ? const <String>['main']
@@ -86,10 +87,12 @@ class EmployeeRepository {
   ) async {
     final normalized = branchIds.toSet().where((id) => id.isNotEmpty).toList();
     if (normalized.isEmpty) {
-      throw ArgumentError('An employee must be assigned to at least one branch');
+      throw ArgumentError(
+          'An employee must be assigned to at least one branch');
     }
     final batch = _firestore.batch();
-    batch.update(_employeesRef.doc(employeeId), {'assignedBranchIds': normalized});
+    batch.update(
+        _employeesRef.doc(employeeId), {'assignedBranchIds': normalized});
     batch.update(_firestore.collection('users').doc(employeeId), {
       'assignedBranchIds': normalized,
     });
@@ -109,7 +112,7 @@ final employeeRepositoryProvider = Provider<EmployeeRepository?>((ref) {
   if (appUser == null) return null;
   return EmployeeRepository(
     FirebaseFirestore.instance,
-    appUser.merchantId ?? appUser.id,
+    currentEffectiveMerchantId(appUser),
   );
 });
 

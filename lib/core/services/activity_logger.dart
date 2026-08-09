@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../features/authentication/domain/app_user.dart';
+import '../providers/effective_merchant.dart';
 
 class ActivityLogger {
   static Future<void> log({
@@ -9,14 +10,15 @@ class ActivityLogger {
     double amount = 0.0,
   }) async {
     if (user == null) return;
-    final merchantId = user.role == 'employee' ? user.merchantId : user.id;
-    if (merchantId == null || merchantId.isEmpty) return;
+    final merchantId = currentEffectiveMerchantId(user);
+    if (merchantId.isEmpty) return;
 
     try {
       final now = DateTime.now();
       final docId = 'act_${now.millisecondsSinceEpoch}_${user.id}';
-      final dateStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-      
+      final dateStr =
+          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
       await FirebaseFirestore.instance
           .collection('merchants')
           .doc(merchantId)
@@ -25,7 +27,8 @@ class ActivityLogger {
           .set({
         'id': docId,
         'employeeId': user.id,
-        'employeeName': user.name ?? (user.role == 'employee' ? 'موظف' : 'التاجر'),
+        'employeeName':
+            user.name ?? (user.role == 'employee' ? 'موظف' : 'التاجر'),
         'actionType': actionType,
         'description': description,
         'amount': amount,

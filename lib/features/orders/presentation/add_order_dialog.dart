@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../../authentication/data/auth_repository.dart';
-import '../../authentication/domain/app_user.dart';
 import '../../products/data/product_repository.dart';
 import '../../customers/data/customer_repository.dart';
 import '../data/order_repository.dart';
@@ -15,8 +14,8 @@ import '../../../core/utils/barcode_scanner_screen.dart';
 import '../../products/domain/product.dart';
 import '../../customers/domain/customer.dart';
 import '../../../core/services/limits_service.dart';
-import '../../../core/services/guest_limit_service.dart';
 import '../../../core/providers/store_profile_provider.dart';
+import '../../../core/providers/effective_merchant.dart';
 
 class AddOrderDialog extends ConsumerStatefulWidget {
   const AddOrderDialog({super.key});
@@ -36,7 +35,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
   final _barcodeController = TextEditingController();
   bool _isCredit = false;
   bool _isLoading = false;
-  
+
   List<Product> _products = [];
 
   @override
@@ -70,11 +69,15 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
         _selectedProductId = product.id;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('تم اختيار المنتج: ${product.name}', style: TextStyle(fontFamily: 'Tajawal'))),
+        SnackBar(
+            content: Text('تم اختيار المنتج: ${product.name}',
+                style: TextStyle(fontFamily: 'Tajawal'))),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.text79, style: TextStyle(fontFamily: 'Tajawal'))),
+        SnackBar(
+            content: Text(AppLocalizations.of(context)!.text79,
+                style: TextStyle(fontFamily: 'Tajawal'))),
       );
     }
   }
@@ -93,26 +96,32 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       final orderRepo = ref.read(orderRepositoryProvider);
       final logRepo = ref.read(inventoryLogRepositoryProvider);
 
-      final customers = (ref.read(customersStreamProvider).value ?? []).where((c) => c.isActive).toList();
+      final customers = (ref.read(customersStreamProvider).value ?? [])
+          .where((c) => c.isActive)
+          .toList();
 
-      final selectedProduct = _products.firstWhere((p) => p.id == _selectedProductId);
-      
+      final selectedProduct =
+          _products.firstWhere((p) => p.id == _selectedProductId);
+
       String finalCustomerId = 'walk_in';
       String finalCustomerName = 'عميل عام';
-      
+
       final nameInput = _customerNameController.text.trim();
       final phoneInput = _customerPhoneController.text.trim();
 
       if (nameInput.isNotEmpty || phoneInput.isNotEmpty) {
         Customer? existingCustomer;
-        
+
         // Search by phone if provided
         if (phoneInput.isNotEmpty) {
-          existingCustomer = customers.where((c) => c.phone == phoneInput).firstOrNull;
+          existingCustomer =
+              customers.where((c) => c.phone == phoneInput).firstOrNull;
         }
         // If not found by phone, search by name exactly
         if (existingCustomer == null && nameInput.isNotEmpty) {
-          existingCustomer = customers.where((c) => c.name.toLowerCase() == nameInput.toLowerCase()).firstOrNull;
+          existingCustomer = customers
+              .where((c) => c.name.toLowerCase() == nameInput.toLowerCase())
+              .firstOrNull;
         }
 
         if (existingCustomer != null) {
@@ -121,15 +130,19 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
         } else {
           // Attempt to create new customer
           final appUser = ref.read(appUserProvider).value;
-          if (appUser == null) throw Exception(AppLocalizations.of(context)!.text47);
-          final canAdd = await ref.read(limitsServiceProvider).canAddCustomer(appUser);
+          if (appUser == null)
+            throw Exception(AppLocalizations.of(context)!.text47);
+          final merchantId = currentEffectiveMerchantId(appUser);
+          final canAdd =
+              await ref.read(limitsServiceProvider).canAddCustomer(appUser);
           if (!canAdd) {
-            throw Exception('عفواً، لقد وصلت للحد الأقصى المسموح به للعملاء في باقتك الحالية. لا يمكن إضافة عميل جديد، ولكن يمكنك الاستمرار كـ "عميل عام" بمسح الاسم والرقم.');
+            throw Exception(
+                'عفواً، لقد وصلت للحد الأقصى المسموح به للعملاء في باقتك الحالية. لا يمكن إضافة عميل جديد، ولكن يمكنك الاستمرار كـ "عميل عام" بمسح الاسم والرقم.');
           }
 
           final newCustomer = Customer(
             id: Uuid().v4(),
-            merchantId: ref.read(appUserProvider).value?.merchantId ?? user.uid,
+            merchantId: merchantId,
             name: nameInput.isEmpty ? 'عميل غير معروف' : nameInput,
             phone: phoneInput,
             createdAt: DateTime.now(),
@@ -143,7 +156,8 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       final quantity = int.parse(_quantityController.text);
       final total = selectedProduct.price * quantity;
 
-      if (!selectedProduct.isManufacturedOnDemand && selectedProduct.quantity < quantity) {
+      if (!selectedProduct.isManufacturedOnDemand &&
+          selectedProduct.quantity < quantity) {
         throw Exception(AppLocalizations.of(context)!.text80);
       }
 
@@ -160,17 +174,20 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       }
 
       final appUser = ref.read(appUserProvider).value;
+      if (appUser == null)
+        throw Exception(AppLocalizations.of(context)!.text47);
       final storeProfile = ref.read(storeProfileProvider).value;
       final defaultTax = storeProfile?.defaultTaxPercentage ?? 0.0;
       final defaultIsInclusive = storeProfile?.defaultIsTaxInclusive ?? true;
-      
+
       final finalTax = selectedProduct.getEffectiveTax(defaultTax);
       final hasCustomTax = selectedProduct.taxMode == TaxMode.custom;
-      final finalIsInclusive = hasCustomTax ? selectedProduct.isTaxInclusive : defaultIsInclusive;
+      final finalIsInclusive =
+          hasCustomTax ? selectedProduct.isTaxInclusive : defaultIsInclusive;
 
       final newOrder = AppOrder(
         id: Uuid().v4(),
-        merchantId: ref.read(appUserProvider).value?.merchantId ?? user.uid,
+        merchantId: currentEffectiveMerchantId(appUser),
         customerId: finalCustomerId,
         customerName: finalCustomerName,
         items: [
@@ -190,8 +207,8 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
         paidAmount: paidAmount,
         isCredit: _isCredit,
         notes: _notesController.text.trim(),
-        creatorId: appUser?.id,
-        creatorName: appUser?.name ?? 'غير معروف',
+        creatorId: appUser.id,
+        creatorName: appUser.name ?? 'غير معروف',
         createdAt: DateTime.now(),
       );
 
@@ -205,7 +222,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
         newQuantity: selectedProduct.quantity - quantity,
         reason: AppLocalizations.of(context)!.text82,
         userEmail: user.email,
-        userName: appUser?.name ?? user.email,
+        userName: appUser.name ?? user.email,
         itemType: 'product',
       );
 
@@ -214,7 +231,9 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.error}: $e', style: TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(
+              content: Text('${l10n.error}: $e',
+                  style: TextStyle(fontFamily: 'Tajawal'))),
         );
       }
     } finally {
@@ -228,7 +247,8 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
     final productsState = ref.watch(productsStreamProvider);
     final customersState = ref.watch(customersStreamProvider);
     final appUser = ref.watch(appUserProvider).value;
-    final canSellOnCredit = appUser?.hasPermission('can_sell_on_credit') ?? false;
+    final canSellOnCredit =
+        appUser?.hasPermission('can_sell_on_credit') ?? false;
 
     return Padding(
       padding: EdgeInsets.all(24.0),
@@ -240,16 +260,20 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
           children: [
             Text(
               l10n.add,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+              style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Tajawal'),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 24),
-            
+
             // Customer Name & Phone Fields
             TextFormField(
               controller: _customerNameController,
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context)!.text60.replaceAll('تعديل', 'اسم'), // Fallback to "اسم العميل" basically
+                labelText: AppLocalizations.of(context)!.text60.replaceAll(
+                    'تعديل', 'اسم'), // Fallback to "اسم العميل" basically
                 hintText: 'عميل عام (بدون تحديد)',
                 border: const OutlineInputBorder(),
                 prefixIcon: const Icon(Icons.person),
@@ -277,13 +301,15 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
                       labelText: l10n.searchByBarcode,
                       border: const OutlineInputBorder(),
                     ),
-                    onFieldSubmitted: (val) => _findProductByBarcode(val.trim()),
+                    onFieldSubmitted: (val) =>
+                        _findProductByBarcode(val.trim()),
                   ),
                 ),
                 SizedBox(width: 8),
                 IconButton(
                   onPressed: _scanBarcode,
-                  icon: Icon(Icons.qr_code_scanner, color: Colors.blue, size: 32),
+                  icon:
+                      Icon(Icons.qr_code_scanner, color: Colors.blue, size: 32),
                 ),
               ],
             ),
@@ -295,8 +321,16 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
                 _products = products;
                 return DropdownButtonFormField<String>(
                   value: _selectedProductId,
-                  decoration: InputDecoration(labelText: l10n.products, border: const OutlineInputBorder()),
-                  items: products.map((p) => DropdownMenuItem(value: p.id, child: Text('${p.name} (${l10n.quantity}: ${p.quantity})', style: TextStyle(fontFamily: 'Tajawal')))).toList(),
+                  decoration: InputDecoration(
+                      labelText: l10n.products,
+                      border: const OutlineInputBorder()),
+                  items: products
+                      .map((p) => DropdownMenuItem(
+                          value: p.id,
+                          child: Text(
+                              '${p.name} (${l10n.quantity}: ${p.quantity})',
+                              style: TextStyle(fontFamily: 'Tajawal'))))
+                      .toList(),
                   onChanged: (val) => setState(() => _selectedProductId = val),
                   validator: (val) => val == null ? l10n.requiredField : null,
                 );
@@ -316,7 +350,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
               validator: (value) => value!.isEmpty ? l10n.requiredField : null,
             ),
             SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _notesController,
               decoration: InputDecoration(
@@ -329,20 +363,23 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
 
             // Credit / Debt Section
             if (canSellOnCredit)
-            SwitchListTile(
-              title: Text(AppLocalizations.of(context)!.text83, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-              subtitle: Text(AppLocalizations.of(context)!.text84, style: TextStyle(fontFamily: 'Tajawal')),
-              value: _isCredit,
-              onChanged: (val) {
-                setState(() {
-                  _isCredit = val;
-                  if (!val) {
-                    _paidAmountController.clear();
-                  }
-                });
-              },
-            ),
-            
+              SwitchListTile(
+                title: Text(AppLocalizations.of(context)!.text83,
+                    style: TextStyle(
+                        fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                subtitle: Text(AppLocalizations.of(context)!.text84,
+                    style: TextStyle(fontFamily: 'Tajawal')),
+                value: _isCredit,
+                onChanged: (val) {
+                  setState(() {
+                    _isCredit = val;
+                    if (!val) {
+                      _paidAmountController.clear();
+                    }
+                  });
+                },
+              ),
+
             if (_isCredit && canSellOnCredit) ...[
               SizedBox(height: 8),
               TextFormField(
@@ -355,7 +392,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
                 ),
               ),
             ],
-            
+
             SizedBox(height: 24),
 
             ElevatedButton(
@@ -365,7 +402,8 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
               ),
               child: _isLoading
                   ? const CircularProgressIndicator()
-                  : Text(l10n.confirm, style: TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
+                  : Text(l10n.confirm,
+                      style: TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
             ),
             SizedBox(height: 16),
           ],
@@ -374,4 +412,3 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
     );
   }
 }
-

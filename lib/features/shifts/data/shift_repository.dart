@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../branches/presentation/branch_context.dart';
 import '../domain/shift.dart';
@@ -11,10 +12,16 @@ class ShiftRepository {
 
   ShiftRepository(this._firestore);
 
-  DocumentReference<Map<String, dynamic>> _runtimeRef(String merchantId, String branchId) =>
-      _firestore.collection('merchants').doc(merchantId).collection('branch_runtime').doc(branchId);
+  DocumentReference<Map<String, dynamic>> _runtimeRef(
+          String merchantId, String branchId) =>
+      _firestore
+          .collection('merchants')
+          .doc(merchantId)
+          .collection('branch_runtime')
+          .doc(branchId);
 
-  Stream<Shift?> watchCurrentShift(String merchantId, {String branchId = 'main'}) {
+  Stream<Shift?> watchCurrentShift(String merchantId,
+      {String branchId = 'main'}) {
     return _firestore
         .collection('shifts')
         .where('merchantId', isEqualTo: merchantId)
@@ -44,7 +51,8 @@ class ShiftRepository {
       return branchId == shift.branchId;
     });
     if (hasOpenInBranch) {
-      throw Exception('يوجد وردية مفتوحة حالياً في هذا الفرع، الرجاء إغلاقها أولاً.');
+      throw Exception(
+          'يوجد وردية مفتوحة حالياً في هذا الفرع، الرجاء إغلاقها أولاً.');
     }
 
     // Concurrency guard for the multi-branch era. Two devices attempting to
@@ -55,16 +63,20 @@ class ShiftRepository {
       final runtime = await transaction.get(runtimeRef);
       final existingOpenShiftId = runtime.data()?['openShiftId']?.toString();
       if (existingOpenShiftId != null && existingOpenShiftId.isNotEmpty) {
-        throw Exception('يوجد وردية مفتوحة حالياً في هذا الفرع، الرجاء إغلاقها أولاً.');
+        throw Exception(
+            'يوجد وردية مفتوحة حالياً في هذا الفرع، الرجاء إغلاقها أولاً.');
       }
 
       transaction.set(shiftRef, shift.toJson());
-      transaction.set(runtimeRef, {
-        'merchantId': shift.merchantId,
-        'branchId': shift.branchId,
-        'openShiftId': shift.id,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      transaction.set(
+          runtimeRef,
+          {
+            'merchantId': shift.merchantId,
+            'branchId': shift.branchId,
+            'openShiftId': shift.id,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
     });
   }
 
@@ -88,7 +100,9 @@ class ShiftRepository {
 
       final runtime = await transaction.get(runtimeRef);
       final runtimeOpenId = runtime.data()?['openShiftId']?.toString();
-      if (runtimeOpenId != null && runtimeOpenId.isNotEmpty && runtimeOpenId != shift.id) {
+      if (runtimeOpenId != null &&
+          runtimeOpenId.isNotEmpty &&
+          runtimeOpenId != shift.id) {
         throw Exception('حالة الوردية في هذا الفرع غير متطابقة.');
       }
 
@@ -108,13 +122,16 @@ class ShiftRepository {
         'totalTax': shift.totalTax,
         'status': 'closed',
       });
-      transaction.set(runtimeRef, {
-        'merchantId': shift.merchantId,
-        'branchId': shift.branchId,
-        'openShiftId': null,
-        'lastClosedShiftId': shift.id,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      transaction.set(
+          runtimeRef,
+          {
+            'merchantId': shift.merchantId,
+            'branchId': shift.branchId,
+            'openShiftId': null,
+            'lastClosedShiftId': shift.id,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
     });
   }
 
@@ -162,7 +179,7 @@ Stream<List<Shift>> shiftsStream(ShiftsStreamRef ref) {
   final repository = ref.watch(shiftRepositoryProvider);
   return repository._firestore
       .collection('shifts')
-      .where('merchantId', isEqualTo: appUser.merchantId ?? appUser.id)
+      .where('merchantId', isEqualTo: currentEffectiveMerchantId(appUser))
       .orderBy('startTime', descending: true)
       .limit(100)
       .snapshots()

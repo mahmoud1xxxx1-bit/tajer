@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../../features/authentication/data/auth_repository.dart';
+import 'effective_merchant.dart';
 
 class StoreProfile {
   final String storeName;
@@ -41,33 +42,36 @@ class StoreProfile {
       address: address ?? this.address,
       logoBase64: logoBase64 ?? this.logoBase64,
       defaultTaxPercentage: defaultTaxPercentage ?? this.defaultTaxPercentage,
-      defaultIsTaxInclusive: defaultIsTaxInclusive ?? this.defaultIsTaxInclusive,
+      defaultIsTaxInclusive:
+          defaultIsTaxInclusive ?? this.defaultIsTaxInclusive,
       vatNumber: vatNumber ?? this.vatNumber,
       crNumber: crNumber ?? this.crNumber,
     );
   }
 
   Map<String, dynamic> toJson() => {
-    'storeName': storeName,
-    'phone': phone,
-    'address': address,
-    'logoBase64': logoBase64,
-    'defaultTaxPercentage': defaultTaxPercentage,
-    'defaultIsTaxInclusive': defaultIsTaxInclusive,
-    'vatNumber': vatNumber,
-    'crNumber': crNumber,
-  };
+        'storeName': storeName,
+        'phone': phone,
+        'address': address,
+        'logoBase64': logoBase64,
+        'defaultTaxPercentage': defaultTaxPercentage,
+        'defaultIsTaxInclusive': defaultIsTaxInclusive,
+        'vatNumber': vatNumber,
+        'crNumber': crNumber,
+      };
 
   factory StoreProfile.fromJson(Map<String, dynamic> json) => StoreProfile(
-    storeName: json['storeName'] ?? '',
-    phone: json['phone'] ?? '',
-    address: json['address'] ?? '',
-    logoBase64: json['logoBase64'] ?? '',
-    defaultTaxPercentage: json['defaultTaxPercentage'] != null ? (json['defaultTaxPercentage'] as num).toDouble() : null,
-    defaultIsTaxInclusive: json['defaultIsTaxInclusive'] ?? false,
-    vatNumber: json['vatNumber'],
-    crNumber: json['crNumber'],
-  );
+        storeName: json['storeName'] ?? '',
+        phone: json['phone'] ?? '',
+        address: json['address'] ?? '',
+        logoBase64: json['logoBase64'] ?? '',
+        defaultTaxPercentage: json['defaultTaxPercentage'] != null
+            ? (json['defaultTaxPercentage'] as num).toDouble()
+            : null,
+        defaultIsTaxInclusive: json['defaultIsTaxInclusive'] ?? false,
+        vatNumber: json['vatNumber'],
+        crNumber: json['crNumber'],
+      );
 }
 
 class StoreProfileNotifier extends StateNotifier<AsyncValue<StoreProfile>> {
@@ -88,18 +92,20 @@ class StoreProfileNotifier extends StateNotifier<AsyncValue<StoreProfile>> {
         state = AsyncValue.data(StoreProfile());
       }
 
-      if (_merchantId != null && _merchantId!.isNotEmpty) {
+      final merchantId = _merchantId;
+      if (merchantId != null && merchantId.isNotEmpty) {
         try {
           final doc = await FirebaseFirestore.instance
               .collection('merchants')
-              .doc(_merchantId)
+              .doc(merchantId)
               .collection('inventory_logs')
               .doc('store_profile_doc')
               .get();
           if (doc.exists && doc.data() != null) {
             final remoteProfile = StoreProfile.fromJson(doc.data()!);
             state = AsyncValue.data(remoteProfile);
-            await prefs.setString('store_profile', jsonEncode(remoteProfile.toJson()));
+            await prefs.setString(
+                'store_profile', jsonEncode(remoteProfile.toJson()));
           }
         } catch (_) {}
       }
@@ -113,11 +119,12 @@ class StoreProfileNotifier extends StateNotifier<AsyncValue<StoreProfile>> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('store_profile', jsonEncode(profile.toJson()));
 
-    if (_merchantId != null && _merchantId!.isNotEmpty) {
+    final merchantId = _merchantId;
+    if (merchantId != null && merchantId.isNotEmpty) {
       try {
         await FirebaseFirestore.instance
             .collection('merchants')
-            .doc(_merchantId)
+            .doc(merchantId)
             .collection('inventory_logs')
             .doc('store_profile_doc')
             .set(profile.toJson());
@@ -126,8 +133,10 @@ class StoreProfileNotifier extends StateNotifier<AsyncValue<StoreProfile>> {
   }
 }
 
-final storeProfileProvider = StateNotifierProvider<StoreProfileNotifier, AsyncValue<StoreProfile>>((ref) {
+final storeProfileProvider =
+    StateNotifierProvider<StoreProfileNotifier, AsyncValue<StoreProfile>>(
+        (ref) {
   final user = ref.watch(appUserProvider).value;
-  final merchantId = user?.merchantId ?? user?.id;
+  final merchantId = user == null ? null : currentEffectiveMerchantId(user);
   return StoreProfileNotifier(merchantId);
 });

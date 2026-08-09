@@ -1,6 +1,6 @@
-import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../orders/domain/order.dart';
 import '../domain/customer.dart';
@@ -97,13 +97,14 @@ class CustomerRepository {
   Future<void> deleteCustomer(String customerId) async {
     final docRef = _firestore.collection('customers').doc(customerId);
     final snapshot = await docRef.get();
-    
+
     if (snapshot.exists) {
       final data = snapshot.data();
       final totalDebt = (data?['totalDebt'] as num?)?.toDouble() ?? 0.0;
-      
+
       if (totalDebt.abs() > 0.01) {
-        throw Exception('لا يمكن حذف العميل لأن عليه مبلغاً مستحقاً قدره $totalDebt ر.س. يرجى تسوية المبلغ أولاً.');
+        throw Exception(
+            'لا يمكن حذف العميل لأن عليه مبلغاً مستحقاً قدره $totalDebt ر.س. يرجى تسوية المبلغ أولاً.');
       }
 
       final merchantId = data?['merchantId'] as String?;
@@ -113,14 +114,14 @@ class CustomerRepository {
           .where('merchantId', isEqualTo: merchantId)
           .where('customerId', isEqualTo: customerId)
           .get();
-          
+
       bool hasUnpaid = unpaidOrders.docs.any((doc) {
         final orderData = doc.data();
         final paymentMethod = orderData['paymentMethod'] as String?;
         final status = orderData['status'] as String?;
-        
+
         if (paymentMethod != 'credit' || status == 'cancelled') return false;
-        
+
         final total = (orderData['total'] as num?)?.toDouble() ?? 0.0;
         final paidAmount = (orderData['paidAmount'] as num?)?.toDouble() ?? 0.0;
         return (total - paidAmount) > 0.01;
@@ -134,7 +135,8 @@ class CustomerRepository {
     }
   }
 
-  Future<void> moveCustomersToFolder(List<String> customerIds, String? folderName) async {
+  Future<void> moveCustomersToFolder(
+      List<String> customerIds, String? folderName) async {
     final batch = _firestore.batch();
     for (final id in customerIds) {
       final docRef = _firestore.collection('customers').doc(id);
@@ -164,11 +166,14 @@ Stream<List<Customer>> customersStream(CustomersStreamRef ref) {
   if (appUser == null) return const Stream.empty();
 
   final repository = ref.watch(customerRepositoryProvider);
-  return repository.queryCustomers(appUser.merchantId ?? appUser.id).snapshots().map(
-        (snapshot) {
-          final customers = snapshot.docs.map((doc) => doc.data()).toList();
-          customers.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-          return customers;
-        },
-      );
+  return repository
+      .queryCustomers(currentEffectiveMerchantId(appUser))
+      .snapshots()
+      .map(
+    (snapshot) {
+      final customers = snapshot.docs.map((doc) => doc.data()).toList();
+      customers.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return customers;
+    },
+  );
 }

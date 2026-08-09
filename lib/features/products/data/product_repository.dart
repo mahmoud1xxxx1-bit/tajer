@@ -1,7 +1,7 @@
-import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../../core/providers/effective_merchant.dart';
 import '../../branches/data/branch_inventory_repository.dart';
 import '../../branches/presentation/branch_context.dart';
 import '../domain/product.dart';
@@ -20,24 +20,24 @@ class ProductRepository {
         .where('merchantId', isEqualTo: merchantId)
         .where('isArchived', isEqualTo: false)
         .withConverter(
-          fromFirestore: (snapshot, _) {
-            final data = snapshot.data()!;
-            data['id'] = snapshot.id;
-            data['price'] = (data['price'] ?? 0.0).toDouble();
-            data['quantity'] = (data['quantity'] ?? 0).toInt();
-            data['name'] = data['name']?.toString() ?? '';
-            data['merchantId'] = data['merchantId']?.toString() ?? '';
-            // Cost is intentionally not trusted from the public product record.
-            // It is overlaid later from the protected product_costs collection.
-            data.remove('costPrice');
-            return Product.fromJson(data);
-          },
-          toFirestore: (product, _) {
-            final data = product.toJson();
-            data.remove('costPrice');
-            return data;
-          },
-        );
+      fromFirestore: (snapshot, _) {
+        final data = snapshot.data()!;
+        data['id'] = snapshot.id;
+        data['price'] = (data['price'] ?? 0.0).toDouble();
+        data['quantity'] = (data['quantity'] ?? 0).toInt();
+        data['name'] = data['name']?.toString() ?? '';
+        data['merchantId'] = data['merchantId']?.toString() ?? '';
+        // Cost is intentionally not trusted from the public product record.
+        // It is overlaid later from the protected product_costs collection.
+        data.remove('costPrice');
+        return Product.fromJson(data);
+      },
+      toFirestore: (product, _) {
+        final data = product.toJson();
+        data.remove('costPrice');
+        return data;
+      },
+    );
   }
 
   Future<void> migrateOldProducts(String merchantId) async {
@@ -76,12 +76,15 @@ class ProductRepository {
     final batch = _firestore.batch();
     batch.set(productRef, data);
     if (product.costPrice != null) {
-      batch.set(costRef, {
-        'merchantId': product.merchantId,
-        'productId': product.id,
-        'costPrice': product.costPrice,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      batch.set(
+          costRef,
+          {
+            'merchantId': product.merchantId,
+            'productId': product.id,
+            'costPrice': product.costPrice,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
     }
     await batch.commit();
   }
@@ -104,18 +107,24 @@ class ProductRepository {
     if (product.costPrice == null) {
       batch.delete(costRef);
     } else {
-      batch.set(costRef, {
-        'merchantId': product.merchantId,
-        'productId': product.id,
-        'costPrice': product.costPrice,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+      batch.set(
+          costRef,
+          {
+            'merchantId': product.merchantId,
+            'productId': product.id,
+            'costPrice': product.costPrice,
+            'updatedAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true));
     }
     await batch.commit();
   }
 
   Future<void> deleteProduct(String productId) async {
-    await _firestore.collection('products').doc(productId).update({'isArchived': true});
+    await _firestore
+        .collection('products')
+        .doc(productId)
+        .update({'isArchived': true});
   }
 
   Future<int> getProductCount(String merchantId) async {
@@ -123,7 +132,9 @@ class ProductRepository {
         .collection('products')
         .where('merchantId', isEqualTo: merchantId)
         .get();
-    return snapshot.docs.where((doc) => doc.data()['isArchived'] != true).length;
+    return snapshot.docs
+        .where((doc) => doc.data()['isArchived'] != true)
+        .length;
   }
 }
 
@@ -139,7 +150,7 @@ Stream<List<Product>> productsStream(ProductsStreamRef ref) {
 
   final repository = ref.watch(productRepositoryProvider);
   final costRepository = ref.watch(productCostRepositoryProvider);
-  final merchantId = appUser.merchantId ?? appUser.id;
+  final merchantId = currentEffectiveMerchantId(appUser);
   final branchId = ref.watch(selectedBranchIdProvider);
   final branchInventory = ref.watch(branchInventoryStreamProvider(branchId));
   final canViewCost = appUser.hasPermission('can_view_cost');

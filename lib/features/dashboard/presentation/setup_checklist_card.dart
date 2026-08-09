@@ -7,8 +7,8 @@ import '../../categories/data/category_repository.dart';
 import '../../products/data/product_repository.dart';
 import '../../shifts/data/shift_repository.dart';
 import '../../orders/data/order_repository.dart';
-import '../../authentication/domain/app_user.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../../core/providers/effective_merchant.dart';
 import 'package:go_router/go_router.dart';
 
 class SetupChecklistCard extends ConsumerWidget {
@@ -26,7 +26,9 @@ class SetupChecklistCard extends ConsumerWidget {
 
     final categoriesAsync = ref.watch(categoriesStreamProvider);
     final productsAsync = ref.watch(productsStreamProvider);
-    final currentShiftAsync = ref.watch(currentShiftProvider(appUser?.merchantId ?? appUser?.id ?? ''));
+    final currentShiftAsync = ref.watch(currentShiftProvider(
+      appUser == null ? '' : currentEffectiveMerchantId(appUser),
+    ));
     final ordersAsync = ref.watch(ordersStreamProvider);
 
     final bool hasCategories = (categoriesAsync.value?.length ?? 0) > 0;
@@ -57,7 +59,8 @@ class SetupChecklistCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.rocket_launch_rounded, color: Theme.of(context).colorScheme.primary, size: 28),
+                Icon(Icons.rocket_launch_rounded,
+                    color: Theme.of(context).colorScheme.primary, size: 28),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -85,8 +88,10 @@ class SetupChecklistCard extends ConsumerWidget {
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 8,
-                backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
+                backgroundColor:
+                    Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                    Theme.of(context).colorScheme.primary),
               ),
             ),
             const SizedBox(height: 16),
@@ -124,7 +129,11 @@ class SetupChecklistCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildStepItem(BuildContext context, {required bool isCompleted, required String title, required IconData icon, required VoidCallback onTap}) {
+  Widget _buildStepItem(BuildContext context,
+      {required bool isCompleted,
+      required String title,
+      required IconData icon,
+      required VoidCallback onTap}) {
     return InkWell(
       onTap: isCompleted ? null : onTap,
       borderRadius: BorderRadius.circular(8),
@@ -143,7 +152,9 @@ class SetupChecklistCard extends ConsumerWidget {
                 style: TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 14,
-                  color: isCompleted ? Colors.grey : Theme.of(context).colorScheme.onSurface,
+                  color: isCompleted
+                      ? Colors.grey
+                      : Theme.of(context).colorScheme.onSurface,
                   decoration: isCompleted ? TextDecoration.lineThrough : null,
                 ),
               ),

@@ -1,8 +1,8 @@
-import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../branches/data/branch_inventory_repository.dart';
 import '../../branches/presentation/branch_context.dart';
@@ -15,36 +15,45 @@ class InventoryLogRepository {
 
   InventoryLogRepository(this._firestore, this._merchantId, this._branchId);
 
-  CollectionReference<Map<String, dynamic>> get _logsRef =>
-      _firestore.collection('merchants').doc(_merchantId).collection('inventory_logs');
+  CollectionReference<Map<String, dynamic>> get _logsRef => _firestore
+      .collection('merchants')
+      .doc(_merchantId)
+      .collection('inventory_logs');
 
   Stream<List<InventoryLog>> watchLogs({String? branchId}) {
     final scope = branchId ?? _branchId;
-    return _logsRef.withConverter<InventoryLog?>(
-      fromFirestore: (snapshot, _) {
-        try {
-          final data = Map<String, dynamic>.from(snapshot.data() ?? {});
-          data['id'] = snapshot.id;
-          data['productId'] = data['productId']?.toString() ?? '';
-          data['productName'] = data['productName']?.toString() ?? '';
-          data['reason'] = data['reason']?.toString() ?? '';
-          data['merchantId'] = data['merchantId']?.toString() ?? '';
-          data['branchId'] = data['branchId']?.toString() ?? 'main';
-          data['changeQuantity'] =
-              double.tryParse(data['changeQuantity']?.toString() ?? '0') ?? 0.0;
-          data['previousQuantity'] =
-              double.tryParse(data['previousQuantity']?.toString() ?? '0') ?? 0.0;
-          data['newQuantity'] =
-              double.tryParse(data['newQuantity']?.toString() ?? '0') ?? 0.0;
-          if (data['date'] == null) data['date'] = Timestamp.now();
-          return InventoryLog.fromJson(data);
-        } catch (e) {
-          debugPrint('Error parsing InventoryLog ${snapshot.id}: $e');
-          return null;
-        }
-      },
-      toFirestore: (log, _) => log?.toJson() ?? {},
-    ).orderBy('date', descending: true).snapshots().map((snapshot) {
+    return _logsRef
+        .withConverter<InventoryLog?>(
+          fromFirestore: (snapshot, _) {
+            try {
+              final data = Map<String, dynamic>.from(snapshot.data() ?? {});
+              data['id'] = snapshot.id;
+              data['productId'] = data['productId']?.toString() ?? '';
+              data['productName'] = data['productName']?.toString() ?? '';
+              data['reason'] = data['reason']?.toString() ?? '';
+              data['merchantId'] = data['merchantId']?.toString() ?? '';
+              data['branchId'] = data['branchId']?.toString() ?? 'main';
+              data['changeQuantity'] =
+                  double.tryParse(data['changeQuantity']?.toString() ?? '0') ??
+                      0.0;
+              data['previousQuantity'] = double.tryParse(
+                      data['previousQuantity']?.toString() ?? '0') ??
+                  0.0;
+              data['newQuantity'] =
+                  double.tryParse(data['newQuantity']?.toString() ?? '0') ??
+                      0.0;
+              if (data['date'] == null) data['date'] = Timestamp.now();
+              return InventoryLog.fromJson(data);
+            } catch (e) {
+              debugPrint('Error parsing InventoryLog ${snapshot.id}: $e');
+              return null;
+            }
+          },
+          toFirestore: (log, _) => log?.toJson() ?? {},
+        )
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map((snapshot) {
       return snapshot.docs
           .where((doc) =>
               doc.id != 'store_profile_doc' &&
@@ -130,7 +139,8 @@ class InventoryLogRepository {
           : (log.branchId == 'main' ? legacyMainQuantity : 0.0);
       final next = current - log.changeQuantity;
       if (next < -0.000001) {
-        throw Exception('Cannot revert: branch inventory would become negative');
+        throw Exception(
+            'Cannot revert: branch inventory would become negative');
       }
       final normalized = next < 0 ? 0.0 : next;
       final initial = inventorySnap.exists
@@ -186,7 +196,7 @@ final inventoryLogRepositoryProvider = Provider<InventoryLogRepository?>((ref) {
   final branchId = ref.watch(selectedBranchIdProvider);
   return InventoryLogRepository(
     FirebaseFirestore.instance,
-    appUser.merchantId ?? appUser.id,
+    currentEffectiveMerchantId(appUser),
     branchId,
   );
 });

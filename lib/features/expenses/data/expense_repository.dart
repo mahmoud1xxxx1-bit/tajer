@@ -2,6 +2,7 @@ import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../branches/presentation/branch_context.dart';
 import '../domain/expense.dart';
@@ -12,8 +13,10 @@ class ExpenseRepository {
 
   ExpenseRepository(this._firestore, this._merchantId);
 
-  CollectionReference<Map<String, dynamic>> get _expensesRef =>
-      _firestore.collection('merchants').doc(_merchantId).collection('expenses');
+  CollectionReference<Map<String, dynamic>> get _expensesRef => _firestore
+      .collection('merchants')
+      .doc(_merchantId)
+      .collection('expenses');
 
   Future<String> _selectedBranchId() async {
     final prefs = await SharedPreferences.getInstance();
@@ -21,7 +24,8 @@ class ExpenseRepository {
     return value == null || value.isEmpty ? 'main' : value;
   }
 
-  Future<DocumentSnapshot<Map<String, dynamic>>?> _openShiftForBranch(String branchId) async {
+  Future<DocumentSnapshot<Map<String, dynamic>>?> _openShiftForBranch(
+      String branchId) async {
     final snap = await _firestore
         .collection('shifts')
         .where('merchantId', isEqualTo: _merchantId)
@@ -35,16 +39,20 @@ class ExpenseRepository {
   }
 
   Stream<List<Expense>> watchExpenses({String branchId = 'main'}) {
-    return _expensesRef.withConverter(
-      fromFirestore: (snapshot, _) {
-        final data = snapshot.data()!;
-        data['id'] = snapshot.id;
-        data['amount'] = (data['amount'] ?? 0.0).toDouble();
-        data['branchId'] = data['branchId']?.toString() ?? 'main';
-        return Expense.fromJson(data);
-      },
-      toFirestore: (expense, _) => expense.toJson(),
-    ).orderBy('date', descending: true).snapshots().map((snapshot) {
+    return _expensesRef
+        .withConverter(
+          fromFirestore: (snapshot, _) {
+            final data = snapshot.data()!;
+            data['id'] = snapshot.id;
+            data['amount'] = (data['amount'] ?? 0.0).toDouble();
+            data['branchId'] = data['branchId']?.toString() ?? 'main';
+            return Expense.fromJson(data);
+          },
+          toFirestore: (expense, _) => expense.toJson(),
+        )
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map((snapshot) {
       return snapshot.docs
           .map((doc) => doc.data())
           .where((expense) => expense.branchId == branchId)
@@ -59,7 +67,8 @@ class ExpenseRepository {
     if (expense.isFromShiftDrawer && expense.paymentMethod == 'cash') {
       final openShift = await _openShiftForBranch(branchId);
       if (openShift == null) {
-        throw Exception('لا يمكن خصم المصروف من الدرج بدون وردية مفتوحة في هذا الفرع.');
+        throw Exception(
+            'لا يمكن خصم المصروف من الدرج بدون وردية مفتوحة في هذا الفرع.');
       }
       shiftId = openShift.id;
     }
@@ -70,8 +79,12 @@ class ExpenseRepository {
     );
 
     if (normalized.shiftId != null && normalized.shiftId!.isNotEmpty) {
-      final shift = await _firestore.collection('shifts').doc(normalized.shiftId).get(const GetOptions(source: Source.serverAndCache));
-      if (!shift.exists) throw Exception('الوردية المرتبطة بالمصروف غير موجودة.');
+      final shift = await _firestore
+          .collection('shifts')
+          .doc(normalized.shiftId)
+          .get(const GetOptions(source: Source.serverAndCache));
+      if (!shift.exists)
+        throw Exception('الوردية المرتبطة بالمصروف غير موجودة.');
       final data = shift.data()!;
       final shiftBranchId = data['branchId']?.toString() ?? 'main';
       final status = data['status']?.toString();
@@ -91,7 +104,10 @@ class ExpenseRepository {
     if (expense.isCancelled) return;
 
     if (expense.shiftId != null && expense.shiftId!.isNotEmpty) {
-      final shift = await _firestore.collection('shifts').doc(expense.shiftId).get(const GetOptions(source: Source.serverAndCache));
+      final shift = await _firestore
+          .collection('shifts')
+          .doc(expense.shiftId)
+          .get(const GetOptions(source: Source.serverAndCache));
       if (!shift.exists) {
         throw Exception('تعذر التحقق من الوردية المرتبطة بهذا المصروف.');
       }
@@ -99,10 +115,12 @@ class ExpenseRepository {
       final status = data['status']?.toString();
       final shiftBranchId = data['branchId']?.toString() ?? 'main';
       if (shiftBranchId != expense.branchId) {
-        throw Exception('المصروف مرتبط بفرع مختلف ولا يمكن إلغاؤه من هذا الفرع.');
+        throw Exception(
+            'المصروف مرتبط بفرع مختلف ولا يمكن إلغاؤه من هذا الفرع.');
       }
       if (status != 'open' || data['endTime'] != null) {
-        throw Exception('لا يمكن إلغاء هذا المصروف لأن الوردية المرتبطة به مغلقة.');
+        throw Exception(
+            'لا يمكن إلغاء هذا المصروف لأن الوردية المرتبطة به مغلقة.');
       }
     } else {
       final openShifts = await _firestore
@@ -118,8 +136,10 @@ class ExpenseRepository {
       if (matchingOpen.isNotEmpty) {
         final currentShiftData = matchingOpen.first.data();
         final startTime = (currentShiftData['startTime'] as Timestamp).toDate();
-        if (expense.createdAt.isBefore(startTime.subtract(const Duration(minutes: 1)))) {
-          throw Exception('لا يمكن إلغاء هذا المصروف لأنه يخص وردية سابقة ومغلقة.');
+        if (expense.createdAt
+            .isBefore(startTime.subtract(const Duration(minutes: 1)))) {
+          throw Exception(
+              'لا يمكن إلغاء هذا المصروف لأنه يخص وردية سابقة ومغلقة.');
         }
       } else {
         final closed = await _firestore
@@ -132,11 +152,14 @@ class ExpenseRepository {
           return b == expense.branchId;
         });
         if (hasClosedInBranch) {
-          throw Exception('لا توجد وردية مفتوحة حالياً في هذا الفرع. لا يمكن إلغاء مصروف وردية مغلقة.');
+          throw Exception(
+              'لا توجد وردية مفتوحة حالياً في هذا الفرع. لا يمكن إلغاء مصروف وردية مغلقة.');
         }
 
         final now = DateTime.now();
-        final sameDay = now.year == expense.date.year && now.month == expense.date.month && now.day == expense.date.day;
+        final sameDay = now.year == expense.date.year &&
+            now.month == expense.date.month &&
+            now.day == expense.date.day;
         final recent = now.difference(expense.date).inHours < 16;
         if (!sameDay && !recent) {
           throw Exception('المصروف قديم جداً ولا يمكن إلغاؤه.');
@@ -158,7 +181,8 @@ class ExpenseRepository {
 final expenseRepositoryProvider = Provider<ExpenseRepository?>((ref) {
   final appUser = ref.watch(appUserProvider).value;
   if (appUser == null) return null;
-  return ExpenseRepository(FirebaseFirestore.instance, appUser.merchantId ?? appUser.id);
+  return ExpenseRepository(
+      FirebaseFirestore.instance, currentEffectiveMerchantId(appUser));
 });
 
 final expensesStreamProvider = StreamProvider<List<Expense>>((ref) {

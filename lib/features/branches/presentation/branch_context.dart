@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../authentication/data/auth_repository.dart';
+import '../../../core/providers/effective_merchant.dart';
 import '../domain/branch.dart';
 
 class BranchContextState {
@@ -44,7 +45,7 @@ class BranchContextNotifier extends StateNotifier<BranchContextState> {
 final branchContextProvider =
     StateNotifierProvider<BranchContextNotifier, BranchContextState>((ref) {
   final user = ref.watch(appUserProvider).value;
-  final merchantId = user?.merchantId ?? user?.id ?? '';
+  final merchantId = user == null ? '' : currentEffectiveMerchantId(user);
   return BranchContextNotifier(merchantId);
 });
 

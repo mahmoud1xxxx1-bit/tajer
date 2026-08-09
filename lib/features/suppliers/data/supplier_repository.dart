@@ -1,6 +1,6 @@
-import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../domain/supplier.dart';
 
@@ -10,25 +10,31 @@ class SupplierRepository {
 
   SupplierRepository(this._firestore, this._merchantId);
 
-  CollectionReference<Map<String, dynamic>> get _suppliersRef =>
-      _firestore.collection('merchants').doc(_merchantId).collection('suppliers');
+  CollectionReference<Map<String, dynamic>> get _suppliersRef => _firestore
+      .collection('merchants')
+      .doc(_merchantId)
+      .collection('suppliers');
 
   Stream<List<Supplier>> watchSuppliers() {
-    return _suppliersRef.withConverter(
-      fromFirestore: (snapshot, _) {
-        final data = snapshot.data()!;
-        data['id'] = snapshot.id;
-        data['merchantId'] = data['merchantId']?.toString() ?? '';
-        data['name'] = data['name']?.toString() ?? '';
-        data['phone'] = data['phone']?.toString() ?? '';
-        data['totalDebt'] = (data['totalDebt'] ?? 0.0).toDouble();
-        if (data['createdAt'] == null) {
-          data['createdAt'] = Timestamp.now();
-        }
-        return Supplier.fromJson(data);
-      },
-      toFirestore: (supplier, _) => supplier.toJson(),
-    ).orderBy('createdAt', descending: true).snapshots().map((snapshot) {
+    return _suppliersRef
+        .withConverter(
+          fromFirestore: (snapshot, _) {
+            final data = snapshot.data()!;
+            data['id'] = snapshot.id;
+            data['merchantId'] = data['merchantId']?.toString() ?? '';
+            data['name'] = data['name']?.toString() ?? '';
+            data['phone'] = data['phone']?.toString() ?? '';
+            data['totalDebt'] = (data['totalDebt'] ?? 0.0).toDouble();
+            if (data['createdAt'] == null) {
+              data['createdAt'] = Timestamp.now();
+            }
+            return Supplier.fromJson(data);
+          },
+          toFirestore: (supplier, _) => supplier.toJson(),
+        )
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
       return snapshot.docs.map((doc) => doc.data()).toList();
     });
   }
@@ -57,7 +63,8 @@ class SupplierRepository {
     }
 
     final supplierRef = _suppliersRef.doc(supplierId);
-    final supplierTxRef = supplierRef.collection('transactions').doc(transactionId);
+    final supplierTxRef =
+        supplierRef.collection('transactions').doc(transactionId);
 
     await _firestore.runTransaction((transaction) async {
       final supplierSnapshot = await transaction.get(supplierRef);
@@ -98,7 +105,8 @@ class SupplierRepository {
         throw Exception('المورد غير موجود.');
       }
 
-      final currentDebt = (snapshot.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
+      final currentDebt =
+          (snapshot.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
       if (amountPaid > currentDebt) {
         throw Exception('مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق.');
       }
@@ -131,7 +139,8 @@ class SupplierRepository {
     }
 
     final supplierRef = _suppliersRef.doc(supplierId);
-    final supplierTxRef = supplierRef.collection('transactions').doc(transactionId);
+    final supplierTxRef =
+        supplierRef.collection('transactions').doc(transactionId);
     final expenseRef = _firestore
         .collection('merchants')
         .doc(_merchantId)
@@ -156,7 +165,8 @@ class SupplierRepository {
 
       if (needsOpenShift) {
         if (shiftRef == null) {
-          throw Exception('لا يمكن خصم سداد المورد من الدرج بدون وردية مفتوحة.');
+          throw Exception(
+              'لا يمكن خصم سداد المورد من الدرج بدون وردية مفتوحة.');
         }
         final shiftSnapshot = await transaction.get(shiftRef);
         if (!shiftSnapshot.exists || shiftSnapshot.data() == null) {
@@ -184,7 +194,8 @@ class SupplierRepository {
         'amount': amountPaid,
         'type': 'payment',
         'paymentMethod': paymentMethod,
-        'description': 'دفعة سداد ديون للمورد${paymentMethod == 'cash' ? (isFromShiftDrawer ? ' (من الدرج)' : ' (خارج الدرج)') : ''}',
+        'description':
+            'دفعة سداد ديون للمورد${paymentMethod == 'cash' ? (isFromShiftDrawer ? ' (من الدرج)' : ' (خارج الدرج)') : ''}',
         'date': Timestamp.fromDate(occurredAt),
         'createdAt': Timestamp.fromDate(occurredAt),
         'isCancelled': false,
@@ -217,7 +228,8 @@ class SupplierRepository {
     required String transactionId,
   }) async {
     final supplierRef = _suppliersRef.doc(supplierId);
-    final supplierTxRef = supplierRef.collection('transactions').doc(transactionId);
+    final supplierTxRef =
+        supplierRef.collection('transactions').doc(transactionId);
 
     await _firestore.runTransaction((transaction) async {
       final supplierSnapshot = await transaction.get(supplierRef);
@@ -306,7 +318,7 @@ final supplierRepositoryProvider = Provider<SupplierRepository?>((ref) {
   if (appUser == null) return null;
   return SupplierRepository(
     FirebaseFirestore.instance,
-    appUser.merchantId ?? appUser.id,
+    currentEffectiveMerchantId(appUser),
   );
 });
 

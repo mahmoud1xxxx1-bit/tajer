@@ -16,6 +16,7 @@ import '../../orders/data/order_repository.dart';
 import '../../shifts/data/shift_repository.dart';
 import '../../../core/services/activity_logger.dart';
 import '../../../core/providers/settings_provider.dart';
+import '../../../core/providers/effective_merchant.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
@@ -34,7 +35,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
   String _searchQuery = '';
   bool _filterHasDebt = false;
   String _sortOption = 'newest';
-  
+
   bool _isSelectionMode = false;
   Set<String> _selectedCustomerIds = {};
   Set<String> _expandedFolders = {};
@@ -42,7 +43,6 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    
     if (!_isInitialized) {
       _expandedFolders.add(l10n.generalCustomers);
       _isInitialized = true;
@@ -50,21 +50,27 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
     final customersAsyncValue = ref.watch(customersStreamProvider);
     final currency = ref.watch(currencyProvider).code;
     final appUser = ref.watch(appUserProvider).value;
-    final canManageCustomers = appUser?.hasPermission('can_manage_customers') ?? false;
-    final canReceivePayments = appUser?.hasPermission('can_receive_payments') ?? false;
+    final canManageCustomers =
+        appUser?.hasPermission('can_manage_customers') ?? false;
+    final canReceivePayments =
+        appUser?.hasPermission('can_receive_payments') ?? false;
 
     return Scaffold(
       appBar: AppBar(
-        title: _isSelectionMode 
-            ? Text(l10n.selectedCount(_selectedCustomerIds.length.toString()), style: const TextStyle(fontFamily: 'Tajawal'))
-            : Text(AppLocalizations.of(context)!.text55, style: const TextStyle(fontFamily: 'Tajawal')),
-        leading: _isSelectionMode ? IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => setState(() {
-            _isSelectionMode = false;
-            _selectedCustomerIds.clear();
-          }),
-        ) : null,
+        title: _isSelectionMode
+            ? Text(l10n.selectedCount(_selectedCustomerIds.length.toString()),
+                style: const TextStyle(fontFamily: 'Tajawal'))
+            : Text(AppLocalizations.of(context)!.text55,
+                style: const TextStyle(fontFamily: 'Tajawal')),
+        leading: _isSelectionMode
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => setState(() {
+                  _isSelectionMode = false;
+                  _selectedCustomerIds.clear();
+                }),
+              )
+            : null,
         actions: [
           if (_isSelectionMode && _selectedCustomerIds.isNotEmpty)
             IconButton(
@@ -89,8 +95,9 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
       body: customersAsyncValue.when(
         data: (customers) {
           var filtered = customers.where((c) {
-            final matchesSearch = c.name.toLowerCase().contains(_searchQuery.toLowerCase()) || 
-                                  c.phone.contains(_searchQuery);
+            final matchesSearch =
+                c.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+                    c.phone.contains(_searchQuery);
             final matchesDebt = !_filterHasDebt || c.totalDebt > 0;
             return matchesSearch && matchesDebt;
           }).toList();
@@ -105,7 +112,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
 
           final Map<String, List<Customer>> groupedCustomers = {};
           final List<Customer> uncategorized = [];
-          
+
           for (var c in filtered) {
             if (c.folderName != null && c.folderName!.isNotEmpty) {
               groupedCustomers.putIfAbsent(c.folderName!, () => []).add(c);
@@ -140,8 +147,10 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                           labelText: l10n.searchNamePhone,
                           labelStyle: const TextStyle(fontFamily: 'Tajawal'),
                           prefixIcon: const Icon(Icons.search),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                          contentPadding:
+                              const EdgeInsets.symmetric(horizontal: 16),
                         ),
                         onChanged: (val) => setState(() => _searchQuery = val),
                       ),
@@ -149,23 +158,46 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                       Row(
                         children: [
                           FilterChip(
-                            label: Text(l10n.hasDebts, style: TextStyle(fontFamily: 'Tajawal')),
+                            label: Text(l10n.hasDebts,
+                                style: TextStyle(fontFamily: 'Tajawal')),
                             selected: _filterHasDebt,
-                            onSelected: (val) => setState(() => _filterHasDebt = val),
+                            onSelected: (val) =>
+                                setState(() => _filterHasDebt = val),
                             selectedColor: Colors.red.withOpacity(0.2),
                             checkmarkColor: Colors.red,
                           ),
                           const Spacer(),
-                          Text(l10n.sortBy, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 12)),
+                          Text(l10n.sortBy,
+                              style: TextStyle(
+                                  fontFamily: 'Tajawal',
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12)),
                           DropdownButton<String>(
                             value: _sortOption,
                             underline: const SizedBox(),
-                            items: [DropdownMenuItem(value: 'newest', child: Text('الأحدث', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
-                              DropdownMenuItem(value: 'debt', child: Text(l10n.highestDebt, style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
-                              DropdownMenuItem(value: 'alpha', child: Text(l10n.sortAlphabetical, style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
+                            items: [
+                              DropdownMenuItem(
+                                  value: 'newest',
+                                  child: Text('الأحدث',
+                                      style: TextStyle(
+                                          fontFamily: 'Tajawal',
+                                          fontSize: 13))),
+                              DropdownMenuItem(
+                                  value: 'debt',
+                                  child: Text(l10n.highestDebt,
+                                      style: TextStyle(
+                                          fontFamily: 'Tajawal',
+                                          fontSize: 13))),
+                              DropdownMenuItem(
+                                  value: 'alpha',
+                                  child: Text(l10n.sortAlphabetical,
+                                      style: TextStyle(
+                                          fontFamily: 'Tajawal',
+                                          fontSize: 13))),
                             ],
                             onChanged: (val) {
-                              if (val != null) setState(() => _sortOption = val);
+                              if (val != null)
+                                setState(() => _sortOption = val);
                             },
                           ),
                         ],
@@ -177,9 +209,12 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                 child: flattenedList.isEmpty
                     ? Center(
                         child: Text(
-                          _searchQuery.isNotEmpty || _filterHasDebt ? 'لا يوجد عملاء يطابقون البحث' : AppLocalizations.of(context)!.text56,
+                          _searchQuery.isNotEmpty || _filterHasDebt
+                              ? 'لا يوجد عملاء يطابقون البحث'
+                              : AppLocalizations.of(context)!.text56,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16),
+                          style: const TextStyle(
+                              fontFamily: 'Tajawal', fontSize: 16),
                         ),
                       )
                     : ListView.builder(
@@ -187,41 +222,68 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         itemBuilder: (context, index) {
                           final item = flattenedList[index];
-                          
+
                           if (item is String) {
                             final isExpanded = _expandedFolders.contains(item);
                             final isGeneral = item == l10n.generalCustomers;
                             return InkWell(
                               onTap: () {
                                 setState(() {
-                                  if (isExpanded) _expandedFolders.remove(item);
-                                  else _expandedFolders.add(item);
+                                  if (isExpanded)
+                                    _expandedFolders.remove(item);
+                                  else
+                                    _expandedFolders.add(item);
                                 });
                               },
                               child: Container(
                                 margin: const EdgeInsets.symmetric(vertical: 8),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
                                 decoration: BoxDecoration(
-                                  color: isGeneral ? Colors.grey.withOpacity(0.2) : Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                  color: isGeneral
+                                      ? Colors.grey.withOpacity(0.2)
+                                      : Theme.of(context)
+                                          .colorScheme
+                                          .primary
+                                          .withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
                                   children: [
-                                    Icon(isGeneral ? Icons.people : Icons.folder, color: isGeneral ? Colors.grey[700] : Theme.of(context).colorScheme.primary),
+                                    Icon(
+                                        isGeneral ? Icons.people : Icons.folder,
+                                        color: isGeneral
+                                            ? Colors.grey[700]
+                                            : Theme.of(context)
+                                                .colorScheme
+                                                .primary),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
                                         item,
-                                        style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16),
+                                        style: const TextStyle(
+                                            fontFamily: 'Tajawal',
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16),
                                       ),
                                     ),
-                                    Icon(isExpanded ? Icons.expand_less : Icons.expand_more, color: Colors.grey),
+                                    Icon(
+                                        isExpanded
+                                            ? Icons.expand_less
+                                            : Icons.expand_more,
+                                        color: Colors.grey),
                                   ],
                                 ),
                               ),
                             );
                           } else if (item is Customer) {
-                            return _buildCustomerCard(item, context, ref, currency, canManageCustomers, canReceivePayments);
+                            return _buildCustomerCard(
+                                item,
+                                context,
+                                ref,
+                                currency,
+                                canManageCustomers,
+                                canReceivePayments);
                           }
                           return const SizedBox();
                         },
@@ -232,35 +294,47 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(
-          child: Text('حدث خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal')),
+          child: Text('حدث خطأ: $e',
+              style: const TextStyle(fontFamily: 'Tajawal')),
         ),
       ),
-      floatingActionButton: canManageCustomers && !_isSelectionMode ? FloatingActionButton.extended(
-        heroTag: null,
-        onPressed: () async {
-          final canAdd = await GuestLimitService.canAddCustomer(context, ref);
-          if (!canAdd) return;
+      floatingActionButton: canManageCustomers && !_isSelectionMode
+          ? FloatingActionButton.extended(
+              heroTag: null,
+              onPressed: () async {
+                final canAdd =
+                    await GuestLimitService.canAddCustomer(context, ref);
+                if (!canAdd) return;
 
-          if (context.mounted) {
-            showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              builder: (context) => Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                ),
-                child: const AddCustomerDialog(),
-              ),
-            );
-          }
-        },
-        label: Text(AppLocalizations.of(context)!.text62, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-        icon: const Icon(Icons.person_add),
-      ) : null,
+                if (context.mounted) {
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    builder: (context) => Padding(
+                      padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).viewInsets.bottom,
+                      ),
+                      child: const AddCustomerDialog(),
+                    ),
+                  );
+                }
+              },
+              label: Text(AppLocalizations.of(context)!.text62,
+                  style: const TextStyle(
+                      fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              icon: const Icon(Icons.person_add),
+            )
+          : null,
     );
   }
 
-  Widget _buildCustomerCard(Customer customer, BuildContext context, WidgetRef ref, String currency, bool canManageCustomers, bool canReceivePayments) {
+  Widget _buildCustomerCard(
+      Customer customer,
+      BuildContext context,
+      WidgetRef ref,
+      String currency,
+      bool canManageCustomers,
+      bool canReceivePayments) {
     return GlassCard(
       margin: const EdgeInsets.only(bottom: 12, left: 16),
       padding: EdgeInsets.zero,
@@ -284,8 +358,10 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                 value: _selectedCustomerIds.contains(customer.id),
                 onChanged: (val) {
                   setState(() {
-                    if (val == true) _selectedCustomerIds.add(customer.id);
-                    else _selectedCustomerIds.remove(customer.id);
+                    if (val == true)
+                      _selectedCustomerIds.add(customer.id);
+                    else
+                      _selectedCustomerIds.remove(customer.id);
                   });
                 },
               ),
@@ -304,7 +380,8 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                    color:
+                        Theme.of(context).colorScheme.primary.withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -312,8 +389,14 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
               ),
               alignment: Alignment.center,
               child: Text(
-                customer.name.isNotEmpty ? customer.name.substring(0, 1).toUpperCase() : '?',
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 24, fontFamily: 'Tajawal'),
+                customer.name.isNotEmpty
+                    ? customer.name.substring(0, 1).toUpperCase()
+                    : '?',
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 24,
+                    fontFamily: 'Tajawal'),
               ),
             ),
             const SizedBox(width: 16),
@@ -324,10 +407,12 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                   Text(
                     customer.name,
                     style: TextStyle(
-                      fontWeight: FontWeight.bold, 
-                      fontFamily: 'Tajawal', 
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Tajawal',
                       fontSize: 18,
-                      decoration: !customer.isActive ? TextDecoration.lineThrough : null,
+                      decoration: !customer.isActive
+                          ? TextDecoration.lineThrough
+                          : null,
                       color: !customer.isActive ? Colors.grey : null,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -339,20 +424,23 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                       const SizedBox(width: 4),
                       Text(
                         customer.phone,
-                        style: const TextStyle(color: Colors.grey, fontFamily: 'Tajawal'),
+                        style: const TextStyle(
+                            color: Colors.grey, fontFamily: 'Tajawal'),
                       ),
-                      if (customer.phone.isNotEmpty)
-                        const SizedBox(width: 8),
+                      if (customer.phone.isNotEmpty) const SizedBox(width: 8),
                       if (customer.phone.isNotEmpty)
                         InkWell(
                           onTap: () async {
-                            final url = Uri.parse('whatsapp://send?phone=${customer.phone}');
+                            final url = Uri.parse(
+                                'whatsapp://send?phone=${customer.phone}');
                             if (await canLaunchUrl(url)) {
-                              await launchUrl(url, mode: LaunchMode.externalApplication);
+                              await launchUrl(url,
+                                  mode: LaunchMode.externalApplication);
                             }
                           },
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: Colors.green.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(4),
@@ -360,9 +448,15 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.chat_bubble_outline, size: 14, color: Colors.green),
+                                const Icon(Icons.chat_bubble_outline,
+                                    size: 14, color: Colors.green),
                                 const SizedBox(width: 4),
-                                Text(l10n.whatsapp, style: TextStyle(color: Colors.green, fontSize: 10, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                Text(l10n.whatsapp,
+                                    style: TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 10,
+                                        fontFamily: 'Tajawal',
+                                        fontWeight: FontWeight.bold)),
                               ],
                             ),
                           ),
@@ -375,26 +469,40 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                     runSpacing: 4,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .secondary
+                              .withOpacity(0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           '${customer.orderCount} ${Localizations.localeOf(context).languageCode == "ar" ? "طلبات" : "orders"}',
-                          style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.secondary, fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.secondary,
+                              fontFamily: 'Tajawal',
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
-                      if (customer.creatorName != null && customer.creatorName!.isNotEmpty)
+                      if (customer.creatorName != null &&
+                          customer.creatorName!.isNotEmpty)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
                             color: Colors.teal.withOpacity(0.15),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             '${l10n.byCreator(customer.creatorName ?? "")}',
-                            style: const TextStyle(fontSize: 12, color: Colors.teal, fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.teal,
+                                fontFamily: 'Tajawal',
+                                fontWeight: FontWeight.bold),
                           ),
                         ),
                     ],
@@ -417,7 +525,8 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                 if (customer.totalDebt > 0) ...[
                   const SizedBox(height: 4),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: Colors.red.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(4),
@@ -453,32 +562,63 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                       } else if (value == 'pay_debt') {
                         _showPayDebtDialog(context, ref, customer);
                       } else if (value == 'delete') {
-                        if (customer.isActive && customer.totalDebt.abs() > 0.01) {
+                        if (customer.isActive &&
+                            customer.totalDebt.abs() > 0.01) {
                           showDialog(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: Text(Localizations.localeOf(ctx).languageCode == 'ar' ? 'تنبيه' : 'Warning', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
-                              content: Text(Localizations.localeOf(ctx).languageCode == 'ar' ? 'يجب تسديد الدين اولا لشطب العميل' : 'Debt must be settled first to cancel the customer.', style: const TextStyle(fontFamily: 'Tajawal')),
-                              actions: [
-                                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('حسناً', style: TextStyle(fontFamily: 'Tajawal')))
-                              ],
-                            )
-                          );
+                              context: context,
+                              builder: (ctx) => AlertDialog(
+                                    title: Text(
+                                        Localizations.localeOf(ctx)
+                                                    .languageCode ==
+                                                'ar'
+                                            ? 'تنبيه'
+                                            : 'Warning',
+                                        style: const TextStyle(
+                                            fontFamily: 'Tajawal',
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.red)),
+                                    content: Text(
+                                        Localizations.localeOf(ctx)
+                                                    .languageCode ==
+                                                'ar'
+                                            ? 'يجب تسديد الدين اولا لشطب العميل'
+                                            : 'Debt must be settled first to cancel the customer.',
+                                        style: const TextStyle(
+                                            fontFamily: 'Tajawal')),
+                                    actions: [
+                                      TextButton(
+                                          onPressed: () => Navigator.pop(ctx),
+                                          child: const Text('حسناً',
+                                              style: TextStyle(
+                                                  fontFamily: 'Tajawal')))
+                                    ],
+                                  ));
                           return;
                         }
 
                         final appUser = ref.read(appUserProvider).value;
                         if (appUser != null) {
-                          final isAr = Localizations.localeOf(context).languageCode == 'ar';
-                          final title = customer.isActive 
-                              ? (isAr ? 'تأكيد: إلغاء العميل' : 'Warning: Cancel Customer')
-                              : (isAr ? 'تأكيد: استعادة العميل' : 'Confirm: Restore Customer');
+                          final isAr =
+                              Localizations.localeOf(context).languageCode ==
+                                  'ar';
+                          final title = customer.isActive
+                              ? (isAr
+                                  ? 'تأكيد: إلغاء العميل'
+                                  : 'Warning: Cancel Customer')
+                              : (isAr
+                                  ? 'تأكيد: استعادة العميل'
+                                  : 'Confirm: Restore Customer');
                           final warning = customer.isActive
-                              ? (isAr ? 'سيتم شطب العميل من القائمة. لن يتم مسح بياناته السابقة.' : 'Customer will be crossed out. Data will remain.')
-                              : (isAr ? 'سيتم استعادة العميل وإزالة الشطب.' : 'Customer will be restored.');
-                          
-                          final success = await PinConfirmationDialog.requirePinOrSetup(
-                            context, 
+                              ? (isAr
+                                  ? 'سيتم شطب العميل من القائمة. لن يتم مسح بياناته السابقة.'
+                                  : 'Customer will be crossed out. Data will remain.')
+                              : (isAr
+                                  ? 'سيتم استعادة العميل وإزالة الشطب.'
+                                  : 'Customer will be restored.');
+
+                          final success =
+                              await PinConfirmationDialog.requirePinOrSetup(
+                            context,
                             appUser,
                             title: title,
                             warning: warning,
@@ -486,36 +626,64 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                           if (!success) return;
                         }
                         try {
-                          final updatedCustomer = customer.copyWith(isActive: !customer.isActive);
-                          await ref.read(customerRepositoryProvider).updateCustomer(updatedCustomer);
+                          final updatedCustomer =
+                              customer.copyWith(isActive: !customer.isActive);
+                          await ref
+                              .read(customerRepositoryProvider)
+                              .updateCustomer(updatedCustomer);
                         } catch (e) {
                           if (context.mounted) {
                             showDialog(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: Text(Localizations.localeOf(ctx).languageCode == 'ar' ? 'تنبيه' : 'Warning', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
-                                content: Text(e.toString().replaceAll('Exception: ', ''), style: const TextStyle(fontFamily: 'Tajawal')),
-                                actions: [
-                                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('حسناً', style: TextStyle(fontFamily: 'Tajawal')))
-                                ],
-                              )
-                            );
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                      title: Text(
+                                          Localizations.localeOf(ctx)
+                                                      .languageCode ==
+                                                  'ar'
+                                              ? 'تنبيه'
+                                              : 'Warning',
+                                          style: const TextStyle(
+                                              fontFamily: 'Tajawal',
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.red)),
+                                      content: Text(
+                                          e
+                                              .toString()
+                                              .replaceAll('Exception: ', ''),
+                                          style: const TextStyle(
+                                              fontFamily: 'Tajawal')),
+                                      actions: [
+                                        TextButton(
+                                            onPressed: () => Navigator.pop(ctx),
+                                            child: const Text('حسناً',
+                                                style: TextStyle(
+                                                    fontFamily: 'Tajawal')))
+                                      ],
+                                    ));
                           }
                         }
                       } else if (value == 'print') {
                         try {
                           final appUser = ref.read(appUserProvider).value;
-                          final merchantId = appUser?.merchantId ?? appUser?.id ?? customer.merchantId;
-                          final orders = await ref.read(customerRepositoryProvider).getCustomerOrdersAcrossBranches(
-                            merchantId: merchantId,
-                            customerId: customer.id,
-                          );
+                          final merchantId = appUser == null
+                              ? customer.merchantId
+                              : currentEffectiveMerchantId(appUser);
+                          final orders = await ref
+                              .read(customerRepositoryProvider)
+                              .getCustomerOrdersAcrossBranches(
+                                merchantId: merchantId,
+                                customerId: customer.id,
+                              );
                           if (!context.mounted) return;
-                          await PdfService.printCustomerStatement(context, customer, orders, currency);
+                          await PdfService.printCustomerStatement(
+                              context, customer, orders, currency);
                         } catch (e) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.printError(e.toString()), style: const TextStyle(fontFamily: 'Tajawal'))),
+                              SnackBar(
+                                  content: Text(l10n.printError(e.toString()),
+                                      style: const TextStyle(
+                                          fontFamily: 'Tajawal'))),
                             );
                           }
                         }
@@ -527,9 +695,12 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                           value: 'edit',
                           child: Row(
                             children: [
-                              const Icon(Icons.edit, size: 20, color: Colors.blue),
+                              const Icon(Icons.edit,
+                                  size: 20, color: Colors.blue),
                               const SizedBox(width: 8),
-                              Text(AppLocalizations.of(context)!.text60, style: const TextStyle(fontFamily: 'Tajawal')),
+                              Text(AppLocalizations.of(context)!.text60,
+                                  style:
+                                      const TextStyle(fontFamily: 'Tajawal')),
                             ],
                           ),
                         ),
@@ -538,9 +709,14 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                           value: 'pay_debt',
                           child: Row(
                             children: [
-                              Icon(Icons.payments, size: 20, color: Colors.green),
+                              Icon(Icons.payments,
+                                  size: 20, color: Colors.green),
                               SizedBox(width: 8),
-                              Text(l10n.payDebt, style: TextStyle(fontFamily: 'Tajawal', color: Colors.green, fontWeight: FontWeight.bold)),
+                              Text(l10n.payDebt,
+                                  style: TextStyle(
+                                      fontFamily: 'Tajawal',
+                                      color: Colors.green,
+                                      fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
@@ -548,9 +724,11 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                         value: 'print',
                         child: Row(
                           children: [
-                            const Icon(Icons.print_outlined, size: 20, color: Colors.indigo),
+                            const Icon(Icons.print_outlined,
+                                size: 20, color: Colors.indigo),
                             const SizedBox(width: 8),
-                            Text(AppLocalizations.of(context)!.text61, style: const TextStyle(fontFamily: 'Tajawal')),
+                            Text(AppLocalizations.of(context)!.text61,
+                                style: const TextStyle(fontFamily: 'Tajawal')),
                           ],
                         ),
                       ),
@@ -559,9 +737,32 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                           value: 'delete',
                           child: Row(
                             children: [
-                              Icon(customer.isActive ? Icons.cancel_outlined : Icons.restore, color: customer.isActive ? Colors.red : Colors.green, size: 20),
+                              Icon(
+                                  customer.isActive
+                                      ? Icons.cancel_outlined
+                                      : Icons.restore,
+                                  color: customer.isActive
+                                      ? Colors.red
+                                      : Colors.green,
+                                  size: 20),
                               const SizedBox(width: 8),
-                              Text(customer.isActive ? (Localizations.localeOf(context).languageCode == 'ar' ? 'إلغاء العميل' : 'Cancel Customer') : (Localizations.localeOf(context).languageCode == 'ar' ? 'استعادة العميل' : 'Restore Customer'), style: TextStyle(color: customer.isActive ? Colors.red : Colors.green, fontFamily: 'Tajawal')),
+                              Text(
+                                  customer.isActive
+                                      ? (Localizations.localeOf(context)
+                                                  .languageCode ==
+                                              'ar'
+                                          ? 'إلغاء العميل'
+                                          : 'Cancel Customer')
+                                      : (Localizations.localeOf(context)
+                                                  .languageCode ==
+                                              'ar'
+                                          ? 'استعادة العميل'
+                                          : 'Restore Customer'),
+                                  style: TextStyle(
+                                      color: customer.isActive
+                                          ? Colors.red
+                                          : Colors.green,
+                                      fontFamily: 'Tajawal')),
                             ],
                           ),
                         ),
@@ -580,11 +781,15 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.moveToFolder, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        title: Text(l10n.moveToFolder,
+            style:
+                TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('أدخل اسم المجلد الجديد أو الحالي لجمع العملاء المحددين فيه:', style: TextStyle(fontFamily: 'Tajawal')),
+            const Text(
+                'أدخل اسم المجلد الجديد أو الحالي لجمع العملاء المحددين فيه:',
+                style: TextStyle(fontFamily: 'Tajawal')),
             const SizedBox(height: 16),
             TextField(
               controller: folderController,
@@ -595,21 +800,24 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            Text(l10n.leaveEmptyToRemoveFromFolder, style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey)),
+            Text(l10n.leaveEmptyToRemoveFromFolder,
+                style: TextStyle(
+                    fontFamily: 'Tajawal', fontSize: 12, color: Colors.grey)),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+            child: const Text('إلغاء',
+                style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
           ),
           ElevatedButton(
             onPressed: () async {
               final folderName = folderController.text.trim();
               await ref.read(customerRepositoryProvider).moveCustomersToFolder(
-                _selectedCustomerIds.toList(),
-                folderName.isEmpty ? null : folderName,
-              );
+                    _selectedCustomerIds.toList(),
+                    folderName.isEmpty ? null : folderName,
+                  );
               if (context.mounted) {
                 Navigator.pop(context);
                 setState(() {
@@ -621,30 +829,39 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                 });
               }
             },
-            child: Text(l10n.move, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+            child: Text(l10n.move,
+                style: TextStyle(
+                    fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     );
   }
 
-  void _showPayDebtDialog(BuildContext context, WidgetRef ref, Customer customer) {
-    final amountController = TextEditingController(text: customer.totalDebt.toString());
+  void _showPayDebtDialog(
+      BuildContext context, WidgetRef ref, Customer customer) {
+    final amountController =
+        TextEditingController(text: customer.totalDebt.toString());
     showDialog(
       context: context,
       builder: (context) {
         final isAr = Localizations.localeOf(context).languageCode == 'ar';
         return AlertDialog(
-          title: Text(l10n.payDebt, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+          title: Text(l10n.payDebt,
+              style: const TextStyle(
+                  fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(l10n.totalCustomerDebtText(customer.totalDebt.toString()), style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600)),
+              Text(l10n.totalCustomerDebtText(customer.totalDebt.toString()),
+                  style: const TextStyle(
+                      fontFamily: 'Tajawal', fontWeight: FontWeight.w600)),
               const SizedBox(height: 16),
               TextField(
                 controller: amountController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 decoration: const InputDecoration(
                   labelText: 'المبلغ المسدد من الدين',
                   labelStyle: TextStyle(fontFamily: 'Tajawal'),
@@ -656,28 +873,38 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text(AppLocalizations.of(context)!.text43, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+              child: Text(AppLocalizations.of(context)!.text43,
+                  style: const TextStyle(
+                      fontFamily: 'Tajawal', color: Colors.grey)),
             ),
             ElevatedButton(
               onPressed: () async {
-                final paid = double.tryParse(amountController.text.trim()) ?? 0.0;
+                final paid =
+                    double.tryParse(amountController.text.trim()) ?? 0.0;
                 if (paid <= 0) return;
-                
+
                 if (paid > customer.totalDebt) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(isAr ? 'مبلغ السداد لا يمكن أن يتجاوز الدين المستحق.' : 'Payment amount cannot exceed the outstanding debt.', style: const TextStyle(fontFamily: 'Tajawal')),
+                      content: Text(
+                          isAr
+                              ? 'مبلغ السداد لا يمكن أن يتجاوز الدين المستحق.'
+                              : 'Payment amount cannot exceed the outstanding debt.',
+                          style: const TextStyle(fontFamily: 'Tajawal')),
                       backgroundColor: Colors.red,
                     ),
                   );
                   return;
                 }
-                
-                final user = ref.read(appUserProvider).value;
-                final merchantId = user?.merchantId ?? user?.id ?? '';
-                final currentShift = ref.read(currentShiftProvider(merchantId)).value;
 
-                if (context.mounted) Navigator.pop(context); // close first dialog
+                final user = ref.read(appUserProvider).value;
+                final merchantId =
+                    user == null ? '' : currentEffectiveMerchantId(user);
+                final currentShift =
+                    ref.read(currentShiftProvider(merchantId)).value;
+
+                if (context.mounted)
+                  Navigator.pop(context); // close first dialog
 
                 if (currentShift != null) {
                   // Proactive prompt for payment method
@@ -685,19 +912,27 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                     showDialog(
                       context: context,
                       builder: (ctx) => AlertDialog(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
                         title: Row(
                           children: [
                             const Icon(Icons.payments, color: Colors.green),
                             const SizedBox(width: 8),
-                            Expanded(child: Text(isAr ? "طريقة الدفع" : "Payment Method", style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold))),
+                            Expanded(
+                                child: Text(
+                                    isAr ? "طريقة الدفع" : "Payment Method",
+                                    style: const TextStyle(
+                                        fontFamily: 'Tajawal',
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold))),
                           ],
                         ),
                         content: Text(
-                          isAr 
-                            ? "ما هي الطريقة التي تم بها سداد هذا الدين؟\n(سيتم تسجيلها في الوردية الحالية)"
-                            : "How was this debt paid?\n(Will be recorded in current shift)",
-                          style: const TextStyle(fontFamily: 'Tajawal', height: 1.5, fontSize: 15),
+                          isAr
+                              ? "ما هي الطريقة التي تم بها سداد هذا الدين؟\n(سيتم تسجيلها في الوردية الحالية)"
+                              : "How was this debt paid?\n(Will be recorded in current shift)",
+                          style: const TextStyle(
+                              fontFamily: 'Tajawal', height: 1.5, fontSize: 15),
                         ),
                         actionsAlignment: MainAxisAlignment.center,
                         actions: [
@@ -711,21 +946,27 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                 ),
                                 onPressed: () async {
                                   Navigator.pop(ctx);
-                                  await ref.read(orderRepositoryProvider).payCustomerDebt(
-                                    merchantId: merchantId,
-                                    customerId: customer.id,
-                                    amountPaid: paid,
-                                    shiftId: currentShift.id,
-                                    paymentMethod: 'cash',
-                                  );
+                                  await ref
+                                      .read(orderRepositoryProvider)
+                                      .payCustomerDebt(
+                                        merchantId: merchantId,
+                                        customerId: customer.id,
+                                        amountPaid: paid,
+                                        shiftId: currentShift.id,
+                                        paymentMethod: 'cash',
+                                      );
                                   ActivityLogger.log(
                                     user: user,
                                     actionType: 'Receive Payment|استلام دفعة',
-                                    description: 'Received cash payment of $paid from customer (${customer.name})|استلام دفعة نقدية بقيمة $paid من العميل (${customer.name})',
+                                    description:
+                                        'Received cash payment of $paid from customer (${customer.name})|استلام دفعة نقدية بقيمة $paid من العميل (${customer.name})',
                                   );
                                 },
                                 icon: const Icon(Icons.money),
-                                label: Text(isAr ? "كاش 💵" : "Cash 💵", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                label: Text(isAr ? "كاش 💵" : "Cash 💵",
+                                    style: const TextStyle(
+                                        fontFamily: 'Tajawal',
+                                        fontWeight: FontWeight.bold)),
                               ),
                               const SizedBox(height: 8),
                               ElevatedButton.icon(
@@ -735,21 +976,27 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                 ),
                                 onPressed: () async {
                                   Navigator.pop(ctx);
-                                  await ref.read(orderRepositoryProvider).payCustomerDebt(
-                                    merchantId: merchantId,
-                                    customerId: customer.id,
-                                    amountPaid: paid,
-                                    shiftId: currentShift.id,
-                                    paymentMethod: 'card',
-                                  );
+                                  await ref
+                                      .read(orderRepositoryProvider)
+                                      .payCustomerDebt(
+                                        merchantId: merchantId,
+                                        customerId: customer.id,
+                                        amountPaid: paid,
+                                        shiftId: currentShift.id,
+                                        paymentMethod: 'card',
+                                      );
                                   ActivityLogger.log(
                                     user: user,
                                     actionType: 'Receive Payment|استلام دفعة',
-                                    description: 'Received mada/card payment of $paid from customer (${customer.name})|استلام دفعة مدى بقيمة $paid من العميل (${customer.name})',
+                                    description:
+                                        'Received mada/card payment of $paid from customer (${customer.name})|استلام دفعة مدى بقيمة $paid من العميل (${customer.name})',
                                   );
                                 },
                                 icon: const Icon(Icons.credit_card),
-                                label: Text(isAr ? "مدى 💳" : "Mada 💳", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                label: Text(isAr ? "مدى 💳" : "Mada 💳",
+                                    style: const TextStyle(
+                                        fontFamily: 'Tajawal',
+                                        fontWeight: FontWeight.bold)),
                               ),
                               const SizedBox(height: 8),
                               ElevatedButton.icon(
@@ -759,21 +1006,30 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                 ),
                                 onPressed: () async {
                                   Navigator.pop(ctx);
-                                  await ref.read(orderRepositoryProvider).payCustomerDebt(
-                                    merchantId: merchantId,
-                                    customerId: customer.id,
-                                    amountPaid: paid,
-                                    shiftId: currentShift.id,
-                                    paymentMethod: 'transfer',
-                                  );
+                                  await ref
+                                      .read(orderRepositoryProvider)
+                                      .payCustomerDebt(
+                                        merchantId: merchantId,
+                                        customerId: customer.id,
+                                        amountPaid: paid,
+                                        shiftId: currentShift.id,
+                                        paymentMethod: 'transfer',
+                                      );
                                   ActivityLogger.log(
                                     user: user,
                                     actionType: 'Receive Payment|استلام دفعة',
-                                    description: 'Received bank transfer of $paid from customer (${customer.name})|استلام حوالة بنكية بقيمة $paid من العميل (${customer.name})',
+                                    description:
+                                        'Received bank transfer of $paid from customer (${customer.name})|استلام حوالة بنكية بقيمة $paid من العميل (${customer.name})',
                                   );
                                 },
                                 icon: const Icon(Icons.account_balance),
-                                label: Text(isAr ? "حوالة بنكية 🏦" : "Bank Transfer 🏦", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                                label: Text(
+                                    isAr
+                                        ? "حوالة بنكية 🏦"
+                                        : "Bank Transfer 🏦",
+                                    style: const TextStyle(
+                                        fontFamily: 'Tajawal',
+                                        fontWeight: FontWeight.bold)),
                               ),
                             ],
                           ),
@@ -783,20 +1039,23 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                   }
                 } else {
                   await ref.read(orderRepositoryProvider).payCustomerDebt(
-                    merchantId: merchantId,
-                    customerId: customer.id,
-                    amountPaid: paid,
-                    shiftId: null,
-                    paymentMethod: 'cash', // Default fallback
-                  );
+                        merchantId: merchantId,
+                        customerId: customer.id,
+                        amountPaid: paid,
+                        shiftId: null,
+                        paymentMethod: 'cash', // Default fallback
+                      );
                   ActivityLogger.log(
                     user: user,
                     actionType: 'Receive Payment|استلام دفعة',
-                    description: 'Received payment of $paid from customer (${customer.name})|استلام دفعة بقيمة $paid من العميل (${customer.name})',
+                    description:
+                        'Received payment of $paid from customer (${customer.name})|استلام دفعة بقيمة $paid من العميل (${customer.name})',
                   );
                 }
               },
-              child: const Text('تأكيد السداد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              child: const Text('تأكيد السداد',
+                  style: TextStyle(
+                      fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
             ),
           ],
         );
@@ -805,12 +1064,13 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
   }
 
   Future<void> _exportToExcel(List<Customer> customers) async {
-    
     try {
       if (customers.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.noCustomersToExport, style: TextStyle(fontFamily: 'Tajawal'))),
+            SnackBar(
+                content: Text(l10n.noCustomersToExport,
+                    style: TextStyle(fontFamily: 'Tajawal'))),
           );
         }
         return;
@@ -819,7 +1079,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
       var excel = Excel.createExcel();
       Sheet sheetObject = excel['Customers'];
       excel.setDefaultSheet('Customers');
-      
+
       // Header row
       sheetObject.appendRow([
         TextCellValue('اسم العميل'),
@@ -847,17 +1107,19 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
         final directory = await getApplicationDocumentsDirectory();
         final timestamp = DateTime.now().millisecondsSinceEpoch;
         final filePath = '${directory.path}/customers_$timestamp.xlsx';
-        
+
         File(filePath)
           ..createSync(recursive: true)
           ..writeAsBytesSync(fileBytes);
-          
+
         await Share.shareXFiles([XFile(filePath)], text: 'قائمة العملاء');
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.exportError(e.toString()), style: const TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(
+              content: Text(l10n.exportError(e.toString()),
+                  style: const TextStyle(fontFamily: 'Tajawal'))),
         );
       }
     }

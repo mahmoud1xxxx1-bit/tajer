@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../features/authentication/data/auth_repository.dart';
 import '../../features/authentication/domain/app_user.dart';
+import '../providers/effective_merchant.dart';
 
 part 'limits_service.g.dart';
 
@@ -46,29 +46,47 @@ class LimitsService {
     return _canAdd(user, 'employees', maxEmployees);
   }
 
-  Future<bool> _canAdd(AppUser user, String collectionName, int maxLimit) async {
+  Future<bool> _canAdd(
+      AppUser user, String collectionName, int maxLimit) async {
     // Banned devices cannot add anything (0 limit) ONLY if they are anonymous
     if (user.plan == 'banned_device' && user.isAnonymous) return false;
 
     // Employees are part of a merchant's team and should never be restricted by limit checking queries
-    if (user.role == 'employee' || user.role == 'cashier' || user.plan == 'employee' || (user.merchantId != null && user.merchantId!.isNotEmpty && !user.isAnonymous)) {
+    if (!isOwnerLikeRole(user.role) &&
+        (user.role == 'employee' ||
+            user.role == 'cashier' ||
+            user.plan == 'employee' ||
+            (user.merchantId != null &&
+                user.merchantId!.isNotEmpty &&
+                !user.isAnonymous))) {
       return true;
     }
 
-    final String merchantId = user.merchantId ?? user.id;
-    bool isPremium = user.plan == 'pro' || user.plan == 'premium' || user.email?.trim().toLowerCase() == 'love.dotk@gmail.com';
+    final String merchantId = currentEffectiveMerchantId(user);
+    bool isPremium = user.plan == 'pro' ||
+        user.plan == 'premium' ||
+        user.email?.trim().toLowerCase() == 'love.dotk@gmail.com';
 
     // Pro/Premium users have unlimited access
     if (isPremium) return true;
 
     // Check count for free/guest users
-    final isRootCollection = ['products', 'orders', 'customers'].contains(collectionName);
-    
+    final isRootCollection =
+        ['products', 'orders', 'customers'].contains(collectionName);
+
     final Query query = isRootCollection
-        ? _firestore.collection(collectionName).where('merchantId', isEqualTo: merchantId)
-        : (collectionName == 'employees') 
-            ? _firestore.collection('users').doc(merchantId).collection(collectionName)
-            : _firestore.collection('merchants').doc(merchantId).collection(collectionName);
+        ? _firestore
+            .collection(collectionName)
+            .where('merchantId', isEqualTo: merchantId)
+        : (collectionName == 'employees')
+            ? _firestore
+                .collection('users')
+                .doc(merchantId)
+                .collection(collectionName)
+            : _firestore
+                .collection('merchants')
+                .doc(merchantId)
+                .collection(collectionName);
 
     // Products and Raw Materials support Soft Delete (isArchived).
     // We cannot use `.where('isArchived', isEqualTo: false)` because old products without the field would be ignored and NOT counted.
@@ -88,10 +106,14 @@ class LimitsService {
         return (snapshot.count ?? 0) < maxLimit;
       }
     } catch (e) {
-      if (e.toString().contains('UNAVAILABLE') || e.toString().contains('offline') || e.toString().contains('failed-precondition')) {
+      if (e.toString().contains('UNAVAILABLE') ||
+          e.toString().contains('offline') ||
+          e.toString().contains('failed-precondition')) {
         try {
-          final snapshot = await query.get(const GetOptions(source: Source.cache));
-          if (collectionName == 'products' || collectionName == 'raw_materials') {
+          final snapshot =
+              await query.get(const GetOptions(source: Source.cache));
+          if (collectionName == 'products' ||
+              collectionName == 'raw_materials') {
             int activeCount = 0;
             for (var doc in snapshot.docs) {
               final data = doc.data() as Map<String, dynamic>;

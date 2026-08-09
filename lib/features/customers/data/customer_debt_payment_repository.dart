@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../branches/presentation/branch_context.dart';
 import '../domain/customer_debt_payment.dart';
@@ -61,7 +62,7 @@ final customerDebtPaymentRepositoryProvider =
   if (appUser == null) return null;
   return CustomerDebtPaymentRepository(
     FirebaseFirestore.instance,
-    appUser.merchantId ?? appUser.id,
+    currentEffectiveMerchantId(appUser),
   );
 });
 

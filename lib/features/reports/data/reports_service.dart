@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/store_profile_provider.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../../core/providers/effective_merchant.dart';
 import '../../branches/presentation/branch_context.dart';
 import '../../customers/data/customer_debt_payment_repository.dart';
 import '../../customers/data/customer_repository.dart';
@@ -158,20 +159,20 @@ class ReportsService {
   }
 
   double get totalTaxCollected => orders
-      .where((order) =>
-          order.status != 'cancelled' && order.status != 'debt_repayment')
-      .fold(0.0, (sum, order) {
-    double orderTax = 0.0;
-    for (final item in order.items) {
-      final itemTax = item.taxPercentage ?? defaultTaxPercentage;
-      if (itemTax <= 0) continue;
-      final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
-      orderTax += isInclusive
-          ? item.total - (item.total / (1 + (itemTax / 100)))
-          : item.total * (itemTax / 100);
-    }
-    return sum + orderTax;
-  });
+          .where((order) =>
+              order.status != 'cancelled' && order.status != 'debt_repayment')
+          .fold(0.0, (sum, order) {
+        double orderTax = 0.0;
+        for (final item in order.items) {
+          final itemTax = item.taxPercentage ?? defaultTaxPercentage;
+          if (itemTax <= 0) continue;
+          final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
+          orderTax += isInclusive
+              ? item.total - (item.total / (1 + (itemTax / 100)))
+              : item.total * (itemTax / 100);
+        }
+        return sum + orderTax;
+      });
 
   double get netProfit =>
       totalRevenue - totalTaxCollected - totalCOGS - totalExpenses;
@@ -179,7 +180,8 @@ class ReportsService {
   List<SalesData> getDailySales() {
     final Map<String, double> dailyMap = {};
     for (final order in orders) {
-      if (order.status == 'cancelled' || order.status == 'debt_repayment') continue;
+      if (order.status == 'cancelled' || order.status == 'debt_repayment')
+        continue;
       final dateStr =
           '${order.createdAt.year}-${order.createdAt.month.toString().padLeft(2, '0')}-${order.createdAt.day.toString().padLeft(2, '0')}';
       dailyMap[dateStr] = (dailyMap[dateStr] ?? 0.0) + order.total;
@@ -199,7 +201,8 @@ class ReportsService {
     final Map<String, int> qtyMap = {};
     final Map<String, double> revenueMap = {};
     for (final order in orders) {
-      if (order.status == 'cancelled' || order.status == 'debt_repayment') continue;
+      if (order.status == 'cancelled' || order.status == 'debt_repayment')
+        continue;
       for (final item in order.items) {
         qtyMap[item.productId] = (qtyMap[item.productId] ?? 0) + item.quantity;
         revenueMap[item.productId] =
@@ -249,7 +252,7 @@ final branchOrderCostsProvider = StreamProvider<Map<String, double>>((ref) {
       !appUser.hasPermission('can_view_cost')) {
     return Stream.value(const <String, double>{});
   }
-  final merchantId = appUser.merchantId ?? appUser.id;
+  final merchantId = currentEffectiveMerchantId(appUser);
   final branchId = ref.watch(selectedBranchIdProvider);
   return OrderCostSnapshotRepository(FirebaseFirestore.instance)
       .watchBranchOrderCosts(merchantId, branchId);
@@ -263,7 +266,7 @@ final merchantOrderCostsProvider = StreamProvider<Map<String, double>>((ref) {
       !appUser.hasPermission('can_view_cost')) {
     return Stream.value(const <String, double>{});
   }
-  final merchantId = appUser.merchantId ?? appUser.id;
+  final merchantId = currentEffectiveMerchantId(appUser);
   return OrderCostSnapshotRepository(FirebaseFirestore.instance)
       .watchOrderCosts(merchantId);
 });
@@ -300,8 +303,7 @@ final reportsServiceProvider = Provider<ReportsService?>((ref) {
     debtPayments: debtPaymentsState.value!,
     protectedOrderCosts: costsState.value ?? const {},
     canViewCost: canViewCost,
-    defaultTaxPercentage:
-        storeProfileState.value?.defaultTaxPercentage ?? 0.0,
+    defaultTaxPercentage: storeProfileState.value?.defaultTaxPercentage ?? 0.0,
     defaultIsTaxInclusive:
         storeProfileState.value?.defaultIsTaxInclusive ?? true,
   );
@@ -313,7 +315,7 @@ final merchantWideOrdersStreamProvider = StreamProvider<List<AppOrder>>((ref) {
       (appUser.role != 'merchant' && appUser.role != 'admin')) {
     return Stream.value(const <AppOrder>[]);
   }
-  final merchantId = appUser.merchantId ?? appUser.id;
+  final merchantId = currentEffectiveMerchantId(appUser);
   final repository = OrderRepository(FirebaseFirestore.instance);
   return repository.queryOrders(merchantId).snapshots().map((snapshot) {
     final values = snapshot.docs.map((doc) => doc.data()).toList();
@@ -328,7 +330,7 @@ final merchantWideExpensesStreamProvider = StreamProvider<List<Expense>>((ref) {
       (appUser.role != 'merchant' && appUser.role != 'admin')) {
     return Stream.value(const <Expense>[]);
   }
-  final merchantId = appUser.merchantId ?? appUser.id;
+  final merchantId = currentEffectiveMerchantId(appUser);
   return FirebaseFirestore.instance
       .collection('merchants')
       .doc(merchantId)
@@ -385,8 +387,7 @@ final consolidatedReportsServiceProvider = Provider<ReportsService?>((ref) {
     debtPayments: debtPaymentsState.value!,
     protectedOrderCosts: costsState.value ?? const {},
     canViewCost: canViewCost,
-    defaultTaxPercentage:
-        storeProfileState.value?.defaultTaxPercentage ?? 0.0,
+    defaultTaxPercentage: storeProfileState.value?.defaultTaxPercentage ?? 0.0,
     defaultIsTaxInclusive:
         storeProfileState.value?.defaultIsTaxInclusive ?? true,
   );

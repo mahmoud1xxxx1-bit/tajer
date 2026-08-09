@@ -26,6 +26,7 @@ async function seed(testEnv) {
     const db = context.firestore();
     await setDoc(doc(db, 'users', merchantId), {
       role: 'merchant',
+      merchantId: 'legacy-merchant-id',
       isRevoked: false,
     });
     await setDoc(doc(db, 'users', 'cashier-branch-2'), {
@@ -90,6 +91,16 @@ async function seed(testEnv) {
       transferTotal: 0,
       totalTax: 0,
     });
+    await setDoc(doc(db, 'shifts', 'shift-main'), {
+      id: 'shift-main',
+      merchantId,
+      branchId: 'main',
+      status: 'open',
+      cashSales: 0,
+      cardTotal: 0,
+      transferTotal: 0,
+      totalTax: 0,
+    });
   });
 }
 
@@ -104,7 +115,8 @@ function checkout(db, uid, targetBranchId = branchId) {
   );
   const logRef = doc(db, 'merchants', merchantId, 'inventory_logs', `log-${uid}-${targetBranchId}`);
   const counterRef = doc(db, 'merchants', merchantId, 'counters', `daily_orders_${targetBranchId}`);
-  const shiftRef = doc(db, 'shifts', 'shift-branch-2');
+  const shiftId = targetBranchId === 'main' ? 'shift-main' : 'shift-branch-2';
+  const shiftRef = doc(db, 'shifts', shiftId);
 
   return runTransaction(db, async (tx) => {
     const productSnap = await tx.get(doc(db, 'products', productId));
@@ -164,7 +176,7 @@ function checkout(db, uid, targetBranchId = branchId) {
       creatorId: uid,
       creatorName: uid,
       paymentMethod: 'cash',
-      shiftId: 'shift-branch-2',
+      shiftId,
       queueNumber: 1,
       createdAt: serverTimestamp(),
     });
@@ -211,6 +223,21 @@ async function main() {
     const shift = await getDoc(doc(ownerDb, 'shifts', 'shift-branch-2'));
     if (shift.data().cashSales !== 40) {
       throw new Error(`expected shift cashSales to be 40, got ${shift.data().cashSales}`);
+    }
+
+    await seed(testEnv);
+    await assertSucceeds(checkout(ownerDb, merchantId, 'main'));
+    const mainInventoryAfterOwner = await getDoc(
+      doc(ownerDb, 'merchants', merchantId, 'branch_inventory', 'main_product_pepsi'),
+    );
+    if (mainInventoryAfterOwner.data().quantity !== 25) {
+      throw new Error(`expected main stock to be 25, got ${mainInventoryAfterOwner.data().quantity}`);
+    }
+    const branchInventoryAfterMain = await getDoc(
+      doc(ownerDb, 'merchants', merchantId, 'branch_inventory', inventoryId),
+    );
+    if (branchInventoryAfterMain.data().quantity !== 10) {
+      throw new Error(`expected branch 2 stock to remain 10, got ${branchInventoryAfterMain.data().quantity}`);
     }
 
     await seed(testEnv);

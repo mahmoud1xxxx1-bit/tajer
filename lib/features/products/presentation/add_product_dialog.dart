@@ -3,12 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../../../core/services/activity_logger.dart';
+import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
-import '../../authentication/domain/app_user.dart';
 import '../data/product_repository.dart';
 import '../domain/product.dart';
 import '../../categories/data/category_repository.dart';
-import '../../categories/domain/category.dart';
 import '../../inventory_log/data/inventory_log_repository.dart';
 import '../../../core/utils/barcode_scanner_screen.dart';
 import '../domain/raw_material.dart';
@@ -48,15 +47,19 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       _quantityController.text = widget.productToEdit!.quantity.toString();
       _barcodeController.text = widget.productToEdit!.barcode ?? '';
       _modifiersController.text = widget.productToEdit!.modifiers.join('، ');
-      _taxPercentageController.text = widget.productToEdit!.taxPercentage?.toString() ?? '';
-      _costPriceController.text = widget.productToEdit!.costPrice?.toString() ?? '';
+      _taxPercentageController.text =
+          widget.productToEdit!.taxPercentage?.toString() ?? '';
+      _costPriceController.text =
+          widget.productToEdit!.costPrice?.toString() ?? '';
       _isManufacturedOnDemand = widget.productToEdit!.isManufacturedOnDemand;
       _isTaxInclusive = widget.productToEdit!.isTaxInclusive;
       _taxMode = widget.productToEdit!.taxMode;
       _selectedCategoryId = widget.productToEdit!.categoryId;
       if (widget.productToEdit!.recipe.isNotEmpty) {
-        _selectedRawMaterialId = widget.productToEdit!.recipe.first.rawMaterialId;
-        _rawMaterialQtyController.text = widget.productToEdit!.recipe.first.amountRequired.toString();
+        _selectedRawMaterialId =
+            widget.productToEdit!.recipe.first.rawMaterialId;
+        _rawMaterialQtyController.text =
+            widget.productToEdit!.recipe.first.amountRequired.toString();
       }
     }
   }
@@ -91,29 +94,38 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
-    
+
     try {
       final user = ref.read(authRepositoryProvider).currentUser;
       if (user == null) throw Exception(AppLocalizations.of(context)!.text47);
       final appUser = ref.read(appUserProvider).value;
+      if (appUser == null)
+        throw Exception(AppLocalizations.of(context)!.text47);
 
       final productRepo = ref.read(productRepositoryProvider);
       final logRepo = ref.read(inventoryLogRepositoryProvider);
 
       final isEditing = widget.productToEdit != null;
-      final newQuantity = _isManufacturedOnDemand ? 0 : (int.tryParse(_quantityController.text) ?? 0);
+      final newQuantity = _isManufacturedOnDemand
+          ? 0
+          : (int.tryParse(_quantityController.text) ?? 0);
       final previousQuantity = isEditing ? widget.productToEdit!.quantity : 0;
 
       List<RecipeItem> updatedRecipe = [];
-      if (_isManufacturedOnDemand && _selectedRawMaterialId != null && _rawMaterialQtyController.text.isNotEmpty) {
+      if (_isManufacturedOnDemand &&
+          _selectedRawMaterialId != null &&
+          _rawMaterialQtyController.text.isNotEmpty) {
         final qty = double.tryParse(_rawMaterialQtyController.text) ?? 0.0;
         if (qty > 0) {
-          updatedRecipe.add(RecipeItem(rawMaterialId: _selectedRawMaterialId!, amountRequired: qty));
+          updatedRecipe.add(RecipeItem(
+              rawMaterialId: _selectedRawMaterialId!, amountRequired: qty));
         }
       }
-      
-      final merchantId = isEditing ? widget.productToEdit!.merchantId : (appUser?.merchantId ?? user.uid);
-      
+
+      final merchantId = isEditing
+          ? widget.productToEdit!.merchantId
+          : currentEffectiveMerchantId(appUser);
+
       final newProduct = Product(
         id: isEditing ? widget.productToEdit!.id : const Uuid().v4(),
         merchantId: merchantId,
@@ -121,14 +133,26 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
         price: double.parse(_priceController.text),
         quantity: newQuantity,
         categoryId: _selectedCategoryId,
-        barcode: _barcodeController.text.trim().isEmpty ? null : _barcodeController.text.trim(),
-        modifiers: _modifiersController.text.trim().isEmpty ? [] : _modifiersController.text.split('،').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+        barcode: _barcodeController.text.trim().isEmpty
+            ? null
+            : _barcodeController.text.trim(),
+        modifiers: _modifiersController.text.trim().isEmpty
+            ? []
+            : _modifiersController.text
+                .split('،')
+                .map((e) => e.trim())
+                .where((e) => e.isNotEmpty)
+                .toList(),
         recipe: updatedRecipe,
         isTaxInclusive: _isTaxInclusive,
-        taxPercentage: _taxMode == TaxMode.custom ? (double.tryParse(_taxPercentageController.text.trim()) ?? 0.0) : null,
+        taxPercentage: _taxMode == TaxMode.custom
+            ? (double.tryParse(_taxPercentageController.text.trim()) ?? 0.0)
+            : null,
         taxMode: _taxMode,
         isManufacturedOnDemand: _isManufacturedOnDemand,
-        costPrice: _costPriceController.text.trim().isEmpty ? null : double.tryParse(_costPriceController.text.trim()),
+        costPrice: _costPriceController.text.trim().isEmpty
+            ? null
+            : double.tryParse(_costPriceController.text.trim()),
         createdAt: isEditing ? widget.productToEdit!.createdAt : DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -138,7 +162,8 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
         ActivityLogger.log(
           user: appUser,
           actionType: 'Edit Product|تعديل منتج',
-          description: 'Updated product "${newProduct.name}"|تم تعديل بيانات المنتج "${newProduct.name}"',
+          description:
+              'Updated product "${newProduct.name}"|تم تعديل بيانات المنتج "${newProduct.name}"',
         );
         if (newQuantity != previousQuantity) {
           await logRepo?.logChange(
@@ -157,7 +182,8 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
         ActivityLogger.log(
           user: appUser,
           actionType: 'Add Product|إضافة منتج',
-          description: 'Added new product "${newProduct.name}"|تم إضافة منتج جديد "${newProduct.name}"',
+          description:
+              'Added new product "${newProduct.name}"|تم إضافة منتج جديد "${newProduct.name}"',
         );
         if (newQuantity > 0) {
           await logRepo?.logChange(
@@ -177,7 +203,9 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.error}: $e', style: TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(
+              content: Text('${l10n.error}: $e',
+                  style: TextStyle(fontFamily: 'Tajawal'))),
         );
       }
     } finally {
@@ -192,7 +220,8 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final categoriesAsync = ref.watch(categoriesStreamProvider);
     final appUser = ref.watch(appUserProvider).value;
-    final merchantId = appUser?.merchantId ?? ref.read(authRepositoryProvider).currentUser?.uid ?? '';
+    final merchantId =
+        appUser == null ? '' : currentEffectiveMerchantId(appUser);
     final rawMaterialsAsync = ref.watch(rawMaterialsStreamProvider(merchantId));
 
     return Padding(
@@ -205,307 +234,448 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-              isEditing ? l10n.edit : l10n.add,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 24),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _barcodeController,
-                    decoration: InputDecoration(
-                      labelText: l10n.barcode,
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 8),
-                IconButton(
-                  onPressed: _scanBarcode,
-                  icon: Icon(Icons.qr_code_scanner, color: Colors.blue, size: 32),
-                ),
-              ],
-            ),
-            SizedBox(height: 16),
-            categoriesAsync.when(
-              data: (categories) {
-                return DropdownButtonFormField<String>(
-                  value: _selectedCategoryId,
-                  decoration: InputDecoration(
-                    labelText: l10n.category,
-                    border: const OutlineInputBorder(),
-                  ),
-                  items: [
-                    DropdownMenuItem(value: null, child: Text(l10n.noCategory, style: TextStyle(fontFamily: 'Tajawal'))),
-                    ...categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, style: TextStyle(fontFamily: 'Tajawal')))),
-                  ],
-                  onChanged: (value) => setState(() => _selectedCategoryId = value),
-                );
-              },
-              loading: () => const CircularProgressIndicator(),
-              error: (e, st) => Text(l10n.error),
-            ),
-            SizedBox(height: 16),
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: l10n.productName,
-                border: const OutlineInputBorder(),
+                isEditing ? l10n.edit : l10n.add,
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Tajawal'),
+                textAlign: TextAlign.center,
               ),
-              validator: (value) => value!.isEmpty ? l10n.requiredField : null,
-            ),
-            SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _priceController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: isAr ? 'السعر' : 'Price',
-                      border: const OutlineInputBorder(),
-                    ),
-                    validator: (value) => value!.isEmpty ? l10n.requiredField : null,
-                  ),
-                ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: TextFormField(
-                    controller: _costPriceController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: isAr ? 'التكلفة' : 'Cost',
-                      hintText: isAr ? 'اختياري' : 'Optional',
-                      border: const OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark ? Colors.blueGrey.withOpacity(0.1) : Colors.blue.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? Colors.blueGrey.withOpacity(0.3) : Colors.blue.shade100),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              SizedBox(height: 24),
+              Row(
                 children: [
-                  Text(
-                    isAr ? 'نوع المنتج وطريقة حسابه:' : 'Product Type & Tracking:',
-                    style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 14),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _barcodeController,
+                      decoration: InputDecoration(
+                        labelText: l10n.barcode,
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: RadioListTile<bool>(
-                          value: false,
-                          groupValue: _isManufacturedOnDemand,
-                          onChanged: (val) {
-                            setState(() => _isManufacturedOnDemand = val!);
-                          },
-                          title: Text(isAr ? 'منتج جاهز' : 'Ready Product', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold)),
-                          subtitle: Text(isAr ? 'له كمية ثابتة في المستودع' : 'Fixed inventory quantity', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 11)),
-                          contentPadding: EdgeInsets.zero,
-                          activeColor: Colors.blue,
-                        ),
-                      ),
-                      Expanded(
-                        child: RadioListTile<bool>(
-                          value: true,
-                          groupValue: _isManufacturedOnDemand,
-                          onChanged: (val) {
-                            setState(() => _isManufacturedOnDemand = val!);
-                          },
-                          title: Text(isAr ? 'يُصنع عند الطلب' : 'On-Demand', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 13, fontWeight: FontWeight.bold)),
-                          subtitle: Text(isAr ? 'يُخصم من المواد الخام' : 'Deducted from raw materials', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 11)),
-                          contentPadding: EdgeInsets.zero,
-                          activeColor: Colors.orange,
-                        ),
-                      ),
-                    ],
+                  SizedBox(width: 8),
+                  IconButton(
+                    onPressed: _scanBarcode,
+                    icon: Icon(Icons.qr_code_scanner,
+                        color: Colors.blue, size: 32),
                   ),
                 ],
               ),
-            ),
-            if (!_isManufacturedOnDemand) ...[
               SizedBox(height: 16),
-              TextFormField(
-                controller: _quantityController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: isAr ? 'الكمية الحالية في المستودع' : 'Current Quantity in Inventory',
-                  border: const OutlineInputBorder(),
-                ),
-                validator: (value) => value!.isEmpty ? l10n.requiredField : null,
-              ),
-            ],
-            SizedBox(height: 16),
-            TextFormField(
-              controller: _modifiersController,
-              decoration: InputDecoration(
-                labelText: isAr ? 'أزرار سريعة (اختياري)' : 'Fast Buttons (Optional)',
-                hintText: isAr ? 'مثال: بدون بصل، سفري، حار' : 'e.g. No onion, Spicy, To-go',
-                border: const OutlineInputBorder(),
-              ),
-              onFieldSubmitted: (_) => _submit(),
-            ),
-            SizedBox(height: 24),
-            Card(
-              elevation: 0,
-              color: Theme.of(context).brightness == Brightness.dark ? Colors.orange.withOpacity(0.1) : Colors.orange.withOpacity(0.05),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent.withOpacity(0.5) : Colors.orange.shade200),
-              ),
-              child: ExpansionTile(
-                title: Text(
-                  isAr ? 'إعدادات متقدمة للضريبة (اختياري)' : 'Advanced Tax Settings (Optional)',
-                  style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent : Colors.orange.shade800),
-                ),
-                iconColor: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent : Colors.orange.shade800,
-                collapsedIconColor: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent : Colors.orange.shade800,
-                childrenPadding: const EdgeInsets.all(16.0),
-                children: [
-                  Text(
-                    isAr 
-                      ? 'تحديد الإعدادات هنا سيلغي إعدادات المتجر العامة لهذا المنتج، وسيؤثر مباشرة على الحساب النهائي.' 
-                      : 'Setting these will override the global store tax settings for this product.',
-                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Theme.of(context).brightness == Brightness.dark ? Colors.orange.shade300 : Colors.orange.shade900),
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<TaxMode>(
-                    value: _taxMode,
+              categoriesAsync.when(
+                data: (categories) {
+                  return DropdownButtonFormField<String>(
+                    value: _selectedCategoryId,
                     decoration: InputDecoration(
-                      labelText: isAr ? 'نظام الضريبة' : 'Tax Mode',
-                      labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), fontFamily: 'Tajawal'),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent.withOpacity(0.5) : Colors.orange.shade300),
-                      ),
-                      filled: true,
-                      fillColor: Theme.of(context).colorScheme.surface,
+                      labelText: l10n.category,
+                      border: const OutlineInputBorder(),
                     ),
                     items: [
-                      DropdownMenuItem(value: TaxMode.store, child: Text(isAr ? 'استخدام ضريبة المتجر' : 'Use store tax', style: const TextStyle(fontFamily: 'Tajawal'))),
-                      DropdownMenuItem(value: TaxMode.custom, child: Text(isAr ? 'ضريبة مخصصة' : 'Custom tax', style: const TextStyle(fontFamily: 'Tajawal'))),
-                      DropdownMenuItem(value: TaxMode.exempt, child: Text(isAr ? 'معفى من الضريبة' : 'Tax exempt', style: const TextStyle(fontFamily: 'Tajawal'))),
+                      DropdownMenuItem(
+                          value: null,
+                          child: Text(l10n.noCategory,
+                              style: TextStyle(fontFamily: 'Tajawal'))),
+                      ...categories.map((c) => DropdownMenuItem(
+                          value: c.id,
+                          child: Text(c.name,
+                              style: TextStyle(fontFamily: 'Tajawal')))),
                     ],
-                    onChanged: (val) {
-                      if (val != null) {
-                        setState(() => _taxMode = val);
-                      }
-                    },
-                  ),
-                  if (_taxMode == TaxMode.custom) ...[
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _taxPercentageController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontFamily: 'Tajawal'),
+                    onChanged: (value) =>
+                        setState(() => _selectedCategoryId = value),
+                  );
+                },
+                loading: () => const CircularProgressIndicator(),
+                error: (e, st) => Text(l10n.error),
+              ),
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                  labelText: l10n.productName,
+                  border: const OutlineInputBorder(),
+                ),
+                validator: (value) =>
+                    value!.isEmpty ? l10n.requiredField : null,
+              ),
+              SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _priceController,
+                      keyboardType: TextInputType.number,
                       decoration: InputDecoration(
-                        labelText: isAr ? 'نسبة الضريبة الخاصة بالمنتج (%)' : 'Product Tax Percentage (%)',
-                        labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                        labelText: isAr ? 'السعر' : 'Price',
+                        border: const OutlineInputBorder(),
+                      ),
+                      validator: (value) =>
+                          value!.isEmpty ? l10n.requiredField : null,
+                    ),
+                  ),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _costPriceController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: isAr ? 'التكلفة' : 'Cost',
+                        hintText: isAr ? 'اختياري' : 'Optional',
+                        border: const OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.blueGrey.withOpacity(0.1)
+                      : Colors.blue.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.blueGrey.withOpacity(0.3)
+                          : Colors.blue.shade100),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isAr
+                          ? 'نوع المنتج وطريقة حسابه:'
+                          : 'Product Type & Tracking:',
+                      style: const TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: RadioListTile<bool>(
+                            value: false,
+                            groupValue: _isManufacturedOnDemand,
+                            onChanged: (val) {
+                              setState(() => _isManufacturedOnDemand = val!);
+                            },
+                            title: Text(isAr ? 'منتج جاهز' : 'Ready Product',
+                                style: const TextStyle(
+                                    fontFamily: 'Tajawal',
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold)),
+                            subtitle: Text(
+                                isAr
+                                    ? 'له كمية ثابتة في المستودع'
+                                    : 'Fixed inventory quantity',
+                                style: const TextStyle(
+                                    fontFamily: 'Tajawal', fontSize: 11)),
+                            contentPadding: EdgeInsets.zero,
+                            activeColor: Colors.blue,
+                          ),
+                        ),
+                        Expanded(
+                          child: RadioListTile<bool>(
+                            value: true,
+                            groupValue: _isManufacturedOnDemand,
+                            onChanged: (val) {
+                              setState(() => _isManufacturedOnDemand = val!);
+                            },
+                            title: Text(isAr ? 'يُصنع عند الطلب' : 'On-Demand',
+                                style: const TextStyle(
+                                    fontFamily: 'Tajawal',
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold)),
+                            subtitle: Text(
+                                isAr
+                                    ? 'يُخصم من المواد الخام'
+                                    : 'Deducted from raw materials',
+                                style: const TextStyle(
+                                    fontFamily: 'Tajawal', fontSize: 11)),
+                            contentPadding: EdgeInsets.zero,
+                            activeColor: Colors.orange,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              if (!_isManufacturedOnDemand) ...[
+                SizedBox(height: 16),
+                TextFormField(
+                  controller: _quantityController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: isAr
+                        ? 'الكمية الحالية في المستودع'
+                        : 'Current Quantity in Inventory',
+                    border: const OutlineInputBorder(),
+                  ),
+                  validator: (value) =>
+                      value!.isEmpty ? l10n.requiredField : null,
+                ),
+              ],
+              SizedBox(height: 16),
+              TextFormField(
+                controller: _modifiersController,
+                decoration: InputDecoration(
+                  labelText: isAr
+                      ? 'أزرار سريعة (اختياري)'
+                      : 'Fast Buttons (Optional)',
+                  hintText: isAr
+                      ? 'مثال: بدون بصل، سفري، حار'
+                      : 'e.g. No onion, Spicy, To-go',
+                  border: const OutlineInputBorder(),
+                ),
+                onFieldSubmitted: (_) => _submit(),
+              ),
+              SizedBox(height: 24),
+              Card(
+                elevation: 0,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.orange.withOpacity(0.1)
+                    : Colors.orange.withOpacity(0.05),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.orangeAccent.withOpacity(0.5)
+                          : Colors.orange.shade200),
+                ),
+                child: ExpansionTile(
+                  title: Text(
+                    isAr
+                        ? 'إعدادات متقدمة للضريبة (اختياري)'
+                        : 'Advanced Tax Settings (Optional)',
+                    style: TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.orangeAccent
+                            : Colors.orange.shade800),
+                  ),
+                  iconColor: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.orangeAccent
+                      : Colors.orange.shade800,
+                  collapsedIconColor:
+                      Theme.of(context).brightness == Brightness.dark
+                          ? Colors.orangeAccent
+                          : Colors.orange.shade800,
+                  childrenPadding: const EdgeInsets.all(16.0),
+                  children: [
+                    Text(
+                      isAr
+                          ? 'تحديد الإعدادات هنا سيلغي إعدادات المتجر العامة لهذا المنتج، وسيؤثر مباشرة على الحساب النهائي.'
+                          : 'Setting these will override the global store tax settings for this product.',
+                      style: TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontSize: 12,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.orange.shade300
+                              : Colors.orange.shade900),
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<TaxMode>(
+                      value: _taxMode,
+                      decoration: InputDecoration(
+                        labelText: isAr ? 'نظام الضريبة' : 'Tax Mode',
+                        labelStyle: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withOpacity(0.7),
+                            fontFamily: 'Tajawal'),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8)),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent.withOpacity(0.5) : Colors.orange.shade300),
+                          borderSide: BorderSide(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Colors.orangeAccent.withOpacity(0.5)
+                                  : Colors.orange.shade300),
                         ),
                         filled: true,
                         fillColor: Theme.of(context).colorScheme.surface,
                       ),
-                      validator: (val) {
-                        if (val == null || val.trim().isEmpty) {
-                          return isAr ? 'يجب إدخال نسبة الضريبة' : 'Tax percentage is required';
+                      items: [
+                        DropdownMenuItem(
+                            value: TaxMode.store,
+                            child: Text(
+                                isAr ? 'استخدام ضريبة المتجر' : 'Use store tax',
+                                style: const TextStyle(fontFamily: 'Tajawal'))),
+                        DropdownMenuItem(
+                            value: TaxMode.custom,
+                            child: Text(isAr ? 'ضريبة مخصصة' : 'Custom tax',
+                                style: const TextStyle(fontFamily: 'Tajawal'))),
+                        DropdownMenuItem(
+                            value: TaxMode.exempt,
+                            child: Text(isAr ? 'معفى من الضريبة' : 'Tax exempt',
+                                style: const TextStyle(fontFamily: 'Tajawal'))),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() => _taxMode = val);
                         }
-                        final parsed = double.tryParse(val.trim());
-                        if (parsed == null || parsed < 0) {
-                          return isAr ? 'نسبة الضريبة غير صالحة' : 'Invalid tax percentage';
-                        }
-                        return null;
                       },
                     ),
-                  ],
-                  if (_taxMode != TaxMode.exempt) ...[
-                    const SizedBox(height: 12),
-                    SwitchListTile(
-                      title: Text(isAr ? 'السعر المحدد يشمل الضريبة' : 'Price is Tax Inclusive', style: const TextStyle(fontFamily: 'Tajawal')),
-                      value: _isTaxInclusive ?? false,
-                      onChanged: (val) => setState(() => _isTaxInclusive = val),
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            SizedBox(height: 24),
-            if (_isManufacturedOnDemand) ...[
-              SizedBox(height: 24),
-              Text(isAr ? 'المقادير (المواد الخام) للمنتج' : 'Recipe (Raw Materials)', style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', color: Colors.orange)),
-              const SizedBox(height: 8),
-              rawMaterialsAsync.when(
-                data: (materials) {
-                  if (materials.isEmpty) {
-                    return Text(isAr ? 'لا توجد مواد خام مضافة' : 'No raw materials added', style: const TextStyle(color: Colors.grey, fontFamily: 'Tajawal'));
-                  }
-                  return Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: DropdownButtonFormField<String>(
-                          value: _selectedRawMaterialId,
-                          decoration: InputDecoration(
-                            labelText: isAr ? 'اختر المادة الخام' : 'Select Raw Material',
-                            border: const OutlineInputBorder(),
+                    if (_taxMode == TaxMode.custom) ...[
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _taxPercentageController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontFamily: 'Tajawal'),
+                        decoration: InputDecoration(
+                          labelText: isAr
+                              ? 'نسبة الضريبة الخاصة بالمنتج (%)'
+                              : 'Product Tax Percentage (%)',
+                          labelStyle: TextStyle(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.7)),
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide(
+                                color: Theme.of(context).brightness ==
+                                        Brightness.dark
+                                    ? Colors.orangeAccent.withOpacity(0.5)
+                                    : Colors.orange.shade300),
                           ),
-                          items: materials.map((m) => DropdownMenuItem(value: m.id, child: Text(m.name, style: const TextStyle(fontFamily: 'Tajawal')))).toList(),
-                          onChanged: (val) => setState(() => _selectedRawMaterialId = val),
-                          validator: (value) => _isManufacturedOnDemand && value == null ? l10n.requiredField : null,
+                          filled: true,
+                          fillColor: Theme.of(context).colorScheme.surface,
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        flex: 1,
-                        child: TextFormField(
-                          controller: _rawMaterialQtyController,
-                          keyboardType: TextInputType.number,
-                          decoration: InputDecoration(
-                            labelText: isAr ? 'الكمية' : 'Quantity',
-                            border: const OutlineInputBorder(),
-                          ),
-                          validator: (value) => _isManufacturedOnDemand && value!.isEmpty ? l10n.requiredField : null,
-                        ),
+                        validator: (val) {
+                          if (val == null || val.trim().isEmpty) {
+                            return isAr
+                                ? 'يجب إدخال نسبة الضريبة'
+                                : 'Tax percentage is required';
+                          }
+                          final parsed = double.tryParse(val.trim());
+                          if (parsed == null || parsed < 0) {
+                            return isAr
+                                ? 'نسبة الضريبة غير صالحة'
+                                : 'Invalid tax percentage';
+                          }
+                          return null;
+                        },
                       ),
                     ],
-                  );
-                },
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, st) => const Text('Error loading materials'),
+                    if (_taxMode != TaxMode.exempt) ...[
+                      const SizedBox(height: 12),
+                      SwitchListTile(
+                        title: Text(
+                            isAr
+                                ? 'السعر المحدد يشمل الضريبة'
+                                : 'Price is Tax Inclusive',
+                            style: const TextStyle(fontFamily: 'Tajawal')),
+                        value: _isTaxInclusive ?? false,
+                        onChanged: (val) =>
+                            setState(() => _isTaxInclusive = val),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ],
+                  ],
+                ),
               ),
+              SizedBox(height: 24),
+              if (_isManufacturedOnDemand) ...[
+                SizedBox(height: 24),
+                Text(
+                    isAr
+                        ? 'المقادير (المواد الخام) للمنتج'
+                        : 'Recipe (Raw Materials)',
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Tajawal',
+                        color: Colors.orange)),
+                const SizedBox(height: 8),
+                rawMaterialsAsync.when(
+                  data: (materials) {
+                    if (materials.isEmpty) {
+                      return Text(
+                          isAr
+                              ? 'لا توجد مواد خام مضافة'
+                              : 'No raw materials added',
+                          style: const TextStyle(
+                              color: Colors.grey, fontFamily: 'Tajawal'));
+                    }
+                    return Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: DropdownButtonFormField<String>(
+                            value: _selectedRawMaterialId,
+                            decoration: InputDecoration(
+                              labelText: isAr
+                                  ? 'اختر المادة الخام'
+                                  : 'Select Raw Material',
+                              border: const OutlineInputBorder(),
+                            ),
+                            items: materials
+                                .map((m) => DropdownMenuItem(
+                                    value: m.id,
+                                    child: Text(m.name,
+                                        style: const TextStyle(
+                                            fontFamily: 'Tajawal'))))
+                                .toList(),
+                            onChanged: (val) =>
+                                setState(() => _selectedRawMaterialId = val),
+                            validator: (value) =>
+                                _isManufacturedOnDemand && value == null
+                                    ? l10n.requiredField
+                                    : null,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          flex: 1,
+                          child: TextFormField(
+                            controller: _rawMaterialQtyController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              labelText: isAr ? 'الكمية' : 'Quantity',
+                              border: const OutlineInputBorder(),
+                            ),
+                            validator: (value) =>
+                                _isManufacturedOnDemand && value!.isEmpty
+                                    ? l10n.requiredField
+                                    : null,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (e, st) => const Text('Error loading materials'),
+                ),
+              ],
+              SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: _isLoading ? null : _submit,
+                style: ElevatedButton.styleFrom(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: _isLoading
+                    ? const CircularProgressIndicator()
+                    : Text(l10n.save,
+                        style: TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
+              ),
+              SizedBox(height: 16),
             ],
-            SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _submit,
-              style: ElevatedButton.styleFrom(
-                padding: EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: _isLoading
-                  ? const CircularProgressIndicator()
-                  : Text(l10n.save, style: TextStyle(fontSize: 16, fontFamily: 'Tajawal')),
-            ),
-            SizedBox(height: 16),
-          ],
-        ),
+          ),
         ),
       ),
     );
   }
 }
-

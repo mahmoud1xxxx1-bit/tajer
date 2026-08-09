@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../authentication/data/auth_repository.dart';
+import '../../../core/providers/effective_merchant.dart';
 import '../../../core/providers/store_profile_provider.dart';
 import '../data/branch_repository.dart';
 import '../domain/branch.dart';
@@ -317,7 +318,9 @@ class _BranchesScreenState extends ConsumerState<BranchesScreen> {
                           setDialogState(() => saving = true);
                           final repository = ref.read(branchRepositoryProvider);
                           final appUser = ref.read(appUserProvider).value;
-                          final merchantId = appUser?.merchantId ?? appUser?.id;
+                          final merchantId = appUser == null
+                              ? null
+                              : currentEffectiveMerchantId(appUser);
                           if (repository == null || merchantId == null) return;
                           final now = DateTime.now();
                           final payload = Branch(
