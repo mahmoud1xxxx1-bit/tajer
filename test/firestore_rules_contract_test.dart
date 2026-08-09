@@ -226,7 +226,8 @@ void main() {
       expect(
           rules,
           contains(
-              "request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity', 'updatedAt'])"));
+              "request.resource.data.diff(resource.data).affectedKeys().hasOnly(['id', 'quantity', 'initialQuantity', 'updatedAt'])"));
+      expect(rules, contains('function isInventoryIdentityPreserved(inventoryId)'));
       expect(
           rules,
           contains(

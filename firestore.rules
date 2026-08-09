@@ -108,10 +108,15 @@ service cloud.firestore {
         request.resource.data.get('quantity', -1) >= 0 &&
         request.resource.data.get('initialQuantity', -1) >= request.resource.data.get('quantity', -1);
     }
-    function isCheckoutInventoryUpdate(merchantId) {
+    function isInventoryIdentityPreserved(inventoryId) {
+      return request.resource.data.get('id', inventoryId) == resource.data.get('id', inventoryId) &&
+        request.resource.data.get('initialQuantity', resource.data.get('quantity', 0)) == resource.data.get('initialQuantity', resource.data.get('quantity', 0));
+    }
+    function isCheckoutInventoryUpdate(merchantId, inventoryId) {
       return hasPermission(merchantId, 'can_create_orders') &&
         hasDataBranchAccess(merchantId, resource.data) &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity', 'updatedAt']) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['id', 'quantity', 'initialQuantity', 'updatedAt']) &&
+        isInventoryIdentityPreserved(inventoryId) &&
         request.resource.data.get('merchantId', '') == resource.data.get('merchantId', '') &&
         request.resource.data.get('branchId', 'main') == resource.data.get('branchId', 'main') &&
         request.resource.data.get('itemId', '') == resource.data.get('itemId', '') &&
@@ -121,10 +126,11 @@ service cloud.firestore {
         request.resource.data.get('quantity', -1) >= 0 &&
         request.resource.data.get('quantity', -1) <= resource.data.get('quantity', -1);
     }
-    function isCancellationInventoryUpdate(merchantId) {
+    function isCancellationInventoryUpdate(merchantId, inventoryId) {
       return hasPermission(merchantId, 'can_cancel_orders') &&
         hasDataBranchAccess(merchantId, resource.data) &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['quantity', 'updatedAt']) &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['id', 'quantity', 'initialQuantity', 'updatedAt']) &&
+        isInventoryIdentityPreserved(inventoryId) &&
         request.resource.data.get('merchantId', '') == resource.data.get('merchantId', '') &&
         request.resource.data.get('branchId', 'main') == resource.data.get('branchId', 'main') &&
         request.resource.data.get('itemId', '') == resource.data.get('itemId', '') &&
@@ -279,8 +285,8 @@ service cloud.firestore {
         allow update: if resource != null &&
           hasDataBranchAccess(merchantId, resource.data) &&
           (hasPermission(merchantId, 'can_manage_inventory') ||
-           isCheckoutInventoryUpdate(merchantId) ||
-           isCancellationInventoryUpdate(merchantId)) &&
+           isCheckoutInventoryUpdate(merchantId, inventoryId) ||
+           isCancellationInventoryUpdate(merchantId, inventoryId)) &&
           request.resource.data.get('merchantId', '') == resource.data.get('merchantId', '') &&
           request.resource.data.get('branchId', 'main') == resource.data.get('branchId', 'main') &&
           request.resource.data.get('itemId', '') == resource.data.get('itemId', '') &&
