@@ -1,10 +1,23 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../authentication/domain/app_user.dart';
 import '../../branches/presentation/branch_context.dart';
 import '../domain/order.dart';
+
+String? restrictedOrderCreatorId(AppUser appUser, String? authUid) {
+  if (appUser.role == 'merchant' ||
+      appUser.role == 'admin' ||
+      appUser.role == 'owner' ||
+      appUser.hasPermission('can_view_all_orders')) {
+    return null;
+  }
+  final uid = authUid?.trim();
+  return uid == null || uid.isEmpty ? appUser.id : uid;
+}
 
 /// Branch-scoped read model for order lists/reports.
 ///
@@ -20,12 +33,19 @@ final branchOrdersStreamProvider =
   final branchId = ref.watch(selectedBranchIdProvider);
   if (branchId.isEmpty) return const Stream.empty();
 
-  return FirebaseFirestore.instance
+  Query<Map<String, dynamic>> query = FirebaseFirestore.instance
       .collection('orders')
       .where('merchantId', isEqualTo: merchantId)
-      .where('branchId', isEqualTo: branchId)
-      .snapshots()
-      .map((snapshot) {
+      .where('branchId', isEqualTo: branchId);
+  final creatorId = restrictedOrderCreatorId(
+    appUser,
+    FirebaseAuth.instance.currentUser?.uid,
+  );
+  if (creatorId != null) {
+    query = query.where('creatorId', isEqualTo: creatorId);
+  }
+
+  return query.snapshots().map((snapshot) {
     var orders = snapshot.docs
         .map((doc) {
           final data = Map<String, dynamic>.from(doc.data());

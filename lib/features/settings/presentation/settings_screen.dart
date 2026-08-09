@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../authentication/application/session_controller.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../authentication/domain/app_user.dart';
 import '../../../core/services/app_review_service.dart';
@@ -327,10 +328,10 @@ class SettingsScreen extends ConsumerWidget {
                     );
                     
                     if (confirm == true) {
-                      await ref.read(authRepositoryProvider).signOut();
+                      await ref.read(sessionControllerProvider).logout();
                     }
                   } else {
-                    ref.read(authRepositoryProvider).signOut();
+                    await ref.read(sessionControllerProvider).logout();
                   }
                 },
               ),

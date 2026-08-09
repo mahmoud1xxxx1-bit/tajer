@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../../features/authentication/data/auth_repository.dart';
+import '../../features/authentication/application/session_controller.dart';
 import '../../features/branches/presentation/active_branch_selector.dart';
 import '../providers/store_profile_provider.dart';
 
@@ -246,7 +247,7 @@ class AppDrawer extends ConsumerWidget {
                 style:
                     const TextStyle(fontFamily: 'Tajawal', color: Colors.red)),
             onTap: () async {
-              await ref.read(authRepositoryProvider).signOut();
+              await ref.read(sessionControllerProvider).logout();
               if (context.mounted) {
                 context.go('/');
               }

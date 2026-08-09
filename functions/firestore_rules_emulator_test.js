@@ -6,11 +6,15 @@ const {
   initializeTestEnvironment,
 } = require('@firebase/rules-unit-testing');
 const {
+  collection,
   deleteDoc,
   doc,
   getDoc,
+  getDocs,
+  query,
   setDoc,
   updateDoc,
+  where,
 } = require('firebase/firestore');
 
 const projectId = 'demo-tajer-rules';
@@ -89,6 +93,16 @@ async function main() {
           can_create_orders: true,
         },
       });
+      await setDoc(doc(db, 'users', 'cashier-view-all'), {
+        role: 'employee',
+        merchantId: 'merchant-a',
+        isRevoked: false,
+        assignedBranchIds: ['branch-a'],
+        permissions: {
+          can_create_orders: true,
+          can_view_all_orders: true,
+        },
+      });
       await setDoc(
         doc(db, 'merchants', 'merchant-a', 'branch_inventory', 'branch-a_product_prod-1'),
         {
@@ -102,6 +116,20 @@ async function main() {
       await setDoc(doc(db, 'orders', 'order-a'), {
         merchantId: 'merchant-a',
         branchId: 'branch-a',
+        creatorId: 'cashier-a',
+        status: 'pending',
+        paidAmount: 0,
+      });
+      await setDoc(doc(db, 'orders', 'order-other-creator'), {
+        merchantId: 'merchant-a',
+        branchId: 'branch-a',
+        creatorId: 'merchant-a',
+        status: 'pending',
+        paidAmount: 0,
+      });
+      await setDoc(doc(db, 'orders', 'order-branch-b'), {
+        merchantId: 'merchant-a',
+        branchId: 'branch-b',
         creatorId: 'cashier-a',
         status: 'pending',
         paidAmount: 0,
@@ -136,9 +164,52 @@ async function main() {
     const auditor = testEnv.authenticatedContext('auditor-a', {
       email: 'auditor-a@example.test',
     }).firestore();
+    const viewAllCashier = testEnv.authenticatedContext('cashier-view-all', {
+      email: 'cashier-view-all@example.test',
+    }).firestore();
+    const merchant = testEnv.authenticatedContext('merchant-a', {
+      email: 'merchant-a@example.test',
+    }).firestore();
 
     await assertSucceeds(getDoc(doc(cashier, 'orders', 'order-a')));
     await assertFails(getDoc(doc(otherMerchant, 'orders', 'order-a')));
+    await assertSucceeds(
+      getDocs(query(
+        collection(cashier, 'orders'),
+        where('merchantId', '==', 'merchant-a'),
+        where('branchId', '==', 'branch-a'),
+        where('creatorId', '==', 'cashier-a'),
+      )),
+    );
+    await assertFails(
+      getDocs(query(
+        collection(cashier, 'orders'),
+        where('merchantId', '==', 'merchant-a'),
+        where('branchId', '==', 'branch-a'),
+      )),
+    );
+    await assertFails(
+      getDocs(query(
+        collection(cashier, 'orders'),
+        where('merchantId', '==', 'merchant-a'),
+        where('branchId', '==', 'branch-b'),
+        where('creatorId', '==', 'cashier-a'),
+      )),
+    );
+    await assertSucceeds(
+      getDocs(query(
+        collection(viewAllCashier, 'orders'),
+        where('merchantId', '==', 'merchant-a'),
+        where('branchId', '==', 'branch-a'),
+      )),
+    );
+    await assertSucceeds(
+      getDocs(query(
+        collection(merchant, 'orders'),
+        where('merchantId', '==', 'merchant-a'),
+        where('branchId', '==', 'branch-a'),
+      )),
+    );
     await assertSucceeds(getDoc(doc(cashier, 'products', 'prod-1')));
     await assertFails(getDoc(doc(otherMerchant, 'products', 'prod-1')));
 

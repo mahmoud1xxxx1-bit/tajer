@@ -1,4 +1,3 @@
-import 'package:tajer/l10n/app_localizations.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/utils/date_parser.dart';
@@ -12,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../domain/app_user.dart';
 import '../../../core/services/data_migration_service.dart';
+import '../../../core/providers/effective_merchant.dart';
 
 part 'auth_repository.g.dart';
 
@@ -120,7 +120,16 @@ class AuthRepository {
   }
 
   Future<void> signOut() async {
+    final oldUid = _auth.currentUser?.uid;
+    debugPrint('LOGOUT oldUid=$oldUid');
+    _pendingCredential = null;
+    try {
+      await GoogleSignIn().signOut();
+    } catch (e) {
+      debugPrint('LOGOUT googleSignOutError=${e.runtimeType}');
+    }
     await _auth.signOut();
+    debugPrint('LOGOUT firebaseUidAfterLogout=${_auth.currentUser?.uid}');
   }
 
   Future<void> _ensureUserDocument(User user,
@@ -188,6 +197,13 @@ class AuthRepository {
       } else {
         // Native platforms (Android/iOS)
         final GoogleSignIn googleSignIn = GoogleSignIn();
+        if (currentUser?.isAnonymous != true) {
+          try {
+            await googleSignIn.signOut();
+          } catch (e) {
+            debugPrint('GOOGLE_LOGIN providerSignOutError=${e.runtimeType}');
+          }
+        }
         final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
         if (googleUser == null) return; // User canceled
 
@@ -219,6 +235,12 @@ class AuthRepository {
         } else {
           // If not anonymous, just sign in directly
           final userCred = await _auth.signInWithCredential(credential);
+          final providerIds = userCred.user?.providerData
+                  .map((info) => info.providerId)
+                  .join(',') ??
+              '';
+          debugPrint(
+              'GOOGLE_AUTH_RESULT googleEmail=${googleUser.email} firebaseUid=${userCred.user?.uid} providerIds=$providerIds');
           if (userCred.user != null) {
             await _ensureUserDocument(userCred.user!,
                 email: googleUser.email, name: googleUser.displayName);
@@ -563,23 +585,29 @@ Stream<AppUser?> appUser(AppUserRef ref) {
       .authStateChanges()
       .asyncExpand((user) {
     if (user == null) return Stream<AppUser?>.value(null);
-    return FirebaseFirestore.instance
-        .collection('users')
-        .doc(user.uid)
-        .snapshots()
-        .map((snapshot) {
-      if (snapshot.exists && snapshot.data() != null) {
-        final data = snapshot.data()!;
-        if (data['createdAt'] != null) {
-          data['createdAt'] =
-              safeParseDate(data['createdAt']).toIso8601String();
+    return (() async* {
+      yield null;
+      yield* FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .snapshots()
+          .map((snapshot) {
+        if (snapshot.exists && snapshot.data() != null) {
+          final data = snapshot.data()!;
+          if (data['createdAt'] != null) {
+            data['createdAt'] =
+                safeParseDate(data['createdAt']).toIso8601String();
+          }
+          if (data['email'] == 'love.dotk@gmail.com') {
+            data['plan'] = 'premium';
+          }
+          final appUser = AppUser.fromJson(data);
+          debugPrint(
+              'APP_USER_RESOLUTION authenticatedUid=${user.uid} loadedUserPath=users/${user.uid} role=${appUser.role} effectiveMerchantId=${currentEffectiveMerchantId(appUser)}');
+          return appUser;
         }
-        if (data['email'] == 'love.dotk@gmail.com') {
-          data['plan'] = 'premium';
-        }
-        return AppUser.fromJson(data);
-      }
-      return null;
-    });
+        return null;
+      });
+    })();
   });
 }
