@@ -38,6 +38,14 @@
           }
         },
         {
+          "client_id": "88663100884-ennnpsrngonik8jjgsjrl189ocsu6oe5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.allldown.tajer",
+            "certificate_hash": "7eb1fc414266ad3619841e4b97f5f313d3981585"
+          }
+        },
+        {
           "client_id": "88663100884-1g4lvc7f9okgd0vh53fgrd1hemv0go01.apps.googleusercontent.com",
           "client_type": 3
         }
