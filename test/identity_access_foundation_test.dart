@@ -181,6 +181,13 @@ void main() {
       expect(dashboard, contains('policy.canViewReports'));
     });
 
+    test('store identity completion banner is owner policy gated', () {
+      expect(dashboard, contains('completeStoreBrandingAlert'));
+      expect(dashboard, contains('policy.canAccessBranding &&'));
+      expect(dashboard,
+          contains('(storeProfile?.storeName.isEmpty ?? true)'));
+    });
+
     test('audit and changed compound query indexes are declared', () {
       expect(firebaseJson, contains('"indexes": "firestore.indexes.json"'));
       final list = indexes['indexes'] as List<dynamic>;

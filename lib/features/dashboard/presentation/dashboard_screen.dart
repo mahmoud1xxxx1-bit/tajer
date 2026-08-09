@@ -323,7 +323,8 @@ class DashboardHome extends ConsumerWidget {
                   ),
                 ],
                 const SizedBox(height: 16),
-                if (storeProfile?.storeName.isEmpty ?? true) ...[
+                if (policy.canAccessBranding &&
+                    (storeProfile?.storeName.isEmpty ?? true)) ...[
                   Container(
                     margin: EdgeInsets.only(bottom: 16),
                     padding: EdgeInsets.all(12),
