@@ -18,9 +18,12 @@ class BranchContextState {
 
 class BranchContextNotifier extends StateNotifier<BranchContextState> {
   final String merchantId;
+  final List<String> allowedBranchIds;
 
-  BranchContextNotifier(this.merchantId)
-      : super(const BranchContextState.loading()) {
+  BranchContextNotifier(
+    this.merchantId, {
+    this.allowedBranchIds = const [],
+  }) : super(const BranchContextState.loading()) {
     _load();
   }
 
@@ -29,11 +32,14 @@ class BranchContextNotifier extends StateNotifier<BranchContextState> {
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(_prefsKey);
-    state = BranchContextState(branchId: resolveBranchId(saved), isReady: true);
+    state = BranchContextState(
+      branchId: resolveAllowedBranchId(saved, allowedBranchIds),
+      isReady: true,
+    );
   }
 
   Future<void> selectBranch(String branchId) async {
-    final resolved = resolveBranchId(branchId);
+    final resolved = resolveAllowedBranchId(branchId, allowedBranchIds);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_prefsKey, resolved);
     state = BranchContextState(branchId: resolved, isReady: true);
@@ -46,7 +52,14 @@ final branchContextProvider =
     StateNotifierProvider<BranchContextNotifier, BranchContextState>((ref) {
   final user = ref.watch(appUserProvider).value;
   final merchantId = user == null ? '' : currentEffectiveMerchantId(user);
-  return BranchContextNotifier(merchantId);
+  final allowedBranchIds =
+      user == null || user.role == 'merchant' || user.role == 'admin'
+          ? const <String>[]
+          : effectiveEmployeeBranchIds(user.assignedBranchIds);
+  return BranchContextNotifier(
+    merchantId,
+    allowedBranchIds: allowedBranchIds,
+  );
 });
 
 final selectedBranchIdProvider = Provider<String>((ref) {
@@ -59,7 +72,7 @@ final selectedBranchIdProvider = Provider<String>((ref) {
   final allowed = user.assignedBranchIds.isEmpty
       ? const <String>[BranchIds.main]
       : user.assignedBranchIds;
-  return allowed.contains(requested) ? requested : allowed.first;
+  return resolveAllowedBranchId(requested, allowed);
 });
 
 final employeeAllowedBranchIdsProvider = Provider<List<String>>((ref) {
@@ -71,3 +84,21 @@ final employeeAllowedBranchIdsProvider = Provider<List<String>>((ref) {
       ? const <String>[BranchIds.main]
       : List<String>.unmodifiable(user.assignedBranchIds);
 });
+
+List<String> effectiveEmployeeBranchIds(List<String> assignedBranchIds) {
+  final normalized = assignedBranchIds
+      .map(resolveBranchId)
+      .where((branchId) => branchId.isNotEmpty)
+      .toSet()
+      .toList(growable: false);
+  return normalized.isEmpty ? const <String>[BranchIds.main] : normalized;
+}
+
+String resolveAllowedBranchId(
+    String? requested, List<String> allowedBranchIds) {
+  final resolved = resolveBranchId(requested);
+  if (allowedBranchIds.isEmpty || allowedBranchIds.contains(resolved)) {
+    return resolved;
+  }
+  return allowedBranchIds.first;
+}

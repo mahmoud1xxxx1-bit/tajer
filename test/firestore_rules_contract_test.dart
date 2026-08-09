@@ -93,13 +93,14 @@ void main() {
           rules, contains("hasPermission(merchantId, 'can_receive_payments')"));
     });
 
-    test('product cost is isolated from normal product documents', () {
+    test('product reads stay available while protected costs remain isolated',
+        () {
       expect(rules, contains('match /products/{productId}'));
-      expect(rules, contains("resource.data.get('costPrice', null) == null"));
       expect(
-          rules,
-          contains(
-              "hasPermission(resource.data.get('merchantId', ''), 'can_view_cost')"));
+        rules,
+        contains(
+            "allow read: if resource == null || hasAccess(resource.data.get('merchantId', ''));"),
+      );
       expect(rules, contains('function isProductMasterCreate()'));
       expect(rules, contains('function isProductMasterUpdate()'));
       expect(

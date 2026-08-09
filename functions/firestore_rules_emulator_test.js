@@ -89,11 +89,21 @@ async function main() {
         status: 'pending',
         paidAmount: 0,
       });
+      await setDoc(doc(db, 'products', 'prod-1'), {
+        merchantId: 'merchant-a',
+        name: 'Pepsi',
+        costPrice: 2,
+      });
       await setDoc(doc(db, 'merchants', 'merchant-a', 'order_cost_snapshots', 'order-a'), {
         merchantId: 'merchant-a',
         branchId: 'branch-a',
         isComplete: true,
         totalCost: 10,
+      });
+      await setDoc(doc(db, 'merchants', 'merchant-a', 'product_costs', 'prod-1'), {
+        merchantId: 'merchant-a',
+        productId: 'prod-1',
+        costPrice: 2,
       });
     });
 
@@ -112,6 +122,8 @@ async function main() {
 
     await assertSucceeds(getDoc(doc(cashier, 'orders', 'order-a')));
     await assertFails(getDoc(doc(otherMerchant, 'orders', 'order-a')));
+    await assertSucceeds(getDoc(doc(cashier, 'products', 'prod-1')));
+    await assertFails(getDoc(doc(otherMerchant, 'products', 'prod-1')));
 
     await assertFails(
       updateDoc(
@@ -147,6 +159,8 @@ async function main() {
     );
     await assertFails(getDoc(doc(cashier, 'merchants', 'merchant-a', 'order_cost_snapshots', 'order-a')));
     await assertSucceeds(getDoc(doc(auditor, 'merchants', 'merchant-a', 'order_cost_snapshots', 'order-a')));
+    await assertFails(getDoc(doc(cashier, 'merchants', 'merchant-a', 'product_costs', 'prod-1')));
+    await assertSucceeds(getDoc(doc(auditor, 'merchants', 'merchant-a', 'product_costs', 'prod-1')));
 
     await assertFails(
       setDoc(doc(cashier, 'merchants', 'merchant-a', 'product_costs', 'prod-1'), {

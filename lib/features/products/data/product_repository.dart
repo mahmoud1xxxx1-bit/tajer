@@ -158,7 +158,8 @@ Stream<List<Product>> productsStream(ProductsStreamRef ref) {
   repository.migrateOldProducts(merchantId).catchError((_) {});
 
   // Only merchant/admin performs the destructive legacy cost migration. Until
-  // it runs, Firestore Rules fail closed for employees without can_view_cost.
+  // it runs, queryProducts strips costPrice before deserialization. Protected
+  // product_costs remains the source for authorized cost overlays.
   if (appUser.role == 'merchant' || appUser.role == 'admin') {
     costRepository.migrateLegacyCosts(merchantId).catchError((_) {});
   }

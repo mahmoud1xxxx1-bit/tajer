@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tajer/features/reports/data/shift_report_reconciliation.dart';
 import 'package:tajer/features/shifts/domain/shift.dart';
@@ -82,5 +84,22 @@ void main() {
 
     expect(result.isBalanced(), isTrue);
     expect(result.isBalanced(tolerance: 0.001), isFalse);
+  });
+
+  test('shift archive and details expose branch and full payment breakdown',
+      () {
+    final details =
+        File('lib/features/shifts/presentation/shift_details_screen.dart')
+            .readAsStringSync();
+    final archive =
+        File('lib/features/shifts/presentation/shifts_archive_screen.dart')
+            .readAsStringSync();
+
+    expect(details, contains("shift.branchId"));
+    expect(archive, contains("shift.branchId"));
+    expect(details, contains("shift.debtCollectionsCard ?? 0.0"));
+    expect(details, contains("shift.refundsCard ?? 0.0"));
+    expect(details, contains("shift.debtCollectionsTransfer ?? 0.0"));
+    expect(details, contains("shift.refundsTransfer ?? 0.0"));
   });
 }
