@@ -18,6 +18,7 @@ void main() {
 
       expect(defaults[EmployeePermissionKeys.receivePayments], isFalse);
       expect(defaults[EmployeePermissionKeys.viewReports], isFalse);
+      expect(defaults[EmployeePermissionKeys.viewShiftArchive], isFalse);
       expect(defaults[EmployeePermissionKeys.viewAllOrders], isFalse);
       expect(defaults[EmployeePermissionKeys.manageProducts], isFalse);
       expect(defaults[EmployeePermissionKeys.manageInventory], isFalse);
@@ -27,13 +28,16 @@ void main() {
       expect(defaults[EmployeePermissionKeys.manageExpenses], isFalse);
     });
 
-    test('ordinary operating permissions remain available for a new cashier', () {
+    test('ordinary operating permissions remain available for a new cashier',
+        () {
       final defaults = EmployeePermissionCatalog.leastPrivilegeDefaults;
       expect(defaults[EmployeePermissionKeys.createOrders], isTrue);
       expect(defaults[EmployeePermissionKeys.manageCustomers], isTrue);
     });
 
-    test('Firestore authorization references only known employee permission keys', () {
+    test(
+        'Firestore authorization references only known employee permission keys',
+        () {
       final rules = File('firestore.rules').readAsStringSync();
       final matches = RegExp(r"hasPermission\([^,]+, '([^']+)'\)")
           .allMatches(rules)

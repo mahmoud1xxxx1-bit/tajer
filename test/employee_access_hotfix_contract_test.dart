@@ -69,7 +69,7 @@ void main() {
       expect(router, contains('ownerOnly: true, child: BranchesScreen'));
       expect(router,
           contains('ownerOnly: true, child: EmployeePermissionsScreen'));
-      expect(router, contains("permission: 'can_view_reports'"));
+      expect(router, contains("permission: 'can_view_shift_archive'"));
       expect(router, contains("permission: 'can_manage_inventory'"));
       expect(router, contains('accessPolicyProvider'));
       expect(router, contains('policy.allowsRoutePermission'));

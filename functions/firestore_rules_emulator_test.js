@@ -103,6 +103,13 @@ async function main() {
           can_view_all_orders: true,
         },
       });
+      await setDoc(doc(db, 'users', 'cashier-no-shift'), {
+        role: 'employee',
+        merchantId: 'merchant-a',
+        isRevoked: false,
+        assignedBranchIds: ['branch-a'],
+        permissions: {},
+      });
       await setDoc(
         doc(db, 'merchants', 'merchant-a', 'branch_inventory', 'branch-a_product_prod-1'),
         {
@@ -170,6 +177,9 @@ async function main() {
     const merchant = testEnv.authenticatedContext('merchant-a', {
       email: 'merchant-a@example.test',
     }).firestore();
+    const noShiftCashier = testEnv.authenticatedContext('cashier-no-shift', {
+      email: 'cashier-no-shift@example.test',
+    }).firestore();
 
     await assertSucceeds(getDoc(doc(cashier, 'orders', 'order-a')));
     await assertFails(getDoc(doc(otherMerchant, 'orders', 'order-a')));
@@ -212,6 +222,58 @@ async function main() {
     );
     await assertSucceeds(getDoc(doc(cashier, 'products', 'prod-1')));
     await assertFails(getDoc(doc(otherMerchant, 'products', 'prod-1')));
+
+    await assertSucceeds(
+      getDoc(doc(cashier, 'merchants', 'merchant-a', 'branch_runtime', 'branch-a')),
+    );
+    await assertSucceeds(
+      setDoc(doc(cashier, 'merchants', 'merchant-a', 'branch_runtime', 'branch-a'), {
+        merchantId: 'merchant-a',
+        branchId: 'branch-a',
+        openShiftId: 'shift-new',
+        updatedAt: new Date(),
+      }),
+    );
+    await assertSucceeds(
+      setDoc(doc(cashier, 'shifts', 'shift-new'), {
+        id: 'shift-new',
+        merchantId: 'merchant-a',
+        branchId: 'branch-a',
+        employeeId: 'cashier-a',
+        employeeName: 'Cashier A',
+        startTime: new Date(),
+        startCash: 100,
+        status: 'open',
+      }),
+    );
+    await assertFails(
+      setDoc(doc(noShiftCashier, 'shifts', 'shift-no-permission'), {
+        id: 'shift-no-permission',
+        merchantId: 'merchant-a',
+        branchId: 'branch-a',
+        employeeId: 'cashier-no-shift',
+        employeeName: 'No Shift',
+        startTime: new Date(),
+        startCash: 100,
+        status: 'open',
+      }),
+    );
+    await assertFails(
+      setDoc(doc(noShiftCashier, 'merchants', 'merchant-a', 'branch_runtime', 'branch-a'), {
+        merchantId: 'merchant-a',
+        branchId: 'branch-a',
+        openShiftId: 'shift-no-permission',
+        updatedAt: new Date(),
+      }),
+    );
+    await assertFails(
+      setDoc(doc(cashier, 'merchants', 'merchant-a', 'branch_runtime', 'branch-b'), {
+        merchantId: 'merchant-a',
+        branchId: 'branch-b',
+        openShiftId: 'shift-wrong-branch',
+        updatedAt: new Date(),
+      }),
+    );
 
     await assertFails(
       updateDoc(

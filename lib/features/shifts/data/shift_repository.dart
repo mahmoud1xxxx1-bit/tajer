@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/providers/effective_merchant.dart';
+import '../../authentication/application/access_policy.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../branches/presentation/branch_context.dart';
 import '../domain/shift.dart';
@@ -180,6 +181,7 @@ Stream<List<Shift>> shiftsStream(ShiftsStreamRef ref) {
 
   final branchId = ref.watch(selectedBranchIdProvider);
   if (branchId.isEmpty) return const Stream.empty();
+  final policy = ref.watch(accessPolicyProvider);
   final repository = ref.watch(shiftRepositoryProvider);
   return repository._firestore
       .collection('shifts')
@@ -188,8 +190,17 @@ Stream<List<Shift>> shiftsStream(ShiftsStreamRef ref) {
       .orderBy('startTime', descending: true)
       .limit(100)
       .snapshots()
-      .map((snapshot) => snapshot.docs
-          .map((doc) => Shift.fromJson(doc.data()))
-          .where((shift) => shift.branchId == branchId)
-          .toList());
+      .map((snapshot) {
+    var shifts = snapshot.docs
+        .map((doc) => Shift.fromJson(doc.data()))
+        .where((shift) => shift.branchId == branchId)
+        .toList();
+    if (!policy.canViewShiftArchive && policy.canViewOwnShiftHistory) {
+      shifts = shifts.where((shift) => shift.employeeId == appUser.id).toList();
+    }
+    if (!policy.canViewShiftArchive && !policy.canViewOwnShiftHistory) {
+      shifts = const <Shift>[];
+    }
+    return shifts;
+  });
 }

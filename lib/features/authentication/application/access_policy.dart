@@ -53,7 +53,9 @@ class AccessPolicy {
   bool get canAccessBackupSecurity => isOwnerLike;
   bool get canAccessBranding => isOwnerLike;
   bool get canCloseShift => hasAssignedBranch;
-  bool get canViewShiftArchive => isOwnerLike || canViewReports;
+  bool get canViewOwnShiftHistory => hasAssignedBranch;
+  bool get canViewShiftArchive =>
+      isOwnerLike || (hasAssignedBranch && _perm('can_view_shift_archive'));
 
   bool allowsRoutePermission(String permission) {
     switch (permission) {
@@ -73,6 +75,10 @@ class AccessPolicy {
         return canViewCosts;
       case 'can_close_shift':
         return canCloseShift;
+      case 'can_view_shift_archive':
+        return canViewShiftArchive || canViewOwnShiftHistory;
+      case 'my_permissions':
+        return isEmployee && hasAssignedBranch;
       default:
         return hasAssignedBranch && _perm(permission);
     }

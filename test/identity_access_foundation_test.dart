@@ -138,12 +138,53 @@ void main() {
       expect(revoked.canManageExpenses, isFalse);
       expect(granted.canManageExpenses, isTrue);
     });
+
+    test('reports permission does not grant broad shift archive', () {
+      final user = _appUser(
+        id: 'employee-a',
+        role: 'employee',
+        merchantId: 'merchant-a',
+        permissions: {
+          'can_view_reports': true,
+        },
+        assignedBranchIds: const ['branch-a'],
+      );
+      final policy = AccessPolicy(_identity(
+        user: user,
+        effectiveMerchantId: 'merchant-a',
+        activeBranchId: 'branch-a',
+      ));
+
+      expect(policy.canViewReports, isTrue);
+      expect(policy.canViewOwnShiftHistory, isTrue);
+      expect(policy.canViewShiftArchive, isFalse);
+    });
+
+    test('explicit archive permission grants scoped shift archive', () {
+      final user = _appUser(
+        id: 'employee-a',
+        role: 'employee',
+        merchantId: 'merchant-a',
+        permissions: {
+          'can_view_shift_archive': true,
+        },
+        assignedBranchIds: const ['branch-a'],
+      );
+      final policy = AccessPolicy(_identity(
+        user: user,
+        effectiveMerchantId: 'merchant-a',
+        activeBranchId: 'branch-a',
+      ));
+
+      expect(policy.canViewShiftArchive, isTrue);
+    });
   });
 
   group('identity architecture source contracts', () {
     late String drawer;
     late String router;
     late String dashboard;
+    late String myPermissions;
     late Map<String, dynamic> indexes;
     late String firebaseJson;
 
@@ -152,6 +193,9 @@ void main() {
       router = File('lib/routing/app_router.dart').readAsStringSync();
       dashboard =
           File('lib/features/dashboard/presentation/dashboard_screen.dart')
+              .readAsStringSync();
+      myPermissions =
+          File('lib/features/employees/presentation/my_permissions_screen.dart')
               .readAsStringSync();
       indexes = jsonDecode(File('firestore.indexes.json').readAsStringSync())
           as Map<String, dynamic>;
@@ -171,6 +215,11 @@ void main() {
       expect(router, contains('policy.allowsRoutePermission'));
       expect(router, contains('policy.isOwnerLike'));
       expect(router, contains('sessionIdentityReadyProvider'));
+      expect(router, contains("permission: 'can_view_shift_archive'"));
+      expect(
+          router,
+          isNot(contains(
+              "permission: 'can_view_reports', child: ShiftsArchiveScreen")));
     });
 
     test('dashboard waits for session identity and uses access policy', () {
@@ -184,8 +233,15 @@ void main() {
     test('store identity completion banner is owner policy gated', () {
       expect(dashboard, contains('completeStoreBrandingAlert'));
       expect(dashboard, contains('policy.canAccessBranding &&'));
-      expect(dashboard,
-          contains('(storeProfile?.storeName.isEmpty ?? true)'));
+      expect(dashboard, contains('(storeProfile?.storeName.isEmpty ?? true)'));
+    });
+
+    test('my permissions view is read-only and hides internal keys', () {
+      expect(myPermissions, contains('My Permissions'));
+      expect(myPermissions, contains('EmployeePermissionPresentationCatalog'));
+      expect(myPermissions, contains('identity.permissions[item.key] == true'));
+      expect(myPermissions, isNot(contains('can_create_orders')));
+      expect(myPermissions, isNot(contains('SwitchListTile')));
     });
 
     test('audit and changed compound query indexes are declared', () {

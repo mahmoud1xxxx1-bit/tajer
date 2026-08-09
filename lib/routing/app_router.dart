@@ -21,6 +21,7 @@ import '../features/employees/presentation/employees_screen.dart';
 import '../features/employees/presentation/employee_branch_assignments_screen.dart';
 import '../features/employees/presentation/employee_management_hub_screen.dart';
 import '../features/employees/presentation/employee_permissions_screen.dart';
+import '../features/employees/presentation/my_permissions_screen.dart';
 import '../features/subscription/presentation/subscription_screen.dart';
 import '../features/settings/presentation/profile_screen.dart';
 import '../features/settings/presentation/audit_log_screen.dart';
@@ -113,6 +114,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           builder: (context, state) => const _RouteAccess(
               ownerOnly: true, child: EmployeePermissionsScreen())),
       GoRoute(
+          path: '/my_permissions',
+          builder: (context, state) => const _RouteAccess(
+              permission: 'my_permissions', child: MyPermissionsScreen())),
+      GoRoute(
           path: '/profile',
           builder: (context, state) =>
               const _RouteAccess(ownerOnly: true, child: ProfileScreen())),
@@ -138,7 +143,8 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
           path: '/shifts_archive',
           builder: (context, state) => const _RouteAccess(
-              permission: 'can_view_reports', child: ShiftsArchiveScreen())),
+              permission: 'can_view_shift_archive',
+              child: ShiftsArchiveScreen())),
       GoRoute(
           path: '/raw_materials',
           builder: (context, state) =>

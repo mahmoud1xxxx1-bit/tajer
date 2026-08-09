@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tajer/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
+import '../../authentication/application/access_policy.dart';
 import '../data/shift_repository.dart';
 import '../domain/shift.dart';
 import '../../../core/theme/glass_card.dart';
@@ -14,18 +14,31 @@ class ShiftsArchiveScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final policy = ref.watch(accessPolicyProvider);
     final shiftsAsync = ref.watch(shiftsStreamProvider);
     final branchesAsync = ref.watch(branchesStreamProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isAr ? 'أرشيف الورديات' : 'Shifts Archive',
+        title: Text(
+            policy.canViewShiftArchive
+                ? (isAr
+                    ? '\u0623\u0631\u0634\u064a\u0641 \u0627\u0644\u0648\u0631\u062f\u064a\u0627\u062a'
+                    : 'Shifts Archive')
+                : (isAr
+                    ? '\u0648\u0631\u062f\u064a\u0627\u062a\u064a'
+                    : 'My Shifts'),
             style: const TextStyle(
                 fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
       ),
       body: shiftsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Error: $error')),
+        error: (error, stack) => Center(
+          child: Text(
+            isAr ? 'تعذر تحميل الورديات.' : 'Could not load shifts.',
+            style: const TextStyle(fontFamily: 'Tajawal'),
+          ),
+        ),
         data: (shifts) {
           final branchNames = {
             for (final branch in branchesAsync.valueOrNull ?? const [])

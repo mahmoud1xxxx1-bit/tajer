@@ -212,7 +212,7 @@ service cloud.firestore {
     }
     match /shifts/{shiftId} {
       allow read: if resource != null && hasAccess(resource.data.get('merchantId', '')) && hasDataBranchAccess(resource.data.get('merchantId', ''), resource.data);
-      allow create: if hasAccess(request.resource.data.get('merchantId', '')) && hasDataBranchAccess(request.resource.data.get('merchantId', ''), request.resource.data);
+      allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_create_orders') && hasDataBranchAccess(request.resource.data.get('merchantId', ''), request.resource.data);
       allow update: if resource != null && hasAccess(resource.data.get('merchantId', '')) && hasDataBranchAccess(resource.data.get('merchantId', ''), resource.data);
       allow delete: if resource == null || isOwner(resource.data.get('merchantId', ''));
     }
@@ -307,6 +307,15 @@ service cloud.firestore {
         allow read: if resource != null && hasAccess(merchantId) && hasDataBranchAccess(merchantId, resource.data);
         allow create: if isCustomerDebtPaymentCreate(merchantId);
         allow update, delete: if isOwner(merchantId);
+      }
+      match /branch_runtime/{branchId} {
+        allow read: if hasBranchAccess(merchantId, branchId) &&
+          (isOwner(merchantId) || hasPermission(merchantId, 'can_create_orders'));
+        allow create, update: if request.resource.data.get('merchantId', '') == merchantId &&
+          request.resource.data.get('branchId', branchId) == branchId &&
+          hasBranchAccess(merchantId, branchId) &&
+          (isOwner(merchantId) || hasPermission(merchantId, 'can_create_orders'));
+        allow delete: if isOwner(merchantId);
       }
       match /counters/{counterId} { allow read, write: if hasAccess(merchantId); }
       match /employee_actions/{actionId} {

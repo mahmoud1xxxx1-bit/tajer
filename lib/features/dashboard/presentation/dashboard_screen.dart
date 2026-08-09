@@ -500,7 +500,8 @@ class DashboardHome extends ConsumerWidget {
                       ),
                   ],
                 ),
-                if (policy.canViewShiftArchive) ...[
+                if (policy.canViewShiftArchive ||
+                    policy.canViewOwnShiftHistory) ...[
                   SizedBox(height: 16),
                   Wrap(
                     alignment: WrapAlignment.spaceEvenly,

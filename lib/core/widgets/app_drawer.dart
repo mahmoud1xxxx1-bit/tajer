@@ -241,6 +241,20 @@ class AppDrawer extends ConsumerWidget {
                 context.push('/end_shift');
               },
             ),
+          if (policy.isEmployee && policy.hasAssignedBranch)
+            ListTile(
+              leading: const Icon(Icons.verified_user_outlined),
+              title: Text(
+                Localizations.localeOf(context).languageCode == 'ar'
+                    ? 'صلاحياتي'
+                    : 'My Permissions',
+                style: const TextStyle(fontFamily: 'Tajawal'),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/my_permissions');
+              },
+            ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.logout, color: Colors.red),

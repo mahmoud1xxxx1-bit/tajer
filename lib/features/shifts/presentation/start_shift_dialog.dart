@@ -3,10 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../domain/shift.dart';
 import '../data/shift_repository.dart';
+import '../../authentication/application/access_policy.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../branches/presentation/branch_context.dart';
+import '../../../core/services/app_error_mapper.dart';
 import '../../../core/services/activity_logger.dart';
 import '../../../core/providers/effective_merchant.dart';
+import '../../../core/widgets/tajer_message.dart';
 
 class StartShiftDialog extends ConsumerStatefulWidget {
   const StartShiftDialog({super.key});
@@ -29,6 +32,15 @@ class _StartShiftDialogState extends ConsumerState<StartShiftDialog> {
     final cash = double.tryParse(_cashController.text) ?? 0.0;
     final user = ref.read(appUserProvider).value;
     if (user == null) return;
+    final policy = ref.read(accessPolicyProvider);
+    if (!policy.canCreateOrders) {
+      await TajerMessage.show(
+        context,
+        AppErrorMapper.fromError(Exception('permission-denied'),
+            domain: 'shift'),
+      );
+      return;
+    }
 
     setState(() => _isLoading = true);
     try {
@@ -52,10 +64,10 @@ class _StartShiftDialogState extends ConsumerState<StartShiftDialog> {
       );
     } catch (e) {
       if (mounted) {
-        final isAr = Localizations.localeOf(context).languageCode == 'ar';
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(isAr ? 'خطأ: $e' : 'Error: $e',
-                style: const TextStyle(fontFamily: 'Tajawal'))));
+        await TajerMessage.show(
+          context,
+          AppErrorMapper.fromError(e, domain: 'shift'),
+        );
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

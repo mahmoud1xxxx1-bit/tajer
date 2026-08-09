@@ -14,6 +14,7 @@ abstract final class EmployeePermissionKeys {
   static const receivePayments = 'can_receive_payments';
   static const manageExpenses = 'can_manage_expenses';
   static const viewReports = 'can_view_reports';
+  static const viewShiftArchive = 'can_view_shift_archive';
   static const viewAllOrders = 'can_view_all_orders';
 
   static const all = <String>{
@@ -27,6 +28,7 @@ abstract final class EmployeePermissionKeys {
     receivePayments,
     manageExpenses,
     viewReports,
+    viewShiftArchive,
     viewAllOrders,
   };
 }
@@ -69,6 +71,11 @@ abstract final class EmployeePermissionCatalog {
     ),
     EmployeePermissionDefinition(
       key: EmployeePermissionKeys.viewReports,
+      risk: EmployeePermissionRisk.sensitive,
+      defaultEnabled: false,
+    ),
+    EmployeePermissionDefinition(
+      key: EmployeePermissionKeys.viewShiftArchive,
       risk: EmployeePermissionRisk.sensitive,
       defaultEnabled: false,
     ),
