@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:tajer/l10n/app_localizations.dart';
@@ -6,7 +5,6 @@ import '../../products/presentation/products_screen.dart';
 import '../../customers/presentation/customers_screen.dart';
 import '../../orders/presentation/orders_screen.dart';
 import '../../orders/presentation/pos_screen.dart';
-import '../../inventory_log/presentation/inventory_logs_screen.dart';
 import '../../reports/presentation/reports_screen.dart';
 import '../../orders/data/order_repository.dart';
 import '../../products/data/product_repository.dart';
@@ -16,11 +14,12 @@ import '../../../core/providers/store_profile_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../authentication/data/auth_repository.dart';
-import '../../authentication/domain/app_user.dart';
 import '../../../core/services/app_review_service.dart';
 import '../../../core/widgets/app_drawer.dart';
 import '../../branches/presentation/active_branch_selector.dart';
+import '../../branches/presentation/branch_context.dart';
 import 'setup_checklist_card.dart';
+
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
@@ -43,22 +42,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final appUser = ref.watch(appUserProvider).value;
-    final themeMode = ref.watch(themeProvider); // Force rebuild on theme change
-    
-    final bool canManageCustomers = appUser?.hasPermission('can_manage_customers') ?? false;
-    final bool canViewReports = appUser?.hasPermission('can_view_reports') ?? false;
-    final bool canCreateOrders = appUser?.hasPermission('can_create_orders') ?? false;
+    final appUserState = ref.watch(appUserProvider);
+    final branchContext = ref.watch(branchContextProvider);
+    ref.watch(themeProvider); // Force rebuild on theme change
+
+    if (appUserState.isLoading || appUser == null || !branchContext.isReady) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final bool canManageCustomers =
+        appUser.hasPermission('can_manage_customers');
+    final bool canViewReports = appUser.hasPermission('can_view_reports');
+    final bool canCreateOrders = appUser.hasPermission('can_create_orders');
 
     final List<Widget> screens = [
       DashboardHome(
-        canManageCustomers: canManageCustomers,
-        canViewReports: canViewReports,
-        canCreateOrders: canCreateOrders,
-        onNavigateToTab: (index) {
-        setState(() {
-          _currentIndex = index;
-        });
-      }),
+          canManageCustomers: canManageCustomers,
+          canViewReports: canViewReports,
+          canCreateOrders: canCreateOrders,
+          onNavigateToTab: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          }),
       OrdersScreen(), // Removed const to ensure rebuild
       ProductsScreen(),
       if (canManageCustomers) CustomersScreen(),
@@ -72,16 +80,24 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         final shouldPop = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text(l10n.confirmExit, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.indigo.shade900)),
-            content: Text(l10n.confirmExitMessage, style: TextStyle(fontFamily: 'Tajawal')),
+            title: Text(l10n.confirmExit,
+                style: TextStyle(
+                    fontFamily: 'Tajawal',
+                    fontWeight: FontWeight.bold,
+                    color: Colors.indigo.shade900)),
+            content: Text(l10n.confirmExitMessage,
+                style: TextStyle(fontFamily: 'Tajawal')),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: Text(l10n.cancel, style: TextStyle(fontFamily: 'Tajawal')),
+                child:
+                    Text(l10n.cancel, style: TextStyle(fontFamily: 'Tajawal')),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red.shade600, foregroundColor: Colors.white),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red.shade600,
+                    foregroundColor: Colors.white),
                 child: Text(l10n.exit, style: TextStyle(fontFamily: 'Tajawal')),
               ),
             ],
@@ -96,56 +112,60 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           index: _currentIndex,
           children: screens,
         ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
-          FocusManager.instance.primaryFocus?.unfocus();
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        destinations: [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: l10n.dashboard,
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.shopping_cart_outlined),
-            selectedIcon: Icon(Icons.shopping_cart),
-            label: l10n.orders,
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
-            label: l10n.products,
-          ),
-          if (canManageCustomers)
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: _currentIndex,
+          onDestinationSelected: (index) {
+            FocusManager.instance.primaryFocus?.unfocus();
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          destinations: [
             NavigationDestination(
-              icon: Icon(Icons.people_outline),
-              selectedIcon: Icon(Icons.people),
-              label: l10n.customers,
+              icon: Icon(Icons.dashboard_outlined),
+              selectedIcon: Icon(Icons.dashboard),
+              label: l10n.dashboard,
             ),
-          if (canViewReports)
             NavigationDestination(
-              icon: Icon(Icons.bar_chart_outlined),
-              selectedIcon: Icon(Icons.bar_chart),
-              label: l10n.reports,
+              icon: Icon(Icons.shopping_cart_outlined),
+              selectedIcon: Icon(Icons.shopping_cart),
+              label: l10n.orders,
             ),
-        ],
-      ),
+            NavigationDestination(
+              icon: Icon(Icons.inventory_2_outlined),
+              selectedIcon: Icon(Icons.inventory_2),
+              label: l10n.products,
+            ),
+            if (canManageCustomers)
+              NavigationDestination(
+                icon: Icon(Icons.people_outline),
+                selectedIcon: Icon(Icons.people),
+                label: l10n.customers,
+              ),
+            if (canViewReports)
+              NavigationDestination(
+                icon: Icon(Icons.bar_chart_outlined),
+                selectedIcon: Icon(Icons.bar_chart),
+                label: l10n.reports,
+              ),
+          ],
+        ),
       ),
     );
   }
 }
-
 
 class DashboardHome extends ConsumerWidget {
   final void Function(int) onNavigateToTab;
   final bool canManageCustomers;
   final bool canViewReports;
   final bool canCreateOrders;
-  const DashboardHome({super.key, required this.onNavigateToTab, required this.canManageCustomers, required this.canViewReports, required this.canCreateOrders});
+  const DashboardHome(
+      {super.key,
+      required this.onNavigateToTab,
+      required this.canManageCustomers,
+      required this.canViewReports,
+      required this.canCreateOrders});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -168,19 +188,25 @@ class DashboardHome extends ConsumerWidget {
             onPressed: () => context.push('/branches'),
           ),
           if (appUser?.role != 'employee')
-          IconButton(
-            icon: Icon(Icons.settings),
-            onPressed: () {
-              context.push('/settings');
-            },
-          ),
+            IconButton(
+              icon: Icon(Icons.settings),
+              onPressed: () {
+                context.push('/settings');
+              },
+            ),
         ],
       ),
       drawer: const AppDrawer(),
       body: ordersAsync.when(
         data: (orders) {
-          final totalSales = orders.fold<double>(0, (sum, order) => sum + order.total);
-          final ordersCount = orders.length;
+          final liveOrders = orders
+              .where((order) =>
+                  order.status != 'cancelled' &&
+                  order.status != 'debt_repayment')
+              .toList();
+          final totalSales =
+              liveOrders.fold<double>(0, (sum, order) => sum + order.total);
+          final ordersCount = liveOrders.length;
 
           // Low stock calculation and widget
           Widget? lowStockWidget;
@@ -200,14 +226,20 @@ class DashboardHome extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       l10n.errorFetchingInventory,
-                      style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                      style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Tajawal'),
                     ),
                   ),
                 ],
               ),
             );
           } else {
-            final lowStockProducts = productsAsync.value?.where((p) => !p.isManufacturedOnDemand && p.quantity <= 5).toList() ?? [];
+            final lowStockProducts = productsAsync.value
+                    ?.where((p) => !p.isManufacturedOnDemand && p.quantity <= 5)
+                    .toList() ??
+                [];
             if (lowStockProducts.isNotEmpty) {
               lowStockWidget = Container(
                 margin: EdgeInsets.only(bottom: 16),
@@ -224,12 +256,17 @@ class DashboardHome extends ConsumerWidget {
                     Expanded(
                       child: Text(
                         l10n.lowStockAlert(lowStockProducts.length.toString()),
-                        style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                        style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'Tajawal'),
                       ),
                     ),
                     TextButton(
                       onPressed: () => onNavigateToTab(2),
-                      child: Text(AppLocalizations.of(context)!.text63, style: TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                      child: Text(AppLocalizations.of(context)!.text63,
+                          style: TextStyle(
+                              color: Colors.red, fontFamily: 'Tajawal')),
                     ),
                   ],
                 ),
@@ -275,14 +312,21 @@ class DashboardHome extends ConsumerWidget {
                         Expanded(
                           child: Text(
                             l10n.completeStoreBrandingAlert,
-                            style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                            style: TextStyle(
+                                color: Colors.orange,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Tajawal'),
                           ),
                         ),
                         TextButton(
                           onPressed: () {
                             context.push('/store_branding');
                           },
-                          child: Text(l10n.completeNow, style: TextStyle(color: Colors.orange, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                          child: Text(l10n.completeNow,
+                              style: TextStyle(
+                                  color: Colors.orange,
+                                  fontFamily: 'Tajawal',
+                                  fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
@@ -292,7 +336,10 @@ class DashboardHome extends ConsumerWidget {
                 if (lowStockWidget != null) lowStockWidget,
                 Text(
                   l10n.reports,
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Tajawal'),
                 ),
                 SizedBox(height: 16),
                 Row(
@@ -317,11 +364,12 @@ class DashboardHome extends ConsumerWidget {
                   ],
                 ),
                 SizedBox(height: 24),
-
-
                 Text(
                   l10n.quickActions,
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Tajawal'),
                 ),
                 SizedBox(height: 16),
                 Wrap(
@@ -337,7 +385,8 @@ class DashboardHome extends ConsumerWidget {
                         onTap: () async {
                           final shouldGoToOrders = await Navigator.push<bool>(
                             context,
-                            MaterialPageRoute(builder: (context) => const PosScreen()),
+                            MaterialPageRoute(
+                                builder: (context) => const PosScreen()),
                           );
                           if (shouldGoToOrders == true) {
                             onNavigateToTab(1); // 1 is the index of Orders tab
@@ -373,7 +422,10 @@ class DashboardHome extends ConsumerWidget {
                 SizedBox(height: 24),
                 Text(
                   l10n.managementAndInventory,
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Tajawal'),
                 ),
                 SizedBox(height: 16),
                 Wrap(
@@ -424,13 +476,15 @@ class DashboardHome extends ConsumerWidget {
                     children: [
                       _QuickAction(
                         icon: Icons.archive,
-                        label: Localizations.localeOf(context).languageCode == 'ar' ? 'أرشيف الورديات' : 'Shifts Archive',
+                        label:
+                            Localizations.localeOf(context).languageCode == 'ar'
+                                ? 'أرشيف الورديات'
+                                : 'Shifts Archive',
                         color: Colors.brown,
                         onTap: () {
                           context.push('/shifts_archive');
                         },
                       ),
-
                     ],
                   ),
                 ],
@@ -477,13 +531,19 @@ class _StatCard extends StatelessWidget {
               child: Icon(icon, size: 28, color: color),
             ),
             SizedBox(height: 12),
-            Text(title, style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey, fontSize: 14), maxLines: 1, overflow: TextOverflow.ellipsis),
+            Text(title,
+                style: TextStyle(
+                    fontFamily: 'Tajawal', color: Colors.grey, fontSize: 14),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis),
             SizedBox(height: 4),
             Expanded(
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerRight,
-                child: Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                child: Text(value,
+                    style:
+                        TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -518,7 +578,9 @@ class _QuickAction extends StatelessWidget {
             child: Icon(icon, color: color, size: 30),
           ),
           SizedBox(height: 8),
-          Text(label, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+          Text(label,
+              style: TextStyle(
+                  fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         ],
       ),
     );

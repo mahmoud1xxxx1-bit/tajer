@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../../core/providers/effective_merchant.dart';
+import '../../branches/presentation/branch_context.dart';
 import '../data/customer_repository.dart';
 import '../domain/customer.dart';
 import '../../../core/services/activity_logger.dart';
@@ -56,12 +57,14 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
         throw Exception(AppLocalizations.of(context)!.text47);
       final isEditing = widget.customerToEdit != null;
       final isAr = Localizations.localeOf(context).languageCode == 'ar';
+      final branchId = ref.read(selectedBranchIdProvider);
 
       final newCustomer = Customer(
         id: isEditing ? widget.customerToEdit!.id : Uuid().v4(),
         merchantId: isEditing
             ? widget.customerToEdit!.merchantId
             : currentEffectiveMerchantId(appUser),
+        branchId: isEditing ? widget.customerToEdit!.branchId : branchId,
         name: _nameController.text.trim(),
         phone: _phoneController.text.trim(),
         createdAt:

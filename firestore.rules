@@ -63,6 +63,15 @@ service cloud.firestore {
     function isCustomerDebtAccountingUpdate(merchantId) {
       return hasPermission(merchantId, 'can_receive_payments') && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalDebt','updatedAt']);
     }
+    function isCustomerDebtPaymentCreate(merchantId) {
+      let customerPath = /databases/$(database)/documents/customers/$(request.resource.data.get('customerId', ''));
+      let customerDoc = get(customerPath);
+      return customerDoc != null &&
+        customerDoc.data.get('merchantId', '') == merchantId &&
+        customerDoc.data.get('branchId', 'main') == request.resource.data.get('branchId', 'main') &&
+        hasPermission(merchantId, 'can_receive_payments') &&
+        hasDataBranchAccess(merchantId, request.resource.data);
+    }
     function isProductMasterCreate() {
       return request.resource.data.get('costPrice', null) == null &&
         request.resource.data.get('quantity', 0) == 0;
@@ -301,7 +310,7 @@ service cloud.firestore {
       }
       match /customer_debt_payments/{paymentId} {
         allow read: if resource != null && hasAccess(merchantId) && hasDataBranchAccess(merchantId, resource.data);
-        allow create: if hasPermission(merchantId, 'can_receive_payments') && hasDataBranchAccess(merchantId, request.resource.data);
+        allow create: if isCustomerDebtPaymentCreate(merchantId);
         allow update, delete: if isOwner(merchantId);
       }
       match /counters/{counterId} { allow read, write: if hasAccess(merchantId); }

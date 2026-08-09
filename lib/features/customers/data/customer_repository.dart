@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../branches/presentation/branch_context.dart';
 import '../../orders/domain/order.dart';
 import '../domain/customer.dart';
 
@@ -21,6 +22,10 @@ class CustomerRepository {
             final data = snapshot.data()!;
             data['id'] = snapshot.id;
             data['merchantId'] = data['merchantId']?.toString() ?? '';
+            data['branchId'] =
+                data['branchId']?.toString().trim().isNotEmpty == true
+                    ? data['branchId'].toString()
+                    : 'main';
             data['name'] = data['name']?.toString() ?? '';
             data['phone'] = data['phone']?.toString() ?? '';
             data['totalPurchases'] = (data['totalPurchases'] ?? 0.0).toDouble();
@@ -49,6 +54,7 @@ class CustomerRepository {
   Future<List<AppOrder>> getCustomerOrdersAcrossBranches({
     required String merchantId,
     required String customerId,
+    String? branchId,
   }) async {
     final snapshot = await _firestore
         .collection('orders')
@@ -56,39 +62,42 @@ class CustomerRepository {
         .where('customerId', isEqualTo: customerId)
         .get(const GetOptions(source: Source.serverAndCache));
 
-    final orders = snapshot.docs.map((doc) {
-      final data = Map<String, dynamic>.from(doc.data());
-      data['id'] = doc.id;
-      data['merchantId'] = data['merchantId']?.toString() ?? merchantId;
-      data['customerId'] = data['customerId']?.toString() ?? customerId;
-      data['customerName'] = data['customerName']?.toString() ?? '';
-      data['total'] = (data['total'] as num?)?.toDouble() ?? 0.0;
-      data['paidAmount'] = (data['paidAmount'] as num?)?.toDouble() ?? 0.0;
-      data['isCredit'] = data['isCredit'] as bool? ?? false;
-      data['status'] = data['status']?.toString() ?? 'pending';
+    final orders = snapshot.docs
+        .map((doc) {
+          final data = Map<String, dynamic>.from(doc.data());
+          data['id'] = doc.id;
+          data['merchantId'] = data['merchantId']?.toString() ?? merchantId;
+          data['customerId'] = data['customerId']?.toString() ?? customerId;
+          data['customerName'] = data['customerName']?.toString() ?? '';
+          data['total'] = (data['total'] as num?)?.toDouble() ?? 0.0;
+          data['paidAmount'] = (data['paidAmount'] as num?)?.toDouble() ?? 0.0;
+          data['isCredit'] = data['isCredit'] as bool? ?? false;
+          data['status'] = data['status']?.toString() ?? 'pending';
 
-      if (data['items'] == null && data['productId'] != null) {
-        data['items'] = [
-          {
-            'productId': data['productId']?.toString() ?? '',
-            'productName': data['productName']?.toString() ?? '',
-            'quantity': (data['quantity'] as num?)?.toInt() ?? 0,
-            'price': (data['price'] as num?)?.toDouble() ?? 0.0,
-            'total': (data['total'] as num?)?.toDouble() ?? 0.0,
+          if (data['items'] == null && data['productId'] != null) {
+            data['items'] = [
+              {
+                'productId': data['productId']?.toString() ?? '',
+                'productName': data['productName']?.toString() ?? '',
+                'quantity': (data['quantity'] as num?)?.toInt() ?? 0,
+                'price': (data['price'] as num?)?.toDouble() ?? 0.0,
+                'total': (data['total'] as num?)?.toDouble() ?? 0.0,
+              }
+            ];
+          } else if (data['items'] != null) {
+            data['items'] = List<Map<String, dynamic>>.from(
+              (data['items'] as List).map(
+                (item) => Map<String, dynamic>.from(item as Map),
+              ),
+            );
+          } else {
+            data['items'] = <Map<String, dynamic>>[];
           }
-        ];
-      } else if (data['items'] != null) {
-        data['items'] = List<Map<String, dynamic>>.from(
-          (data['items'] as List).map(
-            (item) => Map<String, dynamic>.from(item as Map),
-          ),
-        );
-      } else {
-        data['items'] = <Map<String, dynamic>>[];
-      }
 
-      return AppOrder.fromJson(data);
-    }).toList();
+          return AppOrder.fromJson(data);
+        })
+        .where((order) => branchId == null || order.branchId == branchId)
+        .toList();
 
     orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return orders;
@@ -108,6 +117,7 @@ class CustomerRepository {
       }
 
       final merchantId = data?['merchantId'] as String?;
+      final branchId = data?['branchId']?.toString() ?? 'main';
 
       final unpaidOrders = await _firestore
           .collection('orders')
@@ -119,8 +129,13 @@ class CustomerRepository {
         final orderData = doc.data();
         final paymentMethod = orderData['paymentMethod'] as String?;
         final status = orderData['status'] as String?;
+        final orderBranchId = orderData['branchId']?.toString() ?? 'main';
 
-        if (paymentMethod != 'credit' || status == 'cancelled') return false;
+        if (paymentMethod != 'credit' ||
+            status == 'cancelled' ||
+            orderBranchId != branchId) {
+          return false;
+        }
 
         final total = (orderData['total'] as num?)?.toDouble() ?? 0.0;
         final paidAmount = (orderData['paidAmount'] as num?)?.toDouble() ?? 0.0;
@@ -166,12 +181,16 @@ Stream<List<Customer>> customersStream(CustomersStreamRef ref) {
   if (appUser == null) return const Stream.empty();
 
   final repository = ref.watch(customerRepositoryProvider);
+  final branchId = ref.watch(selectedBranchIdProvider);
   return repository
       .queryCustomers(currentEffectiveMerchantId(appUser))
       .snapshots()
       .map(
     (snapshot) {
-      final customers = snapshot.docs.map((doc) => doc.data()).toList();
+      final customers = snapshot.docs
+          .map((doc) => doc.data())
+          .where((customer) => customer.branchId == branchId)
+          .toList();
       customers.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return customers;
     },

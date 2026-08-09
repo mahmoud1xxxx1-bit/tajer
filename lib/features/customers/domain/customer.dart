@@ -4,6 +4,7 @@ import '../../../core/utils/date_parser.dart';
 class Customer {
   final String id;
   final String merchantId;
+  final String branchId;
   final String name;
   final String phone;
   final double totalPurchases;
@@ -18,6 +19,7 @@ class Customer {
   const Customer({
     required this.id,
     required this.merchantId,
+    this.branchId = 'main',
     required this.name,
     required this.phone,
     this.totalPurchases = 0.0,
@@ -33,6 +35,7 @@ class Customer {
   Customer copyWith({
     String? id,
     String? merchantId,
+    String? branchId,
     String? name,
     String? phone,
     double? totalPurchases,
@@ -47,6 +50,7 @@ class Customer {
     return Customer(
       id: id ?? this.id,
       merchantId: merchantId ?? this.merchantId,
+      branchId: branchId ?? this.branchId,
       name: name ?? this.name,
       phone: phone ?? this.phone,
       totalPurchases: totalPurchases ?? this.totalPurchases,
@@ -64,6 +68,9 @@ class Customer {
     return Customer(
       id: json['id'] as String? ?? '',
       merchantId: json['merchantId'] as String? ?? '',
+      branchId: json['branchId']?.toString().trim().isEmpty == false
+          ? json['branchId'].toString()
+          : 'main',
       name: json['name'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
       totalPurchases: (json['totalPurchases'] as num?)?.toDouble() ?? 0.0,
@@ -85,12 +92,15 @@ class Customer {
     return {
       'id': id,
       'merchantId': merchantId,
+      'branchId': branchId,
       'name': name,
       'phone': phone,
       'totalPurchases': totalPurchases,
       'orderCount': orderCount,
       'totalDebt': totalDebt,
-      'lastPurchaseDate': lastPurchaseDate != null ? Timestamp.fromDate(lastPurchaseDate!) : null,
+      'lastPurchaseDate': lastPurchaseDate != null
+          ? Timestamp.fromDate(lastPurchaseDate!)
+          : null,
       'createdAt': Timestamp.fromDate(createdAt),
       'creatorName': creatorName,
       'folderName': folderName,

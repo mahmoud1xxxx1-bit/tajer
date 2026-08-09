@@ -22,6 +22,7 @@ import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'package:excel/excel.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../branches/presentation/active_branch_selector.dart';
 
 class CustomersScreen extends ConsumerStatefulWidget {
   const CustomersScreen({super.key});
@@ -92,211 +93,232 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
             ),
         ],
       ),
-      body: customersAsyncValue.when(
-        data: (customers) {
-          var filtered = customers.where((c) {
-            final matchesSearch =
-                c.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-                    c.phone.contains(_searchQuery);
-            final matchesDebt = !_filterHasDebt || c.totalDebt > 0;
-            return matchesSearch && matchesDebt;
-          }).toList();
+      body: Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: ActiveBranchSelector(compact: true),
+          ),
+          Expanded(
+            child: customersAsyncValue.when(
+              data: (customers) {
+                var filtered = customers.where((c) {
+                  final matchesSearch = c.name
+                          .toLowerCase()
+                          .contains(_searchQuery.toLowerCase()) ||
+                      c.phone.contains(_searchQuery);
+                  final matchesDebt = !_filterHasDebt || c.totalDebt > 0;
+                  return matchesSearch && matchesDebt;
+                }).toList();
 
-          if (_sortOption == 'debt') {
-            filtered.sort((a, b) => b.totalDebt.compareTo(a.totalDebt));
-          } else if (_sortOption == 'alpha') {
-            filtered.sort((a, b) => a.name.compareTo(b.name));
-          } else {
-            filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-          }
+                if (_sortOption == 'debt') {
+                  filtered.sort((a, b) => b.totalDebt.compareTo(a.totalDebt));
+                } else if (_sortOption == 'alpha') {
+                  filtered.sort((a, b) => a.name.compareTo(b.name));
+                } else {
+                  filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+                }
 
-          final Map<String, List<Customer>> groupedCustomers = {};
-          final List<Customer> uncategorized = [];
+                final Map<String, List<Customer>> groupedCustomers = {};
+                final List<Customer> uncategorized = [];
 
-          for (var c in filtered) {
-            if (c.folderName != null && c.folderName!.isNotEmpty) {
-              groupedCustomers.putIfAbsent(c.folderName!, () => []).add(c);
-            } else {
-              uncategorized.add(c);
-            }
-          }
+                for (var c in filtered) {
+                  if (c.folderName != null && c.folderName!.isNotEmpty) {
+                    groupedCustomers
+                        .putIfAbsent(c.folderName!, () => [])
+                        .add(c);
+                  } else {
+                    uncategorized.add(c);
+                  }
+                }
 
-          final List<dynamic> flattenedList = [];
-          for (var entry in groupedCustomers.entries) {
-            flattenedList.add(entry.key);
-            if (_expandedFolders.contains(entry.key)) {
-              flattenedList.addAll(entry.value);
-            }
-          }
-          if (uncategorized.isNotEmpty) {
-            flattenedList.add(l10n.generalCustomers);
-            if (_expandedFolders.contains(l10n.generalCustomers)) {
-              flattenedList.addAll(uncategorized);
-            }
-          }
+                final List<dynamic> flattenedList = [];
+                for (var entry in groupedCustomers.entries) {
+                  flattenedList.add(entry.key);
+                  if (_expandedFolders.contains(entry.key)) {
+                    flattenedList.addAll(entry.value);
+                  }
+                }
+                if (uncategorized.isNotEmpty) {
+                  flattenedList.add(l10n.generalCustomers);
+                  if (_expandedFolders.contains(l10n.generalCustomers)) {
+                    flattenedList.addAll(uncategorized);
+                  }
+                }
 
-          return Column(
-            children: [
-              if (!_isSelectionMode)
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: l10n.searchNamePhone,
-                          labelStyle: const TextStyle(fontFamily: 'Tajawal'),
-                          prefixIcon: const Icon(Icons.search),
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          contentPadding:
-                              const EdgeInsets.symmetric(horizontal: 16),
-                        ),
-                        onChanged: (val) => setState(() => _searchQuery = val),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        children: [
-                          FilterChip(
-                            label: Text(l10n.hasDebts,
-                                style: TextStyle(fontFamily: 'Tajawal')),
-                            selected: _filterHasDebt,
-                            onSelected: (val) =>
-                                setState(() => _filterHasDebt = val),
-                            selectedColor: Colors.red.withOpacity(0.2),
-                            checkmarkColor: Colors.red,
-                          ),
-                          const Spacer(),
-                          Text(l10n.sortBy,
-                              style: TextStyle(
-                                  fontFamily: 'Tajawal',
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12)),
-                          DropdownButton<String>(
-                            value: _sortOption,
-                            underline: const SizedBox(),
-                            items: [
-                              DropdownMenuItem(
-                                  value: 'newest',
-                                  child: Text('الأحدث',
-                                      style: TextStyle(
-                                          fontFamily: 'Tajawal',
-                                          fontSize: 13))),
-                              DropdownMenuItem(
-                                  value: 'debt',
-                                  child: Text(l10n.highestDebt,
-                                      style: TextStyle(
-                                          fontFamily: 'Tajawal',
-                                          fontSize: 13))),
-                              DropdownMenuItem(
-                                  value: 'alpha',
-                                  child: Text(l10n.sortAlphabetical,
-                                      style: TextStyle(
-                                          fontFamily: 'Tajawal',
-                                          fontSize: 13))),
-                            ],
-                            onChanged: (val) {
-                              if (val != null)
-                                setState(() => _sortOption = val);
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              Expanded(
-                child: flattenedList.isEmpty
-                    ? Center(
-                        child: Text(
-                          _searchQuery.isNotEmpty || _filterHasDebt
-                              ? 'لا يوجد عملاء يطابقون البحث'
-                              : AppLocalizations.of(context)!.text56,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                              fontFamily: 'Tajawal', fontSize: 16),
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: flattenedList.length,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemBuilder: (context, index) {
-                          final item = flattenedList[index];
-
-                          if (item is String) {
-                            final isExpanded = _expandedFolders.contains(item);
-                            final isGeneral = item == l10n.generalCustomers;
-                            return InkWell(
-                              onTap: () {
-                                setState(() {
-                                  if (isExpanded)
-                                    _expandedFolders.remove(item);
-                                  else
-                                    _expandedFolders.add(item);
-                                });
-                              },
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(vertical: 8),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: isGeneral
-                                      ? Colors.grey.withOpacity(0.2)
-                                      : Theme.of(context)
-                                          .colorScheme
-                                          .primary
-                                          .withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(8),
+                return Column(
+                  children: [
+                    if (!_isSelectionMode)
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            TextField(
+                              decoration: InputDecoration(
+                                labelText: l10n.searchNamePhone,
+                                labelStyle:
+                                    const TextStyle(fontFamily: 'Tajawal'),
+                                prefixIcon: const Icon(Icons.search),
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12)),
+                                contentPadding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
+                              ),
+                              onChanged: (val) =>
+                                  setState(() => _searchQuery = val),
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                FilterChip(
+                                  label: Text(l10n.hasDebts,
+                                      style: TextStyle(fontFamily: 'Tajawal')),
+                                  selected: _filterHasDebt,
+                                  onSelected: (val) =>
+                                      setState(() => _filterHasDebt = val),
+                                  selectedColor: Colors.red.withOpacity(0.2),
+                                  checkmarkColor: Colors.red,
                                 ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                        isGeneral ? Icons.people : Icons.folder,
+                                const Spacer(),
+                                Text(l10n.sortBy,
+                                    style: TextStyle(
+                                        fontFamily: 'Tajawal',
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12)),
+                                DropdownButton<String>(
+                                  value: _sortOption,
+                                  underline: const SizedBox(),
+                                  items: [
+                                    DropdownMenuItem(
+                                        value: 'newest',
+                                        child: Text('الأحدث',
+                                            style: TextStyle(
+                                                fontFamily: 'Tajawal',
+                                                fontSize: 13))),
+                                    DropdownMenuItem(
+                                        value: 'debt',
+                                        child: Text(l10n.highestDebt,
+                                            style: TextStyle(
+                                                fontFamily: 'Tajawal',
+                                                fontSize: 13))),
+                                    DropdownMenuItem(
+                                        value: 'alpha',
+                                        child: Text(l10n.sortAlphabetical,
+                                            style: TextStyle(
+                                                fontFamily: 'Tajawal',
+                                                fontSize: 13))),
+                                  ],
+                                  onChanged: (val) {
+                                    if (val != null)
+                                      setState(() => _sortOption = val);
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    Expanded(
+                      child: flattenedList.isEmpty
+                          ? Center(
+                              child: Text(
+                                _searchQuery.isNotEmpty || _filterHasDebt
+                                    ? 'لا يوجد عملاء يطابقون البحث'
+                                    : AppLocalizations.of(context)!.text56,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                    fontFamily: 'Tajawal', fontSize: 16),
+                              ),
+                            )
+                          : ListView.builder(
+                              itemCount: flattenedList.length,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 16),
+                              itemBuilder: (context, index) {
+                                final item = flattenedList[index];
+
+                                if (item is String) {
+                                  final isExpanded =
+                                      _expandedFolders.contains(item);
+                                  final isGeneral =
+                                      item == l10n.generalCustomers;
+                                  return InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        if (isExpanded)
+                                          _expandedFolders.remove(item);
+                                        else
+                                          _expandedFolders.add(item);
+                                      });
+                                    },
+                                    child: Container(
+                                      margin: const EdgeInsets.symmetric(
+                                          vertical: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 12),
+                                      decoration: BoxDecoration(
                                         color: isGeneral
-                                            ? Colors.grey[700]
+                                            ? Colors.grey.withOpacity(0.2)
                                             : Theme.of(context)
                                                 .colorScheme
-                                                .primary),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        item,
-                                        style: const TextStyle(
-                                            fontFamily: 'Tajawal',
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16),
+                                                .primary
+                                                .withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                              isGeneral
+                                                  ? Icons.people
+                                                  : Icons.folder,
+                                              color: isGeneral
+                                                  ? Colors.grey[700]
+                                                  : Theme.of(context)
+                                                      .colorScheme
+                                                      .primary),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Text(
+                                              item,
+                                              style: const TextStyle(
+                                                  fontFamily: 'Tajawal',
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16),
+                                            ),
+                                          ),
+                                          Icon(
+                                              isExpanded
+                                                  ? Icons.expand_less
+                                                  : Icons.expand_more,
+                                              color: Colors.grey),
+                                        ],
                                       ),
                                     ),
-                                    Icon(
-                                        isExpanded
-                                            ? Icons.expand_less
-                                            : Icons.expand_more,
-                                        color: Colors.grey),
-                                  ],
-                                ),
-                              ),
-                            );
-                          } else if (item is Customer) {
-                            return _buildCustomerCard(
-                                item,
-                                context,
-                                ref,
-                                currency,
-                                canManageCustomers,
-                                canReceivePayments);
-                          }
-                          return const SizedBox();
-                        },
-                      ),
+                                  );
+                                } else if (item is Customer) {
+                                  return _buildCustomerCard(
+                                      item,
+                                      context,
+                                      ref,
+                                      currency,
+                                      canManageCustomers,
+                                      canReceivePayments);
+                                }
+                                return const SizedBox();
+                              },
+                            ),
+                    ),
+                  ],
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, st) => Center(
+                child: Text('حدث خطأ: $e',
+                    style: const TextStyle(fontFamily: 'Tajawal')),
               ),
-            ],
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(
-          child: Text('حدث خطأ: $e',
-              style: const TextStyle(fontFamily: 'Tajawal')),
-        ),
+            ),
+          ),
+        ],
       ),
       floatingActionButton: canManageCustomers && !_isSelectionMode
           ? FloatingActionButton.extended(

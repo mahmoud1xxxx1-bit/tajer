@@ -65,6 +65,13 @@ class BranchAwareOrderRepository extends OrderRepository {
         customerRef =
             firestore.collection('customers').doc(orderWithQueue.customerId);
         customerDoc = await tx.get(customerRef);
+        if (customerDoc.exists && customerDoc.data() != null) {
+          final customerBranchId =
+              customerDoc.data()?['branchId']?.toString() ?? 'main';
+          if (customerBranchId != branchId) {
+            throw Exception('Customer account belongs to a different branch.');
+          }
+        }
       }
 
       DocumentReference<Map<String, dynamic>>? shiftRef;
@@ -321,8 +328,11 @@ class BranchAwareOrderRepository extends OrderRepository {
         .where('isCredit', isEqualTo: true)
         .get();
 
-    final orderRefs =
-        creditOrdersSnapshot.docs.map((doc) => doc.reference).toList();
+    final orderRefs = creditOrdersSnapshot.docs
+        .where(
+            (doc) => (doc.data()['branchId']?.toString() ?? 'main') == branchId)
+        .map((doc) => doc.reference)
+        .toList();
     final paymentRef = firestore
         .collection('merchants')
         .doc(merchantId)
@@ -338,6 +348,11 @@ class BranchAwareOrderRepository extends OrderRepository {
 
       final currentDebt =
           (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
+      final customerBranchId =
+          customerDoc.data()?['branchId']?.toString() ?? 'main';
+      if (customerBranchId != branchId) {
+        throw Exception('لا يمكن تحصيل دين عميل تابع لفرع مختلف.');
+      }
       if (amountPaid > currentDebt) {
         throw Exception('مبلغ السداد لا يمكن أن يتجاوز الدين المستحق.');
       }
@@ -365,6 +380,8 @@ class BranchAwareOrderRepository extends OrderRepository {
         final snap = await transaction.get(ref);
         if (!snap.exists || snap.data() == null) continue;
         final data = snap.data()!;
+        final orderBranchId = data['branchId']?.toString() ?? 'main';
+        if (orderBranchId != branchId) continue;
         if (data['status']?.toString() == 'cancelled') continue;
         final total = (data['total'] as num?)?.toDouble() ?? 0.0;
         final paid = (data['paidAmount'] as num?)?.toDouble() ?? 0.0;

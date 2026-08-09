@@ -16,6 +16,7 @@ import '../../customers/domain/customer.dart';
 import '../../../core/services/limits_service.dart';
 import '../../../core/providers/store_profile_provider.dart';
 import '../../../core/providers/effective_merchant.dart';
+import '../../branches/presentation/branch_context.dart';
 
 class AddOrderDialog extends ConsumerStatefulWidget {
   const AddOrderDialog({super.key});
@@ -143,6 +144,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
           final newCustomer = Customer(
             id: Uuid().v4(),
             merchantId: merchantId,
+            branchId: ref.read(selectedBranchIdProvider),
             name: nameInput.isEmpty ? 'عميل غير معروف' : nameInput,
             phone: phoneInput,
             createdAt: DateTime.now(),

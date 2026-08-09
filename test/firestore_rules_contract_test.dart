@@ -158,9 +158,18 @@ void main() {
         () {
       expect(rules, contains('match /customer_debt_payments/{paymentId}'));
       expect(
-          rules,
-          contains(
-              "hasPermission(merchantId, 'can_receive_payments') && hasDataBranchAccess(merchantId, request.resource.data)"));
+        rules,
+        contains('function isCustomerDebtPaymentCreate(merchantId)'),
+      );
+      expect(
+        rules,
+        contains(
+            "customerDoc.data.get('branchId', 'main') == request.resource.data.get('branchId', 'main')"),
+      );
+      expect(
+        rules,
+        contains('allow create: if isCustomerDebtPaymentCreate(merchantId);'),
+      );
       expect(rules, contains('allow update, delete: if isOwner(merchantId);'));
     });
 
@@ -180,13 +189,8 @@ void main() {
           contains('hasDataBranchAccess(merchantId, request.resource.data)'));
       expect(
           rules, contains("hasPermission(merchantId, 'can_manage_inventory')"));
-      expect(
-          rules,
-          contains('isCheckoutInventoryLogCreate'));
-      expect(
-          rules,
-          contains(
-              "hasPermission(merchantId, 'can_cancel_orders')"));
+      expect(rules, contains('isCheckoutInventoryLogCreate'));
+      expect(rules, contains("hasPermission(merchantId, 'can_cancel_orders')"));
     });
 
     test('inventory transfer requires access to source and destination', () {
@@ -221,17 +225,14 @@ void main() {
           contains('hasDataBranchAccess(merchantId, request.resource.data)'));
       expect(
           rules, contains("hasPermission(merchantId, 'can_manage_inventory')"));
-      expect(
-          rules,
-          contains('isCheckoutInventoryUpdate'));
-      expect(
-          rules,
-          contains('isCancellationInventoryUpdate'));
+      expect(rules, contains('isCheckoutInventoryUpdate'));
+      expect(rules, contains('isCancellationInventoryUpdate'));
       expect(
           rules,
           contains(
               "request.resource.data.diff(resource.data).affectedKeys().hasOnly(['id', 'quantity', 'initialQuantity', 'updatedAt'])"));
-      expect(rules, contains('function isInventoryIdentityPreserved(inventoryId)'));
+      expect(rules,
+          contains('function isInventoryIdentityPreserved(inventoryId)'));
       expect(
           rules,
           contains(

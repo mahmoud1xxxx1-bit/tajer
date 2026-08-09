@@ -12,9 +12,7 @@ import '../../customers/domain/customer.dart';
 import '../../customers/data/customer_repository.dart';
 import '../../../core/services/activity_logger.dart';
 import '../../../core/services/pdf_service.dart';
-import '../../../core/services/whatsapp_service.dart';
 import '../../../core/services/printer_service.dart';
-import '../../../core/widgets/tax_dialog.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/widgets/app_drawer.dart';
@@ -25,6 +23,8 @@ import '../../shifts/presentation/start_shift_dialog.dart';
 import '../../../core/providers/store_profile_provider.dart';
 import '../../shifts/domain/shift.dart';
 import '../../categories/data/category_repository.dart';
+import '../../branches/presentation/active_branch_selector.dart';
+import '../../branches/presentation/branch_context.dart';
 
 class PosScreen extends ConsumerStatefulWidget {
   const PosScreen({super.key});
@@ -225,7 +225,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       });
       return;
     }
-    if (newQuantity > product.quantity) {
+    if (!product.isManufacturedOnDemand && newQuantity > product.quantity) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('الكمية غير متوفرة في المخزون',
               style: TextStyle(fontFamily: 'Tajawal'))));
@@ -579,6 +579,10 @@ class _PosScreenState extends ConsumerState<PosScreen> {
               ? const Center(child: CircularProgressIndicator())
               : Column(
                   children: [
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(12, 8, 12, 0),
+                      child: ActiveBranchSelector(compact: true),
+                    ),
                     Container(
                       margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
                       padding: const EdgeInsets.all(12),
@@ -721,9 +725,13 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 16)),
                                         Text(
-                                            isAr
-                                                ? 'المتبقي: ${product.quantity}'
-                                                : 'Left: ${product.quantity}',
+                                            product.isManufacturedOnDemand
+                                                ? (isAr
+                                                    ? 'يصنع عند الطلب'
+                                                    : 'Made to order')
+                                                : (isAr
+                                                    ? 'المتبقي: ${product.quantity}'
+                                                    : 'Left: ${product.quantity}'),
                                             style: const TextStyle(
                                                 fontSize: 12,
                                                 color: Colors.grey,
@@ -988,10 +996,12 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
 
               final user = ref.read(appUserProvider).value;
               if (user == null) return;
+              final branchId = ref.read(selectedBranchIdProvider);
 
               final newCustomer = Customer(
                 id: const Uuid().v4(),
                 merchantId: currentEffectiveMerchantId(user),
+                branchId: branchId,
                 name: nameController.text.trim(),
                 phone: phoneController.text.trim(),
                 createdAt: DateTime.now(),
