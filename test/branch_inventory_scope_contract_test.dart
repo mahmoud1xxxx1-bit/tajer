@@ -35,7 +35,7 @@ void main() {
       // Cost visibility is orthogonal to branch stock and must come only from
       // the protected product_costs stream for authorized users.
       expect(source, contains("appUser.hasPermission('can_view_cost')"));
-      expect(source, contains('costRepository.watchCosts(merchantId)'));
+      expect(source, contains('productCostsStreamProvider(merchantId)'));
       expect(source, contains('next = next.copyWith(costPrice: cost);'));
     });
 

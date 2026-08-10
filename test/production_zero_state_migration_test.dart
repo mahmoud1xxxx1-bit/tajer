@@ -97,12 +97,12 @@ void main() {
         expect(await _migrationStatus(db, '$prefix$branchId'), 'completed');
       }
     }
-    expect(await _migrationStateCount(db), 15);
+    expect(await _migrationStateCount(db), 16);
 
     final countsBeforeRetry = await _catalogCounts(db);
     await service.runForOwner(merchantId: _merchantId);
     expect(await _catalogCounts(db), countsBeforeRetry);
-    expect(await _migrationStateCount(db), 15);
+    expect(await _migrationStateCount(db), 16);
 
     final branchSnapshot = await db
         .collection('merchants')

@@ -592,15 +592,15 @@ ProductRepository productRepository(ProductRepositoryRef ref) {
 }
 
 @riverpod
-Stream<List<Product>> productsStream(ProductsStreamRef ref) {
+Stream<List<Product>> productsStream(ProductsStreamRef ref) async* {
   final appUser = ref.watch(appUserProvider).value;
-  if (appUser == null) return const Stream.empty();
+  if (appUser == null) return;
 
   final repository = ref.watch(productRepositoryProvider);
   final costRepository = ref.watch(productCostRepositoryProvider);
   final merchantId = currentEffectiveMerchantId(appUser);
   final branchId = ref.watch(selectedBranchIdProvider);
-  if (branchId.isEmpty) return const Stream.empty();
+  if (branchId.isEmpty) return;
   final branchInventory = ref.watch(branchInventoryStreamProvider(branchId));
   final canViewCost = appUser.hasPermission('can_view_cost');
 
@@ -613,11 +613,13 @@ Stream<List<Product>> productsStream(ProductsStreamRef ref) {
 
   final productSnapshots =
       repository.queryProducts(merchantId, branchId).snapshots();
-  final costSnapshots = canViewCost
-      ? costRepository.watchCosts(merchantId)
-      : Stream<Map<String, double>>.value(const <String, double>{});
 
-  return productSnapshots.asyncExpand((snapshot) async* {
+  final inventory = await ref.watch(branchInventoryStreamProvider(branchId).future);
+  final costs = canViewCost
+      ? await ref.watch(productCostsStreamProvider(merchantId).future)
+      : const <String, double>{};
+
+  yield* productSnapshots.asyncMap((snapshot) async {
     var baseProducts = snapshot.docs.map((doc) => doc.data()).toList();
     final migrationCompleted =
         await repository.isBranchCatalogMigrationCompleted(
@@ -631,28 +633,22 @@ Stream<List<Product>> productsStream(ProductsStreamRef ref) {
       );
     }
     
-    // Explicitly await the future of the inventory provider to guarantee readiness.
-    // This removes the "False Zero" glitch caused by AsyncLoading mapping to 0.
-    final inventory = await ref.watch(branchInventoryStreamProvider(branchId).future);
-    
-    yield* costSnapshots.map((costs) {
-      final quantities = <String, double>{
-        for (final item in inventory)
-          if (item.itemType == 'product') item.itemId: item.quantity,
-      };
+    final quantities = <String, double>{
+      for (final item in inventory)
+        if (item.itemType == 'product') item.itemId: item.quantity,
+    };
 
-      final products = baseProducts.map((product) {
-        final scopedQuantity = quantities[product.id];
-        var next = product.copyWith(quantity: (scopedQuantity ?? 0).round());
-        if (canViewCost) {
-          final cost = costs['${branchId}_${product.id}'] ?? costs[product.id];
-          if (cost != null) next = next.copyWith(costPrice: cost);
-        }
-        return next;
-      }).toList();
+    final products = baseProducts.map((product) {
+      final scopedQuantity = quantities[product.id];
+      var next = product.copyWith(quantity: (scopedQuantity ?? 0).round());
+      if (canViewCost) {
+        final cost = costs['${branchId}_${product.id}'] ?? costs[product.id];
+        if (cost != null) next = next.copyWith(costPrice: cost);
+      }
+      return next;
+    }).toList();
 
-      products.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      return products;
-    });
+    products.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    return products;
   });
 }
