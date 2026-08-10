@@ -39,6 +39,17 @@ class RawMaterialRepository {
   String availabilityDocId(String branchId, String rawMaterialId) =>
       '${branchId}_$rawMaterialId';
 
+  CollectionReference<Map<String, dynamic>> _legacyVisibilityRef(
+    String merchantId,
+    String branchId,
+  ) =>
+      _firestore
+          .collection('merchants')
+          .doc(merchantId)
+          .collection('branches')
+          .doc(branchId)
+          .collection('legacy_raw_material_visibility');
+
   Future<bool> existsInBranch({
     required String merchantId,
     required String rawMaterialId,
@@ -77,6 +88,16 @@ class RawMaterialRepository {
           .collection('migration_state')
           .doc('branch_raw_materials_v1_$branchId');
 
+  DocumentReference<Map<String, dynamic>> _rawVisibilityStateRef(
+    String merchantId,
+    String branchId,
+  ) =>
+      _firestore
+          .collection('merchants')
+          .doc(merchantId)
+          .collection('migration_state')
+          .doc('legacy_raw_material_visibility_v1_$branchId');
+
   Future<bool> isBranchRawMaterialMigrationCompleted({
     required String merchantId,
     required String branchId,
@@ -102,7 +123,8 @@ class RawMaterialRepository {
     if (lastLegacyRawMaterialId != null && lastLegacyRawMaterialId.isNotEmpty) {
       query = query.where('id', isGreaterThan: lastLegacyRawMaterialId);
     }
-    query = query.orderBy('id').limit(pageSize);
+    final effectivePageSize = pageSize > 240 ? 240 : pageSize;
+    query = query.orderBy('id').limit(effectivePageSize);
     final legacyMaterials = await query.get();
     final availability = await _availabilityRef(merchantId).get();
     final inventory = await _firestore
@@ -173,6 +195,18 @@ class RawMaterialRepository {
         data,
         SetOptions(merge: true),
       );
+      batch.set(
+        _legacyVisibilityRef(merchantId, branchId).doc(rawMaterialId),
+        {
+          'id': rawMaterialId,
+          'merchantId': merchantId,
+          'branchId': branchId,
+          'rawMaterialId': rawMaterialId,
+          'enabled': true,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
     }
 
     batch.set(
@@ -216,14 +250,33 @@ class RawMaterialRepository {
     throw StateError('Raw material migration exceeded maximum page count');
   }
 
-  Future<List<RawMaterial>> readLegacyRawMaterialsForBranch({
+  Future<bool> isLegacyRawMaterialVisibilityManifestCompleted({
     required String merchantId,
     required String branchId,
   }) async {
-    final legacyMaterials = await _firestore
+    final state = await _rawVisibilityStateRef(merchantId, branchId).get();
+    return state.data()?['status'] == 'completed';
+  }
+
+  Future<void> buildLegacyRawMaterialVisibilityManifestPage({
+    required String merchantId,
+    required String branchId,
+    int pageSize = 400,
+  }) async {
+    final stateRef = _rawVisibilityStateRef(merchantId, branchId);
+    final state = await stateRef.get();
+    if (state.data()?['status'] == 'completed') return;
+    final lastLegacyRawMaterialId =
+        state.data()?['lastLegacyRawMaterialId']?.toString();
+
+    var query = _firestore
         .collection('raw_materials')
-        .where('merchantId', isEqualTo: merchantId)
-        .get();
+        .where('merchantId', isEqualTo: merchantId);
+    if (lastLegacyRawMaterialId != null && lastLegacyRawMaterialId.isNotEmpty) {
+      query = query.where('id', isGreaterThan: lastLegacyRawMaterialId);
+    }
+    query = query.orderBy('id').limit(pageSize);
+    final legacyMaterials = await query.get();
     final availability = await _availabilityRef(merchantId).get();
     final inventory = await _firestore
         .collection('merchants')
@@ -232,6 +285,7 @@ class RawMaterialRepository {
         .where('branchId', isEqualTo: branchId)
         .where('itemType', isEqualTo: 'raw_material')
         .get();
+
     final explicit = <String, bool>{};
     final anyExplicit = <String>{};
     for (final doc in availability.docs) {
@@ -248,23 +302,128 @@ class RawMaterialRepository {
       for (final doc in inventory.docs) doc.data()['itemId']?.toString() ?? '',
     }..remove('');
 
-    return legacyMaterials.docs.where((doc) {
+    if (legacyMaterials.docs.isEmpty) {
+      await stateRef.set({
+        'version': 1,
+        'status': 'completed',
+        'branchId': branchId,
+        'completedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      return;
+    }
+
+    final batch = _firestore.batch();
+    batch.set(
+        stateRef,
+        {
+          'version': 1,
+          'status': 'running',
+          'branchId': branchId,
+          'lastError': FieldValue.delete(),
+          'startedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true));
+    var lastProcessedId = lastLegacyRawMaterialId;
+    for (final doc in legacyMaterials.docs) {
       final rawMaterialId = doc.id;
+      lastProcessedId = rawMaterialId;
       final enabled = explicit[rawMaterialId];
-      return enabled ??
+      final belongsToBranch = enabled ??
           (anyExplicit.contains(rawMaterialId)
               ? false
               : (inventoryEvidence.contains(rawMaterialId) ||
                   branchId == 'main'));
-    }).map((doc) {
-      final data = Map<String, dynamic>.from(doc.data());
+      if (!belongsToBranch) continue;
+      batch.set(
+        _legacyVisibilityRef(merchantId, branchId).doc(rawMaterialId),
+        {
+          'id': rawMaterialId,
+          'merchantId': merchantId,
+          'branchId': branchId,
+          'rawMaterialId': rawMaterialId,
+          'enabled': true,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+    }
+    batch.set(
+        stateRef,
+        {
+          'version': 1,
+          'status': 'running',
+          'branchId': branchId,
+          'lastLegacyRawMaterialId': lastProcessedId,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true));
+    await batch.commit();
+  }
+
+  Future<void> buildLegacyRawMaterialVisibilityManifestIfNeeded({
+    required String merchantId,
+    required String branchId,
+    int pageSize = 400,
+  }) async {
+    for (var i = 0; i < 1000; i++) {
+      await buildLegacyRawMaterialVisibilityManifestPage(
+        merchantId: merchantId,
+        branchId: branchId,
+        pageSize: pageSize,
+      );
+      if (await isLegacyRawMaterialVisibilityManifestCompleted(
+        merchantId: merchantId,
+        branchId: branchId,
+      )) {
+        return;
+      }
+    }
+    await _rawVisibilityStateRef(merchantId, branchId).set({
+      'version': 1,
+      'status': 'failed',
+      'branchId': branchId,
+      'lastError':
+          'Raw material visibility manifest exceeded maximum page count',
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    throw StateError(
+        'Raw material visibility manifest exceeded maximum page count');
+  }
+
+  Future<List<RawMaterial>> readLegacyRawMaterialsForBranch({
+    required String merchantId,
+    required String branchId,
+  }) async {
+    if (!await isLegacyRawMaterialVisibilityManifestCompleted(
+      merchantId: merchantId,
+      branchId: branchId,
+    )) {
+      throw StateError(
+          'Branch raw material compatibility manifest is not ready');
+    }
+    final visibility = await _legacyVisibilityRef(merchantId, branchId)
+        .where('enabled', isEqualTo: true)
+        .get();
+    final materialIds = visibility.docs
+        .map((doc) => doc.data()['rawMaterialId']?.toString() ?? doc.id)
+        .where((id) => id.isNotEmpty)
+        .toList(growable: false);
+    final materials = <RawMaterial>[];
+    for (final rawMaterialId in materialIds) {
+      final doc =
+          await _firestore.collection('raw_materials').doc(rawMaterialId).get();
+      if (!doc.exists || doc.data() == null) continue;
+      final data = Map<String, dynamic>.from(doc.data()!);
+      if (data['merchantId']?.toString() != merchantId) continue;
+      if (data['isArchived'] == true) continue;
       data['id'] = doc.id;
       data['merchantId'] = data['merchantId']?.toString() ?? merchantId;
       data['branchId'] = branchId;
       data['quantity'] = 0.0;
       data['initialQuantity'] = 0.0;
-      return RawMaterial.fromJson(data);
-    }).toList();
+      materials.add(RawMaterial.fromJson(data));
+    }
+    return materials;
   }
 
   /// Raw-material documents are branch-owned catalog data. Stock belongs to

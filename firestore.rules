@@ -251,6 +251,16 @@ service cloud.firestore {
         allow read: if hasAccess(merchantId);
         allow create, update, delete: if hasPermission(merchantId, 'can_manage_products');
       }
+      match /migration_state/{stateId} {
+        allow read: if resource != null &&
+          hasAccess(merchantId) &&
+          hasBranchAccess(merchantId, resource.data.get('branchId', 'main'));
+        allow create, update: if request.resource.data.get('branchId', 'main') is string &&
+          hasBranchAccess(merchantId, request.resource.data.get('branchId', 'main')) &&
+          (hasPermission(merchantId, 'can_manage_products') ||
+           hasPermission(merchantId, 'can_manage_inventory'));
+        allow delete: if isOwner(merchantId);
+      }
       match /expenses/{expenseId} {
         allow read: if resource != null && hasAccess(merchantId) && hasDataBranchAccess(merchantId, resource.data);
         allow create: if hasDataBranchAccess(merchantId, request.resource.data) && (hasPermission(merchantId, 'can_manage_expenses') || (hasPermission(merchantId, 'can_manage_inventory') && request.resource.data.get('isSupplierPayment', false) == true));
@@ -303,6 +313,28 @@ service cloud.firestore {
             hasBranchAccess(merchantId, branchId) &&
             request.resource.data.get('merchantId', '') == merchantId &&
             request.resource.data.get('branchId', branchId) == branchId;
+          allow delete: if isOwner(merchantId) && hasBranchAccess(merchantId, branchId);
+        }
+
+        match /legacy_product_visibility/{productId} {
+          allow read: if hasAccess(merchantId) && hasBranchAccess(merchantId, branchId);
+          allow create, update: if hasPermission(merchantId, 'can_manage_products') &&
+            hasBranchAccess(merchantId, branchId) &&
+            request.resource.data.get('merchantId', '') == merchantId &&
+            request.resource.data.get('branchId', branchId) == branchId &&
+            request.resource.data.get('productId', productId) == productId &&
+            request.resource.data.keys().hasOnly(['id', 'merchantId', 'branchId', 'productId', 'enabled', 'updatedAt']);
+          allow delete: if isOwner(merchantId) && hasBranchAccess(merchantId, branchId);
+        }
+
+        match /legacy_raw_material_visibility/{materialId} {
+          allow read: if hasAccess(merchantId) && hasBranchAccess(merchantId, branchId);
+          allow create, update: if hasPermission(merchantId, 'can_manage_inventory') &&
+            hasBranchAccess(merchantId, branchId) &&
+            request.resource.data.get('merchantId', '') == merchantId &&
+            request.resource.data.get('branchId', branchId) == branchId &&
+            request.resource.data.get('rawMaterialId', materialId) == materialId &&
+            request.resource.data.keys().hasOnly(['id', 'merchantId', 'branchId', 'rawMaterialId', 'enabled', 'updatedAt']);
           allow delete: if isOwner(merchantId) && hasBranchAccess(merchantId, branchId);
         }
       }

@@ -104,6 +104,17 @@ class ProductRepository {
   String availabilityDocId(String branchId, String productId) =>
       '${branchId}_$productId';
 
+  CollectionReference<Map<String, dynamic>> _legacyVisibilityRef(
+    String merchantId,
+    String branchId,
+  ) =>
+      _firestore
+          .collection('merchants')
+          .doc(merchantId)
+          .collection('branches')
+          .doc(branchId)
+          .collection('legacy_product_visibility');
+
   Future<void> migrateOldProducts(String merchantId) async {
     try {
       final snapshot = await _firestore
@@ -134,6 +145,16 @@ class ProductRepository {
           .collection('migration_state')
           .doc('branch_catalog_v1_$branchId');
 
+  DocumentReference<Map<String, dynamic>> _productVisibilityStateRef(
+    String merchantId,
+    String branchId,
+  ) =>
+      _firestore
+          .collection('merchants')
+          .doc(merchantId)
+          .collection('migration_state')
+          .doc('legacy_product_visibility_v1_$branchId');
+
   Future<bool> isBranchCatalogMigrationCompleted({
     required String merchantId,
     required String branchId,
@@ -159,7 +180,8 @@ class ProductRepository {
     if (lastLegacyProductId != null && lastLegacyProductId.isNotEmpty) {
       query = query.where('id', isGreaterThan: lastLegacyProductId);
     }
-    query = query.orderBy('id').limit(pageSize);
+    final effectivePageSize = pageSize > 240 ? 240 : pageSize;
+    query = query.orderBy('id').limit(effectivePageSize);
     final legacyProducts = await query.get();
     final availability = await _availabilityRef(merchantId).get();
     final inventory = await _firestore
@@ -229,6 +251,18 @@ class ProductRepository {
         data,
         SetOptions(merge: true),
       );
+      batch.set(
+        _legacyVisibilityRef(merchantId, branchId).doc(productId),
+        {
+          'id': productId,
+          'merchantId': merchantId,
+          'branchId': branchId,
+          'productId': productId,
+          'enabled': true,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
     }
 
     batch.set(
@@ -242,6 +276,145 @@ class ProductRepository {
         },
         SetOptions(merge: true));
     await batch.commit();
+  }
+
+  Future<bool> isLegacyProductVisibilityManifestCompleted({
+    required String merchantId,
+    required String branchId,
+  }) async {
+    final state = await _productVisibilityStateRef(merchantId, branchId).get();
+    return state.data()?['status'] == 'completed';
+  }
+
+  Future<void> buildLegacyProductVisibilityManifestPage({
+    required String merchantId,
+    required String branchId,
+    int pageSize = 400,
+  }) async {
+    final stateRef = _productVisibilityStateRef(merchantId, branchId);
+    final state = await stateRef.get();
+    if (state.data()?['status'] == 'completed') return;
+    final lastLegacyProductId =
+        state.data()?['lastLegacyProductId']?.toString();
+
+    var query = _firestore
+        .collection('products')
+        .where('merchantId', isEqualTo: merchantId);
+    if (lastLegacyProductId != null && lastLegacyProductId.isNotEmpty) {
+      query = query.where('id', isGreaterThan: lastLegacyProductId);
+    }
+    query = query.orderBy('id').limit(pageSize);
+    final legacyProducts = await query.get();
+    final availability = await _availabilityRef(merchantId).get();
+    final inventory = await _firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection('branch_inventory')
+        .where('branchId', isEqualTo: branchId)
+        .where('itemType', isEqualTo: 'product')
+        .get();
+
+    final explicit = <String, bool>{};
+    final anyExplicit = <String>{};
+    for (final doc in availability.docs) {
+      final data = doc.data();
+      final productId = data['productId']?.toString();
+      final availabilityBranchId = data['branchId']?.toString();
+      if (productId == null || productId.isEmpty) continue;
+      anyExplicit.add(productId);
+      if (availabilityBranchId == branchId) {
+        explicit[productId] = data['enabled'] == true;
+      }
+    }
+    final inventoryEvidence = {
+      for (final doc in inventory.docs) doc.data()['itemId']?.toString() ?? '',
+    }..remove('');
+
+    if (legacyProducts.docs.isEmpty) {
+      await stateRef.set({
+        'version': 1,
+        'status': 'completed',
+        'branchId': branchId,
+        'completedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      return;
+    }
+
+    final batch = _firestore.batch();
+    batch.set(
+        stateRef,
+        {
+          'version': 1,
+          'status': 'running',
+          'branchId': branchId,
+          'lastError': FieldValue.delete(),
+          'startedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true));
+
+    var lastProcessedId = lastLegacyProductId;
+    for (final doc in legacyProducts.docs) {
+      final productId = doc.id;
+      lastProcessedId = productId;
+      final enabled = explicit[productId];
+      final belongsToBranch = enabled ??
+          (anyExplicit.contains(productId)
+              ? false
+              : (inventoryEvidence.contains(productId) || branchId == 'main'));
+      if (!belongsToBranch) continue;
+      batch.set(
+        _legacyVisibilityRef(merchantId, branchId).doc(productId),
+        {
+          'id': productId,
+          'merchantId': merchantId,
+          'branchId': branchId,
+          'productId': productId,
+          'enabled': true,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+    }
+
+    batch.set(
+        stateRef,
+        {
+          'version': 1,
+          'status': 'running',
+          'branchId': branchId,
+          'lastLegacyProductId': lastProcessedId,
+          'updatedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true));
+    await batch.commit();
+  }
+
+  Future<void> buildLegacyProductVisibilityManifestIfNeeded({
+    required String merchantId,
+    required String branchId,
+    int pageSize = 400,
+  }) async {
+    for (var i = 0; i < 1000; i++) {
+      await buildLegacyProductVisibilityManifestPage(
+        merchantId: merchantId,
+        branchId: branchId,
+        pageSize: pageSize,
+      );
+      if (await isLegacyProductVisibilityManifestCompleted(
+        merchantId: merchantId,
+        branchId: branchId,
+      )) {
+        return;
+      }
+    }
+    await _productVisibilityStateRef(merchantId, branchId).set({
+      'version': 1,
+      'status': 'failed',
+      'branchId': branchId,
+      'lastError': 'Product visibility manifest exceeded maximum page count',
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    throw StateError('Product visibility manifest exceeded maximum page count');
   }
 
   Future<void> migrateBranchCatalogIfNeeded({
@@ -276,52 +449,35 @@ class ProductRepository {
     required String merchantId,
     required String branchId,
   }) async {
-    final legacyProducts = await _firestore
-        .collection('products')
-        .where('merchantId', isEqualTo: merchantId)
-        .where('isArchived', isEqualTo: false)
-        .get();
-    final availability = await _availabilityRef(merchantId).get();
-    final inventory = await _firestore
-        .collection('merchants')
-        .doc(merchantId)
-        .collection('branch_inventory')
-        .where('branchId', isEqualTo: branchId)
-        .where('itemType', isEqualTo: 'product')
-        .get();
-    final explicit = <String, bool>{};
-    final anyExplicit = <String>{};
-    for (final doc in availability.docs) {
-      final data = doc.data();
-      final productId = data['productId']?.toString();
-      final availabilityBranchId = data['branchId']?.toString();
-      if (productId == null || productId.isEmpty) continue;
-      anyExplicit.add(productId);
-      if (availabilityBranchId == branchId) {
-        explicit[productId] = data['enabled'] == true;
-      }
+    if (!await isLegacyProductVisibilityManifestCompleted(
+      merchantId: merchantId,
+      branchId: branchId,
+    )) {
+      throw StateError('Branch product compatibility manifest is not ready');
     }
-    final inventoryEvidence = {
-      for (final doc in inventory.docs) doc.data()['itemId']?.toString() ?? '',
-    }..remove('');
-
-    return legacyProducts.docs.where((doc) {
-      final productId = doc.id;
-      final enabled = explicit[productId];
-      return enabled ??
-          (anyExplicit.contains(productId)
-              ? false
-              : (inventoryEvidence.contains(productId) || branchId == 'main'));
-    }).map((doc) {
-      final data = Map<String, dynamic>.from(doc.data());
+    final visibility = await _legacyVisibilityRef(merchantId, branchId)
+        .where('enabled', isEqualTo: true)
+        .get();
+    final productIds = visibility.docs
+        .map((doc) => doc.data()['productId']?.toString() ?? doc.id)
+        .where((id) => id.isNotEmpty)
+        .toList(growable: false);
+    final products = <Product>[];
+    for (final productId in productIds) {
+      final doc = await _firestore.collection('products').doc(productId).get();
+      if (!doc.exists || doc.data() == null) continue;
+      final data = Map<String, dynamic>.from(doc.data()!);
+      if (data['merchantId']?.toString() != merchantId) continue;
+      if (data['isArchived'] == true) continue;
       data['id'] = doc.id;
       data['merchantId'] = data['merchantId']?.toString() ?? merchantId;
       data['branchId'] = branchId;
       data['price'] = (data['price'] ?? 0.0).toDouble();
       data['quantity'] = 0;
       data.remove('costPrice');
-      return Product.fromJson(data);
-    }).toList();
+      products.add(Product.fromJson(data));
+    }
+    return products;
   }
 
   /// Product documents are branch-owned operational catalog data. Quantities

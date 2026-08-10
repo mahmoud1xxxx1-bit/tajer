@@ -17,6 +17,7 @@ import '../../authentication/data/auth_repository.dart';
 import '../../authentication/application/access_policy.dart';
 import '../../authentication/application/session_identity.dart';
 import '../../../core/services/app_review_service.dart';
+import '../../../core/services/branch_catalog_migration_bootstrap_service.dart';
 import '../../../core/widgets/app_drawer.dart';
 import '../../branches/presentation/active_branch_selector.dart';
 import '../../branches/presentation/branch_context.dart';
@@ -81,6 +82,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final bool canManageCustomers = policy.canManageCustomers;
     final bool canViewReports = policy.canViewReports;
     final bool canCreateOrders = policy.canCreateOrders;
+    final migrationBootstrap =
+        (appUser.role == 'merchant' || appUser.role == 'admin')
+            ? ref.watch(branchCatalogMigrationBootstrapProvider)
+            : const AsyncData<void>(null);
 
     final List<Widget> screens = [
       DashboardHome(
@@ -133,9 +138,35 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         }
       },
       child: Scaffold(
-        body: IndexedStack(
-          index: _currentIndex,
-          children: screens,
+        body: Column(
+          children: [
+            if (migrationBootstrap.hasError)
+              MaterialBanner(
+                content: Text(
+                  Localizations.localeOf(context).languageCode == 'ar'
+                      ? 'تعذر إكمال تهيئة كتالوج الفروع. حاول مرة أخرى.'
+                      : 'Branch catalog setup could not finish. Try again.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => ref.invalidate(
+                      branchCatalogMigrationBootstrapProvider,
+                    ),
+                    child: Text(
+                      Localizations.localeOf(context).languageCode == 'ar'
+                          ? 'إعادة المحاولة'
+                          : 'Retry',
+                    ),
+                  ),
+                ],
+              ),
+            Expanded(
+              child: IndexedStack(
+                index: _currentIndex,
+                children: screens,
+              ),
+            ),
+          ],
         ),
         bottomNavigationBar: NavigationBar(
           selectedIndex: _currentIndex,

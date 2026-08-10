@@ -216,6 +216,88 @@ async function main() {
           updatedAt: new Date(),
         },
       );
+      await setDoc(doc(db, 'products', 'prod-branch-b-only'), {
+        merchantId: 'merchant-a',
+        name: 'Branch B only product',
+      });
+      await setDoc(doc(db, 'raw_materials', 'raw-branch-b-only'), {
+        merchantId: 'merchant-a',
+        name: 'Branch B only raw',
+        quantity: 0,
+        initialQuantity: 0,
+        unit: 'piece',
+      });
+      await setDoc(
+        doc(db, 'merchants', 'merchant-a', 'product_branch_availability', 'branch-b_prod-branch-b-only'),
+        {
+          id: 'branch-b_prod-branch-b-only',
+          merchantId: 'merchant-a',
+          branchId: 'branch-b',
+          productId: 'prod-branch-b-only',
+          enabled: true,
+          updatedAt: new Date(),
+        },
+      );
+      await setDoc(
+        doc(db, 'merchants', 'merchant-a', 'raw_material_branch_availability', 'branch-b_raw-branch-b-only'),
+        {
+          id: 'branch-b_raw-branch-b-only',
+          merchantId: 'merchant-a',
+          branchId: 'branch-b',
+          rawMaterialId: 'raw-branch-b-only',
+          enabled: true,
+          updatedAt: new Date(),
+        },
+      );
+      await setDoc(
+        doc(db, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_product_visibility', 'prod-1'),
+        {
+          id: 'prod-1',
+          merchantId: 'merchant-a',
+          branchId: 'branch-a',
+          productId: 'prod-1',
+          enabled: true,
+          updatedAt: new Date(),
+        },
+      );
+      await setDoc(
+        doc(db, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_raw_material_visibility', 'raw-1'),
+        {
+          id: 'raw-1',
+          merchantId: 'merchant-a',
+          branchId: 'branch-a',
+          rawMaterialId: 'raw-1',
+          enabled: true,
+          updatedAt: new Date(),
+        },
+      );
+      await setDoc(
+        doc(db, 'merchants', 'merchant-a', 'branches', 'main', 'legacy_product_visibility', 'prod-1'),
+        {
+          id: 'prod-1',
+          merchantId: 'merchant-a',
+          branchId: 'main',
+          productId: 'prod-1',
+          enabled: true,
+          updatedAt: new Date(),
+        },
+      );
+      await setDoc(
+        doc(db, 'merchants', 'merchant-a', 'migration_state', 'legacy_product_visibility_v1_branch-a'),
+        {
+          version: 1,
+          status: 'completed',
+          branchId: 'branch-a',
+        },
+      );
+      await setDoc(
+        doc(db, 'merchants', 'merchant-a', 'migration_state', 'legacy_raw_material_visibility_v1_branch-a'),
+        {
+          version: 1,
+          status: 'completed',
+          branchId: 'branch-a',
+        },
+      );
     });
 
     const cashier = testEnv.authenticatedContext('cashier-a', {
@@ -323,6 +405,33 @@ async function main() {
       getDoc(
         doc(cashier, 'merchants', 'merchant-a', 'raw_material_branch_availability', 'branch-a_raw-1'),
       ),
+    );
+    await assertFails(
+      getDocs(collection(cashier, 'merchants', 'merchant-a', 'product_branch_availability')),
+    );
+    await assertSucceeds(
+      getDocs(query(
+        collection(cashier, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_product_visibility'),
+        where('enabled', '==', true),
+      )),
+    );
+    await assertSucceeds(
+      getDocs(query(
+        collection(cashier, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_raw_material_visibility'),
+        where('enabled', '==', true),
+      )),
+    );
+    await assertFails(
+      getDocs(query(
+        collection(cashier, 'merchants', 'merchant-a', 'branches', 'branch-b', 'legacy_product_visibility'),
+        where('enabled', '==', true),
+      )),
+    );
+    await assertFails(
+      getDoc(doc(cashier, 'merchants', 'merchant-a', 'product_branch_availability', 'branch-b_prod-branch-b-only')),
+    );
+    await assertSucceeds(
+      getDoc(doc(cashier, 'merchants', 'merchant-a', 'migration_state', 'legacy_product_visibility_v1_branch-a')),
     );
 
     await assertSucceeds(

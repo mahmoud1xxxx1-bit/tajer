@@ -34,19 +34,36 @@ void main() {
               ),
             );
       }
+      await repo.buildLegacyProductVisibilityManifestIfNeeded(
+        merchantId: merchantId,
+        branchId: migrationBranchId,
+      );
 
       await repo.migrateBranchCatalogPage(
         merchantId: merchantId,
         branchId: migrationBranchId,
         pageSize: 400,
       );
-      expect(await _branchProductCount(db), 400);
+      expect(await _branchProductCount(db), 240);
       final interruptedRead = await repo.readLegacyProductsForBranch(
         merchantId: merchantId,
         branchId: migrationBranchId,
       );
       expect(
           interruptedRead.map((product) => product.id).toSet(), hasLength(501));
+      expect(
+          await repo.isBranchCatalogMigrationCompleted(
+            merchantId: merchantId,
+            branchId: migrationBranchId,
+          ),
+          isFalse);
+
+      await repo.migrateBranchCatalogPage(
+        merchantId: merchantId,
+        branchId: migrationBranchId,
+        pageSize: 400,
+      );
+      expect(await _branchProductCount(db), 480);
       expect(
           await repo.isBranchCatalogMigrationCompleted(
             merchantId: merchantId,
@@ -106,7 +123,7 @@ void main() {
         branchId: migrationBranchId,
         pageSize: 400,
       );
-      expect(await _branchRawMaterialCount(db), 400);
+      expect(await _branchRawMaterialCount(db), 240);
       expect(
           await repo.isBranchRawMaterialMigrationCompleted(
             merchantId: merchantId,
@@ -114,6 +131,11 @@ void main() {
           ),
           isFalse);
 
+      await repo.migrateBranchRawMaterialsPage(
+        merchantId: merchantId,
+        branchId: migrationBranchId,
+        pageSize: 400,
+      );
       await repo.migrateBranchRawMaterialsPage(
         merchantId: merchantId,
         branchId: migrationBranchId,
