@@ -257,8 +257,7 @@ service cloud.firestore {
           hasBranchAccess(merchantId, resource.data.get('branchId', 'main'));
         allow create, update: if request.resource.data.get('branchId', 'main') is string &&
           hasBranchAccess(merchantId, request.resource.data.get('branchId', 'main')) &&
-          (hasPermission(merchantId, 'can_manage_products') ||
-           hasPermission(merchantId, 'can_manage_inventory'));
+          isOwner(merchantId);
         allow delete: if isOwner(merchantId);
       }
       match /expenses/{expenseId} {
@@ -318,7 +317,7 @@ service cloud.firestore {
 
         match /legacy_product_visibility/{productId} {
           allow read: if hasAccess(merchantId) && hasBranchAccess(merchantId, branchId);
-          allow create, update: if hasPermission(merchantId, 'can_manage_products') &&
+          allow create, update: if isOwner(merchantId) &&
             hasBranchAccess(merchantId, branchId) &&
             request.resource.data.get('merchantId', '') == merchantId &&
             request.resource.data.get('branchId', branchId) == branchId &&
@@ -329,7 +328,7 @@ service cloud.firestore {
 
         match /legacy_raw_material_visibility/{materialId} {
           allow read: if hasAccess(merchantId) && hasBranchAccess(merchantId, branchId);
-          allow create, update: if hasPermission(merchantId, 'can_manage_inventory') &&
+          allow create, update: if isOwner(merchantId) &&
             hasBranchAccess(merchantId, branchId) &&
             request.resource.data.get('merchantId', '') == merchantId &&
             request.resource.data.get('branchId', branchId) == branchId &&

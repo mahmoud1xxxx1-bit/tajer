@@ -170,9 +170,40 @@ void main() {
       expect(rawSource, isNot(contains('.migrateBranchRawMaterialsIfNeeded(')));
       expect(
           categorySource, isNot(contains('.migrateBranchCategoriesIfNeeded(')));
+      expect(dashboardSource, contains("appUser.role == 'admin'"));
       expect(dashboardSource, contains("appUser.role == 'merchant'"));
       expect(
           dashboardSource, contains('branchCatalogMigrationBootstrapProvider'));
+    });
+
+    test('migration metadata writes are owner/admin only in rules', () {
+      final rules = File('firestore.rules').readAsStringSync();
+      final migrationState = rules.split('match /migration_state/{stateId}').last
+          .split('match /expenses/{expenseId}')
+          .first;
+      final productVisibility = rules
+          .split('match /legacy_product_visibility/{productId}')
+          .last
+          .split('match /legacy_raw_material_visibility/{materialId}')
+          .first;
+      final rawVisibility = rules
+          .split('match /legacy_raw_material_visibility/{materialId}')
+          .last
+          .split('match /branch_inventory/{inventoryId}')
+          .first;
+
+      expect(migrationState, contains('allow create, update:'));
+      expect(migrationState, contains('isOwner(merchantId)'));
+      expect(migrationState, isNot(contains("can_manage_products")));
+      expect(migrationState, isNot(contains("can_manage_inventory")));
+
+      expect(productVisibility, contains('allow create, update:'));
+      expect(productVisibility, contains('isOwner(merchantId)'));
+      expect(productVisibility, isNot(contains("can_manage_products")));
+
+      expect(rawVisibility, contains('allow create, update:'));
+      expect(rawVisibility, contains('isOwner(merchantId)'));
+      expect(rawVisibility, isNot(contains("can_manage_inventory")));
     });
   });
 }

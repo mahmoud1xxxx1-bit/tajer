@@ -48,6 +48,34 @@ async function main() {
           can_receive_payments: true,
         },
       });
+      await setDoc(doc(db, 'users', 'product-manager-a'), {
+        role: 'employee',
+        merchantId: 'merchant-a',
+        isRevoked: false,
+        assignedBranchIds: ['branch-a'],
+        permissions: {
+          can_manage_products: true,
+        },
+      });
+      await setDoc(doc(db, 'users', 'inventory-manager-a'), {
+        role: 'employee',
+        merchantId: 'merchant-a',
+        isRevoked: false,
+        assignedBranchIds: ['branch-a'],
+        permissions: {
+          can_manage_inventory: true,
+        },
+      });
+      await setDoc(doc(db, 'users', 'catalog-inventory-manager-a'), {
+        role: 'employee',
+        merchantId: 'merchant-a',
+        isRevoked: false,
+        assignedBranchIds: ['branch-a'],
+        permissions: {
+          can_manage_products: true,
+          can_manage_inventory: true,
+        },
+      });
       await setDoc(doc(db, 'customers', 'customer-a'), {
         merchantId: 'merchant-a',
         branchId: 'branch-a',
@@ -303,6 +331,15 @@ async function main() {
     const cashier = testEnv.authenticatedContext('cashier-a', {
       email: 'cashier-a@example.test',
     }).firestore();
+    const productManager = testEnv.authenticatedContext('product-manager-a', {
+      email: 'product-manager-a@example.test',
+    }).firestore();
+    const inventoryManager = testEnv.authenticatedContext('inventory-manager-a', {
+      email: 'inventory-manager-a@example.test',
+    }).firestore();
+    const catalogInventoryManager = testEnv.authenticatedContext('catalog-inventory-manager-a', {
+      email: 'catalog-inventory-manager-a@example.test',
+    }).firestore();
     const otherMerchant = testEnv.authenticatedContext('cashier-b', {
       email: 'cashier-b@example.test',
     }).firestore();
@@ -432,6 +469,240 @@ async function main() {
     );
     await assertSucceeds(
       getDoc(doc(cashier, 'merchants', 'merchant-a', 'migration_state', 'legacy_product_visibility_v1_branch-a')),
+    );
+    await assertSucceeds(
+      setDoc(doc(merchant, 'merchants', 'merchant-a', 'migration_state', 'owner_metadata_state'), {
+        version: 1,
+        status: 'running',
+        branchId: 'branch-a',
+      }),
+    );
+    await assertSucceeds(
+      updateDoc(doc(merchant, 'merchants', 'merchant-a', 'migration_state', 'owner_metadata_state'), {
+        status: 'completed',
+      }),
+    );
+    await assertSucceeds(
+      deleteDoc(doc(merchant, 'merchants', 'merchant-a', 'migration_state', 'owner_metadata_state')),
+    );
+    await assertSucceeds(
+      setDoc(
+        doc(merchant, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_product_visibility', 'owner-prod'),
+        {
+          id: 'owner-prod',
+          merchantId: 'merchant-a',
+          branchId: 'branch-a',
+          productId: 'owner-prod',
+          enabled: true,
+          updatedAt: new Date(),
+        },
+      ),
+    );
+    await assertSucceeds(
+      updateDoc(
+        doc(merchant, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_product_visibility', 'owner-prod'),
+        { enabled: false },
+      ),
+    );
+    await assertSucceeds(
+      deleteDoc(
+        doc(merchant, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_product_visibility', 'owner-prod'),
+      ),
+    );
+    await assertSucceeds(
+      setDoc(
+        doc(merchant, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_raw_material_visibility', 'owner-raw'),
+        {
+          id: 'owner-raw',
+          merchantId: 'merchant-a',
+          branchId: 'branch-a',
+          rawMaterialId: 'owner-raw',
+          enabled: true,
+          updatedAt: new Date(),
+        },
+      ),
+    );
+    await assertSucceeds(
+      updateDoc(
+        doc(merchant, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_raw_material_visibility', 'owner-raw'),
+        { enabled: false },
+      ),
+    );
+    await assertSucceeds(
+      deleteDoc(
+        doc(merchant, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_raw_material_visibility', 'owner-raw'),
+      ),
+    );
+    await assertSucceeds(
+      getDoc(
+        doc(productManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_product_visibility', 'prod-1'),
+      ),
+    );
+    await assertFails(
+      setDoc(
+        doc(productManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_product_visibility', 'employee-prod'),
+        {
+          id: 'employee-prod',
+          merchantId: 'merchant-a',
+          branchId: 'branch-a',
+          productId: 'employee-prod',
+          enabled: true,
+          updatedAt: new Date(),
+        },
+      ),
+    );
+    await assertFails(
+      updateDoc(
+        doc(productManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_product_visibility', 'prod-1'),
+        { enabled: false },
+      ),
+    );
+    await assertFails(
+      deleteDoc(
+        doc(productManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_product_visibility', 'prod-1'),
+      ),
+    );
+    await assertFails(
+      setDoc(doc(productManager, 'merchants', 'merchant-a', 'migration_state', 'employee_product_state'), {
+        version: 1,
+        status: 'completed',
+        branchId: 'branch-a',
+      }),
+    );
+    await assertFails(
+      updateDoc(doc(productManager, 'merchants', 'merchant-a', 'migration_state', 'legacy_product_visibility_v1_branch-a'), {
+        status: 'tampered',
+      }),
+    );
+    await assertSucceeds(
+      setDoc(doc(productManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'products', 'employee-prod'), {
+        id: 'employee-prod',
+        merchantId: 'merchant-a',
+        branchId: 'branch-a',
+        name: 'Employee Product',
+        price: 12,
+      }),
+    );
+    await assertSucceeds(
+      updateDoc(doc(productManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'products', 'employee-prod'), {
+        price: 13,
+      }),
+    );
+    await assertSucceeds(
+      setDoc(doc(productManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'categories', 'employee-cat'), {
+        id: 'employee-cat',
+        merchantId: 'merchant-a',
+        branchId: 'branch-a',
+        name: 'Employee Category',
+      }),
+    );
+    await assertSucceeds(
+      updateDoc(doc(productManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'categories', 'employee-cat'), {
+        name: 'Employee Category Updated',
+      }),
+    );
+    await assertSucceeds(
+      getDoc(
+        doc(inventoryManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_raw_material_visibility', 'raw-1'),
+      ),
+    );
+    await assertFails(
+      setDoc(
+        doc(inventoryManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_raw_material_visibility', 'employee-raw'),
+        {
+          id: 'employee-raw',
+          merchantId: 'merchant-a',
+          branchId: 'branch-a',
+          rawMaterialId: 'employee-raw',
+          enabled: true,
+          updatedAt: new Date(),
+        },
+      ),
+    );
+    await assertFails(
+      updateDoc(
+        doc(inventoryManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_raw_material_visibility', 'raw-1'),
+        { enabled: false },
+      ),
+    );
+    await assertFails(
+      deleteDoc(
+        doc(inventoryManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_raw_material_visibility', 'raw-1'),
+      ),
+    );
+    await assertFails(
+      setDoc(doc(inventoryManager, 'merchants', 'merchant-a', 'migration_state', 'employee_inventory_state'), {
+        version: 1,
+        status: 'completed',
+        branchId: 'branch-a',
+      }),
+    );
+    await assertFails(
+      updateDoc(doc(inventoryManager, 'merchants', 'merchant-a', 'migration_state', 'legacy_raw_material_visibility_v1_branch-a'), {
+        status: 'tampered',
+      }),
+    );
+    await assertSucceeds(
+      setDoc(doc(inventoryManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'raw_materials', 'employee-raw'), {
+        id: 'employee-raw',
+        merchantId: 'merchant-a',
+        branchId: 'branch-a',
+        name: 'Employee Raw',
+        unit: 'kg',
+        quantity: 5,
+      }),
+    );
+    await assertSucceeds(
+      updateDoc(doc(inventoryManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'raw_materials', 'employee-raw'), {
+        quantity: 7,
+      }),
+    );
+    await assertSucceeds(
+      setDoc(doc(inventoryManager, 'merchants', 'merchant-a', 'branch_inventory', 'branch-a_raw_employee-raw'), {
+        merchantId: 'merchant-a',
+        branchId: 'branch-a',
+        itemId: 'employee-raw',
+        itemType: 'raw_material',
+        quantity: 5,
+      }),
+    );
+    await assertSucceeds(
+      updateDoc(doc(inventoryManager, 'merchants', 'merchant-a', 'branch_inventory', 'branch-a_raw_employee-raw'), {
+        quantity: 6,
+      }),
+    );
+    await assertFails(
+      setDoc(doc(catalogInventoryManager, 'merchants', 'merchant-a', 'migration_state', 'employee_both_state'), {
+        version: 1,
+        status: 'completed',
+        branchId: 'branch-a',
+      }),
+    );
+    await assertFails(
+      setDoc(
+        doc(catalogInventoryManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_product_visibility', 'employee-both-prod'),
+        {
+          id: 'employee-both-prod',
+          merchantId: 'merchant-a',
+          branchId: 'branch-a',
+          productId: 'employee-both-prod',
+          enabled: true,
+          updatedAt: new Date(),
+        },
+      ),
+    );
+    await assertFails(
+      setDoc(
+        doc(catalogInventoryManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_raw_material_visibility', 'employee-both-raw'),
+        {
+          id: 'employee-both-raw',
+          merchantId: 'merchant-a',
+          branchId: 'branch-a',
+          rawMaterialId: 'employee-both-raw',
+          enabled: true,
+          updatedAt: new Date(),
+        },
+      ),
     );
 
     await assertSucceeds(
