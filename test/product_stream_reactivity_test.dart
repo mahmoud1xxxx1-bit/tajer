@@ -240,8 +240,7 @@ FirebaseAuthPlatform.instance = MockFirebaseAuthPlatform();
           .doc('main')
           .collection('products')
           .get();
-      print('Docs count: `${snap.docs.length}');
-      if (snap.docs.isNotEmpty) print('Doc data: `${snap.docs.first.data()}');
+
       final resolved = await waitForData(container, (v) => v.first.quantity == 70);
       expect(resolved.value!.first.quantity, 70);
       
