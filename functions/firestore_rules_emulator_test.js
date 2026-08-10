@@ -148,6 +148,16 @@ async function main() {
           quantity: 3,
         },
       );
+      await setDoc(
+        doc(db, 'merchants', 'merchant-a', 'branch_inventory', 'branch-a_raw_material_raw-1'),
+        {
+          merchantId: 'merchant-a',
+          branchId: 'branch-a',
+          itemId: 'raw-1',
+          itemType: 'raw_material',
+          quantity: 10,
+        },
+      );
       await setDoc(doc(db, 'orders', 'order-a'), {
         merchantId: 'merchant-a',
         branchId: 'branch-a',
@@ -359,9 +369,9 @@ async function main() {
       email: 'cashier-no-shift@example.test',
     }).firestore();
 
-    await assertSucceeds(getDoc(doc(cashier, 'orders', 'order-a')));
-    await assertFails(getDoc(doc(otherMerchant, 'orders', 'order-a')));
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(getDoc(doc(cashier, 'orders', 'order-a')));
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(getDoc(doc(otherMerchant, 'orders', 'order-a')));
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       getDocs(query(
         collection(cashier, 'orders'),
         where('merchantId', '==', 'merchant-a'),
@@ -369,14 +379,14 @@ async function main() {
         where('creatorId', '==', 'cashier-a'),
       )),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       getDocs(query(
         collection(cashier, 'orders'),
         where('merchantId', '==', 'merchant-a'),
         where('branchId', '==', 'branch-a'),
       )),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       getDocs(query(
         collection(cashier, 'orders'),
         where('merchantId', '==', 'merchant-a'),
@@ -384,33 +394,33 @@ async function main() {
         where('creatorId', '==', 'cashier-a'),
       )),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       getDocs(query(
         collection(viewAllCashier, 'orders'),
         where('merchantId', '==', 'merchant-a'),
         where('branchId', '==', 'branch-a'),
       )),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       getDocs(query(
         collection(merchant, 'orders'),
         where('merchantId', '==', 'merchant-a'),
         where('branchId', '==', 'branch-a'),
       )),
     );
-    await assertSucceeds(getDoc(doc(cashier, 'products', 'prod-1')));
-    await assertFails(getDoc(doc(otherMerchant, 'products', 'prod-1')));
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(getDoc(doc(cashier, 'products', 'prod-1')));
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(getDoc(doc(otherMerchant, 'products', 'prod-1')));
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       getDoc(
         doc(cashier, 'merchants', 'merchant-a', 'product_branch_availability', 'branch-a_prod-1'),
       ),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       getDoc(
         doc(cashier, 'merchants', 'merchant-a', 'product_branch_availability', 'branch-b_prod-1'),
       ),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       setDoc(
         doc(cashier, 'merchants', 'merchant-a', 'product_branch_availability', 'branch-a_prod-2'),
         {
@@ -423,13 +433,13 @@ async function main() {
         },
       ),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       getDoc(doc(cashier, 'merchants', 'merchant-a', 'branches', 'branch-a', 'products', 'prod-branch-a')),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       getDoc(doc(cashier, 'merchants', 'merchant-a', 'branches', 'branch-b', 'products', 'prod-branch-b')),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       setDoc(doc(cashier, 'merchants', 'merchant-a', 'branches', 'branch-b', 'products', 'forged'), {
         id: 'forged',
         merchantId: 'merchant-a',
@@ -438,54 +448,54 @@ async function main() {
         price: 1,
       }),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       getDoc(
         doc(cashier, 'merchants', 'merchant-a', 'raw_material_branch_availability', 'branch-a_raw-1'),
       ),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       getDocs(collection(cashier, 'merchants', 'merchant-a', 'product_branch_availability')),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       getDocs(query(
         collection(cashier, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_product_visibility'),
         where('enabled', '==', true),
       )),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       getDocs(query(
         collection(cashier, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_raw_material_visibility'),
         where('enabled', '==', true),
       )),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       getDocs(query(
         collection(cashier, 'merchants', 'merchant-a', 'branches', 'branch-b', 'legacy_product_visibility'),
         where('enabled', '==', true),
       )),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       getDoc(doc(cashier, 'merchants', 'merchant-a', 'product_branch_availability', 'branch-b_prod-branch-b-only')),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       getDoc(doc(cashier, 'merchants', 'merchant-a', 'migration_state', 'legacy_product_visibility_v1_branch-a')),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       setDoc(doc(merchant, 'merchants', 'merchant-a', 'migration_state', 'owner_metadata_state'), {
         version: 1,
         status: 'running',
         branchId: 'branch-a',
       }),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       updateDoc(doc(merchant, 'merchants', 'merchant-a', 'migration_state', 'owner_metadata_state'), {
         status: 'completed',
       }),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       deleteDoc(doc(merchant, 'merchants', 'merchant-a', 'migration_state', 'owner_metadata_state')),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       setDoc(
         doc(merchant, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_product_visibility', 'owner-prod'),
         {
@@ -498,18 +508,18 @@ async function main() {
         },
       ),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       updateDoc(
         doc(merchant, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_product_visibility', 'owner-prod'),
         { enabled: false },
       ),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       deleteDoc(
         doc(merchant, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_product_visibility', 'owner-prod'),
       ),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       setDoc(
         doc(merchant, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_raw_material_visibility', 'owner-raw'),
         {
@@ -522,23 +532,23 @@ async function main() {
         },
       ),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       updateDoc(
         doc(merchant, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_raw_material_visibility', 'owner-raw'),
         { enabled: false },
       ),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       deleteDoc(
         doc(merchant, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_raw_material_visibility', 'owner-raw'),
       ),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       getDoc(
         doc(productManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_product_visibility', 'prod-1'),
       ),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       setDoc(
         doc(productManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_product_visibility', 'employee-prod'),
         {
@@ -551,30 +561,30 @@ async function main() {
         },
       ),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       updateDoc(
         doc(productManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_product_visibility', 'prod-1'),
         { enabled: false },
       ),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       deleteDoc(
         doc(productManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_product_visibility', 'prod-1'),
       ),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       setDoc(doc(productManager, 'merchants', 'merchant-a', 'migration_state', 'employee_product_state'), {
         version: 1,
         status: 'completed',
         branchId: 'branch-a',
       }),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       updateDoc(doc(productManager, 'merchants', 'merchant-a', 'migration_state', 'legacy_product_visibility_v1_branch-a'), {
         status: 'tampered',
       }),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       setDoc(doc(productManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'products', 'employee-prod'), {
         id: 'employee-prod',
         merchantId: 'merchant-a',
@@ -583,12 +593,12 @@ async function main() {
         price: 12,
       }),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       updateDoc(doc(productManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'products', 'employee-prod'), {
         price: 13,
       }),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       setDoc(doc(productManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'categories', 'employee-cat'), {
         id: 'employee-cat',
         merchantId: 'merchant-a',
@@ -596,17 +606,17 @@ async function main() {
         name: 'Employee Category',
       }),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       updateDoc(doc(productManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'categories', 'employee-cat'), {
         name: 'Employee Category Updated',
       }),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       getDoc(
         doc(inventoryManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_raw_material_visibility', 'raw-1'),
       ),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       setDoc(
         doc(inventoryManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_raw_material_visibility', 'employee-raw'),
         {
@@ -619,30 +629,30 @@ async function main() {
         },
       ),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       updateDoc(
         doc(inventoryManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_raw_material_visibility', 'raw-1'),
         { enabled: false },
       ),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       deleteDoc(
         doc(inventoryManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_raw_material_visibility', 'raw-1'),
       ),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       setDoc(doc(inventoryManager, 'merchants', 'merchant-a', 'migration_state', 'employee_inventory_state'), {
         version: 1,
         status: 'completed',
         branchId: 'branch-a',
       }),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       updateDoc(doc(inventoryManager, 'merchants', 'merchant-a', 'migration_state', 'legacy_raw_material_visibility_v1_branch-a'), {
         status: 'tampered',
       }),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       setDoc(doc(inventoryManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'raw_materials', 'employee-raw'), {
         id: 'employee-raw',
         merchantId: 'merchant-a',
@@ -652,12 +662,12 @@ async function main() {
         quantity: 5,
       }),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       updateDoc(doc(inventoryManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'raw_materials', 'employee-raw'), {
         quantity: 7,
       }),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       setDoc(doc(inventoryManager, 'merchants', 'merchant-a', 'branch_inventory', 'branch-a_raw_employee-raw'), {
         merchantId: 'merchant-a',
         branchId: 'branch-a',
@@ -666,19 +676,19 @@ async function main() {
         quantity: 5,
       }),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       updateDoc(doc(inventoryManager, 'merchants', 'merchant-a', 'branch_inventory', 'branch-a_raw_employee-raw'), {
         quantity: 6,
       }),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       setDoc(doc(catalogInventoryManager, 'merchants', 'merchant-a', 'migration_state', 'employee_both_state'), {
         version: 1,
         status: 'completed',
         branchId: 'branch-a',
       }),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       setDoc(
         doc(catalogInventoryManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_product_visibility', 'employee-both-prod'),
         {
@@ -691,7 +701,7 @@ async function main() {
         },
       ),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       setDoc(
         doc(catalogInventoryManager, 'merchants', 'merchant-a', 'branches', 'branch-a', 'legacy_raw_material_visibility', 'employee-both-raw'),
         {
@@ -705,10 +715,10 @@ async function main() {
       ),
     );
 
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       getDoc(doc(cashier, 'merchants', 'merchant-a', 'branch_runtime', 'branch-a')),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       setDoc(doc(cashier, 'merchants', 'merchant-a', 'branch_runtime', 'branch-a'), {
         merchantId: 'merchant-a',
         branchId: 'branch-a',
@@ -716,7 +726,7 @@ async function main() {
         updatedAt: new Date(),
       }),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       setDoc(doc(cashier, 'shifts', 'shift-new'), {
         id: 'shift-new',
         merchantId: 'merchant-a',
@@ -728,7 +738,7 @@ async function main() {
         status: 'open',
       }),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       setDoc(doc(noShiftCashier, 'shifts', 'shift-no-permission'), {
         id: 'shift-no-permission',
         merchantId: 'merchant-a',
@@ -740,7 +750,7 @@ async function main() {
         status: 'open',
       }),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       setDoc(doc(noShiftCashier, 'merchants', 'merchant-a', 'branch_runtime', 'branch-a'), {
         merchantId: 'merchant-a',
         branchId: 'branch-a',
@@ -748,7 +758,7 @@ async function main() {
         updatedAt: new Date(),
       }),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       setDoc(doc(cashier, 'merchants', 'merchant-a', 'branch_runtime', 'branch-b'), {
         merchantId: 'merchant-a',
         branchId: 'branch-b',
@@ -757,44 +767,44 @@ async function main() {
       }),
     );
 
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       updateDoc(
         doc(cashier, 'merchants', 'merchant-a', 'branch_inventory', 'branch-a_product_prod-1'),
         { quantity: 99 },
       ),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       updateDoc(
         doc(cashier, 'merchants', 'merchant-a', 'branch_inventory', 'branch-a_product_prod-1'),
         { quantity: 2, merchantId: 'merchant-a', branchId: 'branch-a', itemId: 'prod-1', itemType: 'product' },
       ),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       updateDoc(
         doc(cashier, 'merchants', 'merchant-a', 'branch_inventory', 'branch-a_product_prod-1'),
         { quantity: 99, merchantId: 'merchant-a', branchId: 'branch-a', itemId: 'prod-1', itemType: 'product' },
       ),
     );
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       updateDoc(
         doc(stock, 'merchants', 'merchant-a', 'branch_inventory', 'branch-a_product_prod-1'),
         { quantity: 4, merchantId: 'merchant-a', branchId: 'branch-a', itemId: 'prod-1', itemType: 'product' },
       ),
     );
 
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       setDoc(doc(cashier, 'merchants', 'merchant-a', 'order_cost_snapshots', 'forged'), {
         merchantId: 'merchant-a',
         branchId: 'branch-a',
         totalCost: 1,
       }),
     );
-    await assertFails(getDoc(doc(cashier, 'merchants', 'merchant-a', 'order_cost_snapshots', 'order-a')));
-    await assertSucceeds(getDoc(doc(auditor, 'merchants', 'merchant-a', 'order_cost_snapshots', 'order-a')));
-    await assertFails(getDoc(doc(cashier, 'merchants', 'merchant-a', 'product_costs', 'prod-1')));
-    await assertSucceeds(getDoc(doc(auditor, 'merchants', 'merchant-a', 'product_costs', 'prod-1')));
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(getDoc(doc(cashier, 'merchants', 'merchant-a', 'order_cost_snapshots', 'order-a')));
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(getDoc(doc(auditor, 'merchants', 'merchant-a', 'order_cost_snapshots', 'order-a')));
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(getDoc(doc(cashier, 'merchants', 'merchant-a', 'product_costs', 'prod-1')));
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(getDoc(doc(auditor, 'merchants', 'merchant-a', 'product_costs', 'prod-1')));
 
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       setDoc(doc(cashier, 'merchants', 'merchant-a', 'customer_debt_payments', 'wrong-branch'), {
         id: 'wrong-branch',
         merchantId: 'merchant-a',
@@ -807,7 +817,7 @@ async function main() {
         createdAt: new Date(),
       }),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       setDoc(doc(cashier, 'merchants', 'merchant-a', 'customer_debt_payments', 'wrong-customer-branch'), {
         id: 'wrong-customer-branch',
         merchantId: 'merchant-a',
@@ -820,31 +830,31 @@ async function main() {
         createdAt: new Date(),
       }),
     );
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       getDoc(doc(cashier, 'merchants', 'merchant-a', 'customer_debt_payments', 'wrong-branch')),
     );
 
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       setDoc(doc(cashier, 'merchants', 'merchant-a', 'product_costs', 'prod-1'), {
         merchantId: 'merchant-a',
         productId: 'prod-1',
         costPrice: 1,
       }),
     );
-    await assertFails(deleteDoc(doc(cashier, 'orders', 'order-a')));
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(deleteDoc(doc(cashier, 'orders', 'order-a')));
 
     // MTO Checkout Rules Tests
     // Employee with can_create_orders assigned to branch-a:
     // READ branch-local product / raw material: ALLOW
-    await assertSucceeds(getDoc(doc(cashier, 'merchants', 'merchant-a', 'branches', 'branch-a', 'products', 'prod-branch-a')));
-    await assertSucceeds(getDoc(doc(cashier, 'merchants', 'merchant-a', 'branches', 'branch-a', 'raw_materials', 'raw-1')));
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(getDoc(doc(cashier, 'merchants', 'merchant-a', 'branches', 'branch-a', 'products', 'prod-branch-a')));
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(getDoc(doc(cashier, 'merchants', 'merchant-a', 'branches', 'branch-a', 'raw_materials', 'raw-1')));
 
     // GET missing compatibility docs according to narrow get rule: ALLOW
-    await assertFails(getDoc(doc(cashier, 'merchants', 'merchant-a', 'product_branch_availability', 'branch-b_prod-1')));
-    await assertSucceeds(getDoc(doc(cashier, 'merchants', 'merchant-a', 'product_branch_availability', 'branch-a_prod-1')));
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(getDoc(doc(cashier, 'merchants', 'merchant-a', 'product_branch_availability', 'branch-b_prod-1')));
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(getDoc(doc(cashier, 'merchants', 'merchant-a', 'product_branch_availability', 'branch-a_prod-1')));
 
     // DECREMENT same-branch branch_inventory (raw-material quantity) through checkout: ALLOW
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       updateDoc(
         doc(cashier, 'merchants', 'merchant-a', 'branch_inventory', 'branch-a_raw_material_raw-1'),
         { quantity: 8, merchantId: 'merchant-a', branchId: 'branch-a', itemId: 'raw-1', itemType: 'raw_material' },
@@ -852,7 +862,7 @@ async function main() {
     );
 
     // CREATE checkout inventory_log: ALLOW
-    await assertSucceeds(
+    console.log('assertSucceeds at line ' + new Error().stack.split('\n')[1]); await assertSucceeds(
       setDoc(
         doc(cashier, 'merchants', 'merchant-a', 'inventory_logs', 'log-1'),
         {
@@ -860,6 +870,8 @@ async function main() {
           branchId: 'branch-a',
           productId: 'raw-1',
           changeQuantity: -2,
+          previousQuantity: 10,
+          newQuantity: 8,
           reason: 'Sales invoice #123',
           date: new Date(),
           userEmail: 'cashier-a@example.test',
@@ -868,7 +880,7 @@ async function main() {
     );
 
     // WRITE raw_material_branch_availability: DENY
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       setDoc(
         doc(cashier, 'merchants', 'merchant-a', 'raw_material_branch_availability', 'branch-a_raw-1'),
         { enabled: true },
@@ -876,7 +888,7 @@ async function main() {
     );
 
     // WRITE product_branch_availability: DENY
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       setDoc(
         doc(cashier, 'merchants', 'merchant-a', 'product_branch_availability', 'branch-a_prod-1'),
         { enabled: true },
@@ -884,7 +896,7 @@ async function main() {
     );
 
     // Cross-branch targeting: DENY
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       updateDoc(
         doc(cashier, 'merchants', 'merchant-a', 'branch_inventory', 'branch-b_raw_material_raw-1'),
         { quantity: 8, merchantId: 'merchant-a', branchId: 'branch-b', itemId: 'raw-1', itemType: 'raw_material' },
@@ -892,7 +904,7 @@ async function main() {
     );
 
     // Manual Mutation: Arbitrary manual inventory mutation without can_manage_inventory: DENY (tested above with 99 quantity, this is just asserting it works for raw materials as well without required fields)
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       updateDoc(
         doc(cashier, 'merchants', 'merchant-a', 'branch_inventory', 'branch-a_raw_material_raw-1'),
         { quantity: 150 }, // Arbitrary mutation (missing itemType/branchId etc)
@@ -900,7 +912,7 @@ async function main() {
     );
 
     // Malformed ID: Targeting invalid non-canonical document IDs: DENY
-    await assertFails(
+    console.log('assertFails at line ' + new Error().stack.split('\n')[1]); await assertFails(
       updateDoc(
         doc(cashier, 'merchants', 'merchant-a', 'branch_inventory', 'branch-a_raw_raw-1'), // non canonical, must be raw_material
         { quantity: 8, merchantId: 'merchant-a', branchId: 'branch-a', itemId: 'raw-1', itemType: 'raw_material' },

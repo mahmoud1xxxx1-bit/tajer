@@ -614,10 +614,13 @@ Stream<List<Product>> productsStream(ProductsStreamRef ref) async* {
   final productSnapshots =
       repository.queryProducts(merchantId, branchId).snapshots();
 
-  final inventory = await ref.watch(branchInventoryStreamProvider(branchId).future);
-  final costs = canViewCost
-      ? await ref.watch(productCostsStreamProvider(merchantId).future)
-      : const <String, double>{};
+  final inventoryFuture = ref.watch(branchInventoryStreamProvider(branchId).future);
+  final costsFuture = canViewCost
+      ? ref.watch(productCostsStreamProvider(merchantId).future)
+      : Future.value(const <String, double>{});
+
+  final inventory = await inventoryFuture;
+  final costs = await costsFuture;
 
   yield* productSnapshots.asyncMap((snapshot) async {
     var baseProducts = snapshot.docs.map((doc) => doc.data()).toList();
