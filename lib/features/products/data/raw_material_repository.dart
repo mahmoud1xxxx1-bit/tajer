@@ -485,9 +485,7 @@ final rawMaterialsStreamProvider =
   final branchId = ref.watch(selectedBranchIdProvider);
   final branchInventory = ref.watch(branchInventoryStreamProvider(branchId));
 
-  return repository.watchRawMaterials(merchantId, branchId).map((materials) {
-    return materials;
-  }).asyncMap((materials) async {
+  return repository.watchRawMaterials(merchantId, branchId).asyncExpand((materials) async* {
     var baseMaterials = materials;
     final migrationCompleted =
         await repository.isBranchRawMaterialMigrationCompleted(
@@ -500,12 +498,16 @@ final rawMaterialsStreamProvider =
         branchId: branchId,
       );
     }
-    final inventory = branchInventory.valueOrNull ?? const [];
+    
+    // Explicitly await the future of the inventory provider to guarantee readiness.
+    // This removes the "False Zero" glitch caused by AsyncLoading mapping to 0.
+    final inventory = await ref.watch(branchInventoryStreamProvider(branchId).future);
+    
     final scoped = {
       for (final item in inventory)
         if (item.itemType == 'raw_material') item.itemId: item,
     };
-    return baseMaterials.map((material) {
+    yield baseMaterials.map((material) {
       final item = scoped[material.id];
       if (item != null) {
         return material.copyWith(

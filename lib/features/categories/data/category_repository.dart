@@ -230,10 +230,11 @@ final categoryRepositoryProvider = Provider<CategoryRepository?>((ref) {
 final categoriesStreamProvider = StreamProvider<List<Category>>((ref) {
   final repo = ref.watch(categoryRepositoryProvider);
   if (repo == null) return Stream.value([]);
-  return repo.watchCategories().asyncMap((categories) async {
+  return repo.watchCategories().asyncExpand((categories) async* {
     if (await repo.isBranchCategoryMigrationCompleted()) {
-      return categories;
+      yield categories;
+    } else {
+      yield await repo.readLegacyCategories();
     }
-    return repo.readLegacyCategories();
   });
 });

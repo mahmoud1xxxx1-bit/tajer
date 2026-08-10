@@ -617,21 +617,25 @@ Stream<List<Product>> productsStream(ProductsStreamRef ref) {
       ? costRepository.watchCosts(merchantId)
       : Stream<Map<String, double>>.value(const <String, double>{});
 
-  return productSnapshots.asyncExpand((snapshot) {
-    return costSnapshots.asyncMap((costs) async {
-      var baseProducts = snapshot.docs.map((doc) => doc.data()).toList();
-      final migrationCompleted =
-          await repository.isBranchCatalogMigrationCompleted(
+  return productSnapshots.asyncExpand((snapshot) async* {
+    var baseProducts = snapshot.docs.map((doc) => doc.data()).toList();
+    final migrationCompleted =
+        await repository.isBranchCatalogMigrationCompleted(
+      merchantId: merchantId,
+      branchId: branchId,
+    );
+    if (!migrationCompleted) {
+      baseProducts = await repository.readLegacyProductsForBranch(
         merchantId: merchantId,
         branchId: branchId,
       );
-      if (!migrationCompleted) {
-        baseProducts = await repository.readLegacyProductsForBranch(
-          merchantId: merchantId,
-          branchId: branchId,
-        );
-      }
-      final inventory = branchInventory.valueOrNull ?? const [];
+    }
+    
+    // Explicitly await the future of the inventory provider to guarantee readiness.
+    // This removes the "False Zero" glitch caused by AsyncLoading mapping to 0.
+    final inventory = await ref.watch(branchInventoryStreamProvider(branchId).future);
+    
+    yield* costSnapshots.map((costs) {
       final quantities = <String, double>{
         for (final item in inventory)
           if (item.itemType == 'product') item.itemId: item.quantity,

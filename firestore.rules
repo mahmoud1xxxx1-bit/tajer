@@ -159,6 +159,12 @@ service cloud.firestore {
         request.resource.data.get('newQuantity', -1) is number &&
         request.resource.data.get('newQuantity', -1) >= 0;
     }
+    function isCanonicalInventoryId(inventoryId) {
+      return inventoryId.matches('^[^_]+_(product|raw_material)_.+$');
+    }
+    function isCanonicalAvailabilityId(availabilityId) {
+      return availabilityId.matches('^[^_]+_.+$');
+    }
 
     match /users/{userId} {
       allow read: if isAuthenticated() && (request.auth.uid == userId || hasAccess(userId) || hasAccess(resource.data.get('merchantId', '')));
@@ -342,7 +348,11 @@ service cloud.firestore {
         }
       }
       match /branch_inventory/{inventoryId} {
-        allow read: if resource != null && hasAccess(merchantId) && hasDataBranchAccess(merchantId, resource.data);
+        allow get: if hasAccess(merchantId) && (
+          (resource != null && hasDataBranchAccess(merchantId, resource.data)) ||
+          (resource == null && isCanonicalInventoryId(inventoryId) && hasBranchAccess(merchantId, inventoryId.split('_')[0]))
+        );
+        allow list: if resource != null && hasAccess(merchantId) && hasDataBranchAccess(merchantId, resource.data);
         allow create: if hasDataBranchAccess(merchantId, request.resource.data) &&
           (hasPermission(merchantId, 'can_manage_inventory') ||
            isCheckoutInventoryCreate(merchantId));
@@ -358,15 +368,19 @@ service cloud.firestore {
         allow delete: if resource == null || isOwner(merchantId);
       }
       match /product_branch_availability/{availabilityId} {
-        allow read: if resource != null &&
-          hasAccess(merchantId) &&
-          hasBranchAccess(merchantId, resource.data.get('branchId', 'main'));
+        allow get: if hasAccess(merchantId) && (
+          (resource != null && hasBranchAccess(merchantId, resource.data.get('branchId', 'main'))) ||
+          (resource == null && isCanonicalAvailabilityId(availabilityId) && hasBranchAccess(merchantId, availabilityId.split('_')[0]))
+        );
+        allow list: if resource != null && hasAccess(merchantId) && hasBranchAccess(merchantId, resource.data.get('branchId', 'main'));
         allow create, update, delete: if false;
       }
       match /raw_material_branch_availability/{availabilityId} {
-        allow read: if resource != null &&
-          hasAccess(merchantId) &&
-          hasBranchAccess(merchantId, resource.data.get('branchId', 'main'));
+        allow get: if hasAccess(merchantId) && (
+          (resource != null && hasBranchAccess(merchantId, resource.data.get('branchId', 'main'))) ||
+          (resource == null && isCanonicalAvailabilityId(availabilityId) && hasBranchAccess(merchantId, availabilityId.split('_')[0]))
+        );
+        allow list: if resource != null && hasAccess(merchantId) && hasBranchAccess(merchantId, resource.data.get('branchId', 'main'));
         allow create, update, delete: if false;
       }
       match /inventory_transfers/{transferId} {
