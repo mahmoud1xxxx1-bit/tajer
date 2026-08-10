@@ -34,7 +34,7 @@ void main() {
         repository, contains('final existingOrder = await tx.get(orderRef)'));
     expect(repository, contains('return AppOrder.fromJson(existingData)'));
     expect(repository,
-        contains('await _attachHistoricalCosts(tx, orderWithQueue)'));
+        contains('await _attachHistoricalCosts(tx, orderWithQueue, canReadCosts: canReadCosts)'));
     expect(repository, contains('applySaleInTransaction('));
     expect(repository,
         contains('tx.set(orderRef, orderWithCostSnapshot.toJson())'));
