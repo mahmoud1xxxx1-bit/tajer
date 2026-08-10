@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 
 import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
@@ -9,28 +10,28 @@ import '../../products/domain/product.dart';
 import '../../products/domain/raw_material.dart';
 import '../data/branch_inventory_repository.dart';
 import '../data/branch_repository.dart';
-import 'branch_context.dart';
 import '../domain/branch.dart';
 import '../domain/branch_inventory.dart';
+import '../domain/branch_operation_context.dart';
 
-final _transferProductsProvider = StreamProvider<List<Product>>((ref) {
+final _transferProductsProvider =
+    StreamProvider.family<List<Product>, String>((ref, branchId) {
   final user = ref.watch(appUserProvider).value;
-  if (user == null) return Stream.value(const <Product>[]);
+  if (user == null || branchId.isEmpty) return Stream.value(const <Product>[]);
   final merchantId = currentEffectiveMerchantId(user);
-  final branchId = ref.watch(selectedBranchIdProvider);
-  if (branchId.isEmpty) return Stream.value(const <Product>[]);
   final repo = ref.watch(productRepositoryProvider);
   return repo.queryProducts(merchantId, branchId).snapshots().map(
         (snapshot) => snapshot.docs.map((doc) => doc.data()).toList(),
       );
 });
 
-final _transferRawMaterialsProvider = StreamProvider<List<RawMaterial>>((ref) {
+final _transferRawMaterialsProvider =
+    StreamProvider.family<List<RawMaterial>, String>((ref, branchId) {
   final user = ref.watch(appUserProvider).value;
-  if (user == null) return Stream.value(const <RawMaterial>[]);
+  if (user == null || branchId.isEmpty) {
+    return Stream.value(const <RawMaterial>[]);
+  }
   final merchantId = currentEffectiveMerchantId(user);
-  final branchId = ref.watch(selectedBranchIdProvider);
-  if (branchId.isEmpty) return Stream.value(const <RawMaterial>[]);
   return ref
       .watch(rawMaterialRepositoryProvider)
       .watchRawMaterials(merchantId, branchId);
@@ -52,7 +53,10 @@ class _InventoryTransferScreenState
   String? _toBranchId;
   String _itemType = 'product';
   String? _itemId;
+  String? _destinationItemId;
   bool _submitting = false;
+
+  bool get _isAr => Localizations.localeOf(context).languageCode == 'ar';
 
   @override
   void dispose() {
@@ -61,7 +65,7 @@ class _InventoryTransferScreenState
     super.dispose();
   }
 
-  bool get _isAr => Localizations.localeOf(context).languageCode == 'ar';
+  String _text(String ar, String en) => _isAr ? ar : en;
 
   String _branchName(List<Branch> branches, String id) {
     for (final branch in branches) {
@@ -85,86 +89,197 @@ class _InventoryTransferScreenState
     return branchId == BranchIds.main ? legacyMainQuantity : 0.0;
   }
 
+  Future<void> _showMessage({
+    required String title,
+    required String message,
+  }) async {
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(_text('حسنا', 'OK')),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<bool> _confirm({
+    required String title,
+    required String message,
+    required String action,
+  }) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(_text('إلغاء', 'Cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(action),
+          ),
+        ],
+      ),
+    );
+    return result == true;
+  }
+
+  Future<String?> _ensureDestinationItem({
+    required String toBranchId,
+    required _TransferItem sourceItem,
+    required List<_TransferItem> destinationItems,
+  }) async {
+    final preferredId = _destinationItemId?.trim().isNotEmpty == true
+        ? _destinationItemId!.trim()
+        : sourceItem.id;
+    if (destinationItems.any((item) => item.id == preferredId)) {
+      return preferredId;
+    }
+
+    final shouldCopy = await _confirm(
+      title: _text('نسخ الصنف إلى فرع الوجهة', 'Copy item to destination'),
+      message: _text(
+        'الصنف غير موجود في فرع الوجهة. هل تريد نسخه إلى فرع الوجهة قبل التحويل؟',
+        'The item does not exist in the destination branch. Copy it there before transferring stock?',
+      ),
+      action: _text('نسخ', 'Copy'),
+    );
+    if (!shouldCopy || !mounted) return null;
+
+    final product = sourceItem.product;
+    if (product != null &&
+        product.isManufacturedOnDemand &&
+        product.recipe.isNotEmpty) {
+      await _showMessage(
+        title: _text('لا يمكن النسخ تلقائيا', 'Automatic copy blocked'),
+        message: _text(
+          'منتج التصنيع عند الطلب يحتوي وصفة. أنشئ المنتج في فرع الوجهة واربط مواد الخام هناك قبل التحويل.',
+          'This made-to-order product has a recipe. Create it in the destination branch and map its raw materials there before transferring.',
+        ),
+      );
+      return null;
+    }
+
+    final user = ref.read(appUserProvider).value;
+    if (user == null) {
+      await _showMessage(
+        title: _text('تعذر المتابعة', 'Unable to continue'),
+        message: _text('جلسة المستخدم غير متاحة.', 'User session unavailable.'),
+      );
+      return null;
+    }
+
+    final merchantId = currentEffectiveMerchantId(user);
+    final operationContext = BranchOperationContext(
+      merchantId: merchantId,
+      branchId: toBranchId,
+    );
+
+    if (product != null) {
+      await ref.read(productRepositoryProvider).addProduct(
+        product.copyWith(
+          quantity: 0,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+        context: operationContext,
+        enabledBranchIds: {toBranchId},
+      );
+    } else if (sourceItem.rawMaterial != null) {
+      await ref.read(rawMaterialRepositoryProvider).addRawMaterial(
+        sourceItem.rawMaterial!.copyWith(
+          quantity: 0.0,
+          initialQuantity: 0.0,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+        context: operationContext,
+        enabledBranchIds: {toBranchId},
+      );
+    }
+    return sourceItem.id;
+  }
+
   Future<void> _submit({
     required List<Branch> branches,
-    required String itemName,
+    required _TransferItem sourceItem,
+    required List<_TransferItem> destinationItems,
     required double sourceAvailable,
     required double sourceLegacyQuantity,
     required double destinationLegacyQuantity,
   }) async {
     final from = _fromBranchId;
     final to = _toBranchId;
-    final itemId = _itemId;
     final quantity = double.tryParse(_quantityController.text.trim());
 
     String? error;
     if (from == null || to == null) {
-      error = _isAr
-          ? 'اختر فرع المصدر وفرع الوجهة.'
-          : 'Select source and destination branches.';
+      error = _text('اختر فرع المصدر وفرع الوجهة.',
+          'Select source and destination branches.');
     } else if (from == to) {
-      error = _isAr
-          ? 'يجب أن يكون فرع الوجهة مختلفاً عن فرع المصدر.'
-          : 'Destination branch must be different from source branch.';
-    } else if (itemId == null) {
-      error = _isAr
-          ? 'اختر المنتج أو المادة الخام.'
-          : 'Select a product or raw material.';
+      error = _text('يجب أن يختلف فرع الوجهة عن فرع المصدر.',
+          'Destination branch must be different from source branch.');
     } else if (quantity == null || quantity <= 0) {
-      error = _isAr
-          ? 'أدخل كمية صحيحة أكبر من صفر.'
-          : 'Enter a valid quantity greater than zero.';
+      error = _text('أدخل كمية صحيحة أكبر من صفر.',
+          'Enter a valid quantity greater than zero.');
     } else if (quantity > sourceAvailable + 0.000001) {
-      error = _isAr
-          ? 'الكمية المطلوبة أكبر من الرصيد المتاح في فرع المصدر.'
-          : 'Requested quantity exceeds available source stock.';
+      error = _text('الكمية المطلوبة أكبر من رصيد فرع المصدر.',
+          'Requested quantity exceeds available source stock.');
     }
 
     if (error != null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text(error)));
+      await _showMessage(
+        title: _text('تعذر التحويل', 'Transfer blocked'),
+        message: error,
+      );
       return;
     }
 
-    final fromName = _branchName(branches, from!);
-    final toName = _branchName(branches, to!);
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(_isAr ? 'تأكيد تحويل المخزون' : 'Confirm Stock Transfer'),
-        content: Text(
-          _isAr
-              ? 'سيتم تحويل ${quantity!.toStringAsFixed(2)} من "$itemName" من "$fromName" إلى "$toName".\n\nهذه العملية ستُسجل في سجل التحويلات وسجل المخزون.'
-              : 'Transfer ${quantity!.toStringAsFixed(2)} of "$itemName" from "$fromName" to "$toName".\n\nThis action will be recorded in transfer and inventory history.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text(_isAr ? 'إلغاء' : 'Cancel'),
-          ),
-          FilledButton.icon(
-            onPressed: () => Navigator.pop(ctx, true),
-            icon: const Icon(Icons.swap_horiz_rounded),
-            label: Text(_isAr ? 'تأكيد التحويل' : 'Confirm Transfer'),
-          ),
-        ],
-      ),
+    final destinationItemId = await _ensureDestinationItem(
+      toBranchId: to!,
+      sourceItem: sourceItem,
+      destinationItems: destinationItems,
     );
-    if (confirmed != true || !mounted) return;
+    if (destinationItemId == null || !mounted) return;
+
+    final fromName = _branchName(branches, from!);
+    final toName = _branchName(branches, to);
+    final confirmed = await _confirm(
+      title: _text('تأكيد تحويل المخزون', 'Confirm stock transfer'),
+      message: _text(
+        'سيتم تحويل ${quantity!.toStringAsFixed(2)} من "${sourceItem.name}" من "$fromName" إلى "$toName".',
+        'Transfer ${quantity!.toStringAsFixed(2)} of "${sourceItem.name}" from "$fromName" to "$toName".',
+      ),
+      action: _text('تأكيد التحويل', 'Confirm transfer'),
+    );
+    if (!confirmed || !mounted) return;
 
     setState(() => _submitting = true);
     try {
       final repo = ref.read(branchInventoryRepositoryProvider);
       final user = ref.read(appUserProvider).value;
-      if (repo == null || user == null)
+      if (repo == null || user == null) {
         throw StateError('Inventory repository unavailable');
+      }
       await repo.transferQuantity(
         fromBranchId: from,
         toBranchId: to,
         itemType: _itemType,
-        itemId: itemId!,
-        itemName: itemName,
-        quantity: quantity!,
+        itemId: sourceItem.id,
+        destinationItemId: destinationItemId,
+        operationId: const Uuid().v4(),
+        itemName: sourceItem.name,
+        quantity: quantity,
         legacySourceMainQuantity: sourceLegacyQuantity,
         legacyDestinationMainQuantity: destinationLegacyQuantity,
         userEmail: user.email,
@@ -176,21 +291,22 @@ class _InventoryTransferScreenState
       if (!mounted) return;
       _quantityController.clear();
       _noteController.clear();
-      setState(() => _itemId = null);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_isAr
-              ? 'تم تحويل المخزون بنجاح.'
-              : 'Stock transferred successfully.'),
-        ),
+      setState(() {
+        _itemId = null;
+        _destinationItemId = null;
+      });
+      await _showMessage(
+        title: _text('تم التحويل', 'Transfer complete'),
+        message:
+            _text('تم تحويل المخزون بنجاح.', 'Stock transferred successfully.'),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(_isAr
-              ? 'تعذر تنفيذ التحويل. تحقق من الرصيد والصلاحيات ثم حاول مجدداً.'
-              : 'Transfer failed. Check stock and permissions, then try again.'),
+      await _showMessage(
+        title: _text('تعذر التحويل', 'Transfer failed'),
+        message: _text(
+          'تعذر تنفيذ التحويل. تحقق من الرصيد والصلاحيات ثم حاول مجددا.',
+          'Transfer failed. Check stock and permissions, then try again.',
         ),
       );
     } finally {
@@ -204,19 +320,16 @@ class _InventoryTransferScreenState
     final canManageInventory =
         user?.hasPermission('can_manage_inventory') ?? false;
     final branchesAsync = ref.watch(branchesStreamProvider);
-    final productsAsync = ref.watch(_transferProductsProvider);
-    final rawMaterialsAsync = ref.watch(_transferRawMaterialsProvider);
 
     if (!canManageInventory) {
       return Scaffold(
-        appBar: AppBar(title: Text(_isAr ? 'تحويل المخزون' : 'Stock Transfer')),
+        appBar: AppBar(title: Text(_text('تحويل المخزون', 'Stock Transfer'))),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              _isAr
-                  ? 'ليس لديك صلاحية إدارة المخزون.'
-                  : 'You do not have inventory management permission.',
+              _text('ليس لديك صلاحية إدارة المخزون.',
+                  'You do not have inventory management permission.'),
               textAlign: TextAlign.center,
             ),
           ),
@@ -226,14 +339,16 @@ class _InventoryTransferScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-            _isAr ? 'تحويل المخزون بين الفروع' : 'Inter-Branch Stock Transfer'),
+        title: Text(_text(
+          'تحويل المخزون بين الفروع',
+          'Inter-Branch Stock Transfer',
+        )),
       ),
       body: branchesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => Center(
-            child: Text(
-                _isAr ? 'تعذر تحميل الفروع.' : 'Could not load branches.')),
+          child: Text(_text('تعذر تحميل الفروع.', 'Could not load branches.')),
+        ),
         data: (allBranches) {
           final branches = allBranches.where((b) => b.isActive).toList();
           if (branches.length < 2) {
@@ -241,9 +356,10 @@ class _InventoryTransferScreenState
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  _isAr
-                      ? 'تحتاج إلى فرعين نشطين على الأقل لتنفيذ تحويل مخزون.'
-                      : 'At least two active branches are required for a stock transfer.',
+                  _text(
+                    'تحتاج إلى فرعين نشطين على الأقل لتنفيذ تحويل مخزون.',
+                    'At least two active branches are required for a stock transfer.',
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -257,50 +373,88 @@ class _InventoryTransferScreenState
           final sourceInventory =
               ref.watch(branchInventoryStreamProvider(fromId)).valueOrNull ??
                   const <BranchInventory>[];
-
-          final products = productsAsync.valueOrNull ?? const <Product>[];
-          final materials =
-              rawMaterialsAsync.valueOrNull ?? const <RawMaterial>[];
+          final destinationInventory =
+              ref.watch(branchInventoryStreamProvider(toId)).valueOrNull ??
+                  const <BranchInventory>[];
+          final sourceProducts =
+              ref.watch(_transferProductsProvider(fromId)).valueOrNull ??
+                  const <Product>[];
+          final sourceMaterials =
+              ref.watch(_transferRawMaterialsProvider(fromId)).valueOrNull ??
+                  const <RawMaterial>[];
+          final destinationProducts =
+              ref.watch(_transferProductsProvider(toId)).valueOrNull ??
+                  const <Product>[];
+          final destinationMaterials =
+              ref.watch(_transferRawMaterialsProvider(toId)).valueOrNull ??
+                  const <RawMaterial>[];
 
           final itemEntries = _itemType == 'product'
-              ? products
+              ? sourceProducts
                   .map((p) => _TransferItem(
-                      id: p.id,
-                      name: p.name,
-                      legacyQuantity: p.quantity.toDouble()))
+                        id: p.id,
+                        name: p.name,
+                        legacyQuantity: p.quantity.toDouble(),
+                        product: p,
+                      ))
                   .toList()
-              : materials
+              : sourceMaterials
                   .map((m) => _TransferItem(
-                      id: m.id, name: m.name, legacyQuantity: m.quantity))
+                        id: m.id,
+                        name: m.name,
+                        legacyQuantity: m.quantity,
+                        rawMaterial: m,
+                      ))
+                  .toList();
+          final destinationEntries = _itemType == 'product'
+              ? destinationProducts
+                  .map((p) => _TransferItem(
+                        id: p.id,
+                        name: p.name,
+                        legacyQuantity: p.quantity.toDouble(),
+                        product: p,
+                      ))
+                  .toList()
+              : destinationMaterials
+                  .map((m) => _TransferItem(
+                        id: m.id,
+                        name: m.name,
+                        legacyQuantity: m.quantity,
+                        rawMaterial: m,
+                      ))
                   .toList();
 
           _TransferItem? selectedItem;
           for (final item in itemEntries) {
             if (item.id == _itemId) selectedItem = item;
           }
+          if (_destinationItemId != null &&
+              !destinationEntries
+                  .any((item) => item.id == _destinationItemId)) {
+            _destinationItemId = null;
+          }
+
           final available = selectedItem == null
               ? 0.0
               : _inventoryQuantity(sourceInventory, selectedItem.id, _itemType,
                   selectedItem.legacyQuantity, fromId);
+          final destinationQuantity = selectedItem == null
+              ? 0.0
+              : _inventoryQuantity(
+                  destinationInventory,
+                  _destinationItemId ?? selectedItem.id,
+                  _itemType,
+                  toId == BranchIds.main ? selectedItem.legacyQuantity : 0.0,
+                  toId,
+                );
 
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    _isAr
-                        ? 'انقل المنتجات أو المواد الخام بين الفروع بأمان. يتم تحديث الفرعين وسجلات التدقيق في عملية واحدة.'
-                        : 'Move products or raw materials safely between branches. Both branches and audit records are updated in one transaction.',
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
               DropdownButtonFormField<String>(
                 value: fromId,
                 decoration: InputDecoration(
-                  labelText: _isAr ? 'من فرع' : 'From branch',
+                  labelText: _text('من فرع', 'From branch'),
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.store_rounded),
                 ),
@@ -319,6 +473,7 @@ class _InventoryTransferScreenState
                                 branches.firstWhere((b) => b.id != value).id;
                           }
                           _itemId = null;
+                          _destinationItemId = null;
                         });
                       },
               ),
@@ -326,7 +481,7 @@ class _InventoryTransferScreenState
               DropdownButtonFormField<String>(
                 value: toId,
                 decoration: InputDecoration(
-                  labelText: _isAr ? 'إلى فرع' : 'To branch',
+                  labelText: _text('إلى فرع', 'To branch'),
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.location_on_rounded),
                 ),
@@ -337,19 +492,24 @@ class _InventoryTransferScreenState
                     .toList(),
                 onChanged: _submitting
                     ? null
-                    : (value) => setState(() => _toBranchId = value),
+                    : (value) => setState(() {
+                          _toBranchId = value;
+                          _destinationItemId = null;
+                        }),
               ),
               const SizedBox(height: 20),
               SegmentedButton<String>(
                 segments: [
                   ButtonSegment(
-                      value: 'product',
-                      icon: const Icon(Icons.inventory_2_rounded),
-                      label: Text(_isAr ? 'منتجات' : 'Products')),
+                    value: 'product',
+                    icon: const Icon(Icons.inventory_2_rounded),
+                    label: Text(_text('منتجات', 'Products')),
+                  ),
                   ButtonSegment(
-                      value: 'raw_material',
-                      icon: const Icon(Icons.scale_rounded),
-                      label: Text(_isAr ? 'مواد خام' : 'Raw Materials')),
+                    value: 'raw_material',
+                    icon: const Icon(Icons.scale_rounded),
+                    label: Text(_text('مواد خام', 'Raw Materials')),
+                  ),
                 ],
                 selected: {_itemType},
                 onSelectionChanged: _submitting
@@ -357,6 +517,7 @@ class _InventoryTransferScreenState
                     : (selection) => setState(() {
                           _itemType = selection.first;
                           _itemId = null;
+                          _destinationItemId = null;
                         }),
               ),
               const SizedBox(height: 16),
@@ -364,25 +525,55 @@ class _InventoryTransferScreenState
                 value: _itemId,
                 isExpanded: true,
                 decoration: InputDecoration(
-                  labelText: _isAr ? 'الصنف' : 'Item',
+                  labelText: _text('صنف المصدر', 'Source item'),
                   border: const OutlineInputBorder(),
                 ),
                 items: itemEntries
                     .map((item) => DropdownMenuItem(
-                        value: item.id,
-                        child:
-                            Text(item.name, overflow: TextOverflow.ellipsis)))
+                          value: item.id,
+                          child:
+                              Text(item.name, overflow: TextOverflow.ellipsis),
+                        ))
                     .toList(),
                 onChanged: _submitting
                     ? null
-                    : (value) => setState(() => _itemId = value),
+                    : (value) => setState(() {
+                          _itemId = value;
+                          _destinationItemId =
+                              destinationEntries.any((item) => item.id == value)
+                                  ? value
+                                  : null;
+                        }),
               ),
               if (selectedItem != null) ...[
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: _destinationItemId,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: _text('صنف الوجهة', 'Destination item'),
+                    border: const OutlineInputBorder(),
+                  ),
+                  items: destinationEntries
+                      .map((item) => DropdownMenuItem(
+                            value: item.id,
+                            child: Text(item.name,
+                                overflow: TextOverflow.ellipsis),
+                          ))
+                      .toList(),
+                  onChanged: _submitting
+                      ? null
+                      : (value) => setState(() => _destinationItemId = value),
+                  hint: Text(_text(
+                    'سيتم نسخ صنف المصدر إذا لم يوجد',
+                    'Copy source item if missing',
+                  )),
+                ),
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(8),
                     color: Theme.of(context)
                         .colorScheme
                         .primaryContainer
@@ -394,9 +585,10 @@ class _InventoryTransferScreenState
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          _isAr
-                              ? 'الرصيد المتاح في ${_branchName(branches, fromId)}: ${available.toStringAsFixed(2)}'
-                              : 'Available in ${_branchName(branches, fromId)}: ${available.toStringAsFixed(2)}',
+                          _text(
+                            'المصدر: ${available.toStringAsFixed(2)} | الوجهة: ${destinationQuantity.toStringAsFixed(2)}',
+                            'Source: ${available.toStringAsFixed(2)} | Destination: ${destinationQuantity.toStringAsFixed(2)}',
+                          ),
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -412,7 +604,7 @@ class _InventoryTransferScreenState
                     const TextInputType.numberWithOptions(decimal: true),
                 decoration: InputDecoration(
                   labelText:
-                      _isAr ? 'الكمية المراد تحويلها' : 'Transfer quantity',
+                      _text('الكمية المراد تحويلها', 'Transfer quantity'),
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.numbers_rounded),
                 ),
@@ -423,7 +615,7 @@ class _InventoryTransferScreenState
                 enabled: !_submitting,
                 maxLines: 2,
                 decoration: InputDecoration(
-                  labelText: _isAr ? 'ملاحظة (اختياري)' : 'Note (optional)',
+                  labelText: _text('ملاحظة (اختياري)', 'Note (optional)'),
                   border: const OutlineInputBorder(),
                   prefixIcon: const Icon(Icons.note_alt_outlined),
                 ),
@@ -434,7 +626,8 @@ class _InventoryTransferScreenState
                     ? null
                     : () => _submit(
                           branches: branches,
-                          itemName: selectedItem!.name,
+                          sourceItem: selectedItem!,
+                          destinationItems: destinationEntries,
                           sourceAvailable: available,
                           sourceLegacyQuantity: fromId == BranchIds.main
                               ? selectedItem.legacyQuantity
@@ -447,13 +640,14 @@ class _InventoryTransferScreenState
                     ? const SizedBox(
                         width: 18,
                         height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2))
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Icon(Icons.swap_horiz_rounded),
-                label: Text(_isAr ? 'تحويل المخزون' : 'Transfer Stock'),
+                label: Text(_text('تحويل المخزون', 'Transfer Stock')),
               ),
               const SizedBox(height: 26),
               Text(
-                _isAr ? 'سجل التحويلات' : 'Transfer History',
+                _text('سجل التحويلات', 'Transfer History'),
                 style: Theme.of(context)
                     .textTheme
                     .titleLarge
@@ -462,21 +656,24 @@ class _InventoryTransferScreenState
               const SizedBox(height: 8),
               ref.watch(inventoryTransfersStreamProvider).when(
                     loading: () => const Center(
-                        child: Padding(
-                            padding: EdgeInsets.all(20),
-                            child: CircularProgressIndicator())),
-                    error: (_, __) => Text(_isAr
-                        ? 'تعذر تحميل سجل التحويلات.'
-                        : 'Could not load transfer history.'),
+                      child: Padding(
+                        padding: EdgeInsets.all(20),
+                        child: CircularProgressIndicator(),
+                      ),
+                    ),
+                    error: (_, __) => Text(_text(
+                      'تعذر تحميل سجل التحويلات.',
+                      'Could not load transfer history.',
+                    )),
                     data: (transfers) {
                       if (transfers.isEmpty) {
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 24),
                           child: Text(
-                              _isAr
-                                  ? 'لا توجد تحويلات مخزون حتى الآن.'
-                                  : 'No stock transfers yet.',
-                              textAlign: TextAlign.center),
+                            _text('لا توجد تحويلات مخزون حتى الآن.',
+                                'No stock transfers yet.'),
+                            textAlign: TextAlign.center,
+                          ),
                         );
                       }
                       return Column(
@@ -487,13 +684,15 @@ class _InventoryTransferScreenState
                           return Card(
                             child: ListTile(
                               leading: const CircleAvatar(
-                                  child: Icon(Icons.swap_horiz_rounded)),
+                                child: Icon(Icons.swap_horiz_rounded),
+                              ),
                               title: Text(t.itemName,
                                   maxLines: 1, overflow: TextOverflow.ellipsis),
                               subtitle: Text(
-                                _isAr
-                                    ? '$fromName ← $toName\nالكمية: ${t.quantity.toStringAsFixed(2)}${t.createdByName == null ? '' : ' • ${t.createdByName}'}'
-                                    : '$fromName → $toName\nQty: ${t.quantity.toStringAsFixed(2)}${t.createdByName == null ? '' : ' • ${t.createdByName}'}',
+                                _text(
+                                  '$fromName -> $toName\nالكمية: ${t.quantity.toStringAsFixed(2)}${t.createdByName == null ? '' : ' • ${t.createdByName}'}',
+                                  '$fromName -> $toName\nQty: ${t.quantity.toStringAsFixed(2)}${t.createdByName == null ? '' : ' • ${t.createdByName}'}',
+                                ),
                               ),
                               isThreeLine: true,
                               trailing: const Icon(Icons.check_circle_rounded,
@@ -516,10 +715,14 @@ class _TransferItem {
   final String id;
   final String name;
   final double legacyQuantity;
+  final Product? product;
+  final RawMaterial? rawMaterial;
 
   const _TransferItem({
     required this.id,
     required this.name,
     required this.legacyQuantity,
+    this.product,
+    this.rawMaterial,
   });
 }

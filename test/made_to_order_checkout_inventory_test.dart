@@ -37,6 +37,19 @@ void main() {
       'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
       'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
     });
+    await firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection('product_branch_availability')
+        .doc('branch-2_$productId')
+        .set({
+      'id': 'branch-2_$productId',
+      'merchantId': merchantId,
+      'branchId': 'branch-2',
+      'productId': productId,
+      'enabled': true,
+      'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+    });
     await firestore.collection('raw_materials').doc(rawId).set({
       'id': rawId,
       'merchantId': merchantId,

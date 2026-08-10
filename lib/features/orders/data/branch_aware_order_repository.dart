@@ -148,7 +148,16 @@ class BranchAwareOrderRepository extends OrderRepository {
           .collection('products')
           .doc(productId));
       if (!snap.exists) {
-        snap = await tx.get(firestore.collection('products').doc(productId));
+        final allowed = await _legacyItemAllowedInBranch(
+          tx,
+          merchantId: order.merchantId,
+          branchId: order.branchId,
+          itemType: 'product',
+          itemId: productId,
+        );
+        if (allowed) {
+          snap = await tx.get(firestore.collection('products').doc(productId));
+        }
       }
       if (!snap.exists || snap.data() == null) continue;
       final data = snap.data()!;
@@ -218,6 +227,39 @@ class BranchAwareOrderRepository extends OrderRepository {
     }).toList();
 
     return order.copyWith(items: items);
+  }
+
+  Future<bool> _legacyItemAllowedInBranch(
+    Transaction tx, {
+    required String merchantId,
+    required String branchId,
+    required String itemType,
+    required String itemId,
+  }) async {
+    if (branchId == 'main') return true;
+    final availabilityCollection = itemType == 'product'
+        ? 'product_branch_availability'
+        : 'raw_material_branch_availability';
+    final availabilityItemField =
+        itemType == 'product' ? 'productId' : 'rawMaterialId';
+    final availabilityId = '${branchId}_$itemId';
+    final availabilitySnap = await tx.get(firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection(availabilityCollection)
+        .doc(availabilityId));
+    if (availabilitySnap.exists &&
+        availabilitySnap.data()?['enabled'] == true &&
+        availabilitySnap.data()?[availabilityItemField]?.toString() == itemId) {
+      return true;
+    }
+    final inventoryId = '${branchId}_${itemType}_$itemId';
+    final inventorySnap = await tx.get(firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection('branch_inventory')
+        .doc(inventoryId));
+    return inventorySnap.exists;
   }
 
   Map<String, dynamic> _saleShiftUpdates(AppOrder order) {

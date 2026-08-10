@@ -326,21 +326,13 @@ service cloud.firestore {
         allow read: if resource != null &&
           hasAccess(merchantId) &&
           hasBranchAccess(merchantId, resource.data.get('branchId', 'main'));
-        allow create, update: if request.resource.data.get('merchantId', '') == merchantId &&
-          hasPermission(merchantId, 'can_manage_products') &&
-          hasBranchAccess(merchantId, request.resource.data.get('branchId', 'main')) &&
-          request.resource.data.keys().hasOnly(['id', 'merchantId', 'branchId', 'productId', 'enabled', 'updatedAt']);
-        allow delete: if isOwner(merchantId);
+        allow create, update, delete: if false;
       }
       match /raw_material_branch_availability/{availabilityId} {
         allow read: if resource != null &&
           hasAccess(merchantId) &&
           hasBranchAccess(merchantId, resource.data.get('branchId', 'main'));
-        allow create, update: if request.resource.data.get('merchantId', '') == merchantId &&
-          hasPermission(merchantId, 'can_manage_inventory') &&
-          hasBranchAccess(merchantId, request.resource.data.get('branchId', 'main')) &&
-          request.resource.data.keys().hasOnly(['id', 'merchantId', 'branchId', 'rawMaterialId', 'enabled', 'updatedAt']);
-        allow delete: if isOwner(merchantId);
+        allow create, update, delete: if false;
       }
       match /inventory_transfers/{transferId} {
         allow read: if resource != null && hasAccess(merchantId) && hasBranchAccess(merchantId, resource.data.get('fromBranchId', 'main')) && hasBranchAccess(merchantId, resource.data.get('toBranchId', 'main'));

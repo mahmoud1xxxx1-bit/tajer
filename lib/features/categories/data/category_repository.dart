@@ -21,7 +21,6 @@ class CategoryRepository {
       .collection('categories');
 
   Stream<List<Category>> watchCategories() {
-    migrateBranchCategoriesIfNeeded().catchError((_) {});
     return _categoriesRef
         .withConverter(
           fromFirestore: (snapshot, _) {
@@ -43,20 +42,43 @@ class CategoryRepository {
     });
   }
 
-  Future<void> migrateBranchCategoriesIfNeeded() async {
-    final stateRef = _firestore
-        .collection('merchants')
-        .doc(_merchantId)
-        .collection('migration_state')
-        .doc('branch_categories_v1_$_branchId');
+  DocumentReference<Map<String, dynamic>> get _migrationStateRef => _firestore
+      .collection('merchants')
+      .doc(_merchantId)
+      .collection('migration_state')
+      .doc('branch_categories_v1_$_branchId');
+
+  Future<bool> isBranchCategoryMigrationCompleted() async {
+    final state = await _migrationStateRef.get();
+    return state.data()?['status'] == 'completed';
+  }
+
+  Future<void> migrateBranchCategoriesPage({int pageSize = 400}) async {
+    final stateRef = _migrationStateRef;
     final state = await stateRef.get();
     if (state.data()?['status'] == 'completed') return;
+    final lastLegacyCategoryId =
+        state.data()?['lastLegacyCategoryId']?.toString();
 
-    final legacy = await _firestore
+    Query<Map<String, dynamic>> query = _firestore
         .collection('merchants')
         .doc(_merchantId)
-        .collection('categories')
-        .get();
+        .collection('categories');
+    if (lastLegacyCategoryId != null && lastLegacyCategoryId.isNotEmpty) {
+      query = query.where('id', isGreaterThan: lastLegacyCategoryId);
+    }
+    query = query.orderBy('id').limit(pageSize);
+    final legacy = await query.get();
+    if (legacy.docs.isEmpty) {
+      await stateRef.set({
+        'version': 1,
+        'status': 'completed',
+        'branchId': _branchId,
+        'completedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      return;
+    }
+
     final batch = _firestore.batch();
     batch.set(
         stateRef,
@@ -64,10 +86,13 @@ class CategoryRepository {
           'version': 1,
           'status': 'running',
           'branchId': _branchId,
+          'lastError': FieldValue.delete(),
           'startedAt': FieldValue.serverTimestamp(),
         },
         SetOptions(merge: true));
-    for (final doc in legacy.docs.take(450)) {
+    var lastProcessedId = lastLegacyCategoryId;
+    for (final doc in legacy.docs) {
+      lastProcessedId = doc.id;
       final data = Map<String, dynamic>.from(doc.data());
       data['id'] = doc.id;
       data['merchantId'] = _merchantId;
@@ -78,12 +103,48 @@ class CategoryRepository {
         stateRef,
         {
           'version': 1,
-          'status': 'completed',
+          'status': 'running',
           'branchId': _branchId,
-          'completedAt': FieldValue.serverTimestamp(),
+          'lastLegacyCategoryId': lastProcessedId,
+          'updatedAt': FieldValue.serverTimestamp(),
         },
         SetOptions(merge: true));
     await batch.commit();
+  }
+
+  Future<void> migrateBranchCategoriesIfNeeded({int pageSize = 400}) async {
+    for (var i = 0; i < 1000; i++) {
+      await migrateBranchCategoriesPage(pageSize: pageSize);
+      if (await isBranchCategoryMigrationCompleted()) return;
+    }
+    await _migrationStateRef.set({
+      'version': 1,
+      'status': 'failed',
+      'branchId': _branchId,
+      'lastError': 'Category migration exceeded maximum page count',
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    throw StateError('Category migration exceeded maximum page count');
+  }
+
+  Future<List<Category>> readLegacyCategories() async {
+    // Preserve empty legacy categories until the owner completes migration so
+    // branches do not appear to have lost intentionally-created catalog groups.
+    final legacy = await _firestore
+        .collection('merchants')
+        .doc(_merchantId)
+        .collection('categories')
+        .orderBy('createdAt', descending: true)
+        .get();
+    return legacy.docs.map((doc) {
+      final data = Map<String, dynamic>.from(doc.data());
+      data['id'] = doc.id;
+      data['merchantId'] = data['merchantId']?.toString() ?? _merchantId;
+      data['branchId'] = _branchId;
+      data['name'] = data['name']?.toString() ?? '';
+      data['createdAt'] ??= Timestamp.now();
+      return Category.fromJson(data);
+    }).toList();
   }
 
   Future<void> addCategory(
@@ -167,5 +228,10 @@ final categoryRepositoryProvider = Provider<CategoryRepository?>((ref) {
 final categoriesStreamProvider = StreamProvider<List<Category>>((ref) {
   final repo = ref.watch(categoryRepositoryProvider);
   if (repo == null) return Stream.value([]);
-  return repo.watchCategories();
+  return repo.watchCategories().asyncMap((categories) async {
+    if (await repo.isBranchCategoryMigrationCompleted()) {
+      return categories;
+    }
+    return repo.readLegacyCategories();
+  });
 });

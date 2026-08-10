@@ -104,72 +104,6 @@ class ProductRepository {
   String availabilityDocId(String branchId, String productId) =>
       '${branchId}_$productId';
 
-  Stream<Map<String, bool>> watchAvailability(
-      String merchantId, String branchId) {
-    return _availabilityRef(merchantId)
-        .where('branchId', isEqualTo: branchId)
-        .snapshots()
-        .map((snapshot) {
-      return {
-        for (final doc in snapshot.docs)
-          '${doc.data()['productId']}::${doc.data()['branchId']}':
-              doc.data()['enabled'] == true,
-      };
-    });
-  }
-
-  Stream<Map<String, bool>> watchProductAvailability({
-    required String merchantId,
-    required String productId,
-  }) {
-    return _availabilityRef(merchantId)
-        .where('productId', isEqualTo: productId)
-        .snapshots()
-        .map((snapshot) {
-      return {
-        for (final doc in snapshot.docs)
-          doc.data()['branchId']?.toString() ?? '':
-              doc.data()['enabled'] == true,
-      };
-    });
-  }
-
-  Future<void> setProductAvailability({
-    required BranchOperationContext context,
-    required String productId,
-    required Set<String> enabledBranchIds,
-    Set<String> knownBranchIds = const <String>{},
-  }) async {
-    if (!context.isValid) throw StateError('Invalid branch operation context');
-    final existing = await _availabilityRef(context.merchantId)
-        .where('productId', isEqualTo: productId)
-        .get();
-    final allBranchIds = <String>{
-      ...knownBranchIds,
-      ...enabledBranchIds,
-      for (final doc in existing.docs) doc.data()['branchId']?.toString() ?? '',
-    }..removeWhere((branchId) => branchId.isEmpty);
-
-    final batch = _firestore.batch();
-    for (final branchId in allBranchIds) {
-      final ref = _availabilityRef(context.merchantId)
-          .doc(availabilityDocId(branchId, productId));
-      batch.set(
-        ref,
-        {
-          'id': ref.id,
-          'merchantId': context.merchantId,
-          'branchId': branchId,
-          'productId': productId,
-          'enabled': enabledBranchIds.contains(branchId),
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
-    }
-    await batch.commit();
-  }
-
   Future<void> migrateOldProducts(String merchantId) async {
     try {
       final snapshot = await _firestore
@@ -190,22 +124,43 @@ class ProductRepository {
     }
   }
 
-  Future<void> migrateBranchCatalogIfNeeded({
+  DocumentReference<Map<String, dynamic>> _productMigrationStateRef(
+    String merchantId,
+    String branchId,
+  ) =>
+      _firestore
+          .collection('merchants')
+          .doc(merchantId)
+          .collection('migration_state')
+          .doc('branch_catalog_v1_$branchId');
+
+  Future<bool> isBranchCatalogMigrationCompleted({
     required String merchantId,
     required String branchId,
   }) async {
-    final stateRef = _firestore
-        .collection('merchants')
-        .doc(merchantId)
-        .collection('migration_state')
-        .doc('branch_catalog_v1_$branchId');
+    final state = await _productMigrationStateRef(merchantId, branchId).get();
+    return state.data()?['status'] == 'completed';
+  }
+
+  Future<void> migrateBranchCatalogPage({
+    required String merchantId,
+    required String branchId,
+    int pageSize = 400,
+  }) async {
+    final stateRef = _productMigrationStateRef(merchantId, branchId);
     final state = await stateRef.get();
     if (state.data()?['status'] == 'completed') return;
+    final lastLegacyProductId =
+        state.data()?['lastLegacyProductId']?.toString();
 
-    final legacyProducts = await _firestore
+    var query = _firestore
         .collection('products')
-        .where('merchantId', isEqualTo: merchantId)
-        .get();
+        .where('merchantId', isEqualTo: merchantId);
+    if (lastLegacyProductId != null && lastLegacyProductId.isNotEmpty) {
+      query = query.where('id', isGreaterThan: lastLegacyProductId);
+    }
+    query = query.orderBy('id').limit(pageSize);
+    final legacyProducts = await query.get();
     final availability = await _availabilityRef(merchantId).get();
     final inventory = await _firestore
         .collection('merchants')
@@ -231,6 +186,16 @@ class ProductRepository {
       for (final doc in inventory.docs) doc.data()['itemId']?.toString() ?? '',
     }..remove('');
 
+    if (legacyProducts.docs.isEmpty) {
+      await stateRef.set({
+        'version': 1,
+        'status': 'completed',
+        'branchId': branchId,
+        'completedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      return;
+    }
+
     final batch = _firestore.batch();
     batch.set(
         stateRef,
@@ -238,14 +203,16 @@ class ProductRepository {
           'version': 1,
           'status': 'running',
           'branchId': branchId,
+          'lastError': FieldValue.delete(),
           'startedAt': FieldValue.serverTimestamp(),
         },
         SetOptions(merge: true));
 
-    var writes = 1;
+    var lastProcessedId = lastLegacyProductId;
     for (final doc in legacyProducts.docs) {
       final data = Map<String, dynamic>.from(doc.data());
       final productId = doc.id;
+      lastProcessedId = productId;
       final enabled = explicit[productId];
       final belongsToBranch = enabled ??
           (anyExplicit.contains(productId)
@@ -262,24 +229,103 @@ class ProductRepository {
         data,
         SetOptions(merge: true),
       );
-      writes++;
-      if (writes >= 450) break;
     }
 
     batch.set(
         stateRef,
         {
           'version': 1,
-          'status': 'completed',
+          'status': 'running',
           'branchId': branchId,
-          'completedAt': FieldValue.serverTimestamp(),
+          'lastLegacyProductId': lastProcessedId,
+          'updatedAt': FieldValue.serverTimestamp(),
         },
         SetOptions(merge: true));
     await batch.commit();
   }
 
-  /// Product documents are merchant-wide master data. Quantities belong to
-  /// branch_inventory. Sensitive cost data belongs to product_costs.
+  Future<void> migrateBranchCatalogIfNeeded({
+    required String merchantId,
+    required String branchId,
+    int pageSize = 400,
+  }) async {
+    for (var i = 0; i < 1000; i++) {
+      await migrateBranchCatalogPage(
+        merchantId: merchantId,
+        branchId: branchId,
+        pageSize: pageSize,
+      );
+      if (await isBranchCatalogMigrationCompleted(
+        merchantId: merchantId,
+        branchId: branchId,
+      )) {
+        return;
+      }
+    }
+    await _productMigrationStateRef(merchantId, branchId).set({
+      'version': 1,
+      'status': 'failed',
+      'branchId': branchId,
+      'lastError': 'Product migration exceeded maximum page count',
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    throw StateError('Product migration exceeded maximum page count');
+  }
+
+  Future<List<Product>> readLegacyProductsForBranch({
+    required String merchantId,
+    required String branchId,
+  }) async {
+    final legacyProducts = await _firestore
+        .collection('products')
+        .where('merchantId', isEqualTo: merchantId)
+        .where('isArchived', isEqualTo: false)
+        .get();
+    final availability = await _availabilityRef(merchantId).get();
+    final inventory = await _firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection('branch_inventory')
+        .where('branchId', isEqualTo: branchId)
+        .where('itemType', isEqualTo: 'product')
+        .get();
+    final explicit = <String, bool>{};
+    final anyExplicit = <String>{};
+    for (final doc in availability.docs) {
+      final data = doc.data();
+      final productId = data['productId']?.toString();
+      final availabilityBranchId = data['branchId']?.toString();
+      if (productId == null || productId.isEmpty) continue;
+      anyExplicit.add(productId);
+      if (availabilityBranchId == branchId) {
+        explicit[productId] = data['enabled'] == true;
+      }
+    }
+    final inventoryEvidence = {
+      for (final doc in inventory.docs) doc.data()['itemId']?.toString() ?? '',
+    }..remove('');
+
+    return legacyProducts.docs.where((doc) {
+      final productId = doc.id;
+      final enabled = explicit[productId];
+      return enabled ??
+          (anyExplicit.contains(productId)
+              ? false
+              : (inventoryEvidence.contains(productId) || branchId == 'main'));
+    }).map((doc) {
+      final data = Map<String, dynamic>.from(doc.data());
+      data['id'] = doc.id;
+      data['merchantId'] = data['merchantId']?.toString() ?? merchantId;
+      data['branchId'] = branchId;
+      data['price'] = (data['price'] ?? 0.0).toDouble();
+      data['quantity'] = 0;
+      data.remove('costPrice');
+      return Product.fromJson(data);
+    }).toList();
+  }
+
+  /// Product documents are branch-owned operational catalog data. Quantities
+  /// belong to branch_inventory. Sensitive cost data belongs to product_costs.
   Future<void> addProduct(
     Product product, {
     required BranchOperationContext context,
@@ -402,10 +448,6 @@ Stream<List<Product>> productsStream(ProductsStreamRef ref) {
   final branchInventory = ref.watch(branchInventoryStreamProvider(branchId));
   final canViewCost = appUser.hasPermission('can_view_cost');
 
-  repository
-      .migrateBranchCatalogIfNeeded(merchantId: merchantId, branchId: branchId)
-      .catchError((_) {});
-
   // Only merchant/admin performs the destructive legacy cost migration. Until
   // it runs, queryProducts strips costPrice before deserialization. Protected
   // product_costs remains the source for authorized cost overlays.
@@ -420,8 +462,19 @@ Stream<List<Product>> productsStream(ProductsStreamRef ref) {
       : Stream<Map<String, double>>.value(const <String, double>{});
 
   return productSnapshots.asyncExpand((snapshot) {
-    final baseProducts = snapshot.docs.map((doc) => doc.data()).toList();
-    return costSnapshots.map((costs) {
+    return costSnapshots.asyncMap((costs) async {
+      var baseProducts = snapshot.docs.map((doc) => doc.data()).toList();
+      final migrationCompleted =
+          await repository.isBranchCatalogMigrationCompleted(
+        merchantId: merchantId,
+        branchId: branchId,
+      );
+      if (!migrationCompleted) {
+        baseProducts = await repository.readLegacyProductsForBranch(
+          merchantId: merchantId,
+          branchId: branchId,
+        );
+      }
       final inventory = branchInventory.valueOrNull ?? const [];
       final quantities = <String, double>{
         for (final item in inventory)
@@ -443,32 +496,3 @@ Stream<List<Product>> productsStream(ProductsStreamRef ref) {
     });
   });
 }
-
-class ProductAvailabilityQuery {
-  final String merchantId;
-  final String productId;
-
-  const ProductAvailabilityQuery({
-    required this.merchantId,
-    required this.productId,
-  });
-
-  @override
-  bool operator ==(Object other) =>
-      other is ProductAvailabilityQuery &&
-      other.merchantId == merchantId &&
-      other.productId == productId;
-
-  @override
-  int get hashCode => Object.hash(merchantId, productId);
-}
-
-final productAvailabilityStreamProvider =
-    StreamProvider.family<Map<String, bool>, ProductAvailabilityQuery>(
-  (ref, query) {
-    return ref.watch(productRepositoryProvider).watchProductAvailability(
-          merchantId: query.merchantId,
-          productId: query.productId,
-        );
-  },
-);

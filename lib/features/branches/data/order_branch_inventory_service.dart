@@ -124,7 +124,16 @@ class OrderBranchInventoryService {
           .collection('products')
           .doc(id));
       if (!snap.exists) {
-        snap = await tx.get(firestore.collection('products').doc(id));
+        final allowed = await _legacyItemAllowedInBranch(
+          tx,
+          merchantId: order.merchantId,
+          branchId: order.branchId,
+          itemType: 'product',
+          itemId: id,
+        );
+        if (allowed) {
+          snap = await tx.get(firestore.collection('products').doc(id));
+        }
       }
       productSnaps.add(snap);
     }
@@ -152,7 +161,16 @@ class OrderBranchInventoryService {
           .collection('raw_materials')
           .doc(id));
       if (!snap.exists) {
-        snap = await tx.get(firestore.collection('raw_materials').doc(id));
+        final allowed = await _legacyItemAllowedInBranch(
+          tx,
+          merchantId: order.merchantId,
+          branchId: order.branchId,
+          itemType: 'raw_material',
+          itemId: id,
+        );
+        if (allowed) {
+          snap = await tx.get(firestore.collection('raw_materials').doc(id));
+        }
       }
       rawSnaps.add(snap);
     }
@@ -170,7 +188,13 @@ class OrderBranchInventoryService {
 
     for (final item in order.items) {
       final data = products[item.productId];
-      if (data == null) continue;
+      if (data == null) {
+        if (sign < 0) {
+          throw Exception(
+              'Product is not available in this branch: ${item.productId}');
+        }
+        continue;
+      }
 
       final productName = data['name']?.toString() ?? item.productName;
       final isManufacturedOnDemand = item.isManufacturedOnDemand ||
@@ -321,6 +345,39 @@ class OrderBranchInventoryService {
         'userEmail': userEmail,
       });
     }
+  }
+
+  Future<bool> _legacyItemAllowedInBranch(
+    Transaction tx, {
+    required String merchantId,
+    required String branchId,
+    required String itemType,
+    required String itemId,
+  }) async {
+    if (branchId == 'main') return true;
+    final availabilityCollection = itemType == 'product'
+        ? 'product_branch_availability'
+        : 'raw_material_branch_availability';
+    final availabilityItemField =
+        itemType == 'product' ? 'productId' : 'rawMaterialId';
+    final availabilityId = '${branchId}_$itemId';
+    final availabilitySnap = await tx.get(firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection(availabilityCollection)
+        .doc(availabilityId));
+    if (availabilitySnap.exists &&
+        availabilitySnap.data()?['enabled'] == true &&
+        availabilitySnap.data()?[availabilityItemField]?.toString() == itemId) {
+      return true;
+    }
+    final inventoryId = '${branchId}_${itemType}_$itemId';
+    final inventorySnap = await tx.get(firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection('branch_inventory')
+        .doc(inventoryId));
+    return inventorySnap.exists;
   }
 
   String _currentUserEmail() {

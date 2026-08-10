@@ -189,12 +189,32 @@ class BranchInventoryRepository {
     final transferRef = operationId?.trim().isNotEmpty == true
         ? _transfersRef.doc(operationId!.trim())
         : _transfersRef.doc();
-    final sourceLogRef = _logsRef.doc();
-    final destinationLogRef = _logsRef.doc();
+    final sourceLogRef = operationId?.trim().isNotEmpty == true
+        ? _logsRef.doc('${transferRef.id}_source')
+        : _logsRef.doc();
+    final destinationLogRef = operationId?.trim().isNotEmpty == true
+        ? _logsRef.doc('${transferRef.id}_destination')
+        : _logsRef.doc();
 
     await firestore.runTransaction<void>((tx) async {
       final existingTransfer = await tx.get(transferRef);
-      if (existingTransfer.exists) return;
+      if (existingTransfer.exists) {
+        final data = existingTransfer.data() ?? const <String, dynamic>{};
+        final existingSourceItemId =
+            data['sourceItemId']?.toString() ?? data['itemId']?.toString();
+        final existingDestinationItemId =
+            data['destinationItemId']?.toString() ?? data['itemId']?.toString();
+        final existingQuantity =
+            (data['quantity'] as num?)?.toDouble() ?? double.nan;
+        final identical = data['fromBranchId'] == fromBranchId &&
+            data['toBranchId'] == toBranchId &&
+            data['itemType'] == itemType &&
+            existingSourceItemId == itemId &&
+            existingDestinationItemId == toItemId &&
+            (existingQuantity - quantity).abs() <= 0.000001;
+        if (identical) return;
+        throw StateError('Transfer idempotency conflict');
+      }
       final fromSnap = await tx.get(fromRef);
       final toSnap = await tx.get(toRef);
       final fromCurrent = fromSnap.exists
