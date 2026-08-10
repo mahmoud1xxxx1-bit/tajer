@@ -8,6 +8,7 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../domain/order.dart';
+import '../domain/order_return.dart';
 
 part 'order_repository.g.dart';
 
@@ -1024,6 +1025,13 @@ class OrderRepository {
         .count()
         .get();
     return snapshot.count ?? 0;
+  }
+
+  Future<AppOrder> returnOrderItems(
+    AppOrder originalOrder,
+    OrderReturn orderReturn,
+  ) async {
+    throw UnimplementedError('Implemented in BranchAwareOrderRepository');
   }
 }
 

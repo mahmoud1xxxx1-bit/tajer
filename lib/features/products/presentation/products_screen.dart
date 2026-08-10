@@ -18,6 +18,8 @@ import '../../branches/presentation/active_branch_selector.dart';
 import '../../branches/domain/branch_operation_context.dart';
 import '../../branches/presentation/branch_context.dart';
 import '../../authentication/application/access_policy.dart';
+import '../../branches/domain/branch.dart';
+import '../../branches/data/branch_repository.dart';
 
 class ProductsScreen extends ConsumerWidget {
   const ProductsScreen({super.key});
@@ -286,6 +288,50 @@ class ProductsScreen extends ConsumerWidget {
                                                 productToEdit: product),
                                           ),
                                         );
+                                      } else if (value == 'copy_branch') {
+                                        final branchesVal = ref.read(branchesStreamProvider).value;
+                                        if (branchesVal == null || branchesVal.isEmpty) return;
+                                        final currentBranchId = ref.read(selectedBranchIdProvider);
+                                        final availableBranches = branchesVal.where((b) => b.id != currentBranchId).toList();
+                                        if (availableBranches.isEmpty) {
+                                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('No other branches available.')));
+                                          return;
+                                        }
+                                        final selectedBranch = await showDialog<Branch>(
+                                          context: context,
+                                          builder: (ctx) => AlertDialog(
+                                            title: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'اختر الفرع' : 'Select Branch', style: const TextStyle(fontFamily: 'Tajawal')),
+                                            content: SizedBox(
+                                              width: double.maxFinite,
+                                              child: ListView.builder(
+                                                shrinkWrap: true,
+                                                itemCount: availableBranches.length,
+                                                itemBuilder: (ctx, i) => ListTile(
+                                                  title: Text(availableBranches[i].name, style: const TextStyle(fontFamily: 'Tajawal')),
+                                                  onTap: () => Navigator.pop(ctx, availableBranches[i]),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                        if (selectedBranch != null) {
+                                          try {
+                                            await ref.read(productRepositoryProvider).copyProductToBranch(
+                                              product: product,
+                                              targetBranchId: selectedBranch.id,
+                                            );
+                                            if (context.mounted) {
+                                              TajerMessage.success(context, AppErrorMapper.success(
+                                                ar: 'تم نسخ المنتج بنجاح',
+                                                en: 'Product copied successfully'
+                                              ));
+                                            }
+                                          } catch (e) {
+                                            if (context.mounted) {
+                                              await TajerMessage.show(context, AppErrorMapper.fromError(e, domain: 'product'));
+                                            }
+                                          }
+                                        }
                                       } else if (value == 'remove_branch' ||
                                           value == 'archive_store') {
                                         final appUser =
@@ -384,6 +430,20 @@ class ProductsScreen extends ConsumerWidget {
                                             Text(l10n.edit,
                                                 style: const TextStyle(
                                                     fontFamily: 'Tajawal')),
+                                          ],
+                                        ),
+                                      ),
+                                      PopupMenuItem(
+                                        value: 'copy_branch',
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.copy, color: Colors.green, size: 20),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                                Localizations.localeOf(context).languageCode == 'ar'
+                                                    ? 'نسخ إلى فرع آخر'
+                                                    : 'Copy to another branch',
+                                                style: const TextStyle(color: Colors.green, fontFamily: 'Tajawal')),
                                           ],
                                         ),
                                       ),

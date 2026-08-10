@@ -13,6 +13,7 @@ import '../../../core/widgets/tax_dialog.dart';
 import '../../../core/services/activity_logger.dart';
 import '../../authentication/data/auth_repository.dart';
 import 'pdf_viewer_screen.dart';
+import 'partial_return_screen.dart';
 import '../../../../../../../../core/theme/glass_card.dart';
 
 class OrderDetailsScreen extends ConsumerStatefulWidget {
@@ -137,6 +138,22 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
   }
 
   // _deleteOrder function has been completely removed to enforce Soft Delete.
+
+  void _showPartialReturnDialog(bool isAr) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => PartialReturnScreen(order: currentOrder)),
+    );
+    if (result == true) {
+      final repository = ref.read(orderRepositoryProvider);
+      final updatedOrder = await repository.queryOrders(currentOrder.merchantId).where('id', isEqualTo: currentOrder.id).get();
+      if (updatedOrder.docs.isNotEmpty) {
+        setState(() {
+          currentOrder = updatedOrder.docs.first.data();
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -429,6 +446,19 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                       icon: const Icon(Icons.cancel_outlined, color: Colors.orange),
                       label: Text(isAr ? 'إلغاء الطلب' : 'Cancel Order', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange)),
                       onPressed: () => _cancelOrder(isAr),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: Colors.deepPurple),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      icon: const Icon(Icons.assignment_return_outlined, color: Colors.deepPurple),
+                      label: Text(isAr ? 'إرجاع جزئي' : 'Partial Return', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.deepPurple)),
+                      onPressed: () => _showPartialReturnDialog(isAr),
                     ),
                   ),
                 ],

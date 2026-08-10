@@ -16,6 +16,7 @@ import '../data/supplier_repository.dart';
 import '../data/supplier_transaction_repository.dart';
 import '../domain/supplier.dart';
 import '../domain/supplier_transaction.dart';
+import 'purchase_invoice_screen.dart';
 
 class SupplierDetailsScreen extends ConsumerWidget {
   final Supplier supplier;
@@ -262,44 +263,78 @@ class SupplierDetailsScreen extends ConsumerWidget {
           ? SafeArea(
               child: Padding(
                 padding: const EdgeInsets.all(16),
-                child: Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () =>
-                            _showAddDebtDialog(context, ref, currentSupplier),
-                        icon: const Icon(Icons.add),
-                        label: Text(
-                          isAr ? 'إضافة دين' : 'Add Debt',
-                          style: const TextStyle(
-                            fontFamily: 'Tajawal',
-                            fontWeight: FontWeight.bold,
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () =>
+                                _showAddDebtDialog(context, ref, currentSupplier),
+                            icon: const Icon(Icons.add),
+                            label: Text(
+                              isAr ? 'إضافة دين' : 'Add Debt',
+                              style: const TextStyle(
+                                fontFamily: 'Tajawal',
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).colorScheme.error,
+                              foregroundColor:
+                                  Theme.of(context).colorScheme.onError,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
                           ),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.error,
-                          foregroundColor:
-                              Theme.of(context).colorScheme.onError,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: () => _showPaySupplierDebtDialog(
+                                context, ref, currentSupplier),
+                            icon: const Icon(Icons.payment),
+                            label: Text(
+                              isAr ? 'تسديد دفعة' : 'Pay Debt',
+                              style: const TextStyle(
+                                fontFamily: 'Tajawal',
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.green,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: () => _showPaySupplierDebtDialog(
-                            context, ref, currentSupplier),
-                        icon: const Icon(Icons.payment),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => PurchaseInvoiceScreen(
+                                supplier: currentSupplier,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.receipt_long),
                         label: Text(
-                          isAr ? 'تسديد دفعة' : 'Pay Debt',
+                          isAr ? 'فاتورة شراء' : 'Purchase Invoice',
                           style: const TextStyle(
                             fontFamily: 'Tajawal',
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
+                          backgroundColor: Theme.of(context).colorScheme.primary,
+                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                       ),

@@ -25,6 +25,7 @@ class AppOrder {
   final double? splitCashAmount;
   final double? splitNetworkAmount;
   final DateTime createdAt;
+  final Map<String, int> returnedQuantities;
 
   const AppOrder({
     required this.id,
@@ -49,6 +50,7 @@ class AppOrder {
     this.splitCashAmount,
     this.splitNetworkAmount,
     required this.createdAt,
+    this.returnedQuantities = const {},
   });
 
   factory AppOrder.fromJson(Map<String, dynamic> json) {
@@ -79,6 +81,9 @@ class AppOrder {
       splitCashAmount: (json['splitCashAmount'] as num?)?.toDouble(),
       splitNetworkAmount: (json['splitNetworkAmount'] as num?)?.toDouble(),
       createdAt: safeParseDate(json['createdAt']),
+      returnedQuantities: (json['returnedQuantities'] as Map<String, dynamic>?)
+              ?.map((k, v) => MapEntry(k, (v as num).toInt())) ??
+          const {},
     );
   }
 
@@ -110,6 +115,7 @@ class AppOrder {
       'splitCashAmount': splitCashAmount,
       'splitNetworkAmount': splitNetworkAmount,
       'createdAt': Timestamp.fromDate(createdAt),
+      'returnedQuantities': returnedQuantities,
     };
   }
 
@@ -136,6 +142,7 @@ class AppOrder {
     double? splitCashAmount,
     double? splitNetworkAmount,
     DateTime? createdAt,
+    Map<String, int>? returnedQuantities,
   }) {
     return AppOrder(
       id: id ?? this.id,
@@ -160,6 +167,7 @@ class AppOrder {
       splitCashAmount: splitCashAmount ?? this.splitCashAmount,
       splitNetworkAmount: splitNetworkAmount ?? this.splitNetworkAmount,
       createdAt: createdAt ?? this.createdAt,
+      returnedQuantities: returnedQuantities ?? this.returnedQuantities,
     );
   }
 }

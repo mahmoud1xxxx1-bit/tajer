@@ -584,6 +584,38 @@ class ProductRepository {
         .where((doc) => doc.data()['isArchived'] != true)
         .length;
   }
+
+  Future<void> copyProductToBranch({
+    required Product product,
+    required String targetBranchId,
+  }) async {
+    final targetRef = _branchProductRef(product.merchantId, targetBranchId, product.id);
+    final targetSnapshot = await targetRef.get();
+    if (targetSnapshot.exists) {
+      return; // Already exists in target branch. Prevent invalid duplicate state.
+    }
+
+    if (product.isManufacturedOnDemand && product.recipe != null && product.recipe!.isNotEmpty) {
+      for (final ingredient in product.recipe!) {
+        // Enforce MTO copy fails closed when required raw materials are unavailable
+        final rawMaterialDoc = await _firestore
+            .collection('merchants')
+            .doc(product.merchantId)
+            .collection('branch_inventory')
+            .doc('${targetBranchId}_raw_material_${ingredient.rawMaterialId}')
+            .get();
+        if (!rawMaterialDoc.exists) {
+          throw StateError('Cannot copy MTO product: Required raw material is not available in the target branch.');
+        }
+      }
+    }
+
+    final data = product.toJson();
+    data['quantity'] = 0;
+    data.remove('costPrice');
+    data['branchId'] = targetBranchId;
+    await targetRef.set(data);
+  }
 }
 
 @riverpod

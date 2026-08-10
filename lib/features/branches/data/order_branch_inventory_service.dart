@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import '../../authentication/data/auth_repository.dart';
+import '../../orders/domain/cart_item.dart';
 import '../../orders/domain/order.dart';
 import 'branch_inventory_repository.dart';
 
@@ -49,6 +50,59 @@ class OrderBranchInventoryService {
       sign: 1,
       reasonPrefix:
           'Inventory restored for cancelled invoice #${order.queueNumber ?? order.id}',
+    );
+  }
+
+  Future<void> restoreForPartialReturnInTransaction(
+    Transaction tx,
+    AppOrder order,
+    List<CartItem> returnedItems,
+  ) async {
+    final productDeltas = <String, double>{};
+    final rawDeltas = <String, double>{};
+    final productNames = <String, String>{};
+    final rawParentNames = <String, String>{};
+
+    for (final returnedItem in returnedItems) {
+      final lineId = returnedItem.lineId;
+      final originalLine = lineId != null 
+          ? order.items.cast<CartItem?>().firstWhere((i) => i?.lineId == lineId, orElse: () => null)
+          : null;
+
+      final isMto = originalLine?.isManufacturedOnDemand ?? returnedItem.isManufacturedOnDemand;
+      final recipe = originalLine?.historicalMtoRecipe ?? returnedItem.historicalMtoRecipe;
+      final productName = originalLine?.productName ?? returnedItem.productName;
+      final productId = originalLine?.productId ?? returnedItem.productId;
+
+      if (isMto) {
+        if (recipe == null) {
+          throw Exception('Cannot partially return legacy MTO item without historical recipe snapshot.');
+        }
+        for (final raw in recipe) {
+          final rawId = raw['rawMaterialId']?.toString() ?? '';
+          final perUnit = (raw['amountRequired'] as num?)?.toDouble() ?? 0.0;
+          if (rawId.isEmpty || perUnit <= 0) continue;
+          
+          rawDeltas[rawId] = (rawDeltas[rawId] ?? 0) + (perUnit * returnedItem.quantity);
+          rawParentNames[rawId] = productName;
+        }
+      } else {
+        productDeltas[productId] = (productDeltas[productId] ?? 0) + returnedItem.quantity;
+        productNames[productId] = productName;
+      }
+    }
+
+    await _applyMutationsInTransaction(
+      tx: tx,
+      order: order,
+      productDeltas: productDeltas,
+      rawDeltas: rawDeltas,
+      products: const {},
+      rawMaterials: const {},
+      productNames: productNames,
+      rawNames: const {}, // Will fallback to 'Raw material'
+      rawParentNames: rawParentNames,
+      reasonPrefix: 'Inventory restored for partial return of invoice #${order.queueNumber ?? order.id}',
     );
   }
 
@@ -218,6 +272,33 @@ class OrderBranchInventoryService {
         rawParentNames[rawId] = productName;
       }
     }
+
+    await _applyMutationsInTransaction(
+      tx: tx,
+      order: order,
+      productDeltas: productDeltas,
+      rawDeltas: rawDeltas,
+      products: products,
+      rawMaterials: rawMaterials,
+      productNames: productNames,
+      rawNames: rawNames,
+      rawParentNames: rawParentNames,
+      reasonPrefix: reasonPrefix,
+    );
+  }
+
+  Future<void> _applyMutationsInTransaction({
+    required Transaction tx,
+    required AppOrder order,
+    required Map<String, double> productDeltas,
+    required Map<String, double> rawDeltas,
+    required Map<String, Map<String, dynamic>> products,
+    required Map<String, Map<String, dynamic>> rawMaterials,
+    required Map<String, String> productNames,
+    required Map<String, String> rawNames,
+    required Map<String, String> rawParentNames,
+    required String reasonPrefix,
+  }) async {
 
     final mutations = <BranchInventoryMutation>[];
     for (final entry in productDeltas.entries) {

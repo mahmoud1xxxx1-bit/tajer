@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../branches/data/order_branch_inventory_service.dart';
 import '../domain/order.dart';
+import '../domain/order_return.dart';
 import 'order_repository.dart';
 
 /// Multi-branch implementation that preserves the v1.0.107 accounting formulas
@@ -652,5 +653,106 @@ class BranchAwareOrderRepository extends OrderRepository {
       }
       rethrow;
     }
+  }
+
+  @override
+  Future<AppOrder> returnOrderItems(
+    AppOrder originalOrder,
+    OrderReturn orderReturn,
+  ) async {
+    final orderRef = firestore.collection('orders').doc(originalOrder.id);
+    final returnRef = firestore
+        .collection('merchants')
+        .doc(originalOrder.merchantId)
+        .collection('returns')
+        .doc(orderReturn.id);
+
+    return firestore.runTransaction<AppOrder>((tx) async {
+      final snap = await tx.get(orderRef);
+      if (!snap.exists || snap.data() == null) {
+        throw Exception('Order not found');
+      }
+      final canonicalOrder = AppOrder.fromJson(snap.data()!);
+      final newReturnedQuantities = Map<String, int>.from(canonicalOrder.returnedQuantities);
+
+      for (final returnedItem in orderReturn.returnedItems) {
+        final lineId = returnedItem.lineId;
+        if (lineId == null) throw Exception('Returned item missing lineId');
+        final currentReturned = newReturnedQuantities[lineId] ?? 0;
+        final originalLine = canonicalOrder.items.firstWhere(
+            (i) => i.lineId == lineId,
+            orElse: () => throw Exception('Line item not found: $lineId'));
+        if (currentReturned + returnedItem.quantity > originalLine.quantity) {
+          throw Exception('Return quantity exceeds sold quantity for $lineId');
+        }
+        newReturnedQuantities[lineId] = currentReturned + returnedItem.quantity;
+      }
+
+      // DO ALL READS FIRST
+      DocumentReference<Map<String, dynamic>>? shiftRef;
+      DocumentSnapshot<Map<String, dynamic>>? shiftSnap;
+      if (orderReturn.returnedTotal > 0) {
+        final shiftId = canonicalOrder.shiftId;
+        if (shiftId != null && shiftId.isNotEmpty) {
+          shiftRef = firestore.collection('shifts').doc(shiftId);
+          shiftSnap = await tx.get(shiftRef);
+          if (shiftSnap.exists) {
+            final shiftBranchId = shiftSnap.data()?['branchId']?.toString() ?? 'main';
+            if (shiftBranchId != canonicalOrder.branchId) {
+              throw Exception('Order branch does not match the active shift');
+            }
+          }
+        }
+      }
+
+      // This performs inventory reads
+      await OrderBranchInventoryService(firestore).restoreForPartialReturnInTransaction(
+        tx,
+        canonicalOrder,
+        orderReturn.returnedItems,
+      );
+
+      // NOW DO ALL WRITES
+      if (orderReturn.returnedTotal > 0) {
+        if (shiftRef != null && shiftSnap != null && shiftSnap.exists) {
+          final updates = <String, dynamic>{};
+          if (canonicalOrder.paymentMethod == 'cash') {
+            updates['cashSales'] = FieldValue.increment(-orderReturn.returnedTotal);
+          }
+          if (['card', 'mada', 'apple_pay'].contains(canonicalOrder.paymentMethod)) {
+            updates['cardTotal'] = FieldValue.increment(-orderReturn.returnedTotal);
+          }
+          if (canonicalOrder.paymentMethod == 'transfer') {
+            updates['transferTotal'] = FieldValue.increment(-orderReturn.returnedTotal);
+          }
+          if (canonicalOrder.paymentMethod == 'split') {
+            updates['cashSales'] = FieldValue.increment(-orderReturn.returnedTotal);
+          }
+          if (updates.isNotEmpty) {
+            tx.update(shiftRef, updates);
+          }
+        }
+
+        final customerId = canonicalOrder.customerId;
+        if (customerId != 'walk_in' && customerId.isNotEmpty) {
+          final customerRef = firestore.collection('customers').doc(customerId);
+          final debtDecrease = canonicalOrder.isCredit ? orderReturn.returnedTotal : 0.0;
+          tx.update(customerRef, {
+            'totalPurchases': FieldValue.increment(-orderReturn.returnedTotal),
+            'totalDebt': FieldValue.increment(-debtDecrease),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+        }
+      }
+
+      tx.set(returnRef, orderReturn.toJson());
+
+      tx.update(orderRef, {
+        'returnedQuantities': newReturnedQuantities,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      return canonicalOrder.copyWith(returnedQuantities: newReturnedQuantities);
+    });
   }
 }

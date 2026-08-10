@@ -12,6 +12,8 @@ class CartItem {
   final TaxMode taxMode;
   final double? costPrice;
   final bool isManufacturedOnDemand;
+  final String? lineId;
+  final List<Map<String, dynamic>>? historicalMtoRecipe;
 
   const CartItem({
     required this.productId,
@@ -25,6 +27,8 @@ class CartItem {
     this.taxMode = TaxMode.store,
     this.costPrice,
     this.isManufacturedOnDemand = false,
+    this.lineId,
+    this.historicalMtoRecipe,
   });
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
@@ -49,6 +53,10 @@ class CartItem {
       costPrice: json['costPrice'] != null
           ? (json['costPrice'] as num).toDouble()
           : null,
+      lineId: json['lineId']?.toString(),
+      historicalMtoRecipe: (json['historicalMtoRecipe'] as List<dynamic>?)
+          ?.map((e) => Map<String, dynamic>.from(e as Map))
+          .toList(),
     );
   }
 
@@ -90,6 +98,8 @@ class CartItem {
       'taxMode': taxMode.name,
       'isManufacturedOnDemand': isManufacturedOnDemand,
       'costPrice': costPrice,
+      'lineId': lineId,
+      'historicalMtoRecipe': historicalMtoRecipe,
     };
   }
 
@@ -104,6 +114,8 @@ class CartItem {
     TaxMode? taxMode,
     double? costPrice,
     bool? isManufacturedOnDemand,
+    String? lineId,
+    List<Map<String, dynamic>>? historicalMtoRecipe,
   }) {
     return CartItem(
       productId: productId ?? this.productId,
@@ -117,6 +129,8 @@ class CartItem {
       costPrice: costPrice ?? this.costPrice,
       isManufacturedOnDemand:
           isManufacturedOnDemand ?? this.isManufacturedOnDemand,
+      lineId: lineId ?? this.lineId,
+      historicalMtoRecipe: historicalMtoRecipe ?? this.historicalMtoRecipe,
     );
   }
 }
