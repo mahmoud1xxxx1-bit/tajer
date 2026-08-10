@@ -157,6 +157,39 @@ async function main() {
         productId: 'prod-1',
         costPrice: 2,
       });
+      await setDoc(
+        doc(db, 'merchants', 'merchant-a', 'product_branch_availability', 'branch-a_prod-1'),
+        {
+          id: 'branch-a_prod-1',
+          merchantId: 'merchant-a',
+          branchId: 'branch-a',
+          productId: 'prod-1',
+          enabled: true,
+          updatedAt: new Date(),
+        },
+      );
+      await setDoc(
+        doc(db, 'merchants', 'merchant-a', 'product_branch_availability', 'branch-b_prod-1'),
+        {
+          id: 'branch-b_prod-1',
+          merchantId: 'merchant-a',
+          branchId: 'branch-b',
+          productId: 'prod-1',
+          enabled: false,
+          updatedAt: new Date(),
+        },
+      );
+      await setDoc(
+        doc(db, 'merchants', 'merchant-a', 'raw_material_branch_availability', 'branch-a_raw-1'),
+        {
+          id: 'branch-a_raw-1',
+          merchantId: 'merchant-a',
+          branchId: 'branch-a',
+          rawMaterialId: 'raw-1',
+          enabled: true,
+          updatedAt: new Date(),
+        },
+      );
     });
 
     const cashier = testEnv.authenticatedContext('cashier-a', {
@@ -222,6 +255,34 @@ async function main() {
     );
     await assertSucceeds(getDoc(doc(cashier, 'products', 'prod-1')));
     await assertFails(getDoc(doc(otherMerchant, 'products', 'prod-1')));
+    await assertSucceeds(
+      getDoc(
+        doc(cashier, 'merchants', 'merchant-a', 'product_branch_availability', 'branch-a_prod-1'),
+      ),
+    );
+    await assertFails(
+      getDoc(
+        doc(cashier, 'merchants', 'merchant-a', 'product_branch_availability', 'branch-b_prod-1'),
+      ),
+    );
+    await assertFails(
+      setDoc(
+        doc(cashier, 'merchants', 'merchant-a', 'product_branch_availability', 'branch-a_prod-2'),
+        {
+          id: 'branch-a_prod-2',
+          merchantId: 'merchant-a',
+          branchId: 'branch-a',
+          productId: 'prod-2',
+          enabled: true,
+          updatedAt: new Date(),
+        },
+      ),
+    );
+    await assertSucceeds(
+      getDoc(
+        doc(cashier, 'merchants', 'merchant-a', 'raw_material_branch_availability', 'branch-a_raw-1'),
+      ),
+    );
 
     await assertSucceeds(
       getDoc(doc(cashier, 'merchants', 'merchant-a', 'branch_runtime', 'branch-a')),

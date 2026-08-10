@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'session_identity.dart';
 
@@ -76,9 +76,11 @@ class AccessPolicy {
       case 'can_close_shift':
         return canCloseShift;
       case 'can_view_shift_archive':
-        return canViewShiftArchive || canViewOwnShiftHistory;
+        return canViewShiftArchive;
+      case 'my_shifts':
+        return canViewOwnShiftHistory;
       case 'my_permissions':
-        return isEmployee && hasAssignedBranch;
+        return isEmployee;
       default:
         return hasAssignedBranch && _perm(permission);
     }

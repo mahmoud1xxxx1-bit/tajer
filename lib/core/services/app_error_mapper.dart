@@ -1,6 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/services.dart';
 
+import 'app_failure.dart';
+
 enum TajerMessageType { success, error, warning, info, validation }
 
 class TajerUserMessage {
@@ -58,6 +60,9 @@ abstract final class AppErrorMapper {
       );
 
   static TajerUserMessage fromError(Object error, {String? domain}) {
+    if (error is AppFailure) {
+      return _failure(error);
+    }
     if (error is FirebaseAuthException) {
       return _auth(error.code, domain: domain);
     }
@@ -112,6 +117,64 @@ abstract final class AppErrorMapper {
       );
     }
     return _fallback;
+  }
+
+  static TajerUserMessage _failure(AppFailure failure) {
+    switch (failure.kind) {
+      case AppFailureKind.invalidCredentials:
+        return _auth('invalid-credential', domain: failure.domain);
+      case AppFailureKind.employeeDeleted:
+      case AppFailureKind.employeeDisabled:
+        return const TajerUserMessage(
+          type: TajerMessageType.error,
+          titleAr: 'الحساب غير متاح',
+          titleEn: 'Account unavailable',
+          messageAr:
+              'لا يمكن تسجيل الدخول بهذا الحساب. تحقق من بيانات الدخول أو تواصل مع التاجر.',
+          messageEn:
+              'This account cannot sign in. Check the credentials or contact the merchant.',
+        );
+      case AppFailureKind.merchantNotFound:
+        return const TajerUserMessage(
+          type: TajerMessageType.error,
+          titleAr: 'تعذر العثور على المتجر',
+          titleEn: 'Store not found',
+          messageAr: 'تحقق من بريد التاجر ثم حاول مرة أخرى.',
+          messageEn: 'Check the merchant email and try again.',
+        );
+      case AppFailureKind.noAssignedBranch:
+        return const TajerUserMessage(
+          type: TajerMessageType.error,
+          titleAr: 'لا يوجد فرع مخصص',
+          titleEn: 'No assigned branch',
+          messageAr: 'لم يتم تعيين فرع لهذا الموظف. تواصل مع التاجر.',
+          messageEn:
+              'No branch is assigned to this employee. Contact the merchant.',
+        );
+      case AppFailureKind.subscriptionInactive:
+        return const TajerUserMessage(
+          type: TajerMessageType.error,
+          titleAr: 'الاشتراك غير نشط',
+          titleEn: 'Subscription inactive',
+          messageAr: 'يجب تفعيل اشتراك المتجر قبل تسجيل دخول الموظفين.',
+          messageEn:
+              'The store subscription must be active before employees can sign in.',
+        );
+      case AppFailureKind.permissionDenied:
+        return _firestore('permission-denied', domain: failure.domain);
+      case AppFailureKind.network:
+        return _firestore('unavailable', domain: failure.domain);
+      case AppFailureKind.sessionExpired:
+        return const TajerUserMessage(
+          type: TajerMessageType.warning,
+          titleAr: 'انتهت الجلسة',
+          titleEn: 'Session expired',
+          messageAr: 'سجل الدخول مرة أخرى لإكمال العملية.',
+          messageEn: 'Sign in again to continue.',
+        );
+      case AppFailureKind.unknown:
+        return _fallback;
+    }
   }
 
   static TajerUserMessage _auth(String code, {String? domain}) {

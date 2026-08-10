@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import '../../../core/services/app_failure.dart';
 import 'dart:io' show Platform;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -321,8 +322,7 @@ class AuthRepository {
     final employeeDoc = await employeeRef.get();
     final employeeData = employeeDoc.data();
     if (!employeeDoc.exists || employeeData == null) {
-      throw Exception(
-          'Employee account is disabled or removed by the merchant.');
+      throw const EmployeeLoginFailure(AppFailureKind.employeeDeleted);
     }
 
     final updates = <String, dynamic>{
@@ -380,10 +380,10 @@ class AuthRepository {
                 empName = data['name']?.toString() ?? 'موظف';
               }
             } else {
-              throw Exception('تم إيقاف هذا الحساب أو حذفه من قبل التاجر.');
+              throw const EmployeeLoginFailure(AppFailureKind.employeeDeleted);
             }
           } else {
-            throw Exception('لم يتم العثور على متجر التاجر.');
+            throw const EmployeeLoginFailure(AppFailureKind.merchantNotFound);
           }
 
           await _firestore.collection('users').doc(uid).set({
@@ -415,8 +415,8 @@ class AuthRepository {
           if (plan != 'premium' &&
               email?.trim().toLowerCase() != 'love.dotk@gmail.com') {
             await _auth.signOut();
-            throw Exception(
-                "لا يمكن تسجيل الدخول لأن التاجر لم يقم بتفعيل الباقة الشهرية.");
+            throw const EmployeeLoginFailure(
+                AppFailureKind.subscriptionInactive);
           }
         }
       }
@@ -424,11 +424,16 @@ class AuthRepository {
       if (e.code == 'user-not-found' ||
           e.code == 'wrong-password' ||
           e.code == 'invalid-credential') {
-        throw Exception("بيانات غير صحيحة. تأكد من إيميل التاجر ورمز الدخول.");
+        throw const EmployeeLoginFailure(AppFailureKind.invalidCredentials);
       }
-      throw Exception(e.message ?? "حدث خطأ أثناء تسجيل دخول الموظف");
+      if (e.code == 'network-request-failed') {
+        throw EmployeeLoginFailure(AppFailureKind.network, cause: e);
+      }
+      throw EmployeeLoginFailure(AppFailureKind.unknown, cause: e);
+    } on AppFailure {
+      rethrow;
     } catch (e) {
-      throw Exception("حدث خطأ غير معروف: $e");
+      throw EmployeeLoginFailure(AppFailureKind.unknown, cause: e);
     }
   }
 

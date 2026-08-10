@@ -1,12 +1,11 @@
-import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../data/product_repository.dart';
 import 'add_product_dialog.dart';
-import '../../../core/services/printer_service.dart';
-import '../../../core/services/pin_service.dart';
+import '../../../core/services/app_error_mapper.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
+import '../../../core/widgets/tajer_message.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
@@ -16,6 +15,9 @@ import '../../../core/utils/date_formatter.dart';
 import '../../categories/data/category_repository.dart';
 import 'package:go_router/go_router.dart';
 import '../../branches/presentation/active_branch_selector.dart';
+import '../../branches/domain/branch_operation_context.dart';
+import '../../branches/presentation/branch_context.dart';
+import '../../authentication/application/access_policy.dart';
 
 class ProductsScreen extends ConsumerWidget {
   const ProductsScreen({super.key});
@@ -26,6 +28,7 @@ class ProductsScreen extends ConsumerWidget {
     final productsAsyncValue = ref.watch(productsStreamProvider);
     final currentCurrency = ref.watch(currencyProvider);
     final appUser = ref.watch(appUserProvider).value;
+    final policy = ref.watch(accessPolicyProvider);
     final canManageProducts =
         appUser?.hasPermission('can_manage_products') ?? false;
 
@@ -283,9 +286,12 @@ class ProductsScreen extends ConsumerWidget {
                                                 productToEdit: product),
                                           ),
                                         );
-                                      } else if (value == 'delete') {
+                                      } else if (value == 'remove_branch' ||
+                                          value == 'archive_store') {
                                         final appUser =
                                             ref.read(appUserProvider).value;
+                                        final branchId =
+                                            ref.read(selectedBranchIdProvider);
                                         final isArabic =
                                             Localizations.localeOf(context)
                                                     .languageCode ==
@@ -297,24 +303,69 @@ class ProductsScreen extends ConsumerWidget {
                                             context,
                                             appUser,
                                             title: isArabic
-                                                ? 'تأكيد الحذف'
-                                                : 'Confirm Deletion',
+                                                ? (value == 'archive_store'
+                                                    ? 'أرشفة المنتج من المتجر'
+                                                    : 'إزالة من هذا الفرع')
+                                                : (value == 'archive_store'
+                                                    ? 'Archive product from store'
+                                                    : 'Remove from this branch'),
                                             warning: isArabic
-                                                ? 'حذف هذا المنتج سيمنعك من مسح أو إلغاء أي فاتورة سابقة تحتوي عليه.\nإذا كان المنتج مربوطاً بمواد خام، يجب عليك حذف مواده الخام أولاً.\nهل أنت متأكد من الحذف؟'
-                                                : 'Deleting prevents cancelling past invoices. If linked to raw materials, delete them first. Proceed?',
+                                                ? (value == 'archive_store'
+                                                    ? 'سيتم إخفاء المنتج من كل الفروع مع حفظ الفواتير السابقة. هل تريد المتابعة؟'
+                                                    : 'سيتم إخفاء المنتج من هذا الفرع فقط دون التأثير على الفروع الأخرى أو الفواتير السابقة.')
+                                                : (value == 'archive_store'
+                                                    ? 'This hides the product from all branches while preserving past invoices. Continue?'
+                                                    : 'This hides the product from this branch only without affecting other branches or historical invoices.'),
                                           );
                                           if (!success) return;
                                         }
-                                        ref
-                                            .read(productRepositoryProvider)
-                                            .deleteProduct(product.id);
-                                        ActivityLogger.log(
-                                          user: appUser,
-                                          actionType:
-                                              'Archive Product|أرشفة منتج',
-                                          description:
-                                              'Archived product "${product.name}"|تم أرشفة وإخفاء المنتج "${product.name}"',
-                                        );
+                                        try {
+                                          final repo = ref
+                                              .read(productRepositoryProvider);
+                                          if (value == 'archive_store') {
+                                            await repo.archiveProductFromStore(
+                                                product.id);
+                                          } else {
+                                            await repo.removeProductFromBranch(
+                                              context: BranchOperationContext(
+                                                merchantId: product.merchantId,
+                                                branchId: branchId,
+                                              ),
+                                              productId: product.id,
+                                            );
+                                          }
+                                          ActivityLogger.log(
+                                            user: appUser,
+                                            actionType: value == 'archive_store'
+                                                ? 'Archive Product'
+                                                : 'Remove Product From Branch',
+                                            description: value ==
+                                                    'archive_store'
+                                                ? 'Archived product'
+                                                : 'Removed product from branch',
+                                          );
+                                          if (context.mounted) {
+                                            TajerMessage.success(
+                                              context,
+                                              AppErrorMapper.success(
+                                                ar: value == 'archive_store'
+                                                    ? 'تمت أرشفة المنتج'
+                                                    : 'تمت إزالة المنتج من هذا الفرع',
+                                                en: value == 'archive_store'
+                                                    ? 'Product archived'
+                                                    : 'Product removed from this branch',
+                                              ),
+                                            );
+                                          }
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            await TajerMessage.show(
+                                              context,
+                                              AppErrorMapper.fromError(e,
+                                                  domain: 'product'),
+                                            );
+                                          }
+                                        }
                                       }
                                     },
                                     itemBuilder: (context) => [
@@ -332,19 +383,45 @@ class ProductsScreen extends ConsumerWidget {
                                         ),
                                       ),
                                       PopupMenuItem(
-                                        value: 'delete',
+                                        value: 'remove_branch',
                                         child: Row(
                                           children: [
-                                            const Icon(Icons.delete,
-                                                color: Colors.red, size: 20),
+                                            const Icon(Icons.remove_circle,
+                                                color: Colors.orange, size: 20),
                                             const SizedBox(width: 8),
-                                            Text(l10n.delete,
+                                            Text(
+                                                Localizations.localeOf(context)
+                                                            .languageCode ==
+                                                        'ar'
+                                                    ? 'إزالة من هذا الفرع'
+                                                    : 'Remove from this branch',
                                                 style: const TextStyle(
-                                                    color: Colors.red,
+                                                    color: Colors.orange,
                                                     fontFamily: 'Tajawal')),
                                           ],
                                         ),
                                       ),
+                                      if (policy.isOwnerLike)
+                                        PopupMenuItem(
+                                          value: 'archive_store',
+                                          child: Row(
+                                            children: [
+                                              const Icon(Icons.archive,
+                                                  color: Colors.red, size: 20),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                  Localizations.localeOf(
+                                                                  context)
+                                                              .languageCode ==
+                                                          'ar'
+                                                      ? 'أرشفة المنتج من المتجر'
+                                                      : 'Archive product from store',
+                                                  style: const TextStyle(
+                                                      color: Colors.red,
+                                                      fontFamily: 'Tajawal')),
+                                            ],
+                                          ),
+                                        ),
                                     ],
                                   ),
                               ],

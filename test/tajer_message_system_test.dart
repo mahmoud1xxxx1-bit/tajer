@@ -42,6 +42,8 @@ void main() {
       final startShift =
           File('lib/features/shifts/presentation/start_shift_dialog.dart')
               .readAsStringSync();
+      final tajerMessage =
+          File('lib/core/widgets/tajer_message.dart').readAsStringSync();
 
       expect(startup, contains('TajerMessage.show'));
       expect(startup, contains('AppErrorMapper.fromError'));
@@ -50,6 +52,9 @@ void main() {
       expect(startShift, contains("domain: 'shift'"));
       expect(startShift, isNot(contains('Error: \$e')));
       expect(startShift, isNot(contains('SnackBar(')));
+      expect(tajerMessage, contains('OverlayEntry'));
+      expect(tajerMessage, isNot(contains('ScaffoldMessenger')));
+      expect(tajerMessage, isNot(contains('SnackBar(')));
     });
   });
 }

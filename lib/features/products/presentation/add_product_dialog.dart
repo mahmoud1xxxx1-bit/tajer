@@ -3,8 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../../../core/services/activity_logger.dart';
+import '../../../core/services/app_error_mapper.dart';
 import '../../../core/providers/effective_merchant.dart';
+import '../../../core/widgets/tajer_message.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../branches/data/branch_repository.dart';
+import '../../branches/domain/branch_operation_context.dart';
+import '../../branches/presentation/branch_context.dart';
 import '../data/product_repository.dart';
 import '../domain/product.dart';
 import '../../categories/data/category_repository.dart';
@@ -37,6 +42,8 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
   String? _selectedCategoryId;
   String? _selectedRawMaterialId;
   bool _isLoading = false;
+  bool _availabilityInitialized = false;
+  Set<String> _selectedBranchIds = <String>{};
 
   @override
   void initState() {
@@ -90,12 +97,13 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
   }
 
   Future<void> _submit() async {
-    final l10n = AppLocalizations.of(context)!;
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
+      final capturedBranchId = ref.read(selectedBranchIdProvider);
       final user = ref.read(authRepositoryProvider).currentUser;
       if (user == null) throw Exception(AppLocalizations.of(context)!.text47);
       final appUser = ref.read(appUserProvider).value;
@@ -104,6 +112,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
 
       final productRepo = ref.read(productRepositoryProvider);
       final logRepo = ref.read(inventoryLogRepositoryProvider);
+      final rawMaterialRepo = ref.read(rawMaterialRepositoryProvider);
 
       final isEditing = widget.productToEdit != null;
       final newQuantity = _isManufacturedOnDemand
@@ -125,6 +134,32 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       final merchantId = isEditing
           ? widget.productToEdit!.merchantId
           : currentEffectiveMerchantId(appUser);
+      final operationContext = BranchOperationContext(
+        merchantId: merchantId,
+        branchId: capturedBranchId,
+      );
+      final enabledBranchIds = _selectedBranchIds.isEmpty
+          ? <String>{capturedBranchId}
+          : Set<String>.from(_selectedBranchIds);
+      final knownBranchIds =
+          (ref.read(branchesStreamProvider).valueOrNull ?? const [])
+              .map((branch) => branch.id)
+              .toSet();
+
+      if (_isManufacturedOnDemand && _selectedRawMaterialId != null) {
+        for (final branchId in enabledBranchIds) {
+          final rawAvailable = await rawMaterialRepo.isAvailableInBranch(
+            merchantId: merchantId,
+            rawMaterialId: _selectedRawMaterialId!,
+            branchId: branchId,
+          );
+          if (!rawAvailable) {
+            throw Exception(isAr
+                ? 'المادة الخام غير متوفرة في أحد الفروع المحددة.'
+                : 'The selected raw material is not available in one of the selected branches.');
+          }
+        }
+      }
 
       final newProduct = Product(
         id: isEditing ? widget.productToEdit!.id : const Uuid().v4(),
@@ -159,6 +194,12 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
 
       if (isEditing) {
         await productRepo.updateProduct(newProduct);
+        await productRepo.setProductAvailability(
+          context: operationContext,
+          productId: newProduct.id,
+          enabledBranchIds: enabledBranchIds,
+          knownBranchIds: knownBranchIds,
+        );
         ActivityLogger.log(
           user: appUser,
           actionType: 'Edit Product|تعديل منتج',
@@ -172,13 +213,19 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             previousQuantity: previousQuantity,
             newQuantity: newQuantity,
             reason: AppLocalizations.of(context)!.text100,
+            branchId: operationContext.branchId,
             userEmail: user.email,
-            userName: appUser?.name ?? user.email,
+            userName: appUser.name ?? user.email,
             itemType: 'product',
           );
         }
       } else {
-        await productRepo.addProduct(newProduct);
+        await productRepo.addProduct(
+          newProduct,
+          context: operationContext,
+          enabledBranchIds: enabledBranchIds,
+          knownBranchIds: knownBranchIds,
+        );
         ActivityLogger.log(
           user: appUser,
           actionType: 'Add Product|إضافة منتج',
@@ -192,8 +239,9 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             previousQuantity: 0,
             newQuantity: newQuantity,
             reason: AppLocalizations.of(context)!.text101,
+            branchId: operationContext.branchId,
             userEmail: user.email,
-            userName: appUser?.name ?? user.email,
+            userName: appUser.name ?? user.email,
             itemType: 'product',
           );
         }
@@ -201,11 +249,9 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-              content: Text('${l10n.error}: $e',
-                  style: TextStyle(fontFamily: 'Tajawal'))),
+        await TajerMessage.show(
+          context,
+          AppErrorMapper.fromError(e, domain: 'product'),
         );
       }
     } finally {
@@ -223,6 +269,34 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     final merchantId =
         appUser == null ? '' : currentEffectiveMerchantId(appUser);
     final rawMaterialsAsync = ref.watch(rawMaterialsStreamProvider(merchantId));
+    final branchesAsync = ref.watch(branchesStreamProvider);
+    final activeBranchId = ref.watch(selectedBranchIdProvider);
+    final availabilityAsync = isEditing && merchantId.isNotEmpty
+        ? ref.watch(productAvailabilityStreamProvider(ProductAvailabilityQuery(
+            merchantId: merchantId,
+            productId: widget.productToEdit!.id,
+          )))
+        : const AsyncValue<Map<String, bool>>.data(<String, bool>{});
+
+    if (!_availabilityInitialized) {
+      final availability = availabilityAsync.valueOrNull;
+      if (!isEditing || availability != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted || _availabilityInitialized) return;
+          final selected = isEditing
+              ? availability!.entries
+                  .where((entry) => entry.value)
+                  .map((entry) => entry.key)
+                  .toSet()
+              : <String>{activeBranchId};
+          setState(() {
+            _selectedBranchIds =
+                selected.isEmpty ? <String>{activeBranchId} : selected;
+            _availabilityInitialized = true;
+          });
+        });
+      }
+    }
 
     return Padding(
       padding: EdgeInsets.all(24.0),
@@ -296,6 +370,58 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                 ),
                 validator: (value) =>
                     value!.isEmpty ? l10n.requiredField : null,
+              ),
+              SizedBox(height: 16),
+              branchesAsync.when(
+                data: (branches) {
+                  final visibleBranches =
+                      branches.where((branch) => branch.isActive).toList();
+                  return Card(
+                    elevation: 0,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isAr ? 'متوفر في الفروع' : 'Available in branches',
+                            style: const TextStyle(
+                              fontFamily: 'Tajawal',
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          ...visibleBranches.map((branch) {
+                            return CheckboxListTile(
+                              contentPadding: EdgeInsets.zero,
+                              value: _selectedBranchIds.contains(branch.id),
+                              title: Text(
+                                branch.name,
+                                style: const TextStyle(fontFamily: 'Tajawal'),
+                              ),
+                              onChanged: (value) {
+                                setState(() {
+                                  final next =
+                                      Set<String>.from(_selectedBranchIds);
+                                  if (value == true) {
+                                    next.add(branch.id);
+                                  } else {
+                                    next.remove(branch.id);
+                                  }
+                                  _selectedBranchIds = next.isEmpty
+                                      ? <String>{activeBranchId}
+                                      : next;
+                                });
+                              },
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+                loading: () => const LinearProgressIndicator(),
+                error: (e, st) => const SizedBox.shrink(),
               ),
               SizedBox(height: 16),
               Row(

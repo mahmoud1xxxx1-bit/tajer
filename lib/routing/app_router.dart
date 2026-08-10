@@ -141,6 +141,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           builder: (context, state) => const _RouteAccess(
               permission: 'can_close_shift', child: EndShiftScreen())),
       GoRoute(
+          path: '/my_shifts',
+          builder: (context, state) => const _RouteAccess(
+              permission: 'my_shifts', child: ShiftsArchiveScreen())),
+      GoRoute(
           path: '/shifts_archive',
           builder: (context, state) => const _RouteAccess(
               permission: 'can_view_shift_archive',

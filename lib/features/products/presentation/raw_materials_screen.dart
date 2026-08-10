@@ -6,10 +6,13 @@ import '../domain/raw_material.dart';
 import '../data/raw_material_repository.dart';
 import '../../inventory_log/data/inventory_log_repository.dart';
 import '../../authentication/data/auth_repository.dart';
-import '../../authentication/domain/app_user.dart';
+import '../../branches/data/branch_repository.dart';
+import '../../branches/domain/branch_operation_context.dart';
+import '../../branches/presentation/branch_context.dart';
 import '../../../core/providers/effective_merchant.dart';
-import '../../../core/services/pin_service.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
+import '../../../core/services/app_error_mapper.dart';
+import '../../../core/widgets/tajer_message.dart';
 
 import '../../../../../../../../core/theme/glass_card.dart';
 
@@ -27,6 +30,9 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
     final quantityController =
         TextEditingController(text: rawMaterial?.quantity.toString() ?? '');
     String selectedUnit = rawMaterial?.unit ?? 'g';
+    final capturedBranchId = ref.read(selectedBranchIdProvider);
+    var selectedBranchIds = <String>{capturedBranchId};
+    final branchesAsync = ref.read(branchesStreamProvider);
     final l10n = AppLocalizations.of(context)!;
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
@@ -128,6 +134,47 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                       }
                     },
                   ),
+                  const SizedBox(height: 16),
+                  branchesAsync.when(
+                    data: (branches) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          isAr ? 'متوفر في الفروع' : 'Available in branches',
+                          style: const TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        ...branches.where((branch) => branch.isActive).map(
+                              (branch) => CheckboxListTile(
+                                contentPadding: EdgeInsets.zero,
+                                value: selectedBranchIds.contains(branch.id),
+                                title: Text(
+                                  branch.name,
+                                  style: const TextStyle(fontFamily: 'Tajawal'),
+                                ),
+                                onChanged: (value) {
+                                  setDialogState(() {
+                                    final next =
+                                        Set<String>.from(selectedBranchIds);
+                                    if (value == true) {
+                                      next.add(branch.id);
+                                    } else {
+                                      next.remove(branch.id);
+                                    }
+                                    selectedBranchIds = next.isEmpty
+                                        ? <String>{capturedBranchId}
+                                        : next;
+                                  });
+                                },
+                              ),
+                            ),
+                      ],
+                    ),
+                    loading: () => const LinearProgressIndicator(),
+                    error: (e, st) => const SizedBox.shrink(),
+                  ),
                 ],
               ),
             ),
@@ -159,9 +206,13 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                 final qty = double.tryParse(quantityController.text) ?? 0;
 
                 if (name.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(l10n.pleaseEnterRawMaterialName,
-                          style: TextStyle(fontFamily: 'Tajawal'))));
+                  await TajerMessage.show(
+                    context,
+                    AppErrorMapper.validation(
+                      ar: l10n.pleaseEnterRawMaterialName,
+                      en: l10n.pleaseEnterRawMaterialName,
+                    ),
+                  );
                   return;
                 }
 
@@ -172,6 +223,14 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                 if (merchantId == null) return;
 
                 final repo = ref.read(rawMaterialRepositoryProvider);
+                final operationContext = BranchOperationContext(
+                  merchantId: merchantId,
+                  branchId: capturedBranchId,
+                );
+                final knownBranchIds =
+                    (ref.read(branchesStreamProvider).valueOrNull ?? const [])
+                        .map((branch) => branch.id)
+                        .toSet();
 
                 if (rawMaterial == null) {
                   final newItem = RawMaterial(
@@ -184,7 +243,12 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                     createdAt: DateTime.now(),
                     updatedAt: DateTime.now(),
                   );
-                  await repo.addRawMaterial(newItem);
+                  await repo.addRawMaterial(
+                    newItem,
+                    context: operationContext,
+                    enabledBranchIds: selectedBranchIds,
+                    knownBranchIds: knownBranchIds,
+                  );
                   if (qty > 0) {
                     final logRepo = ref.read(inventoryLogRepositoryProvider);
                     await logRepo?.logChange(
@@ -193,6 +257,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                       previousQuantity: 0,
                       newQuantity: qty,
                       reason: 'إضافة خام جديد / Add New Raw Material',
+                      branchId: operationContext.branchId,
                       userEmail: user?.email,
                       userName: user?.name ?? user?.email,
                       itemType: 'raw_material',
@@ -206,6 +271,12 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                     updatedAt: DateTime.now(),
                   );
                   await repo.updateRawMaterial(updatedItem);
+                  await repo.setRawMaterialAvailability(
+                    context: operationContext,
+                    rawMaterialId: updatedItem.id,
+                    enabledBranchIds: selectedBranchIds,
+                    knownBranchIds: knownBranchIds,
+                  );
                   if (qty != rawMaterial.quantity) {
                     final logRepo = ref.read(inventoryLogRepositoryProvider);
                     await logRepo?.logChange(
@@ -214,6 +285,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                       previousQuantity: rawMaterial.quantity,
                       newQuantity: qty,
                       reason: 'تحديث يدوي / Manual Update',
+                      branchId: operationContext.branchId,
                       userEmail: user?.email,
                       userName: user?.name ?? user?.email,
                       itemType: 'raw_material',

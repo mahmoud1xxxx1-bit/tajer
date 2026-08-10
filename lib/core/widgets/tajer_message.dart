@@ -48,27 +48,56 @@ abstract final class TajerMessage {
     TajerUserMessage message,
   ) {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: _color(message.type),
-        content: Row(
-          children: [
-            Icon(_icon(message.type), color: Colors.white),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                message.message(isAr),
-                style: const TextStyle(
-                  fontFamily: 'Tajawal',
-                  fontWeight: FontWeight.w600,
-                ),
+    final overlay = Overlay.maybeOf(context);
+    if (overlay == null) return;
+
+    late final OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (context) => PositionedDirectional(
+        top: MediaQuery.of(context).padding.top + 16,
+        start: 16,
+        end: 16,
+        child: SafeArea(
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: _color(message.type),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.18),
+                    blurRadius: 18,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Icon(_icon(message.type), color: Colors.white),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      message.message(isAr),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontFamily: 'Tajawal',
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
+    overlay.insert(entry);
+    Future<void>.delayed(const Duration(seconds: 3), () {
+      if (entry.mounted) entry.remove();
+    });
   }
 
   static Color _color(TajerMessageType type) {

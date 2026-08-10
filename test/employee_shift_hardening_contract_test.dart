@@ -56,7 +56,10 @@ void main() {
 
     test('reports permission is not the shift archive route permission', () {
       expect(accessPolicy, contains("case 'can_view_shift_archive':"));
-      expect(accessPolicy, contains('canViewShiftArchive ||'));
+      expect(accessPolicy, contains('return canViewShiftArchive;'));
+      expect(accessPolicy, contains("case 'my_shifts':"));
+      expect(accessPolicy, contains('return canViewOwnShiftHistory;'));
+      expect(router, contains("path: '/my_shifts'"));
       expect(router, contains("permission: 'can_view_shift_archive'"));
       expect(
         router,

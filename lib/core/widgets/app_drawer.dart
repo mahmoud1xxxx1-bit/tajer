@@ -241,7 +241,7 @@ class AppDrawer extends ConsumerWidget {
                 context.push('/end_shift');
               },
             ),
-          if (policy.isEmployee && policy.hasAssignedBranch)
+          if (policy.isEmployee)
             ListTile(
               leading: const Icon(Icons.verified_user_outlined),
               title: Text(

@@ -512,11 +512,17 @@ class DashboardHome extends ConsumerWidget {
                         icon: Icons.archive,
                         label:
                             Localizations.localeOf(context).languageCode == 'ar'
-                                ? 'أرشيف الورديات'
-                                : 'Shifts Archive',
+                                ? (policy.canViewShiftArchive
+                                    ? 'أرشيف الورديات'
+                                    : 'وردياتي')
+                                : (policy.canViewShiftArchive
+                                    ? 'Shift Archive'
+                                    : 'My Shifts'),
                         color: Colors.brown,
                         onTap: () {
-                          context.push('/shifts_archive');
+                          context.push(policy.canViewShiftArchive
+                              ? '/shifts_archive'
+                              : '/my_shifts');
                         },
                       ),
                     ],
