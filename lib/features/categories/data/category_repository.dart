@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../branches/domain/branch_operation_context.dart';
+import '../../../core/services/legacy_catalog_migration_normalizer.dart';
 import '../../branches/presentation/branch_context.dart';
 import '../domain/category.dart';
 
@@ -65,9 +66,10 @@ class CategoryRepository {
         .doc(_merchantId)
         .collection('categories');
     if (lastLegacyCategoryId != null && lastLegacyCategoryId.isNotEmpty) {
-      query = query.where('id', isGreaterThan: lastLegacyCategoryId);
+      query = query.where(FieldPath.documentId,
+          isGreaterThan: lastLegacyCategoryId);
     }
-    query = query.orderBy('id').limit(pageSize);
+    query = query.orderBy(FieldPath.documentId).limit(pageSize);
     final legacy = await query.get();
     if (legacy.docs.isEmpty) {
       await stateRef.set({
@@ -93,10 +95,11 @@ class CategoryRepository {
     var lastProcessedId = lastLegacyCategoryId;
     for (final doc in legacy.docs) {
       lastProcessedId = doc.id;
-      final data = Map<String, dynamic>.from(doc.data());
-      data['id'] = doc.id;
-      data['merchantId'] = _merchantId;
-      data['branchId'] = _branchId;
+      final data = normalizeLegacyCategoryForBranch(
+        document: doc,
+        merchantId: _merchantId,
+        branchId: _branchId,
+      );
       batch.set(_categoriesRef.doc(doc.id), data, SetOptions(merge: true));
     }
     batch.set(
@@ -137,12 +140,11 @@ class CategoryRepository {
         .orderBy('createdAt', descending: true)
         .get();
     return legacy.docs.map((doc) {
-      final data = Map<String, dynamic>.from(doc.data());
-      data['id'] = doc.id;
-      data['merchantId'] = data['merchantId']?.toString() ?? _merchantId;
-      data['branchId'] = _branchId;
-      data['name'] = data['name']?.toString() ?? '';
-      data['createdAt'] ??= Timestamp.now();
+      final data = normalizeLegacyCategoryForBranch(
+        document: doc,
+        merchantId: _merchantId,
+        branchId: _branchId,
+      );
       return Category.fromJson(data);
     }).toList();
   }

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/services/legacy_catalog_migration_normalizer.dart';
 import '../../branches/data/branch_inventory_repository.dart';
 import '../../branches/domain/branch_operation_context.dart';
 import '../../branches/presentation/branch_context.dart';
@@ -121,10 +122,11 @@ class RawMaterialRepository {
         .collection('raw_materials')
         .where('merchantId', isEqualTo: merchantId);
     if (lastLegacyRawMaterialId != null && lastLegacyRawMaterialId.isNotEmpty) {
-      query = query.where('id', isGreaterThan: lastLegacyRawMaterialId);
+      query = query.where(FieldPath.documentId,
+          isGreaterThan: lastLegacyRawMaterialId);
     }
     final effectivePageSize = pageSize > 240 ? 240 : pageSize;
-    query = query.orderBy('id').limit(effectivePageSize);
+    query = query.orderBy(FieldPath.documentId).limit(effectivePageSize);
     final legacyMaterials = await query.get();
     final availability = await _availabilityRef(merchantId).get();
     final inventory = await _firestore
@@ -175,7 +177,6 @@ class RawMaterialRepository {
 
     var lastProcessedId = lastLegacyRawMaterialId;
     for (final doc in legacyMaterials.docs) {
-      final data = Map<String, dynamic>.from(doc.data());
       final rawMaterialId = doc.id;
       lastProcessedId = rawMaterialId;
       final enabled = explicit[rawMaterialId];
@@ -185,11 +186,11 @@ class RawMaterialRepository {
               : (inventoryEvidence.contains(rawMaterialId) ||
                   branchId == 'main'));
       if (!belongsToBranch) continue;
-      data['id'] = rawMaterialId;
-      data['merchantId'] = merchantId;
-      data['branchId'] = branchId;
-      data['quantity'] = 0.0;
-      data['initialQuantity'] = 0.0;
+      final data = normalizeLegacyRawMaterialForBranch(
+        document: doc,
+        merchantId: merchantId,
+        branchId: branchId,
+      );
       batch.set(
         _branchRawMaterialRef(merchantId, branchId, rawMaterialId),
         data,
@@ -273,9 +274,10 @@ class RawMaterialRepository {
         .collection('raw_materials')
         .where('merchantId', isEqualTo: merchantId);
     if (lastLegacyRawMaterialId != null && lastLegacyRawMaterialId.isNotEmpty) {
-      query = query.where('id', isGreaterThan: lastLegacyRawMaterialId);
+      query = query.where(FieldPath.documentId,
+          isGreaterThan: lastLegacyRawMaterialId);
     }
-    query = query.orderBy('id').limit(pageSize);
+    query = query.orderBy(FieldPath.documentId).limit(pageSize);
     final legacyMaterials = await query.get();
     final availability = await _availabilityRef(merchantId).get();
     final inventory = await _firestore
@@ -413,14 +415,13 @@ class RawMaterialRepository {
       final doc =
           await _firestore.collection('raw_materials').doc(rawMaterialId).get();
       if (!doc.exists || doc.data() == null) continue;
-      final data = Map<String, dynamic>.from(doc.data()!);
-      if (data['merchantId']?.toString() != merchantId) continue;
-      if (data['isArchived'] == true) continue;
-      data['id'] = doc.id;
-      data['merchantId'] = data['merchantId']?.toString() ?? merchantId;
-      data['branchId'] = branchId;
-      data['quantity'] = 0.0;
-      data['initialQuantity'] = 0.0;
+      if (doc.data()?['merchantId']?.toString() != merchantId) continue;
+      if (doc.data()?['isArchived'] == true) continue;
+      final data = normalizeLegacyRawMaterialForBranch(
+        document: doc,
+        merchantId: merchantId,
+        branchId: branchId,
+      );
       materials.add(RawMaterial.fromJson(data));
     }
     return materials;

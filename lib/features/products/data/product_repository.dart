@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../../core/providers/effective_merchant.dart';
+import '../../../core/services/legacy_catalog_migration_normalizer.dart';
 import '../../branches/data/branch_inventory_repository.dart';
 import '../../branches/domain/branch_operation_context.dart';
 import '../../branches/presentation/branch_context.dart';
@@ -178,10 +179,11 @@ class ProductRepository {
         .collection('products')
         .where('merchantId', isEqualTo: merchantId);
     if (lastLegacyProductId != null && lastLegacyProductId.isNotEmpty) {
-      query = query.where('id', isGreaterThan: lastLegacyProductId);
+      query =
+          query.where(FieldPath.documentId, isGreaterThan: lastLegacyProductId);
     }
     final effectivePageSize = pageSize > 240 ? 240 : pageSize;
-    query = query.orderBy('id').limit(effectivePageSize);
+    query = query.orderBy(FieldPath.documentId).limit(effectivePageSize);
     final legacyProducts = await query.get();
     final availability = await _availabilityRef(merchantId).get();
     final inventory = await _firestore
@@ -232,7 +234,6 @@ class ProductRepository {
 
     var lastProcessedId = lastLegacyProductId;
     for (final doc in legacyProducts.docs) {
-      final data = Map<String, dynamic>.from(doc.data());
       final productId = doc.id;
       lastProcessedId = productId;
       final enabled = explicit[productId];
@@ -241,11 +242,11 @@ class ProductRepository {
               ? false
               : (inventoryEvidence.contains(productId) || branchId == 'main'));
       if (!belongsToBranch) continue;
-      data['id'] = productId;
-      data['merchantId'] = merchantId;
-      data['branchId'] = branchId;
-      data['quantity'] = 0;
-      data.remove('costPrice');
+      final data = normalizeLegacyProductForBranch(
+        document: doc,
+        merchantId: merchantId,
+        branchId: branchId,
+      );
       batch.set(
         _branchProductRef(merchantId, branchId, productId),
         data,
@@ -301,9 +302,10 @@ class ProductRepository {
         .collection('products')
         .where('merchantId', isEqualTo: merchantId);
     if (lastLegacyProductId != null && lastLegacyProductId.isNotEmpty) {
-      query = query.where('id', isGreaterThan: lastLegacyProductId);
+      query =
+          query.where(FieldPath.documentId, isGreaterThan: lastLegacyProductId);
     }
-    query = query.orderBy('id').limit(pageSize);
+    query = query.orderBy(FieldPath.documentId).limit(pageSize);
     final legacyProducts = await query.get();
     final availability = await _availabilityRef(merchantId).get();
     final inventory = await _firestore
@@ -466,15 +468,13 @@ class ProductRepository {
     for (final productId in productIds) {
       final doc = await _firestore.collection('products').doc(productId).get();
       if (!doc.exists || doc.data() == null) continue;
-      final data = Map<String, dynamic>.from(doc.data()!);
-      if (data['merchantId']?.toString() != merchantId) continue;
-      if (data['isArchived'] == true) continue;
-      data['id'] = doc.id;
-      data['merchantId'] = data['merchantId']?.toString() ?? merchantId;
-      data['branchId'] = branchId;
-      data['price'] = (data['price'] ?? 0.0).toDouble();
-      data['quantity'] = 0;
-      data.remove('costPrice');
+      if (doc.data()?['merchantId']?.toString() != merchantId) continue;
+      if (doc.data()?['isArchived'] == true) continue;
+      final data = normalizeLegacyProductForBranch(
+        document: doc,
+        merchantId: merchantId,
+        branchId: branchId,
+      );
       products.add(Product.fromJson(data));
     }
     return products;

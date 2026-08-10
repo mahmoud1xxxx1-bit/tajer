@@ -21,6 +21,7 @@ import '../../../core/services/branch_catalog_migration_bootstrap_service.dart';
 import '../../../core/widgets/app_drawer.dart';
 import '../../branches/presentation/active_branch_selector.dart';
 import '../../branches/presentation/branch_context.dart';
+import 'branch_catalog_migration_gate.dart';
 import 'setup_checklist_card.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -87,6 +88,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ? ref.watch(branchCatalogMigrationBootstrapProvider)
             : const AsyncData<void>(null);
 
+    if (migrationBootstrap.isLoading || migrationBootstrap.hasError) {
+      return BranchCatalogMigrationGate(
+        state: migrationBootstrap,
+        onRetry: () => ref.invalidate(branchCatalogMigrationBootstrapProvider),
+        readyBuilder: (_) => const SizedBox.shrink(),
+      );
+    }
+
     final List<Widget> screens = [
       DashboardHome(
           canManageCustomers: canManageCustomers,
@@ -138,35 +147,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         }
       },
       child: Scaffold(
-        body: Column(
-          children: [
-            if (migrationBootstrap.hasError)
-              MaterialBanner(
-                content: Text(
-                  Localizations.localeOf(context).languageCode == 'ar'
-                      ? 'تعذر إكمال تهيئة كتالوج الفروع. حاول مرة أخرى.'
-                      : 'Branch catalog setup could not finish. Try again.',
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => ref.invalidate(
-                      branchCatalogMigrationBootstrapProvider,
-                    ),
-                    child: Text(
-                      Localizations.localeOf(context).languageCode == 'ar'
-                          ? 'إعادة المحاولة'
-                          : 'Retry',
-                    ),
-                  ),
-                ],
-              ),
-            Expanded(
-              child: IndexedStack(
-                index: _currentIndex,
-                children: screens,
-              ),
-            ),
-          ],
+        body: IndexedStack(
+          index: _currentIndex,
+          children: screens,
         ),
         bottomNavigationBar: NavigationBar(
           selectedIndex: _currentIndex,

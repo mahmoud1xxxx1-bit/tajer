@@ -3,7 +3,8 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "test:rules": "node firestore_rules_emulator_test.js"
+    "test:rules": "node firestore_rules_emulator_test.js",
+    "test:zero-state": "node firestore_zero_state_migration_test.js"
   },
   "engines": {
     "node": "20"
