@@ -832,6 +832,81 @@ async function main() {
       }),
     );
     await assertFails(deleteDoc(doc(cashier, 'orders', 'order-a')));
+
+    // MTO Checkout Rules Tests
+    // Employee with can_create_orders assigned to branch-a:
+    // READ branch-local product / raw material: ALLOW
+    await assertSucceeds(getDoc(doc(cashier, 'merchants', 'merchant-a', 'branches', 'branch-a', 'products', 'prod-branch-a')));
+    await assertSucceeds(getDoc(doc(cashier, 'merchants', 'merchant-a', 'branches', 'branch-a', 'raw_materials', 'raw-1')));
+
+    // GET missing compatibility docs according to narrow get rule: ALLOW
+    await assertFails(getDoc(doc(cashier, 'merchants', 'merchant-a', 'product_branch_availability', 'branch-b_prod-1')));
+    await assertSucceeds(getDoc(doc(cashier, 'merchants', 'merchant-a', 'product_branch_availability', 'branch-a_prod-1')));
+
+    // DECREMENT same-branch branch_inventory (raw-material quantity) through checkout: ALLOW
+    await assertSucceeds(
+      updateDoc(
+        doc(cashier, 'merchants', 'merchant-a', 'branch_inventory', 'branch-a_raw_material_raw-1'),
+        { quantity: 8, merchantId: 'merchant-a', branchId: 'branch-a', itemId: 'raw-1', itemType: 'raw_material' },
+      ),
+    );
+
+    // CREATE checkout inventory_log: ALLOW
+    await assertSucceeds(
+      setDoc(
+        doc(cashier, 'merchants', 'merchant-a', 'inventory_logs', 'log-1'),
+        {
+          merchantId: 'merchant-a',
+          branchId: 'branch-a',
+          productId: 'raw-1',
+          changeQuantity: -2,
+          reason: 'Sales invoice #123',
+          date: new Date(),
+          userEmail: 'cashier-a@example.test',
+        },
+      ),
+    );
+
+    // WRITE raw_material_branch_availability: DENY
+    await assertFails(
+      setDoc(
+        doc(cashier, 'merchants', 'merchant-a', 'raw_material_branch_availability', 'branch-a_raw-1'),
+        { enabled: true },
+      ),
+    );
+
+    // WRITE product_branch_availability: DENY
+    await assertFails(
+      setDoc(
+        doc(cashier, 'merchants', 'merchant-a', 'product_branch_availability', 'branch-a_prod-1'),
+        { enabled: true },
+      ),
+    );
+
+    // Cross-branch targeting: DENY
+    await assertFails(
+      updateDoc(
+        doc(cashier, 'merchants', 'merchant-a', 'branch_inventory', 'branch-b_raw_material_raw-1'),
+        { quantity: 8, merchantId: 'merchant-a', branchId: 'branch-b', itemId: 'raw-1', itemType: 'raw_material' },
+      ),
+    );
+
+    // Manual Mutation: Arbitrary manual inventory mutation without can_manage_inventory: DENY (tested above with 99 quantity, this is just asserting it works for raw materials as well without required fields)
+    await assertFails(
+      updateDoc(
+        doc(cashier, 'merchants', 'merchant-a', 'branch_inventory', 'branch-a_raw_material_raw-1'),
+        { quantity: 150 }, // Arbitrary mutation (missing itemType/branchId etc)
+      ),
+    );
+
+    // Malformed ID: Targeting invalid non-canonical document IDs: DENY
+    await assertFails(
+      updateDoc(
+        doc(cashier, 'merchants', 'merchant-a', 'branch_inventory', 'branch-a_raw_raw-1'), // non canonical, must be raw_material
+        { quantity: 8, merchantId: 'merchant-a', branchId: 'branch-a', itemId: 'raw-1', itemType: 'raw_material' },
+      ),
+    );
+
   } finally {
     await testEnv.cleanup();
   }
