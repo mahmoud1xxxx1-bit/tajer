@@ -57,7 +57,11 @@ class OrderRepository {
         );
   }
 
-  Future<AppOrder> createOrder(AppOrder order, {String? shiftId}) async {
+  Future<AppOrder> createOrder(
+    AppOrder order, {
+    String? shiftId,
+    String? branchId,
+  }) async {
     final batch = _firestore.batch();
 
     final customerRef =
@@ -930,6 +934,7 @@ class OrderRepository {
     required double amountPaid,
     required String? shiftId,
     required String paymentMethod, // 'cash', 'card', 'transfer'
+    String branchId = 'main',
   }) async {
     if (amountPaid <= 0) return;
 

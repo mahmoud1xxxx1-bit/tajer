@@ -5,7 +5,7 @@ import 'package:tajer/core/services/app_failure.dart';
 import 'package:tajer/core/services/app_error_mapper.dart';
 
 void main() {
-  group('branch availability foundation contracts', () {
+  group('branch ownership foundation contracts', () {
     late String productRepository;
     late String rawMaterialRepository;
     late String addProductDialog;
@@ -32,15 +32,12 @@ void main() {
       rules = File('firestore.rules').readAsStringSync();
     });
 
-    test('product availability is branch membership, not product duplication',
-        () {
-      expect(productRepository, contains('product_branch_availability'));
-      expect(productRepository,
-          contains('watchAvailability(merchantId, branchId)'));
-      expect(productRepository, contains("return branchId == 'main' ||"));
-      expect(productRepository,
-          contains('inventoryEvidence.contains(product.id)'));
-      expect(productRepository, isNot(contains(r'products_${branchId}')));
+    test('products are branch-owned at runtime', () {
+      expect(productRepository, contains('collection(\'branches\')'));
+      expect(productRepository, contains('collection(\'products\')'));
+      expect(productRepository, contains('migrateBranchCatalogIfNeeded'));
+      expect(addProductDialog, isNot(contains('Available in branches')));
+      expect(addProductDialog, isNot(contains('setProductAvailability')));
     });
 
     test('product mutations capture immutable branch operation context', () {
@@ -50,23 +47,22 @@ void main() {
       expect(addProductDialog, isNot(contains('deleteProduct(product.id)')));
     });
 
-    test('new products write explicit false membership for unselected branches',
-        () {
-      expect(addProductDialog, contains('Available in branches'));
-      expect(addProductDialog, contains('<String>{activeBranchId}'));
-      expect(addProductDialog, contains('knownBranchIds: knownBranchIds'));
-      expect(productRepository,
-          contains("'enabled': enabledBranchIds.contains(branchId)"));
+    test('new products write only the captured branch catalog', () {
+      expect(addProductDialog, contains('final capturedBranchId'));
+      expect(addProductDialog,
+          contains('enabledBranchIds: {operationContext.branchId}'));
+      expect(
+          productRepository, contains("data['branchId'] = context.branchId"));
+      expect(addProductDialog, isNot(contains('_selectedBranchIds')));
     });
 
-    test('raw material branch availability protects recipe branch integrity',
-        () {
-      expect(
-          rawMaterialRepository, contains('raw_material_branch_availability'));
-      expect(rawMaterialRepository, contains('isAvailableInBranch'));
-      expect(addProductDialog, contains('rawMaterialRepo.isAvailableInBranch'));
+    test('raw materials are branch-owned and recipes validate same branch', () {
+      expect(rawMaterialRepository, contains('collection(\'branches\')'));
+      expect(rawMaterialRepository, contains('collection(\'raw_materials\')'));
+      expect(rawMaterialRepository, contains('existsInBranch'));
+      expect(addProductDialog, contains('rawMaterialRepo.existsInBranch'));
       expect(rawMaterialsScreen, contains('BranchOperationContext('));
-      expect(rawMaterialsScreen, contains('knownBranchIds: knownBranchIds'));
+      expect(rawMaterialsScreen, isNot(contains('setRawMaterialAvailability')));
     });
 
     test('remove from branch and global archive are distinct awaited actions',
@@ -78,13 +74,13 @@ void main() {
       expect(productsScreen, contains('if (policy.isOwnerLike)'));
     });
 
-    test('rules scope availability by merchant, branch and permission', () {
-      expect(rules,
-          contains('match /product_branch_availability/{availabilityId}'));
+    test('rules scope branch catalogs by merchant, branch and permission', () {
+      expect(rules, contains('match /branches/{branchId}'));
+      expect(rules, contains('match /products/{productId}'));
+      expect(rules, contains('match /categories/{categoryId}'));
+      expect(rules, contains('match /raw_materials/{materialId}'));
       expect(
           rules, contains("hasPermission(merchantId, 'can_manage_products')"));
-      expect(rules,
-          contains('match /raw_material_branch_availability/{availabilityId}'));
       expect(
           rules, contains("hasPermission(merchantId, 'can_manage_inventory')"));
       expect(rules, isNot(contains('allow read, write: if true')));

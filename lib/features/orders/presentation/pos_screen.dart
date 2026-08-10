@@ -415,11 +415,14 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
       final merchantId = currentEffectiveMerchantId(appUser);
       final shift = await ref.read(currentShiftProvider(merchantId).future);
+      final checkoutBranchId =
+          shift?.branchId ?? ref.read(selectedBranchIdProvider);
       final currency = ref.read(currencyProvider).code;
 
-      final savedOrder = await ref
-          .read(orderRepositoryProvider)
-          .createOrder(newOrder, shiftId: shift?.id);
+      final savedOrder = await ref.read(orderRepositoryProvider).createOrder(
+          newOrder,
+          shiftId: shift?.id,
+          branchId: checkoutBranchId);
 
       // Stop loading and clear cart immediately so UI never hangs!
       setState(() {

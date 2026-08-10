@@ -162,6 +162,8 @@ class BranchInventoryRepository {
     required String toBranchId,
     required String itemType,
     required String itemId,
+    String? destinationItemId,
+    String? operationId,
     required String itemName,
     required double quantity,
     double legacySourceMainQuantity = 0.0,
@@ -177,15 +179,22 @@ class BranchInventoryRepository {
     if (itemType != 'product' && itemType != 'raw_material')
       throw Exception('Unsupported inventory item type');
 
+    final toItemId = destinationItemId?.trim().isNotEmpty == true
+        ? destinationItemId!.trim()
+        : itemId;
     final fromId = docId(fromBranchId, itemType, itemId);
-    final toId = docId(toBranchId, itemType, itemId);
+    final toId = docId(toBranchId, itemType, toItemId);
     final fromRef = ref.doc(fromId);
     final toRef = ref.doc(toId);
-    final transferRef = _transfersRef.doc();
+    final transferRef = operationId?.trim().isNotEmpty == true
+        ? _transfersRef.doc(operationId!.trim())
+        : _transfersRef.doc();
     final sourceLogRef = _logsRef.doc();
     final destinationLogRef = _logsRef.doc();
 
     await firestore.runTransaction<void>((tx) async {
+      final existingTransfer = await tx.get(transferRef);
+      if (existingTransfer.exists) return;
       final fromSnap = await tx.get(fromRef);
       final toSnap = await tx.get(toRef);
       final fromCurrent = fromSnap.exists
@@ -227,7 +236,7 @@ class BranchInventoryRepository {
             'id': toId,
             'merchantId': merchantId,
             'branchId': toBranchId,
-            'itemId': itemId,
+            'itemId': toItemId,
             'itemType': itemType,
             'quantity': toNext,
             'initialQuantity': toSnap.exists ? toInitial : toNext,
@@ -256,7 +265,7 @@ class BranchInventoryRepository {
         'id': destinationLogRef.id,
         'merchantId': merchantId,
         'branchId': toBranchId,
-        'productId': itemId,
+        'productId': toItemId,
         'productName': itemName,
         'itemType': itemType,
         'changeQuantity': quantity,
@@ -275,6 +284,8 @@ class BranchInventoryRepository {
         'merchantId': merchantId,
         'fromBranchId': fromBranchId,
         'toBranchId': toBranchId,
+        'sourceItemId': itemId,
+        'destinationItemId': toItemId,
         'itemId': itemId,
         'itemName': itemName,
         'itemType': itemType,

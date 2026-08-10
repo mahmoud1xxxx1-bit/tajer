@@ -31,8 +31,6 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
         TextEditingController(text: rawMaterial?.quantity.toString() ?? '');
     String selectedUnit = rawMaterial?.unit ?? 'g';
     final capturedBranchId = ref.read(selectedBranchIdProvider);
-    var selectedBranchIds = <String>{capturedBranchId};
-    final branchesAsync = ref.read(branchesStreamProvider);
     final l10n = AppLocalizations.of(context)!;
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
@@ -135,46 +133,6 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  branchesAsync.when(
-                    data: (branches) => Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isAr ? 'متوفر في الفروع' : 'Available in branches',
-                          style: const TextStyle(
-                            fontFamily: 'Tajawal',
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        ...branches.where((branch) => branch.isActive).map(
-                              (branch) => CheckboxListTile(
-                                contentPadding: EdgeInsets.zero,
-                                value: selectedBranchIds.contains(branch.id),
-                                title: Text(
-                                  branch.name,
-                                  style: const TextStyle(fontFamily: 'Tajawal'),
-                                ),
-                                onChanged: (value) {
-                                  setDialogState(() {
-                                    final next =
-                                        Set<String>.from(selectedBranchIds);
-                                    if (value == true) {
-                                      next.add(branch.id);
-                                    } else {
-                                      next.remove(branch.id);
-                                    }
-                                    selectedBranchIds = next.isEmpty
-                                        ? <String>{capturedBranchId}
-                                        : next;
-                                  });
-                                },
-                              ),
-                            ),
-                      ],
-                    ),
-                    loading: () => const LinearProgressIndicator(),
-                    error: (e, st) => const SizedBox.shrink(),
-                  ),
                 ],
               ),
             ),
@@ -227,10 +185,6 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                   merchantId: merchantId,
                   branchId: capturedBranchId,
                 );
-                final knownBranchIds =
-                    (ref.read(branchesStreamProvider).valueOrNull ?? const [])
-                        .map((branch) => branch.id)
-                        .toSet();
 
                 if (rawMaterial == null) {
                   final newItem = RawMaterial(
@@ -246,8 +200,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                   await repo.addRawMaterial(
                     newItem,
                     context: operationContext,
-                    enabledBranchIds: selectedBranchIds,
-                    knownBranchIds: knownBranchIds,
+                    enabledBranchIds: {operationContext.branchId},
                   );
                   if (qty > 0) {
                     final logRepo = ref.read(inventoryLogRepositoryProvider);
@@ -270,12 +223,9 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                     unit: selectedUnit,
                     updatedAt: DateTime.now(),
                   );
-                  await repo.updateRawMaterial(updatedItem);
-                  await repo.setRawMaterialAvailability(
+                  await repo.updateRawMaterial(
+                    updatedItem,
                     context: operationContext,
-                    rawMaterialId: updatedItem.id,
-                    enabledBranchIds: selectedBranchIds,
-                    knownBranchIds: knownBranchIds,
                   );
                   if (qty != rawMaterial.quantity) {
                     final logRepo = ref.read(inventoryLogRepositoryProvider);
@@ -468,7 +418,14 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                                       }
                                       ref
                                           .read(rawMaterialRepositoryProvider)
-                                          .deleteRawMaterial(item.id);
+                                          .deleteRawMaterial(
+                                            context: BranchOperationContext(
+                                              merchantId: merchantId,
+                                              branchId: ref.read(
+                                                  selectedBranchIdProvider),
+                                            ),
+                                            id: item.id,
+                                          );
                                     },
                                   ),
                                 ],

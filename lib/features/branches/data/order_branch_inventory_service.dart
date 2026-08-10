@@ -116,7 +116,17 @@ class OrderBranchInventoryService {
 
     final productSnaps = <DocumentSnapshot<Map<String, dynamic>>>[];
     for (final id in productIds) {
-      productSnaps.add(await tx.get(firestore.collection('products').doc(id)));
+      var snap = await tx.get(firestore
+          .collection('merchants')
+          .doc(order.merchantId)
+          .collection('branches')
+          .doc(order.branchId)
+          .collection('products')
+          .doc(id));
+      if (!snap.exists) {
+        snap = await tx.get(firestore.collection('products').doc(id));
+      }
+      productSnaps.add(snap);
     }
 
     final products = <String, Map<String, dynamic>>{};
@@ -134,7 +144,17 @@ class OrderBranchInventoryService {
 
     final rawSnaps = <DocumentSnapshot<Map<String, dynamic>>>[];
     for (final id in rawMaterialIds) {
-      rawSnaps.add(await tx.get(firestore.collection('raw_materials').doc(id)));
+      var snap = await tx.get(firestore
+          .collection('merchants')
+          .doc(order.merchantId)
+          .collection('branches')
+          .doc(order.branchId)
+          .collection('raw_materials')
+          .doc(id));
+      if (!snap.exists) {
+        snap = await tx.get(firestore.collection('raw_materials').doc(id));
+      }
+      rawSnaps.add(snap);
     }
 
     final rawMaterials = <String, Map<String, dynamic>>{

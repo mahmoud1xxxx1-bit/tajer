@@ -180,6 +180,32 @@ async function main() {
         },
       );
       await setDoc(
+        doc(db, 'merchants', 'merchant-a', 'branches', 'branch-a', 'products', 'prod-branch-a'),
+        {
+          id: 'prod-branch-a',
+          merchantId: 'merchant-a',
+          branchId: 'branch-a',
+          name: 'Branch A product',
+          price: 10,
+          isArchived: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      );
+      await setDoc(
+        doc(db, 'merchants', 'merchant-a', 'branches', 'branch-b', 'products', 'prod-branch-b'),
+        {
+          id: 'prod-branch-b',
+          merchantId: 'merchant-a',
+          branchId: 'branch-b',
+          name: 'Branch B product',
+          price: 10,
+          isArchived: false,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      );
+      await setDoc(
         doc(db, 'merchants', 'merchant-a', 'raw_material_branch_availability', 'branch-a_raw-1'),
         {
           id: 'branch-a_raw-1',
@@ -277,6 +303,21 @@ async function main() {
           updatedAt: new Date(),
         },
       ),
+    );
+    await assertSucceeds(
+      getDoc(doc(cashier, 'merchants', 'merchant-a', 'branches', 'branch-a', 'products', 'prod-branch-a')),
+    );
+    await assertFails(
+      getDoc(doc(cashier, 'merchants', 'merchant-a', 'branches', 'branch-b', 'products', 'prod-branch-b')),
+    );
+    await assertFails(
+      setDoc(doc(cashier, 'merchants', 'merchant-a', 'branches', 'branch-b', 'products', 'forged'), {
+        id: 'forged',
+        merchantId: 'merchant-a',
+        branchId: 'branch-b',
+        name: 'Forged',
+        price: 1,
+      }),
     );
     await assertSucceeds(
       getDoc(

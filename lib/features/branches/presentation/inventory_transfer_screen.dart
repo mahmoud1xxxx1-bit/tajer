@@ -9,6 +9,7 @@ import '../../products/domain/product.dart';
 import '../../products/domain/raw_material.dart';
 import '../data/branch_inventory_repository.dart';
 import '../data/branch_repository.dart';
+import 'branch_context.dart';
 import '../domain/branch.dart';
 import '../domain/branch_inventory.dart';
 
@@ -16,8 +17,10 @@ final _transferProductsProvider = StreamProvider<List<Product>>((ref) {
   final user = ref.watch(appUserProvider).value;
   if (user == null) return Stream.value(const <Product>[]);
   final merchantId = currentEffectiveMerchantId(user);
+  final branchId = ref.watch(selectedBranchIdProvider);
+  if (branchId.isEmpty) return Stream.value(const <Product>[]);
   final repo = ref.watch(productRepositoryProvider);
-  return repo.queryProducts(merchantId).snapshots().map(
+  return repo.queryProducts(merchantId, branchId).snapshots().map(
         (snapshot) => snapshot.docs.map((doc) => doc.data()).toList(),
       );
 });
@@ -26,7 +29,11 @@ final _transferRawMaterialsProvider = StreamProvider<List<RawMaterial>>((ref) {
   final user = ref.watch(appUserProvider).value;
   if (user == null) return Stream.value(const <RawMaterial>[]);
   final merchantId = currentEffectiveMerchantId(user);
-  return ref.watch(rawMaterialRepositoryProvider).watchRawMaterials(merchantId);
+  final branchId = ref.watch(selectedBranchIdProvider);
+  if (branchId.isEmpty) return Stream.value(const <RawMaterial>[]);
+  return ref
+      .watch(rawMaterialRepositoryProvider)
+      .watchRawMaterials(merchantId, branchId);
 });
 
 class InventoryTransferScreen extends ConsumerStatefulWidget {

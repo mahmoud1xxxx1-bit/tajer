@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../branches/data/order_branch_inventory_service.dart';
 import '../domain/order.dart';
@@ -13,30 +12,26 @@ class BranchAwareOrderRepository extends OrderRepository {
 
   BranchAwareOrderRepository(this.firestore) : super(firestore);
 
-  Future<String> _selectedBranch(String merchantId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final value = prefs.getString('selected_branch_$merchantId')?.trim();
-    return value == null || value.isEmpty ? 'main' : value;
-  }
+  String _operationBranch(String branchId) =>
+      branchId.trim().isEmpty ? 'main' : branchId.trim();
 
   @override
-  Future<AppOrder> createOrder(AppOrder order, {String? shiftId}) async {
-    final branchId = await _selectedBranch(order.merchantId);
+  Future<AppOrder> createOrder(
+    AppOrder order, {
+    String? shiftId,
+    String? branchId,
+  }) async {
+    final effectiveBranchId = _operationBranch(branchId ?? order.branchId);
     final now = DateTime.now();
     final date =
         '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-    final prefs = await SharedPreferences.getInstance();
-    final dateKey = 'queue_date_${order.merchantId}_$branchId';
-    final numKey = 'queue_num_${order.merchantId}_$branchId';
-    final localNumber =
-        prefs.getString(dateKey) == date ? (prefs.getInt(numKey) ?? 0) : 0;
 
     final orderRef = firestore.collection('orders').doc(order.id);
     final counterRef = firestore
         .collection('merchants')
         .doc(order.merchantId)
         .collection('counters')
-        .doc('daily_orders_$branchId');
+        .doc('daily_orders_$effectiveBranchId');
 
     final createdOrder = await firestore.runTransaction<AppOrder>((tx) async {
       final existingOrder = await tx.get(orderRef);
@@ -51,9 +46,9 @@ class BranchAwareOrderRepository extends OrderRepository {
       final current = counterData?['date'] == date
           ? (counterData?['lastNumber'] as num?)?.toInt() ?? 0
           : 0;
-      final queueNumber = (current > localNumber ? current : localNumber) + 1;
+      final queueNumber = current + 1;
       final orderWithQueue = order.copyWith(
-        branchId: branchId,
+        branchId: effectiveBranchId,
         shiftId: shiftId,
         queueNumber: queueNumber,
       );
@@ -70,7 +65,7 @@ class BranchAwareOrderRepository extends OrderRepository {
         if (customerDoc.exists && customerDoc.data() != null) {
           final customerBranchId =
               customerDoc.data()?['branchId']?.toString() ?? 'main';
-          if (customerBranchId != branchId) {
+          if (customerBranchId != effectiveBranchId) {
             throw Exception('Customer account belongs to a different branch.');
           }
         }
@@ -86,7 +81,7 @@ class BranchAwareOrderRepository extends OrderRepository {
         final shiftBranchId =
             shiftSnap.data()?['branchId']?.toString() ?? 'main';
         final shiftStatus = shiftSnap.data()?['status']?.toString();
-        if (shiftBranchId != branchId || shiftStatus != 'open') {
+        if (shiftBranchId != effectiveBranchId || shiftStatus != 'open') {
           throw Exception('Order branch does not match the active shift');
         }
       }
@@ -102,7 +97,7 @@ class BranchAwareOrderRepository extends OrderRepository {
           {
             'date': date,
             'lastNumber': queueNumber,
-            'branchId': branchId,
+            'branchId': effectiveBranchId,
             'updatedAt': FieldValue.serverTimestamp(),
           },
           SetOptions(merge: true));
@@ -128,10 +123,6 @@ class BranchAwareOrderRepository extends OrderRepository {
       return orderWithCostSnapshot;
     });
 
-    await prefs.setString(dateKey, date);
-    if (createdOrder.queueNumber != null) {
-      await prefs.setInt(numKey, createdOrder.queueNumber!);
-    }
     return createdOrder;
   }
 
@@ -149,8 +140,16 @@ class BranchAwareOrderRepository extends OrderRepository {
     final products = <String, Map<String, dynamic>>{};
     final rawMaterialIds = <String>{};
     for (final productId in productIds) {
-      final snap =
-          await tx.get(firestore.collection('products').doc(productId));
+      var snap = await tx.get(firestore
+          .collection('merchants')
+          .doc(order.merchantId)
+          .collection('branches')
+          .doc(order.branchId)
+          .collection('products')
+          .doc(productId));
+      if (!snap.exists) {
+        snap = await tx.get(firestore.collection('products').doc(productId));
+      }
       if (!snap.exists || snap.data() == null) continue;
       final data = snap.data()!;
       products[productId] = data;
@@ -168,9 +167,20 @@ class BranchAwareOrderRepository extends OrderRepository {
           .collection('merchants')
           .doc(order.merchantId)
           .collection('product_costs')
-          .doc(id));
+          .doc('${order.branchId}_$id'));
       final value = snap.data()?['costPrice'];
       if (value is num && value >= 0) costs[id] = value.toDouble();
+      if (value is! num) {
+        final legacySnap = await tx.get(firestore
+            .collection('merchants')
+            .doc(order.merchantId)
+            .collection('product_costs')
+            .doc(id));
+        final legacyValue = legacySnap.data()?['costPrice'];
+        if (legacyValue is num && legacyValue >= 0) {
+          costs[id] = legacyValue.toDouble();
+        }
+      }
     }
 
     final items = order.items.map((item) {
@@ -394,10 +404,11 @@ class BranchAwareOrderRepository extends OrderRepository {
     required double amountPaid,
     required String? shiftId,
     required String paymentMethod,
+    String branchId = 'main',
   }) async {
     if (amountPaid <= 0) return;
 
-    final branchId = await _selectedBranch(merchantId);
+    final operationBranchId = _operationBranch(branchId);
     final creditOrdersSnapshot = await firestore
         .collection('orders')
         .where('merchantId', isEqualTo: merchantId)
@@ -406,8 +417,8 @@ class BranchAwareOrderRepository extends OrderRepository {
         .get();
 
     final orderRefs = creditOrdersSnapshot.docs
-        .where(
-            (doc) => (doc.data()['branchId']?.toString() ?? 'main') == branchId)
+        .where((doc) =>
+            (doc.data()['branchId']?.toString() ?? 'main') == operationBranchId)
         .map((doc) => doc.reference)
         .toList();
     final paymentRef = firestore
@@ -427,7 +438,7 @@ class BranchAwareOrderRepository extends OrderRepository {
           (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
       final customerBranchId =
           customerDoc.data()?['branchId']?.toString() ?? 'main';
-      if (customerBranchId != branchId) {
+      if (customerBranchId != operationBranchId) {
         throw Exception('لا يمكن تحصيل دين عميل تابع لفرع مختلف.');
       }
       if (amountPaid > currentDebt) {
@@ -443,7 +454,7 @@ class BranchAwareOrderRepository extends OrderRepository {
         }
         final shiftData = shiftDoc.data()!;
         final shiftBranchId = shiftData['branchId']?.toString() ?? 'main';
-        if (shiftBranchId != branchId ||
+        if (shiftBranchId != operationBranchId ||
             shiftData['status']?.toString() != 'open' ||
             shiftData['endTime'] != null) {
           throw Exception(
@@ -458,7 +469,7 @@ class BranchAwareOrderRepository extends OrderRepository {
         if (!snap.exists || snap.data() == null) continue;
         final data = snap.data()!;
         final orderBranchId = data['branchId']?.toString() ?? 'main';
-        if (orderBranchId != branchId) continue;
+        if (orderBranchId != operationBranchId) continue;
         if (data['status']?.toString() == 'cancelled') continue;
         final total = (data['total'] as num?)?.toDouble() ?? 0.0;
         final paid = (data['paidAmount'] as num?)?.toDouble() ?? 0.0;
@@ -522,7 +533,7 @@ class BranchAwareOrderRepository extends OrderRepository {
         'id': paymentRef.id,
         'merchantId': merchantId,
         'customerId': customerId,
-        'branchId': branchId,
+        'branchId': operationBranchId,
         'shiftId': shiftId,
         'amount': amountPaid,
         'paymentMethod': paymentMethod,

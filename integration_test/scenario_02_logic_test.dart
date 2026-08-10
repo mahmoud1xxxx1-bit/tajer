@@ -209,7 +209,7 @@ void main() {
       notes: 'Paper',
       createdAt: DateTime.now(),
     );
-    await expenseRepo.addExpense(expense);
+    await expenseRepo.addExpense(expense, branchId: 'main');
     
     final expSnap = await firestore.collection('expenses').doc('exp1').get();
     expect(expSnap.exists, true, reason: "Expense should exist");

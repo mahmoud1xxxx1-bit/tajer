@@ -23,16 +23,14 @@ void main() {
       expect(source, contains('selectedBranchIdProvider'));
       expect(source, contains('branchInventoryStreamProvider(branchId)'));
       expect(source, contains("item.itemType == 'product'"));
+      expect(source, contains('queryProducts(String merchantId, String branchId)'));
+      expect(source, contains("collection('branches')"));
 
-      // v107 compatibility: when no branch_inventory row exists, Main keeps
-      // the legacy product quantity while every non-main branch fails closed
-      // to zero. The current implementation applies this after the protected
-      // product-cost overlay instead of returning early from the mapper.
+      // Branch-owned catalog identity is independent from branch stock. Stock
+      // is still overlaid from branch_inventory and defaults to zero when no
+      // inventory row exists.
       expect(source, contains('final scopedQuantity = quantities[product.id];'));
-      expect(source, contains('if (scopedQuantity != null)'));
-      expect(source, contains('next = next.copyWith(quantity: scopedQuantity.round());'));
-      expect(source, contains("else if (branchId != 'main')"));
-      expect(source, contains('next = next.copyWith(quantity: 0);'));
+      expect(source, contains('product.copyWith(quantity: (scopedQuantity ?? 0).round())'));
 
       // Cost visibility is orthogonal to branch stock and must come only from
       // the protected product_costs stream for authorized users.
@@ -49,7 +47,8 @@ void main() {
       expect(source, contains('selectedBranchIdProvider'));
       expect(source, contains('branchInventoryStreamProvider(branchId)'));
       expect(source, contains("item.itemType == 'raw_material'"));
-      expect(source, contains("if (branchId == 'main') return material;"));
+      expect(source, contains('watchRawMaterials(merchantId, branchId)'));
+      expect(source, contains("collection('branches')"));
       expect(
         source,
         contains('return material.copyWith(quantity: 0.0, initialQuantity: 0.0);'),

@@ -976,6 +976,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                         amountPaid: paid,
                                         shiftId: currentShift.id,
                                         paymentMethod: 'cash',
+                                        branchId: currentShift.branchId,
                                       );
                                   ActivityLogger.log(
                                     user: user,
@@ -1006,6 +1007,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                         amountPaid: paid,
                                         shiftId: currentShift.id,
                                         paymentMethod: 'card',
+                                        branchId: currentShift.branchId,
                                       );
                                   ActivityLogger.log(
                                     user: user,
@@ -1036,6 +1038,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                         amountPaid: paid,
                                         shiftId: currentShift.id,
                                         paymentMethod: 'transfer',
+                                        branchId: currentShift.branchId,
                                       );
                                   ActivityLogger.log(
                                     user: user,
@@ -1066,6 +1069,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                         amountPaid: paid,
                         shiftId: null,
                         paymentMethod: 'cash', // Default fallback
+                        branchId: customer.branchId,
                       );
                   ActivityLogger.log(
                     user: user,

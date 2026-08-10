@@ -261,6 +261,7 @@ void main() {
     final oldSale = await repository.createOrder(
       readyOrder('ready-old', quantity: 2),
       shiftId: shiftId,
+      branchId: 'main',
     );
     expect(oldSale.items.single.costPrice, 5.0);
 
@@ -273,6 +274,7 @@ void main() {
     final newSale = await repository.createOrder(
       readyOrder('ready-new', quantity: 2),
       shiftId: shiftId,
+      branchId: 'main',
     );
 
     final service = ReportsService(
@@ -302,8 +304,10 @@ void main() {
     );
     await seedShift(firestore, 'main');
 
-    final saved = await BranchAwareOrderRepository(firestore)
-        .createOrder(madeToOrder('order-main'), shiftId: shiftId);
+    final saved = await BranchAwareOrderRepository(firestore).createOrder(
+        madeToOrder('order-main'),
+        shiftId: shiftId,
+        branchId: 'main');
 
     expect(saved.id, 'order-main');
     expect(saved.items.single.costPrice, 10.0);
@@ -342,8 +346,10 @@ void main() {
     await seedShift(firestore, 'main');
 
     expect(
-      () => BranchAwareOrderRepository(firestore)
-          .createOrder(madeToOrder('order-denied'), shiftId: shiftId),
+      () => BranchAwareOrderRepository(firestore).createOrder(
+          madeToOrder('order-denied'),
+          shiftId: shiftId,
+          branchId: 'main'),
       throwsA(predicate((error) =>
           error.toString().contains('Insufficient raw material inventory'))),
     );
@@ -361,8 +367,10 @@ void main() {
     await seedShift(firestore, 'branch-2');
 
     expect(
-      () => BranchAwareOrderRepository(firestore)
-          .createOrder(madeToOrder('order-branch2-denied'), shiftId: shiftId),
+      () => BranchAwareOrderRepository(firestore).createOrder(
+          madeToOrder('order-branch2-denied'),
+          shiftId: shiftId,
+          branchId: 'branch-2'),
       throwsA(predicate((error) =>
           error.toString().contains('Insufficient raw material inventory'))),
     );
@@ -393,6 +401,7 @@ void main() {
     final saved = await repository.createOrder(
       madeToOrder('order-branch2'),
       shiftId: shiftId,
+      branchId: 'branch-2',
     );
     var mainRaw = await firestore
         .collection('merchants')

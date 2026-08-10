@@ -1,7 +1,6 @@
 import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../branches/presentation/branch_context.dart';
@@ -18,11 +17,8 @@ class ExpenseRepository {
       .doc(_merchantId)
       .collection('expenses');
 
-  Future<String> _selectedBranchId() async {
-    final prefs = await SharedPreferences.getInstance();
-    final value = prefs.getString('selected_branch_$_merchantId')?.trim();
-    return value == null || value.isEmpty ? 'main' : value;
-  }
+  String _operationBranch(String branchId) =>
+      branchId.trim().isEmpty ? 'main' : branchId.trim();
 
   Future<DocumentSnapshot<Map<String, dynamic>>?> _openShiftForBranch(
       String branchId) async {
@@ -57,12 +53,12 @@ class ExpenseRepository {
         .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }
 
-  Future<void> addExpense(Expense expense) async {
-    final branchId = await _selectedBranchId();
+  Future<void> addExpense(Expense expense, {required String branchId}) async {
+    final operationBranchId = _operationBranch(branchId);
     String? shiftId = expense.shiftId;
 
     if (expense.isFromShiftDrawer && expense.paymentMethod == 'cash') {
-      final openShift = await _openShiftForBranch(branchId);
+      final openShift = await _openShiftForBranch(operationBranchId);
       if (openShift == null) {
         throw Exception(
             'لا يمكن خصم المصروف من الدرج بدون وردية مفتوحة في هذا الفرع.');
@@ -71,7 +67,7 @@ class ExpenseRepository {
     }
 
     final normalized = expense.copyWith(
-      branchId: branchId,
+      branchId: operationBranchId,
       shiftId: shiftId,
     );
 

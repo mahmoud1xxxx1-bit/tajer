@@ -10,6 +10,24 @@ class RawMaterialRepository {
 
   RawMaterialRepository(this._firestore);
 
+  CollectionReference<Map<String, dynamic>> _branchRawMaterialsRef(
+    String merchantId,
+    String branchId,
+  ) =>
+      _firestore
+          .collection('merchants')
+          .doc(merchantId)
+          .collection('branches')
+          .doc(branchId)
+          .collection('raw_materials');
+
+  DocumentReference<Map<String, dynamic>> _branchRawMaterialRef(
+    String merchantId,
+    String branchId,
+    String rawMaterialId,
+  ) =>
+      _branchRawMaterialsRef(merchantId, branchId).doc(rawMaterialId);
+
   CollectionReference<Map<String, dynamic>> _availabilityRef(
     String merchantId,
   ) =>
@@ -70,43 +88,121 @@ class RawMaterialRepository {
     await batch.commit();
   }
 
-  Future<bool> isAvailableInBranch({
+  Future<bool> existsInBranch({
     required String merchantId,
     required String rawMaterialId,
     required String branchId,
   }) async {
-    final explicit = await _availabilityRef(merchantId)
-        .doc(availabilityDocId(branchId, rawMaterialId))
-        .get();
-    if (explicit.exists) return explicit.data()?['enabled'] == true;
+    final doc =
+        await _branchRawMaterialRef(merchantId, branchId, rawMaterialId).get();
+    return doc.exists && doc.data()?['isArchived'] != true;
+  }
 
-    final anyExplicit = await _availabilityRef(merchantId)
-        .where('rawMaterialId', isEqualTo: rawMaterialId)
-        .limit(1)
-        .get();
-    if (anyExplicit.docs.isNotEmpty) return false;
-    if (branchId == 'main') return true;
+  Stream<List<RawMaterial>> watchRawMaterials(
+    String merchantId,
+    String branchId,
+  ) {
+    return _branchRawMaterialsRef(merchantId, branchId)
+        .snapshots()
+        .map((snapshot) {
+      final items = snapshot.docs.map((doc) {
+        final data = Map<String, dynamic>.from(doc.data());
+        data['id'] = doc.id;
+        data['merchantId'] = data['merchantId']?.toString() ?? merchantId;
+        data['branchId'] = data['branchId']?.toString() ?? branchId;
+        return RawMaterial.fromJson(data);
+      }).toList();
+      return items.where((item) => !item.isArchived).toList();
+    });
+  }
 
-    final inventoryId = '${branchId}_raw_material_$rawMaterialId';
+  Future<void> migrateBranchRawMaterialsIfNeeded({
+    required String merchantId,
+    required String branchId,
+  }) async {
+    final stateRef = _firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection('migration_state')
+        .doc('branch_raw_materials_v1_$branchId');
+    final state = await stateRef.get();
+    if (state.data()?['status'] == 'completed') return;
+
+    final legacyMaterials = await _firestore
+        .collection('raw_materials')
+        .where('merchantId', isEqualTo: merchantId)
+        .get();
+    final availability = await _availabilityRef(merchantId).get();
     final inventory = await _firestore
         .collection('merchants')
         .doc(merchantId)
         .collection('branch_inventory')
-        .doc(inventoryId)
+        .where('branchId', isEqualTo: branchId)
+        .where('itemType', isEqualTo: 'raw_material')
         .get();
-    return inventory.exists;
-  }
 
-  Stream<List<RawMaterial>> watchRawMaterials(String merchantId) {
-    return _firestore
-        .collection('raw_materials')
-        .where('merchantId', isEqualTo: merchantId)
-        .snapshots()
-        .map((snapshot) {
-      final items =
-          snapshot.docs.map((doc) => RawMaterial.fromJson(doc.data())).toList();
-      return items.where((item) => !item.isArchived).toList();
-    });
+    final explicit = <String, bool>{};
+    final anyExplicit = <String>{};
+    for (final doc in availability.docs) {
+      final data = doc.data();
+      final rawMaterialId = data['rawMaterialId']?.toString();
+      final availabilityBranchId = data['branchId']?.toString();
+      if (rawMaterialId == null || rawMaterialId.isEmpty) continue;
+      anyExplicit.add(rawMaterialId);
+      if (availabilityBranchId == branchId) {
+        explicit[rawMaterialId] = data['enabled'] == true;
+      }
+    }
+    final inventoryEvidence = {
+      for (final doc in inventory.docs) doc.data()['itemId']?.toString() ?? '',
+    }..remove('');
+
+    final batch = _firestore.batch();
+    batch.set(
+        stateRef,
+        {
+          'version': 1,
+          'status': 'running',
+          'branchId': branchId,
+          'startedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true));
+
+    var writes = 1;
+    for (final doc in legacyMaterials.docs) {
+      final data = Map<String, dynamic>.from(doc.data());
+      final rawMaterialId = doc.id;
+      final enabled = explicit[rawMaterialId];
+      final belongsToBranch = enabled ??
+          (anyExplicit.contains(rawMaterialId)
+              ? false
+              : (inventoryEvidence.contains(rawMaterialId) ||
+                  branchId == 'main'));
+      if (!belongsToBranch) continue;
+      data['id'] = rawMaterialId;
+      data['merchantId'] = merchantId;
+      data['branchId'] = branchId;
+      data['quantity'] = 0.0;
+      data['initialQuantity'] = 0.0;
+      batch.set(
+        _branchRawMaterialRef(merchantId, branchId, rawMaterialId),
+        data,
+        SetOptions(merge: true),
+      );
+      writes++;
+      if (writes >= 450) break;
+    }
+
+    batch.set(
+        stateRef,
+        {
+          'version': 1,
+          'status': 'completed',
+          'branchId': branchId,
+          'completedAt': FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true));
+    await batch.commit();
   }
 
   /// Raw-material documents are merchant-wide master data. Stock belongs to
@@ -124,40 +220,35 @@ class RawMaterialRepository {
     data['quantity'] = 0.0;
     data['initialQuantity'] = 0.0;
     final batch = _firestore.batch();
-    batch.set(_firestore.collection('raw_materials').doc(rawMaterial.id), data);
-    final branchesToWrite = <String>{...knownBranchIds, ...enabledBranchIds}
-      ..removeWhere((branchId) => branchId.isEmpty);
-    for (final branchId in branchesToWrite) {
-      final ref = _availabilityRef(rawMaterial.merchantId)
-          .doc(availabilityDocId(branchId, rawMaterial.id));
-      batch.set(ref, {
-        'id': ref.id,
-        'merchantId': rawMaterial.merchantId,
-        'branchId': branchId,
-        'rawMaterialId': rawMaterial.id,
-        'enabled': enabledBranchIds.contains(branchId),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    }
+    data['branchId'] = context.branchId;
+    batch.set(
+      _branchRawMaterialRef(
+          context.merchantId, context.branchId, rawMaterial.id),
+      data,
+    );
     await batch.commit();
   }
 
   /// Do not overwrite merchant-wide legacy stock with the currently selected
   /// branch quantity. Stock corrections are applied via BranchInventoryRepository.
-  Future<void> updateRawMaterial(RawMaterial rawMaterial) async {
+  Future<void> updateRawMaterial(
+    RawMaterial rawMaterial, {
+    required BranchOperationContext context,
+  }) async {
     final data = rawMaterial.toJson();
     data.remove('quantity');
     data.remove('initialQuantity');
-    await _firestore
-        .collection('raw_materials')
-        .doc(rawMaterial.id)
+    data['branchId'] = context.branchId;
+    await _branchRawMaterialRef(
+            context.merchantId, context.branchId, rawMaterial.id)
         .update(data);
   }
 
-  Future<void> deleteRawMaterial(String id) async {
-    await _firestore
-        .collection('raw_materials')
-        .doc(id)
+  Future<void> deleteRawMaterial({
+    required BranchOperationContext context,
+    required String id,
+  }) async {
+    await _branchRawMaterialRef(context.merchantId, context.branchId, id)
         .update({'isArchived': true});
   }
 }
@@ -171,31 +262,26 @@ final rawMaterialsStreamProvider =
   final repository = ref.watch(rawMaterialRepositoryProvider);
   final branchId = ref.watch(selectedBranchIdProvider);
   final branchInventory = ref.watch(branchInventoryStreamProvider(branchId));
-  final availabilityStream = repository.watchAvailability(merchantId, branchId);
+  repository
+      .migrateBranchRawMaterialsIfNeeded(
+          merchantId: merchantId, branchId: branchId)
+      .catchError((_) {});
 
-  return repository.watchRawMaterials(merchantId).asyncExpand((materials) {
-    return availabilityStream.map((availability) {
-      final inventory = branchInventory.valueOrNull ?? const [];
-      final scoped = {
-        for (final item in inventory)
-          if (item.itemType == 'raw_material') item.itemId: item,
-      };
-      return materials.where((material) {
-        final key = '${material.id}::$branchId';
-        final enabled = availability[key];
-        if (enabled != null) return enabled;
-        return branchId == 'main' || scoped.containsKey(material.id);
-      }).map((material) {
-        final item = scoped[material.id];
-        if (item != null) {
-          return material.copyWith(
-            quantity: item.quantity,
-            initialQuantity: item.initialQuantity,
-          );
-        }
-        if (branchId == 'main') return material;
-        return material.copyWith(quantity: 0.0, initialQuantity: 0.0);
-      }).toList();
-    });
+  return repository.watchRawMaterials(merchantId, branchId).map((materials) {
+    final inventory = branchInventory.valueOrNull ?? const [];
+    final scoped = {
+      for (final item in inventory)
+        if (item.itemType == 'raw_material') item.itemId: item,
+    };
+    return materials.map((material) {
+      final item = scoped[material.id];
+      if (item != null) {
+        return material.copyWith(
+          quantity: item.quantity,
+          initialQuantity: item.initialQuantity,
+        );
+      }
+      return material.copyWith(quantity: 0.0, initialQuantity: 0.0);
+    }).toList();
   });
 });

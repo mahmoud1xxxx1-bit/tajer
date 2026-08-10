@@ -215,7 +215,10 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
         createdAt: DateTime.now(),
       );
 
-      await orderRepo.createOrder(newOrder);
+      await orderRepo.createOrder(
+        newOrder,
+        branchId: ref.read(selectedBranchIdProvider),
+      );
 
       // Log inventory change
       await logRepo?.logChange(

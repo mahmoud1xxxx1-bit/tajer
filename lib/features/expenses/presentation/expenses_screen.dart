@@ -13,6 +13,7 @@ import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../domain/expense.dart';
 import 'package:intl/intl.dart';
 import '../../shifts/data/shift_repository.dart';
+import '../../branches/presentation/branch_context.dart';
 
 class ExpensesScreen extends ConsumerWidget {
   const ExpensesScreen({super.key});
@@ -336,7 +337,10 @@ class ExpensesScreen extends ConsumerWidget {
                     isFromShiftDrawer: isFromShiftDrawer,
                   );
 
-                  ref.read(expenseRepositoryProvider)?.addExpense(expense);
+                  ref.read(expenseRepositoryProvider)?.addExpense(
+                        expense,
+                        branchId: ref.read(selectedBranchIdProvider),
+                      );
                   Navigator.pop(context);
                 },
                 child: Text(AppLocalizations.of(context)!.text44),

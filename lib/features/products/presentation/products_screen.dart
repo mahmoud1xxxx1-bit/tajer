@@ -324,7 +324,12 @@ class ProductsScreen extends ConsumerWidget {
                                               .read(productRepositoryProvider);
                                           if (value == 'archive_store') {
                                             await repo.archiveProductFromStore(
-                                                product.id);
+                                              context: BranchOperationContext(
+                                                merchantId: product.merchantId,
+                                                branchId: branchId,
+                                              ),
+                                              productId: product.id,
+                                            );
                                           } else {
                                             await repo.removeProductFromBranch(
                                               context: BranchOperationContext(

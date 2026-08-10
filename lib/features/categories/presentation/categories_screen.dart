@@ -6,6 +6,8 @@ import '../../../core/theme/glass_card.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../branches/domain/branch_operation_context.dart';
+import '../../branches/presentation/branch_context.dart';
 import '../data/category_repository.dart';
 import '../../../core/services/pin_service.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
@@ -150,7 +152,15 @@ class CategoriesScreen extends ConsumerWidget {
                             }
                             ref
                                 .read(categoryRepositoryProvider)
-                                ?.deleteCategory(category.id);
+                                ?.deleteCategory(
+                                  category.id,
+                                  context: BranchOperationContext(
+                                    merchantId:
+                                        currentEffectiveMerchantId(appUser!),
+                                    branchId:
+                                        ref.read(selectedBranchIdProvider),
+                                  ),
+                                );
                           },
                         ),
                     ],
@@ -212,7 +222,13 @@ class CategoriesScreen extends ConsumerWidget {
                   createdAt: DateTime.now(),
                 );
 
-                ref.read(categoryRepositoryProvider)?.addCategory(category);
+                ref.read(categoryRepositoryProvider)?.addCategory(
+                      category,
+                      context: BranchOperationContext(
+                        merchantId: currentEffectiveMerchantId(appUser),
+                        branchId: ref.read(selectedBranchIdProvider),
+                      ),
+                    );
                 Navigator.pop(context);
               },
               child: Text(AppLocalizations.of(context)!.text44),
@@ -249,9 +265,13 @@ class CategoriesScreen extends ConsumerWidget {
 
                 final updatedCategory =
                     category.copyWith(name: nameController.text);
-                ref
-                    .read(categoryRepositoryProvider)
-                    ?.updateCategory(updatedCategory);
+                ref.read(categoryRepositoryProvider)?.updateCategory(
+                      updatedCategory,
+                      context: BranchOperationContext(
+                        merchantId: category.merchantId,
+                        branchId: ref.read(selectedBranchIdProvider),
+                      ),
+                    );
                 Navigator.pop(context);
               },
               child: Text(AppLocalizations.of(context)!.text46),

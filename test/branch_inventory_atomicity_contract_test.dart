@@ -46,7 +46,10 @@ void main() {
       contains('Future<void> applySaleInTransaction('),
     );
     expect(service, contains('Transaction tx'));
-    expect(service, contains("productSnaps.add(await tx.get"));
-    expect(service, contains("rawSnaps.add(await tx.get"));
+    expect(service, contains("collection('branches')"));
+    expect(service, contains("collection('products')"));
+    expect(service, contains("collection('raw_materials')"));
+    expect(service, contains('productSnaps.add(snap)'));
+    expect(service, contains('rawSnaps.add(snap)'));
   });
 }

@@ -117,9 +117,10 @@ void main() {
 
       expect(
           source, contains('Customer account belongs to a different branch'));
-      expect(source, contains('customerBranchId != branchId'));
-      expect(source, contains('orderBranchId != branchId'));
-      expect(source, contains('shiftBranchId != branchId'));
+      expect(source, contains('customerBranchId != effectiveBranchId'));
+      expect(source, contains('orderBranchId != operationBranchId'));
+      expect(source, contains('shiftBranchId != effectiveBranchId'));
+      expect(source, contains('String branchId = \'main\''));
     });
 
     test('Firestore payment rule checks customer branch', () {

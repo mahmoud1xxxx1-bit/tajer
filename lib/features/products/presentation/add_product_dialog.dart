@@ -42,8 +42,6 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
   String? _selectedCategoryId;
   String? _selectedRawMaterialId;
   bool _isLoading = false;
-  bool _availabilityInitialized = false;
-  Set<String> _selectedBranchIds = <String>{};
 
   @override
   void initState() {
@@ -138,26 +136,16 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
         merchantId: merchantId,
         branchId: capturedBranchId,
       );
-      final enabledBranchIds = _selectedBranchIds.isEmpty
-          ? <String>{capturedBranchId}
-          : Set<String>.from(_selectedBranchIds);
-      final knownBranchIds =
-          (ref.read(branchesStreamProvider).valueOrNull ?? const [])
-              .map((branch) => branch.id)
-              .toSet();
-
       if (_isManufacturedOnDemand && _selectedRawMaterialId != null) {
-        for (final branchId in enabledBranchIds) {
-          final rawAvailable = await rawMaterialRepo.isAvailableInBranch(
-            merchantId: merchantId,
-            rawMaterialId: _selectedRawMaterialId!,
-            branchId: branchId,
-          );
-          if (!rawAvailable) {
-            throw Exception(isAr
-                ? 'المادة الخام غير متوفرة في أحد الفروع المحددة.'
-                : 'The selected raw material is not available in one of the selected branches.');
-          }
+        final rawAvailable = await rawMaterialRepo.existsInBranch(
+          merchantId: merchantId,
+          rawMaterialId: _selectedRawMaterialId!,
+          branchId: operationContext.branchId,
+        );
+        if (!rawAvailable) {
+          throw Exception(isAr
+              ? '?????? ????? ??? ?????? ?? ??? ?????.'
+              : 'The selected raw material is not available in this branch.');
         }
       }
 
@@ -193,13 +181,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       );
 
       if (isEditing) {
-        await productRepo.updateProduct(newProduct);
-        await productRepo.setProductAvailability(
-          context: operationContext,
-          productId: newProduct.id,
-          enabledBranchIds: enabledBranchIds,
-          knownBranchIds: knownBranchIds,
-        );
+        await productRepo.updateProduct(newProduct, context: operationContext);
         ActivityLogger.log(
           user: appUser,
           actionType: 'Edit Product|تعديل منتج',
@@ -223,8 +205,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
         await productRepo.addProduct(
           newProduct,
           context: operationContext,
-          enabledBranchIds: enabledBranchIds,
-          knownBranchIds: knownBranchIds,
+          enabledBranchIds: {operationContext.branchId},
         );
         ActivityLogger.log(
           user: appUser,
@@ -269,34 +250,6 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     final merchantId =
         appUser == null ? '' : currentEffectiveMerchantId(appUser);
     final rawMaterialsAsync = ref.watch(rawMaterialsStreamProvider(merchantId));
-    final branchesAsync = ref.watch(branchesStreamProvider);
-    final activeBranchId = ref.watch(selectedBranchIdProvider);
-    final availabilityAsync = isEditing && merchantId.isNotEmpty
-        ? ref.watch(productAvailabilityStreamProvider(ProductAvailabilityQuery(
-            merchantId: merchantId,
-            productId: widget.productToEdit!.id,
-          )))
-        : const AsyncValue<Map<String, bool>>.data(<String, bool>{});
-
-    if (!_availabilityInitialized) {
-      final availability = availabilityAsync.valueOrNull;
-      if (!isEditing || availability != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted || _availabilityInitialized) return;
-          final selected = isEditing
-              ? availability!.entries
-                  .where((entry) => entry.value)
-                  .map((entry) => entry.key)
-                  .toSet()
-              : <String>{activeBranchId};
-          setState(() {
-            _selectedBranchIds =
-                selected.isEmpty ? <String>{activeBranchId} : selected;
-            _availabilityInitialized = true;
-          });
-        });
-      }
-    }
 
     return Padding(
       padding: EdgeInsets.all(24.0),
@@ -370,58 +323,6 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                 ),
                 validator: (value) =>
                     value!.isEmpty ? l10n.requiredField : null,
-              ),
-              SizedBox(height: 16),
-              branchesAsync.when(
-                data: (branches) {
-                  final visibleBranches =
-                      branches.where((branch) => branch.isActive).toList();
-                  return Card(
-                    elevation: 0,
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            isAr ? 'متوفر في الفروع' : 'Available in branches',
-                            style: const TextStyle(
-                              fontFamily: 'Tajawal',
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          ...visibleBranches.map((branch) {
-                            return CheckboxListTile(
-                              contentPadding: EdgeInsets.zero,
-                              value: _selectedBranchIds.contains(branch.id),
-                              title: Text(
-                                branch.name,
-                                style: const TextStyle(fontFamily: 'Tajawal'),
-                              ),
-                              onChanged: (value) {
-                                setState(() {
-                                  final next =
-                                      Set<String>.from(_selectedBranchIds);
-                                  if (value == true) {
-                                    next.add(branch.id);
-                                  } else {
-                                    next.remove(branch.id);
-                                  }
-                                  _selectedBranchIds = next.isEmpty
-                                      ? <String>{activeBranchId}
-                                      : next;
-                                });
-                              },
-                            );
-                          }),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-                loading: () => const LinearProgressIndicator(),
-                error: (e, st) => const SizedBox.shrink(),
               ),
               SizedBox(height: 16),
               Row(

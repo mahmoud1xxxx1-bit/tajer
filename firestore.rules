@@ -281,6 +281,30 @@ service cloud.firestore {
         allow read: if hasAccess(merchantId) && hasBranchAccess(merchantId, branchId);
         allow create: if isOwner(merchantId) || (hasAccess(merchantId) && branchId == 'main' && request.resource.data.get('isMain', false) == true);
         allow update, delete: if isOwner(merchantId);
+
+        match /products/{productId} {
+          allow read: if hasAccess(merchantId) && hasBranchAccess(merchantId, branchId);
+          allow create, update: if hasPermission(merchantId, 'can_manage_products') &&
+            hasBranchAccess(merchantId, branchId) &&
+            request.resource.data.get('merchantId', '') == merchantId &&
+            request.resource.data.get('branchId', branchId) == branchId;
+          allow delete: if isOwner(merchantId) && hasBranchAccess(merchantId, branchId);
+        }
+
+        match /categories/{categoryId} {
+          allow read: if hasAccess(merchantId) && hasBranchAccess(merchantId, branchId);
+          allow create, update, delete: if hasPermission(merchantId, 'can_manage_products') &&
+            hasBranchAccess(merchantId, branchId);
+        }
+
+        match /raw_materials/{materialId} {
+          allow read: if hasAccess(merchantId) && hasBranchAccess(merchantId, branchId);
+          allow create, update: if hasPermission(merchantId, 'can_manage_inventory') &&
+            hasBranchAccess(merchantId, branchId) &&
+            request.resource.data.get('merchantId', '') == merchantId &&
+            request.resource.data.get('branchId', branchId) == branchId;
+          allow delete: if isOwner(merchantId) && hasBranchAccess(merchantId, branchId);
+        }
       }
       match /branch_inventory/{inventoryId} {
         allow read: if resource != null && hasAccess(merchantId) && hasDataBranchAccess(merchantId, resource.data);
