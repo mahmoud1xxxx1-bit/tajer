@@ -10,9 +10,10 @@ void main() {
   late FakeFirebaseFirestore firestore;
   late BranchAwareOrderRepository repo;
 
-  setUp(() {
+  setUp(() async {
     firestore = FakeFirebaseFirestore();
-    repo = BranchAwareOrderRepository(firestore);
+    await firestore.collection('users').doc('test-user').set({'role': 'merchant'});
+    repo = BranchAwareOrderRepository(firestore, testUid: 'test-user');
   });
 
   test('partial return successfully updates inventory, shift, and customer', () async {

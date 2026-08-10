@@ -28,6 +28,8 @@ mixin _$Supplier {
   double get totalDebt =>
       throw _privateConstructorUsedError; // Amount the merchant owes the supplier
   bool get isActive => throw _privateConstructorUsedError;
+  List<String> get associatedBranchIds => throw _privateConstructorUsedError;
+  Map<String, double> get branchDebts => throw _privateConstructorUsedError;
   @TimestampConverter()
   DateTime get createdAt => throw _privateConstructorUsedError;
 
@@ -50,6 +52,8 @@ abstract class $SupplierCopyWith<$Res> {
       String? address,
       double totalDebt,
       bool isActive,
+      List<String> associatedBranchIds,
+      Map<String, double> branchDebts,
       @TimestampConverter() DateTime createdAt});
 }
 
@@ -73,6 +77,8 @@ class _$SupplierCopyWithImpl<$Res, $Val extends Supplier>
     Object? address = freezed,
     Object? totalDebt = null,
     Object? isActive = null,
+    Object? associatedBranchIds = null,
+    Object? branchDebts = null,
     Object? createdAt = null,
   }) {
     return _then(_value.copyWith(
@@ -104,6 +110,14 @@ class _$SupplierCopyWithImpl<$Res, $Val extends Supplier>
           ? _value.isActive
           : isActive // ignore: cast_nullable_to_non_nullable
               as bool,
+      associatedBranchIds: null == associatedBranchIds
+          ? _value.associatedBranchIds
+          : associatedBranchIds // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      branchDebts: null == branchDebts
+          ? _value.branchDebts
+          : branchDebts // ignore: cast_nullable_to_non_nullable
+              as Map<String, double>,
       createdAt: null == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -128,6 +142,8 @@ abstract class _$$SupplierImplCopyWith<$Res>
       String? address,
       double totalDebt,
       bool isActive,
+      List<String> associatedBranchIds,
+      Map<String, double> branchDebts,
       @TimestampConverter() DateTime createdAt});
 }
 
@@ -149,6 +165,8 @@ class __$$SupplierImplCopyWithImpl<$Res>
     Object? address = freezed,
     Object? totalDebt = null,
     Object? isActive = null,
+    Object? associatedBranchIds = null,
+    Object? branchDebts = null,
     Object? createdAt = null,
   }) {
     return _then(_$SupplierImpl(
@@ -180,6 +198,14 @@ class __$$SupplierImplCopyWithImpl<$Res>
           ? _value.isActive
           : isActive // ignore: cast_nullable_to_non_nullable
               as bool,
+      associatedBranchIds: null == associatedBranchIds
+          ? _value._associatedBranchIds
+          : associatedBranchIds // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      branchDebts: null == branchDebts
+          ? _value._branchDebts
+          : branchDebts // ignore: cast_nullable_to_non_nullable
+              as Map<String, double>,
       createdAt: null == createdAt
           ? _value.createdAt
           : createdAt // ignore: cast_nullable_to_non_nullable
@@ -199,7 +225,11 @@ class _$SupplierImpl implements _Supplier {
       this.address,
       this.totalDebt = 0.0,
       this.isActive = true,
-      @TimestampConverter() required this.createdAt});
+      final List<String> associatedBranchIds = const [],
+      final Map<String, double> branchDebts = const {},
+      @TimestampConverter() required this.createdAt})
+      : _associatedBranchIds = associatedBranchIds,
+        _branchDebts = branchDebts;
 
   factory _$SupplierImpl.fromJson(Map<String, dynamic> json) =>
       _$$SupplierImplFromJson(json);
@@ -221,13 +251,32 @@ class _$SupplierImpl implements _Supplier {
   @override
   @JsonKey()
   final bool isActive;
+  final List<String> _associatedBranchIds;
+  @override
+  @JsonKey()
+  List<String> get associatedBranchIds {
+    if (_associatedBranchIds is EqualUnmodifiableListView)
+      return _associatedBranchIds;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_associatedBranchIds);
+  }
+
+  final Map<String, double> _branchDebts;
+  @override
+  @JsonKey()
+  Map<String, double> get branchDebts {
+    if (_branchDebts is EqualUnmodifiableMapView) return _branchDebts;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_branchDebts);
+  }
+
   @override
   @TimestampConverter()
   final DateTime createdAt;
 
   @override
   String toString() {
-    return 'Supplier(id: $id, merchantId: $merchantId, name: $name, phone: $phone, address: $address, totalDebt: $totalDebt, isActive: $isActive, createdAt: $createdAt)';
+    return 'Supplier(id: $id, merchantId: $merchantId, name: $name, phone: $phone, address: $address, totalDebt: $totalDebt, isActive: $isActive, associatedBranchIds: $associatedBranchIds, branchDebts: $branchDebts, createdAt: $createdAt)';
   }
 
   @override
@@ -245,14 +294,28 @@ class _$SupplierImpl implements _Supplier {
                 other.totalDebt == totalDebt) &&
             (identical(other.isActive, isActive) ||
                 other.isActive == isActive) &&
+            const DeepCollectionEquality()
+                .equals(other._associatedBranchIds, _associatedBranchIds) &&
+            const DeepCollectionEquality()
+                .equals(other._branchDebts, _branchDebts) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt));
   }
 
   @JsonKey(ignore: true)
   @override
-  int get hashCode => Object.hash(runtimeType, id, merchantId, name, phone,
-      address, totalDebt, isActive, createdAt);
+  int get hashCode => Object.hash(
+      runtimeType,
+      id,
+      merchantId,
+      name,
+      phone,
+      address,
+      totalDebt,
+      isActive,
+      const DeepCollectionEquality().hash(_associatedBranchIds),
+      const DeepCollectionEquality().hash(_branchDebts),
+      createdAt);
 
   @JsonKey(ignore: true)
   @override
@@ -277,6 +340,8 @@ abstract class _Supplier implements Supplier {
           final String? address,
           final double totalDebt,
           final bool isActive,
+          final List<String> associatedBranchIds,
+          final Map<String, double> branchDebts,
           @TimestampConverter() required final DateTime createdAt}) =
       _$SupplierImpl;
 
@@ -297,6 +362,10 @@ abstract class _Supplier implements Supplier {
   double get totalDebt;
   @override // Amount the merchant owes the supplier
   bool get isActive;
+  @override
+  List<String> get associatedBranchIds;
+  @override
+  Map<String, double> get branchDebts;
   @override
   @TimestampConverter()
   DateTime get createdAt;

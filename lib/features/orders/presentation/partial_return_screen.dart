@@ -63,8 +63,10 @@ class _PartialReturnScreenState extends ConsumerState<PartialReturnScreen> {
       final returnQty = _returnQuantities[lineId] ?? 0;
 
       if (returnQty > 0) {
-        final double unitPrice = originalItem.price;
+        final double unitDiscount = originalItem.quantity > 0 ? (originalItem.discountAmount / originalItem.quantity) : 0.0;
+        final double unitPrice = originalItem.price - unitDiscount;
         final double totalLineReturn = unitPrice * returnQty;
+        final double returnedDiscount = unitDiscount * returnQty;
 
         double lineTax = 0.0;
         if (originalItem.taxPercentage != null && originalItem.taxPercentage! > 0) {
@@ -86,6 +88,7 @@ class _PartialReturnScreenState extends ConsumerState<PartialReturnScreen> {
           quantity: returnQty,
           total: totalLineReturn,
           lineId: lineId,
+          discountAmount: returnedDiscount,
         ));
       }
     }

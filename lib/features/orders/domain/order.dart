@@ -10,6 +10,9 @@ class AppOrder {
   final String customerName;
   final List<CartItem> items;
   final double total;
+  final String? discountType; // 'percentage' or 'amount'
+  final double? discountValue; // the input value
+  final double discountAmount; // the total absolute discount
   final String status;
   final double paidAmount;
   final bool isCredit;
@@ -35,6 +38,9 @@ class AppOrder {
     required this.customerName,
     this.items = const [],
     required this.total,
+    this.discountType,
+    this.discountValue,
+    this.discountAmount = 0.0,
     this.status = 'pending',
     this.paidAmount = 0.0,
     this.isCredit = false,
@@ -66,6 +72,9 @@ class AppOrder {
               .toList() ??
           const [],
       total: (json['total'] as num).toDouble(),
+      discountType: json['discountType'] as String?,
+      discountValue: json['discountValue'] != null ? (json['discountValue'] as num).toDouble() : null,
+      discountAmount: (json['discountAmount'] as num?)?.toDouble() ?? 0.0,
       status: json['status'] as String? ?? 'pending',
       paidAmount: (json['paidAmount'] as num?)?.toDouble() ?? 0.0,
       isCredit: json['isCredit'] as bool? ?? false,
@@ -99,6 +108,9 @@ class AppOrder {
       'customerName': customerName,
       'items': items.map((e) => e.toPublicJson()).toList(),
       'total': total,
+      'discountType': discountType,
+      'discountValue': discountValue,
+      'discountAmount': discountAmount,
       'status': status,
       'paidAmount': paidAmount,
       'isCredit': isCredit,
@@ -127,6 +139,9 @@ class AppOrder {
     String? customerName,
     List<CartItem>? items,
     double? total,
+    String? discountType,
+    double? discountValue,
+    double? discountAmount,
     String? status,
     double? paidAmount,
     bool? isCredit,
@@ -152,6 +167,9 @@ class AppOrder {
       customerName: customerName ?? this.customerName,
       items: items ?? this.items,
       total: total ?? this.total,
+      discountType: discountType ?? this.discountType,
+      discountValue: discountValue ?? this.discountValue,
+      discountAmount: discountAmount ?? this.discountAmount,
       status: status ?? this.status,
       paidAmount: paidAmount ?? this.paidAmount,
       isCredit: isCredit ?? this.isCredit,

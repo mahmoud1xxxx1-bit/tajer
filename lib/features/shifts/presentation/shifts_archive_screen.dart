@@ -5,6 +5,8 @@ import '../../authentication/application/access_policy.dart';
 import '../data/shift_repository.dart';
 import '../domain/shift.dart';
 import '../../../core/theme/glass_card.dart';
+import '../../../core/providers/global_display_resolver.dart';
+import '../../branches/presentation/active_branch_selector.dart';
 import '../../branches/data/branch_repository.dart';
 import 'shift_details_screen.dart';
 
@@ -31,15 +33,22 @@ class ShiftsArchiveScreen extends ConsumerWidget {
             style: const TextStyle(
                 fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
       ),
-      body: shiftsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Text(
-            isAr ? 'تعذر تحميل الورديات.' : 'Could not load shifts.',
-            style: const TextStyle(fontFamily: 'Tajawal'),
+      body: Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: ActiveBranchSelector(compact: true),
           ),
-        ),
-        data: (shifts) {
+          Expanded(
+            child: shiftsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stack) => Center(
+                child: Text(
+                  isAr ? 'تعذر تحميل الورديات.' : 'Could not load shifts.',
+                  style: const TextStyle(fontFamily: 'Tajawal'),
+                ),
+              ),
+              data: (shifts) {
           final branchNames = {
             for (final branch in branchesAsync.valueOrNull ?? const [])
               branch.id: branch.name,
@@ -72,6 +81,9 @@ class ShiftsArchiveScreen extends ConsumerWidget {
             },
           );
         },
+      ),
+    ),
+        ],
       ),
     );
   }
@@ -126,6 +138,8 @@ class ShiftsArchiveScreen extends ConsumerWidget {
                               color: Colors.grey,
                               fontSize: 12),
                         ),
+                        // Note: uses globalDisplayResolverProvider conceptually, 
+                        // could be ref.read(globalDisplayResolverProvider).resolveBranchName(shift.branchId, isAr: isAr)
                       ],
                     ),
                     Container(

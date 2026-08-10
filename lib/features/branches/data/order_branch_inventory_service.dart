@@ -380,6 +380,22 @@ class OrderBranchInventoryService {
     }
 
     final userEmail = _currentUserEmail();
+
+    // Fetch branch name for notifications (F1 compliance)
+    String branchNameForNotif = 'فرع غير معروف';
+    if (order.branchId == 'main') {
+      branchNameForNotif = 'الرئيسي';
+    } else {
+      final branchSnap = await tx.get(firestore
+          .collection('merchants')
+          .doc(order.merchantId)
+          .collection('branches')
+          .doc(order.branchId));
+      if (branchSnap.exists) {
+        branchNameForNotif = branchSnap.data()?['name']?.toString() ?? 'فرع غير معروف';
+      }
+    }
+
     for (final mutation in mutations) {
       final key = repository.docId(
         order.branchId,
@@ -388,6 +404,30 @@ class OrderBranchInventoryService {
       );
       final snap = snapshots[key]!;
       final isRaw = mutation.itemType == 'raw_material';
+
+      // Low Stock Notification Deduplication Logic (F4)
+      if (!isRaw && mutation.delta < 0) {
+        final productData = products[mutation.itemId];
+        if (productData != null) {
+          final threshold = (productData['lowStockThreshold'] as num?)?.toDouble() ?? 0.0;
+          final previousQty = previous[key] ?? 0.0;
+          final newQty = next[key] ?? 0.0;
+          if (threshold > 0 && previousQty > threshold && newQty <= threshold) {
+            final notifRef = firestore
+                .collection('users')
+                .doc(order.merchantId)
+                .collection('notifications')
+                .doc();
+            tx.set(notifRef, {
+              'title': 'تنبيه انخفاض المخزون | Low Stock Alert',
+              'message':
+                  'انخفض مخزون المنتج ${productNames[mutation.itemId]} إلى ما دون الحد الأدنى في $branchNameForNotif.',
+              'createdAt': FieldValue.serverTimestamp(),
+              'isRead': false,
+            });
+          }
+        }
+      }
 
       tx.set(
         inventoryRefs[key]!,

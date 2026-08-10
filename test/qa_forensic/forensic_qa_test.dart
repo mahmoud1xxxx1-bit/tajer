@@ -281,6 +281,7 @@ Future<void> selectBranch(String branch) async {
 }
 
 Future<void> seedBase(FakeFirebaseFirestore db) async {
+  await db.collection('users').doc('test-user').set({'role': 'merchant'});
   Timestamp ts() => Timestamp.fromDate(fixedDate);
   Future<void> inv(String branch, String type, String item, double quantity) {
     return db
@@ -461,7 +462,7 @@ void main() {
       () async {
     final db = FakeFirebaseFirestore();
     await seedBase(db);
-    final repo = BranchAwareOrderRepository(db);
+    final repo = BranchAwareOrderRepository(db, testUid: 'test-user');
 
     await selectBranch(mainBranch);
     final readyMain = await repo.createOrder(

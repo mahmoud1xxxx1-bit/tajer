@@ -12,6 +12,7 @@ class Product {
   final String? barcode;
   final double price;
   final int quantity;
+  final int lowStockThreshold;
   final List<String> modifiers;
   final List<RecipeItem> recipe;
   final bool? isTaxInclusive;
@@ -31,6 +32,7 @@ class Product {
     this.barcode,
     required this.price,
     required this.quantity,
+    this.lowStockThreshold = 0,
     this.modifiers = const [],
     this.recipe = const [],
     this.isTaxInclusive,
@@ -52,6 +54,7 @@ class Product {
       barcode: json['barcode'] as String?,
       price: (json['price'] as num).toDouble(),
       quantity: (json['quantity'] as num).toInt(),
+      lowStockThreshold: (json['lowStockThreshold'] as num?)?.toInt() ?? 0,
       modifiers: (json['modifiers'] as List<dynamic>?)?.map((e) => e as String).toList() ?? const [],
       recipe: (json['recipe'] as List<dynamic>?)?.map((e) => RecipeItem.fromJson(e as Map<String, dynamic>)).toList() ?? const [],
       isTaxInclusive: json['isTaxInclusive'] as bool?,
@@ -96,6 +99,7 @@ class Product {
       'barcode': barcode,
       'price': price,
       'quantity': quantity,
+      'lowStockThreshold': lowStockThreshold,
       'modifiers': modifiers,
       'recipe': recipe.map((e) => e.toJson()).toList(),
       'isTaxInclusive': isTaxInclusive,
@@ -117,6 +121,7 @@ class Product {
     String? barcode,
     double? price,
     int? quantity,
+    int? lowStockThreshold,
     List<String>? modifiers,
     List<RecipeItem>? recipe,
     bool? isTaxInclusive,
@@ -136,6 +141,7 @@ class Product {
       barcode: barcode ?? this.barcode,
       price: price ?? this.price,
       quantity: quantity ?? this.quantity,
+      lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
       modifiers: modifiers ?? this.modifiers,
       recipe: recipe ?? this.recipe,
       isTaxInclusive: isTaxInclusive ?? this.isTaxInclusive,

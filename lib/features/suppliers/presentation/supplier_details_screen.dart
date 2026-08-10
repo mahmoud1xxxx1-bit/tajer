@@ -35,6 +35,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
         ref.watch(supplierTransactionsStreamProvider(supplier.id));
     final currentCurrency = ref.watch(currencyProvider);
     final appUser = ref.watch(appUserProvider).value;
+    final activeBranchId = ref.watch(selectedBranchIdProvider);
     final canManageInventory =
         appUser?.hasPermission('can_manage_inventory') ?? false;
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
@@ -64,16 +65,16 @@ class SupplierDetailsScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: currentSupplier.totalDebt > 0
+                        color: (activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0) : currentSupplier.totalDebt) > 0
                             ? Colors.red.withOpacity(0.1)
                             : Colors.green.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        currentSupplier.totalDebt > 0
+                        (activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0) : currentSupplier.totalDebt) > 0
                             ? Icons.money_off
                             : Icons.check_circle,
-                        color: currentSupplier.totalDebt > 0
+                        color: (activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0) : currentSupplier.totalDebt) > 0
                             ? Colors.red
                             : Colors.green,
                         size: 32,
@@ -94,11 +95,11 @@ class SupplierDetailsScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${currentSupplier.totalDebt} ${currentCurrency.code}',
+                            '${activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0) : currentSupplier.totalDebt} ${currentCurrency.code}',
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: currentSupplier.totalDebt > 0
+                              color: (activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0) : currentSupplier.totalDebt) > 0
                                   ? Colors.red
                                   : Colors.green,
                               fontFamily: 'Tajawal',
@@ -118,7 +119,11 @@ class SupplierDetailsScreen extends ConsumerWidget {
               error: (e, _) =>
                   Center(child: Text(isAr ? 'خطأ: $e' : 'Error: $e')),
               data: (transactions) {
-                if (transactions.isEmpty) {
+                final activeTransactions = activeBranchId == null
+                    ? transactions
+                    : transactions.where((t) => t.branchId == activeBranchId).toList();
+
+                if (activeTransactions.isEmpty) {
                   return Center(
                     child: Text(
                       isAr
@@ -130,7 +135,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
                 }
 
                 final grouped = <String, List<SupplierTransaction>>{};
-                for (final transaction in transactions) {
+                for (final transaction in activeTransactions) {
                   final key = DateFormat('yyyy-MM-dd').format(transaction.date);
                   grouped
                       .putIfAbsent(key, () => <SupplierTransaction>[])
@@ -533,9 +538,10 @@ class SupplierDetailsScreen extends ConsumerWidget {
     WidgetRef ref,
     Supplier currentSupplier,
   ) {
+    final activeBranchId = ref.read(selectedBranchIdProvider);
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final amountController = TextEditingController(
-      text: currentSupplier.totalDebt.toString(),
+      text: (activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0.0) : currentSupplier.totalDebt).toString(),
     );
     String paymentMethod = 'cash';
     bool isFromShiftDrawer = true;
@@ -554,7 +560,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${isAr ? 'إجمالي دين المورد' : 'Supplier total debt'}: ${currentSupplier.totalDebt}',
+                '${isAr ? 'إجمالي دين المورد' : 'Supplier total debt'}: ${activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0.0) : currentSupplier.totalDebt}',
                 style: const TextStyle(
                     fontFamily: 'Tajawal', fontWeight: FontWeight.w600),
               ),
@@ -637,13 +643,14 @@ class SupplierDetailsScreen extends ConsumerWidget {
               onPressed: () async {
                 final paid = double.tryParse(amountController.text.trim()) ?? 0;
                 if (paid <= 0) return;
-                if (paid > currentSupplier.totalDebt) {
+                final maxDebt = activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0.0) : currentSupplier.totalDebt;
+                if (paid > maxDebt) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(
                         isAr
-                            ? 'مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق.'
-                            : 'Payment cannot exceed the supplier outstanding debt.',
+                            ? 'مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق في هذا الفرع.'
+                            : 'Payment cannot exceed the supplier outstanding debt in this branch.',
                       ),
                       backgroundColor: Colors.red,
                     ),

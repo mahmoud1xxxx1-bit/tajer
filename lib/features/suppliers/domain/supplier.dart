@@ -15,6 +15,8 @@ class Supplier with _$Supplier {
     String? address,
     @Default(0.0) double totalDebt, // Amount the merchant owes the supplier
     @Default(true) bool isActive,
+    @Default([]) List<String> associatedBranchIds,
+    @Default({}) Map<String, double> branchDebts,
     @TimestampConverter() required DateTime createdAt,
   }) = _Supplier;
 

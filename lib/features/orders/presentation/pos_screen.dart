@@ -25,6 +25,7 @@ import '../../shifts/domain/shift.dart';
 import '../../categories/data/category_repository.dart';
 import '../../branches/presentation/active_branch_selector.dart';
 import '../../branches/presentation/branch_context.dart';
+import '../../../core/providers/global_display_resolver.dart';
 
 class PosScreen extends ConsumerStatefulWidget {
   const PosScreen({super.key});
@@ -392,13 +393,34 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       if (user == null || appUser == null)
         throw Exception(AppLocalizations.of(context)!.text47);
 
+      final bool isAr = Localizations.localeOf(context).languageCode == 'ar';
+
+      // Calculate discounted cart items (F5)
+      double cartSubtotal = 0.0;
+      for (var item in _cart) {
+        cartSubtotal += item.total;
+      }
+      
+      final finalCartItems = _cart.map((item) {
+        if (details.discountAmount <= 0 || cartSubtotal <= 0) return item;
+        final itemDiscount = (item.total / cartSubtotal) * details.discountAmount;
+        return item.copyWith(
+          discountType: details.discountType,
+          discountValue: details.discountValue,
+          discountAmount: itemDiscount,
+        );
+      }).toList();
+
       final newOrder = AppOrder(
         id: Uuid().v4(),
         merchantId: currentEffectiveMerchantId(appUser),
         customerId: details.customerId,
         customerName: details.customerName,
-        items: List.from(_cart),
-        total: _grandTotal,
+        items: finalCartItems,
+        total: details.paidAmount + (details.tenderedAmount != null && details.changeAmount != null ? details.changeAmount! : 0) + (details.isCredit && details.paidAmount < _grandTotal ? (_grandTotal - details.paidAmount) : 0),
+        discountType: details.discountType,
+        discountValue: details.discountValue,
+        discountAmount: details.discountAmount,
         paidAmount: details.paidAmount,
         isCredit: details.isCredit,
         notes: details.notes,
@@ -409,7 +431,11 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         splitCashAmount: details.splitCashAmount,
         splitNetworkAmount: details.splitNetworkAmount,
         creatorId: appUser.id,
-        creatorName: appUser.name ?? 'غير معروف',
+        creatorName: ref.read(globalDisplayResolverProvider).resolveActorName(
+              providedName: appUser.name,
+              isMerchant: appUser.role == 'merchant',
+              isAr: isAr,
+            ),
         createdAt: DateTime.now(),
       );
 
@@ -448,7 +474,6 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       // }
 
       // Attempt to print receipt asynchronously in background with a 5-second timeout
-      final bool isAr = Localizations.localeOf(context).languageCode == 'ar';
       PrinterService.printReceipt(
         savedOrder,
         currency,
@@ -875,6 +900,9 @@ class OrderDetails {
   final double? changeAmount;
   final double? splitCashAmount;
   final double? splitNetworkAmount;
+  final String? discountType;
+  final double? discountValue;
+  final double discountAmount;
 
   OrderDetails(
       {required this.customerId,
@@ -887,7 +915,10 @@ class OrderDetails {
       this.tenderedAmount,
       this.changeAmount,
       this.splitCashAmount,
-      this.splitNetworkAmount});
+      this.splitNetworkAmount,
+      this.discountType,
+      this.discountValue,
+      this.discountAmount = 0.0});
 }
 
 class _CheckoutSheet extends ConsumerStatefulWidget {
@@ -913,6 +944,8 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
   final _splitCashController = TextEditingController();
   final _splitNetworkController = TextEditingController();
   final _notesController = TextEditingController();
+  final _discountValueController = TextEditingController();
+  String? _discountType;
   String _paymentMethod = 'cash';
   bool _isScheduled = false;
   DateTime? _scheduledDate;
@@ -933,6 +966,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
     _notesController.dispose();
     _paidController.dispose();
     _tenderedController.dispose();
+    _discountValueController.dispose();
     super.dispose();
   }
 
@@ -1058,16 +1092,34 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
     final defaultTaxPercentage = storeProfile?.defaultTaxPercentage ?? 0.0;
     final defaultIsTaxInclusive = storeProfile?.defaultIsTaxInclusive ?? false;
 
+    double cartSubtotal = 0.0;
+    for (var item in widget.cart) {
+      cartSubtotal += item.total;
+    }
+
+    double discountAmount = 0.0;
+    if (_discountType == 'amount') {
+      discountAmount = double.tryParse(_discountValueController.text) ?? 0.0;
+    } else if (_discountType == 'percentage') {
+      final pct = double.tryParse(_discountValueController.text) ?? 0.0;
+      discountAmount = cartSubtotal * (pct / 100);
+    }
+    if (discountAmount > cartSubtotal) discountAmount = cartSubtotal;
+
     double grandTotal = 0.0;
     for (var item in widget.cart) {
       final itemTax = item.getEffectiveTax(defaultTaxPercentage);
       final isInclusive = item.taxMode == TaxMode.custom
           ? (item.isTaxInclusive ?? defaultIsTaxInclusive)
           : defaultIsTaxInclusive;
+      
+      final itemDiscount = cartSubtotal > 0 ? (item.total / cartSubtotal) * discountAmount : 0.0;
+      final discountedTotal = item.total - itemDiscount;
+
       if (isInclusive) {
-        grandTotal += item.total;
+        grandTotal += discountedTotal;
       } else {
-        grandTotal += item.total + (item.total * (itemTax / 100));
+        grandTotal += discountedTotal + (discountedTotal * (itemTax / 100));
       }
     }
 
@@ -1246,6 +1298,88 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                         ),
                       ),
                   ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                elevation: 0,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.blueGrey.withOpacity(0.1)
+                    : Colors.blue.withOpacity(0.05),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.blueGrey.withOpacity(0.3)
+                            : Colors.blue.shade100)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(isAr ? 'خصم على الفاتورة' : 'Invoice Discount',
+                          style: TextStyle(
+                              fontFamily: 'Tajawal',
+                              fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: DropdownButtonFormField<String?>(
+                              value: _discountType,
+                              decoration: InputDecoration(
+                                labelText: isAr ? 'نوع الخصم' : 'Discount Type',
+                                border: const OutlineInputBorder(),
+                              ),
+                              items: [
+                                DropdownMenuItem(
+                                    value: null,
+                                    child: Text(isAr ? 'بدون خصم' : 'No Discount',
+                                        style: const TextStyle(fontFamily: 'Tajawal'))),
+                                DropdownMenuItem(
+                                    value: 'percentage',
+                                    child: Text(isAr ? 'نسبة (%)' : 'Percentage (%)',
+                                        style: const TextStyle(fontFamily: 'Tajawal'))),
+                                DropdownMenuItem(
+                                    value: 'amount',
+                                    child: Text(isAr ? 'مبلغ ثابت' : 'Fixed Amount',
+                                        style: const TextStyle(fontFamily: 'Tajawal'))),
+                              ],
+                              onChanged: (val) {
+                                setState(() {
+                                  _discountType = val;
+                                  if (val == null) {
+                                    _discountValueController.clear();
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _discountValueController,
+                              keyboardType: TextInputType.number,
+                              enabled: _discountType != null,
+                              decoration: InputDecoration(
+                                labelText: isAr ? 'قيمة الخصم' : 'Value',
+                                border: const OutlineInputBorder(),
+                              ),
+                              onChanged: (val) => setState(() {}),
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (discountAmount > 0) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          isAr ? 'قيمة الخصم الإجمالية: ${discountAmount.toStringAsFixed(2)}' : 'Total Discount: ${discountAmount.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                              fontFamily: 'Tajawal', color: Colors.green, fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -1623,6 +1757,9 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                     splitNetworkAmount: _paymentMethod == 'split'
                         ? (double.tryParse(_splitNetworkController.text) ?? 0)
                         : null,
+                    discountType: _discountType,
+                    discountValue: double.tryParse(_discountValueController.text),
+                    discountAmount: discountAmount,
                   ));
                 },
                 child: Text(

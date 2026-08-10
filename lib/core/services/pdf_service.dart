@@ -214,16 +214,17 @@ class PdfService {
                         for (var item in order.items) {
                           final taxRate = item.getEffectiveTax(defaultTaxPercentage);
                           final isInclusive = (item.taxPercentage != null && item.taxPercentage! > 0) ? (item.isTaxInclusive ?? defaultIsTaxInclusive) : defaultIsTaxInclusive;
+                          final taxableTotal = item.total - item.discountAmount;
                           if (taxRate > 0) {
                             if (isInclusive) {
-                              totalTaxAmount += item.total - (item.total / (1 + (taxRate / 100)));
-                              grandTotal += item.total;
+                              totalTaxAmount += taxableTotal - (taxableTotal / (1 + (taxRate / 100)));
+                              grandTotal += taxableTotal;
                             } else {
-                              totalTaxAmount += item.total * (taxRate / 100);
-                              grandTotal += item.total + (item.total * (taxRate / 100));
+                              totalTaxAmount += taxableTotal * (taxRate / 100);
+                              grandTotal += taxableTotal + (taxableTotal * (taxRate / 100));
                             }
                           } else {
-                            grandTotal += item.total;
+                            grandTotal += taxableTotal;
                           }
                         }
                         
@@ -272,17 +273,18 @@ class PdfService {
                         for (var item in order.items) {
                           final taxRate = item.getEffectiveTax(defaultTaxPercentage);
                           final isInclusive = (item.taxPercentage != null && item.taxPercentage! > 0) ? (item.isTaxInclusive ?? defaultIsTaxInclusive) : defaultIsTaxInclusive;
+                          final taxableTotal = item.total - item.discountAmount;
                           if (taxRate > 0) {
                             hasTax = true;
                             if (isInclusive) {
-                              totalTaxAmount += item.total - (item.total / (1 + (taxRate / 100)));
-                              grandTotal += item.total;
+                              totalTaxAmount += taxableTotal - (taxableTotal / (1 + (taxRate / 100)));
+                              grandTotal += taxableTotal;
                             } else {
-                              totalTaxAmount += item.total * (taxRate / 100);
-                              grandTotal += item.total + (item.total * (taxRate / 100));
+                              totalTaxAmount += taxableTotal * (taxRate / 100);
+                              grandTotal += taxableTotal + (taxableTotal * (taxRate / 100));
                             }
                           } else {
-                            grandTotal += item.total;
+                            grandTotal += taxableTotal;
                           }
                         }
                         
@@ -313,6 +315,17 @@ class PdfService {
                                   pw.Text('${(grandTotal - totalTaxAmount).toStringAsFixed(2)} $currency'),
                                 ],
                               ),
+                              if (order.discountAmount > 0) ...[
+                                pw.SizedBox(height: 8),
+                                pw.Row(
+                                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    pw.Text(isAr ? 'إجمالي الخصم' : 'Total Discount', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                                    pw.SizedBox(width: 20),
+                                    pw.Text('-${order.discountAmount.toStringAsFixed(2)} $currency', style: const pw.TextStyle(color: PdfColors.red700)),
+                                  ],
+                                ),
+                              ],
                               pw.SizedBox(height: 8),
                               pw.Row(
                                 mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
@@ -340,6 +353,17 @@ class PdfService {
                                   pw.Text('${order.total} $currency'),
                                 ],
                               ),
+                              if (order.discountAmount > 0) ...[
+                                pw.SizedBox(height: 8),
+                                pw.Row(
+                                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    pw.Text(isAr ? 'إجمالي الخصم' : 'Total Discount', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                                    pw.SizedBox(width: 20),
+                                    pw.Text('-${order.discountAmount.toStringAsFixed(2)} $currency', style: const pw.TextStyle(color: PdfColors.red700)),
+                                  ],
+                                ),
+                              ],
                             ],
                             if (order.isCredit) ...[
                               pw.SizedBox(height: 8),

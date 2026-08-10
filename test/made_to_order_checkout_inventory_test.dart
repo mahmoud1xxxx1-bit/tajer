@@ -266,10 +266,11 @@ void main() {
   test('ready product stores historical COGS and ignores later cost edits',
       () async {
     final firestore = FakeFirebaseFirestore();
+    await firestore.collection('users').doc('test-user').set({'role': 'merchant'});
     await selectBranch('main');
     await seedReadyProduct(firestore, quantity: 10, cost: 5);
     await seedShift(firestore, 'main');
-    final repository = BranchAwareOrderRepository(firestore);
+    final repository = BranchAwareOrderRepository(firestore, testUid: 'test-user');
 
     final oldSale = await repository.createOrder(
       readyOrder('ready-old', quantity: 2),
@@ -308,6 +309,7 @@ void main() {
       'main branch succeeds with sufficient raw materials and no finished stock',
       () async {
     final firestore = FakeFirebaseFirestore();
+    await firestore.collection('users').doc('test-user').set({'role': 'merchant'});
     await selectBranch('main');
     await seedMadeToOrderProduct(
       firestore,
@@ -317,7 +319,7 @@ void main() {
     );
     await seedShift(firestore, 'main');
 
-    final saved = await BranchAwareOrderRepository(firestore).createOrder(
+    final saved = await BranchAwareOrderRepository(firestore, testUid: 'test-user').createOrder(
         madeToOrder('order-main'),
         shiftId: shiftId,
         branchId: 'main');
@@ -354,12 +356,13 @@ void main() {
   test('main branch denies made-to-order checkout for raw material shortage',
       () async {
     final firestore = FakeFirebaseFirestore();
+    await firestore.collection('users').doc('test-user').set({'role': 'merchant'});
     await selectBranch('main');
     await seedMadeToOrderProduct(firestore, mainRaw: 1, branch2Raw: 10);
     await seedShift(firestore, 'main');
 
     expect(
-      () => BranchAwareOrderRepository(firestore).createOrder(
+      () => BranchAwareOrderRepository(firestore, testUid: 'test-user').createOrder(
           madeToOrder('order-denied'),
           shiftId: shiftId,
           branchId: 'main'),
@@ -375,12 +378,13 @@ void main() {
   test('branch 2 raw shortage is isolated and does not change main raw stock',
       () async {
     final firestore = FakeFirebaseFirestore();
+    await firestore.collection('users').doc('test-user').set({'role': 'merchant'});
     await selectBranch('branch-2');
     await seedMadeToOrderProduct(firestore, mainRaw: 10, branch2Raw: 0);
     await seedShift(firestore, 'branch-2');
 
     expect(
-      () => BranchAwareOrderRepository(firestore).createOrder(
+      () => BranchAwareOrderRepository(firestore, testUid: 'test-user').createOrder(
           madeToOrder('order-branch2-denied'),
           shiftId: shiftId,
           branchId: 'branch-2'),
@@ -406,10 +410,11 @@ void main() {
   test('sales and cancellation restore raw materials to the originating branch',
       () async {
     final firestore = FakeFirebaseFirestore();
+    await firestore.collection('users').doc('test-user').set({'role': 'merchant'});
     await selectBranch('branch-2');
     await seedMadeToOrderProduct(firestore, mainRaw: 10, branch2Raw: 6);
     await seedShift(firestore, 'branch-2');
-    final repository = BranchAwareOrderRepository(firestore);
+    final repository = BranchAwareOrderRepository(firestore, testUid: 'test-user');
 
     final saved = await repository.createOrder(
       madeToOrder('order-branch2'),

@@ -31,6 +31,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
   final _nameController = TextEditingController();
   final _priceController = TextEditingController();
   final _quantityController = TextEditingController();
+  final _lowStockThresholdController = TextEditingController();
   final _barcodeController = TextEditingController();
   final _modifiersController = TextEditingController();
   final _rawMaterialQtyController = TextEditingController();
@@ -50,6 +51,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       _nameController.text = widget.productToEdit!.name;
       _priceController.text = widget.productToEdit!.price.toString();
       _quantityController.text = widget.productToEdit!.quantity.toString();
+      _lowStockThresholdController.text = widget.productToEdit!.lowStockThreshold.toString();
       _barcodeController.text = widget.productToEdit!.barcode ?? '';
       _modifiersController.text = widget.productToEdit!.modifiers.join('، ');
       _taxPercentageController.text =
@@ -74,6 +76,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     _nameController.dispose();
     _priceController.dispose();
     _quantityController.dispose();
+    _lowStockThresholdController.dispose();
     _barcodeController.dispose();
     _modifiersController.dispose();
     _rawMaterialQtyController.dispose();
@@ -155,6 +158,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
         name: _nameController.text.trim(),
         price: double.parse(_priceController.text),
         quantity: newQuantity,
+        lowStockThreshold: int.tryParse(_lowStockThresholdController.text) ?? 0,
         categoryId: _selectedCategoryId,
         barcode: _barcodeController.text.trim().isEmpty
             ? null
@@ -433,17 +437,36 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
               ),
               if (!_isManufacturedOnDemand) ...[
                 SizedBox(height: 16),
-                TextFormField(
-                  controller: _quantityController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: isAr
-                        ? 'الكمية الحالية في المستودع'
-                        : 'Current Quantity in Inventory',
-                    border: const OutlineInputBorder(),
-                  ),
-                  validator: (value) =>
-                      value!.isEmpty ? l10n.requiredField : null,
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: _quantityController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: isAr
+                              ? 'الكمية الحالية'
+                              : 'Current Quantity',
+                          border: const OutlineInputBorder(),
+                        ),
+                        validator: (value) =>
+                            value!.isEmpty ? l10n.requiredField : null,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: TextFormField(
+                        controller: _lowStockThresholdController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: isAr
+                              ? 'حد التنبيه (اختياري)'
+                              : 'Low Stock Alert (Opt)',
+                          border: const OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
               SizedBox(height: 16),

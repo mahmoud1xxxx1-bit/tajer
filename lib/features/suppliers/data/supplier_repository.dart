@@ -74,6 +74,8 @@ class SupplierRepository {
 
       transaction.update(supplierRef, {
         'totalDebt': FieldValue.increment(amount),
+        'branchDebts.$branchId': FieldValue.increment(amount),
+        'associatedBranchIds': FieldValue.arrayUnion([branchId]),
       });
       transaction.set(supplierTxRef, {
         'id': transactionId,
@@ -183,6 +185,7 @@ class SupplierRepository {
 
       transaction.update(supplierRef, {
         'totalDebt': FieldValue.increment(-amountPaid),
+        'branchDebts.$branchId': FieldValue.increment(-amountPaid),
       });
 
       transaction.set(supplierTxRef, {
@@ -290,9 +293,16 @@ class SupplierRepository {
         }
       }
 
-      transaction.update(supplierRef, {
+      final updateData = <String, dynamic>{
         'totalDebt': FieldValue.increment(amount),
-      });
+      };
+      
+      final txBranchIdStr = txData['branchId']?.toString();
+      if (txBranchIdStr != null && txBranchIdStr.isNotEmpty) {
+        updateData['branchDebts.$txBranchIdStr'] = FieldValue.increment(amount);
+      }
+      
+      transaction.update(supplierRef, updateData);
       transaction.update(supplierTxRef, {
         'isCancelled': true,
         'cancelledAt': FieldValue.serverTimestamp(),
@@ -310,6 +320,45 @@ class SupplierRepository {
 
   Future<void> deleteSupplier(String supplierId) async {
     await _suppliersRef.doc(supplierId).delete();
+  }
+  Future<void> migrateLegacySuppliers() async {
+    final suppliersSnapshot = await _suppliersRef.get();
+    for (final doc in suppliersSnapshot.docs) {
+      final data = doc.data();
+      final hasBranchData =
+          data.containsKey('associatedBranchIds') && (data['associatedBranchIds'] as List).isNotEmpty;
+      if (hasBranchData) continue;
+
+      final txSnapshot = await doc.reference.collection('transactions').get();
+      final associatedBranches = <String>{};
+      final branchDebts = <String, double>{};
+
+      for (final txDoc in txSnapshot.docs) {
+        final tx = txDoc.data();
+        if (tx['isCancelled'] == true) continue;
+        
+        final branchId = tx['branchId']?.toString();
+        if (branchId == null || branchId.isEmpty) continue;
+
+        associatedBranches.add(branchId);
+
+        final amount = (tx['amount'] as num?)?.toDouble() ?? 0.0;
+        final type = tx['type']?.toString();
+
+        if (type == 'debt_addition') {
+          branchDebts[branchId] = (branchDebts[branchId] ?? 0.0) + amount;
+        } else if (type == 'payment') {
+          branchDebts[branchId] = (branchDebts[branchId] ?? 0.0) - amount;
+        }
+      }
+
+      if (associatedBranches.isNotEmpty) {
+        await doc.reference.update({
+          'associatedBranchIds': associatedBranches.toList(),
+          'branchDebts': branchDebts,
+        });
+      }
+    }
   }
 }
 

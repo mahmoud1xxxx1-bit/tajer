@@ -13,6 +13,8 @@ import 'package:flutter/cupertino.dart';
 import 'supplier_details_screen.dart';
 import '../data/supplier_transaction_repository.dart';
 import '../domain/supplier_transaction.dart';
+import '../../branches/presentation/branch_context.dart';
+import '../../branches/presentation/active_branch_selector.dart';
 
 class SuppliersScreen extends ConsumerWidget {
   const SuppliersScreen({super.key});
@@ -32,17 +34,40 @@ class SuppliersScreen extends ConsumerWidget {
       ),
       body: suppliersAsync.when(
         data: (suppliers) {
-          final activeSuppliers = suppliers;
+          final activeBranchId = ref.watch(selectedBranchIdProvider);
+          final activeSuppliers = suppliers.where((s) {
+            // Include supplier if they are associated with the active branch,
+            // or if they have debt in the active branch, or if we have no active branch.
+            if (activeBranchId == null) return true;
+            if (s.associatedBranchIds.contains(activeBranchId)) return true;
+            if ((s.branchDebts[activeBranchId] ?? 0) > 0) return true;
+            return false;
+          }).toList();
+          
           if (activeSuppliers.isEmpty) {
-            return Center(
-                child: Text(AppLocalizations.of(context)!.text123,
-                    style: TextStyle(fontFamily: 'Tajawal')));
+            return Column(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: ActiveBranchSelector(compact: true),
+                ),
+                Expanded(
+                  child: Center(
+                      child: Text(AppLocalizations.of(context)!.text123,
+                          style: TextStyle(fontFamily: 'Tajawal'))),
+                ),
+              ],
+            );
           }
 
           final totalSupplierDebts =
-              activeSuppliers.fold<double>(0, (sum, s) => sum + s.totalDebt);
+              activeSuppliers.fold<double>(0, (sum, s) => sum + (s.branchDebts[activeBranchId] ?? s.totalDebt));
 
           return Column(children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+              child: ActiveBranchSelector(compact: true),
+            ),
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: GlassCard(
@@ -182,15 +207,15 @@ class SuppliersScreen extends ConsumerWidget {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: supplier.totalDebt > 0
+                                  color: (activeBranchId != null ? (supplier.branchDebts[activeBranchId] ?? 0.0) : supplier.totalDebt) > 0
                                       ? Colors.red.withOpacity(0.1)
                                       : Colors.green.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(
-                                  '${supplier.totalDebt} ${currentCurrency.code}',
+                                  '${activeBranchId != null ? (supplier.branchDebts[activeBranchId] ?? 0.0) : supplier.totalDebt} ${currentCurrency.code}',
                                   style: TextStyle(
-                                    color: supplier.totalDebt > 0
+                                    color: (activeBranchId != null ? (supplier.branchDebts[activeBranchId] ?? 0.0) : supplier.totalDebt) > 0
                                         ? Colors.red
                                         : Colors.green,
                                     fontWeight: FontWeight.bold,

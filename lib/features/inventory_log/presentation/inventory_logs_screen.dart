@@ -10,6 +10,7 @@ import '../domain/inventory_log.dart';
 import '../../../core/services/activity_logger.dart';
 import '../../branches/data/branch_repository.dart';
 import '../../branches/presentation/active_branch_selector.dart';
+import '../../../core/providers/global_display_resolver.dart';
 
 class InventoryLogsScreen extends ConsumerStatefulWidget {
   const InventoryLogsScreen({super.key});
@@ -105,17 +106,10 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
           Expanded(
             child: logsAsync.when(
               data: (logs) {
-                final branchNames = {
-                  for (final branch in branchesAsync.value ?? const [])
-                    branch.id: branch.name,
-                };
                 String branchLabel(String id) {
-                  final resolved = branchNames[id];
-                  if (resolved != null && resolved.trim().isNotEmpty)
-                    return resolved;
-                  if (id == 'main')
-                    return isAr ? 'الفرع الرئيسي' : 'Main Branch';
-                  return id;
+                  return ref
+                      .read(globalDisplayResolverProvider)
+                      .resolveBranchName(id, isAr: isAr);
                 }
 
                 try {
@@ -433,8 +427,11 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                                                           const SizedBox(
                                                               width: 4),
                                                           Text(
-                                                            log.userName ??
-                                                                log.userEmail!,
+                                                            ref.read(globalDisplayResolverProvider).resolveActorName(
+                                                                  providedName: log.userName,
+                                                                  isMerchant: false, // Legacy logs don't distinguish, default to Employee fallback
+                                                                  isAr: isAr,
+                                                                ),
                                                             style: const TextStyle(
                                                                 fontSize: 12,
                                                                 color: Colors

@@ -122,19 +122,20 @@ class PrinterService {
     for (var item in order.items) {
       final taxRate = item.getEffectiveTax(taxPercentage ?? 0.0);
       final isInclusive = (item.taxPercentage != null && item.taxPercentage! > 0) ? (item.isTaxInclusive ?? defaultIsTaxInclusive) : defaultIsTaxInclusive;
+      final taxableTotal = item.total - item.discountAmount;
       if (taxRate > 0) {
         if (isInclusive) {
-          totalTaxAmount += item.total - (item.total / (1 + (taxRate / 100)));
-          grandTotal += item.total;
-          totalBeforeTax += item.total / (1 + (taxRate / 100));
+          totalTaxAmount += taxableTotal - (taxableTotal / (1 + (taxRate / 100)));
+          grandTotal += taxableTotal;
+          totalBeforeTax += taxableTotal / (1 + (taxRate / 100));
         } else {
-          totalTaxAmount += item.total * (taxRate / 100);
-          grandTotal += item.total + (item.total * (taxRate / 100));
-          totalBeforeTax += item.total;
+          totalTaxAmount += taxableTotal * (taxRate / 100);
+          grandTotal += taxableTotal + (taxableTotal * (taxRate / 100));
+          totalBeforeTax += taxableTotal;
         }
       } else {
-        grandTotal += item.total;
-        totalBeforeTax += item.total;
+        grandTotal += taxableTotal;
+        totalBeforeTax += taxableTotal;
       }
     }
     bool hasTax = totalTaxAmount > 0;
@@ -243,6 +244,14 @@ class PrinterService {
                         pw.Text('$currency ${totalBeforeTax.toStringAsFixed(2)}', style: pw.TextStyle(font: ttf, fontSize: 10)),
                       ]
                     ),
+                    if (order.discountAmount > 0)
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Text(isAr ? 'إجمالي الخصم:' : 'Total Discount:', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                          pw.Text('$currency -${order.discountAmount.toStringAsFixed(2)}', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                        ]
+                      ),
                     pw.Row(
                       mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                       children: [
@@ -265,6 +274,14 @@ class PrinterService {
                         pw.Text('$currency ${grandTotal.toStringAsFixed(2)}', style: pw.TextStyle(font: ttfBold, fontSize: 12)),
                       ]
                     ),
+                    if (order.discountAmount > 0)
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Text(isAr ? 'إجمالي الخصم:' : 'Total Discount:', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                          pw.Text('$currency -${order.discountAmount.toStringAsFixed(2)}', style: pw.TextStyle(font: ttf, fontSize: 10)),
+                        ]
+                      ),
                   ],
 
                   pw.SizedBox(height: 4),

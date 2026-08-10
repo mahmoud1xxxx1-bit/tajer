@@ -15,6 +15,14 @@ _$SupplierImpl _$$SupplierImplFromJson(Map<String, dynamic> json) =>
       address: json['address'] as String?,
       totalDebt: (json['totalDebt'] as num?)?.toDouble() ?? 0.0,
       isActive: json['isActive'] as bool? ?? true,
+      associatedBranchIds: (json['associatedBranchIds'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
+      branchDebts: (json['branchDebts'] as Map<String, dynamic>?)?.map(
+            (k, e) => MapEntry(k, (e as num).toDouble()),
+          ) ??
+          const {},
       createdAt: const TimestampConverter().fromJson(json['createdAt']),
     );
 
@@ -27,5 +35,7 @@ Map<String, dynamic> _$$SupplierImplToJson(_$SupplierImpl instance) =>
       'address': instance.address,
       'totalDebt': instance.totalDebt,
       'isActive': instance.isActive,
+      'associatedBranchIds': instance.associatedBranchIds,
+      'branchDebts': instance.branchDebts,
       'createdAt': const TimestampConverter().toJson(instance.createdAt),
     };

@@ -14,6 +14,7 @@ import '../domain/expense.dart';
 import 'package:intl/intl.dart';
 import '../../shifts/data/shift_repository.dart';
 import '../../branches/presentation/branch_context.dart';
+import '../../branches/presentation/active_branch_selector.dart';
 
 class ExpensesScreen extends ConsumerWidget {
   const ExpensesScreen({super.key});
@@ -31,10 +32,17 @@ class ExpensesScreen extends ConsumerWidget {
         title: Text(AppLocalizations.of(context)!.text64,
             style: TextStyle(fontFamily: 'Tajawal')),
       ),
-      body: expensesAsync.when(
-        data: (allExpenses) {
-          final expenses =
-              allExpenses.where((e) => !e.isSupplierPayment).toList();
+      body: Column(
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: ActiveBranchSelector(compact: true),
+          ),
+          Expanded(
+            child: expensesAsync.when(
+              data: (allExpenses) {
+                final expenses =
+                    allExpenses.where((e) => !e.isSupplierPayment).toList();
 
           if (expenses.isEmpty) {
             return Center(
@@ -167,10 +175,13 @@ class ExpensesScreen extends ConsumerWidget {
               ),
             ],
           );
-        },
-        loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('خطأ: $e')),
-      ),
+            },
+            loading: () => Center(child: CircularProgressIndicator()),
+            error: (e, st) => Center(child: Text('خطأ: $e')),
+          ),
+        ),
+      ],
+    ),
       floatingActionButton: canManageExpenses
           ? FloatingActionButton(
               heroTag: null,

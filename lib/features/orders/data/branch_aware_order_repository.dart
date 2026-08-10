@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../branches/data/order_branch_inventory_service.dart';
 import '../domain/order.dart';
@@ -9,9 +10,15 @@ import 'order_repository.dart';
 /// Multi-branch implementation that preserves the v1.0.107 accounting formulas
 /// while changing only the inventory/shift scope from merchant-wide to branch.
 class BranchAwareOrderRepository extends OrderRepository {
+  final OrderBranchInventoryService inventoryService;
   final FirebaseFirestore firestore;
 
-  BranchAwareOrderRepository(this.firestore) : super(firestore);
+  @visibleForTesting
+  final String? testUid;
+
+  BranchAwareOrderRepository(this.firestore, {this.testUid})
+      : inventoryService = OrderBranchInventoryService(firestore),
+        super(firestore);
 
   String _operationBranch(String branchId) =>
       branchId.trim().isEmpty ? 'main' : branchId.trim();
@@ -129,7 +136,14 @@ class BranchAwareOrderRepository extends OrderRepository {
   }
 
   Future<bool> _canReadCosts() async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
+    String? uid = testUid;
+    if (uid == null) {
+      try {
+        uid = FirebaseAuth.instance.currentUser?.uid;
+      } catch (_) {
+        return false;
+      }
+    }
     if (uid == null) return false;
     try {
       final userDoc = await firestore.collection('users').doc(uid).get();

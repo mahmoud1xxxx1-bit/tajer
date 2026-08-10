@@ -6,6 +6,9 @@ class CartItem {
   final int quantity;
   final double price;
   final double total;
+  final String? discountType; // 'percentage' or 'amount'
+  final double? discountValue; // The global input value (e.g., 10 for 10%)
+  final double discountAmount; // The exact allocated amount for this line
   final List<String> selectedModifiers;
   final bool? isTaxInclusive;
   final double? taxPercentage;
@@ -21,6 +24,9 @@ class CartItem {
     required this.quantity,
     required this.price,
     required this.total,
+    this.discountType,
+    this.discountValue,
+    this.discountAmount = 0.0,
     this.selectedModifiers = const [],
     this.isTaxInclusive,
     this.taxPercentage,
@@ -38,6 +44,9 @@ class CartItem {
       quantity: (json['quantity'] ?? 0).toInt(),
       price: (json['price'] ?? 0.0).toDouble(),
       total: (json['total'] ?? 0.0).toDouble(),
+      discountType: json['discountType'] as String?,
+      discountValue: json['discountValue'] != null ? (json['discountValue'] as num).toDouble() : null,
+      discountAmount: (json['discountAmount'] as num?)?.toDouble() ?? 0.0,
       selectedModifiers: (json['selectedModifiers'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
@@ -92,6 +101,9 @@ class CartItem {
       'quantity': quantity,
       'price': price,
       'total': total,
+      'discountType': discountType,
+      'discountValue': discountValue,
+      'discountAmount': discountAmount,
       'selectedModifiers': selectedModifiers,
       'isTaxInclusive': isTaxInclusive,
       'taxPercentage': taxPercentage,
@@ -109,6 +121,9 @@ class CartItem {
     int? quantity,
     double? price,
     double? total,
+    String? discountType,
+    double? discountValue,
+    double? discountAmount,
     bool? isTaxInclusive,
     double? taxPercentage,
     TaxMode? taxMode,
@@ -123,6 +138,9 @@ class CartItem {
       quantity: quantity ?? this.quantity,
       price: price ?? this.price,
       total: total ?? this.total,
+      discountType: discountType ?? this.discountType,
+      discountValue: discountValue ?? this.discountValue,
+      discountAmount: discountAmount ?? this.discountAmount,
       isTaxInclusive: isTaxInclusive ?? this.isTaxInclusive,
       taxPercentage: taxPercentage ?? this.taxPercentage,
       taxMode: taxMode ?? this.taxMode,

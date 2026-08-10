@@ -13,6 +13,7 @@ import '../data/branch_repository.dart';
 import '../domain/branch.dart';
 import '../domain/branch_inventory.dart';
 import '../domain/branch_operation_context.dart';
+import '../../../core/providers/global_display_resolver.dart';
 
 final _transferProductsProvider =
     StreamProvider.family<List<Product>, String>((ref, branchId) {
@@ -68,10 +69,7 @@ class _InventoryTransferScreenState
   String _text(String ar, String en) => _isAr ? ar : en;
 
   String _branchName(List<Branch> branches, String id) {
-    for (final branch in branches) {
-      if (branch.id == id) return branch.name;
-    }
-    return id;
+    return ref.read(globalDisplayResolverProvider).resolveBranchName(id, isAr: _isAr);
   }
 
   double _inventoryQuantity(
