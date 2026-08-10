@@ -8,6 +8,7 @@ class RawMaterial {
   final String name;
   final double quantity; // in smallest unit (e.g., grams, ml)
   final double initialQuantity; // total registered initially
+  final double? lowStockThreshold;
   final String unit; // 'g', 'ml', 'piece'
   final bool isArchived;
   final DateTime createdAt;
@@ -19,6 +20,7 @@ class RawMaterial {
     required this.name,
     required this.quantity,
     required this.initialQuantity,
+    this.lowStockThreshold,
     required this.unit,
     this.isArchived = false,
     required this.createdAt,
@@ -32,6 +34,7 @@ class RawMaterial {
       name: json['name'] as String,
       quantity: (json['quantity'] as num).toDouble(),
       initialQuantity: (json['initialQuantity'] as num?)?.toDouble() ?? (json['quantity'] as num).toDouble(),
+      lowStockThreshold: (json['lowStockThreshold'] as num?)?.toDouble(),
       unit: json['unit'] as String,
       isArchived: json['isArchived'] as bool? ?? false,
       createdAt: safeParseDate(json['createdAt']),
@@ -46,6 +49,7 @@ class RawMaterial {
       'name': name,
       'quantity': quantity,
       'initialQuantity': initialQuantity,
+      'lowStockThreshold': lowStockThreshold,
       'unit': unit,
       'isArchived': isArchived,
       'createdAt': Timestamp.fromDate(createdAt),
@@ -59,6 +63,7 @@ class RawMaterial {
     String? name,
     double? quantity,
     double? initialQuantity,
+    double? lowStockThreshold,
     String? unit,
     bool? isArchived,
     DateTime? createdAt,
@@ -70,6 +75,7 @@ class RawMaterial {
       name: name ?? this.name,
       quantity: quantity ?? this.quantity,
       initialQuantity: initialQuantity ?? this.initialQuantity,
+      lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
       unit: unit ?? this.unit,
       isArchived: isArchived ?? this.isArchived,
       createdAt: createdAt ?? this.createdAt,

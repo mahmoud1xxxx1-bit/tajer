@@ -327,11 +327,12 @@ class OrderRepository {
       for (final item in order.items) {
         if (item.taxPercentage != null && item.taxPercentage! > 0) {
           final isInclusive = item.isTaxInclusive ?? true;
+          final taxableBase = item.total - (item.discountAmount ?? 0.0);
           if (isInclusive) {
             orderTax +=
-                item.total - (item.total / (1 + (item.taxPercentage! / 100)));
+                taxableBase - (taxableBase / (1 + (item.taxPercentage! / 100)));
           } else {
-            orderTax += item.total * (item.taxPercentage! / 100);
+            orderTax += taxableBase * (item.taxPercentage! / 100);
           }
         }
       }
@@ -362,6 +363,49 @@ class OrderRepository {
         batch.update(shiftRef, updates);
       }
     }
+
+    final protectedItems = <Map<String, dynamic>>[];
+    double calculatedTotalCost = 0.0;
+    var complete = true;
+    for (final item in orderWithQueue.items) {
+      if (item.costPrice != null) {
+        final unitCost = item.costPrice!;
+        protectedItems.add({
+          'productId': item.productId,
+          'productName': item.productName,
+          'quantity': item.quantity,
+          'unitCost': unitCost,
+          'lineCost': unitCost * item.quantity,
+        });
+        calculatedTotalCost += unitCost * item.quantity;
+      } else {
+        complete = false;
+        protectedItems.add({
+          'productId': item.productId,
+          'productName': item.productName,
+          'quantity': item.quantity,
+          'unitCost': null,
+          'lineCost': null,
+        });
+      }
+    }
+
+    final snapshotRef = _firestore
+        .collection('merchants')
+        .doc(order.merchantId)
+        .collection('order_cost_snapshots')
+        .doc(orderWithQueue.id);
+
+    batch.set(snapshotRef, {
+      'merchantId': order.merchantId,
+      'orderId': orderWithQueue.id,
+      'branchId': order.branchId,
+      'items': protectedItems,
+      'totalCost': complete ? calculatedTotalCost : null,
+      'isComplete': complete,
+      'createdAt': Timestamp.fromDate(orderWithQueue.createdAt),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
 
     batch.set(orderRef, orderWithQueue.toJson());
     await batch.commit();
@@ -529,11 +573,12 @@ class OrderRepository {
           for (final item in order.items) {
             if (item.taxPercentage != null && item.taxPercentage! > 0) {
               final isInclusive = item.isTaxInclusive ?? true;
+              final taxableBase = item.total - (item.discountAmount ?? 0.0);
               if (isInclusive) {
-                orderTax += item.total -
-                    (item.total / (1 + (item.taxPercentage! / 100)));
+                orderTax += taxableBase -
+                    (taxableBase / (1 + (item.taxPercentage! / 100)));
               } else {
-                orderTax += item.total * (item.taxPercentage! / 100);
+                orderTax += taxableBase * (item.taxPercentage! / 100);
               }
             }
           }
@@ -751,11 +796,12 @@ class OrderRepository {
           for (final item in order.items) {
             if (item.taxPercentage != null && item.taxPercentage! > 0) {
               final isInclusive = item.isTaxInclusive ?? true;
+              final taxableBase = item.total - (item.discountAmount ?? 0.0);
               if (isInclusive) {
-                orderTax += item.total -
-                    (item.total / (1 + (item.taxPercentage! / 100)));
+                orderTax += taxableBase -
+                    (taxableBase / (1 + (item.taxPercentage! / 100)));
               } else {
-                orderTax += item.total * (item.taxPercentage! / 100);
+                orderTax += taxableBase * (item.taxPercentage! / 100);
               }
             }
           }

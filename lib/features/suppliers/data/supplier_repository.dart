@@ -337,15 +337,22 @@ class SupplierRepository {
         final tx = txDoc.data();
         if (tx['isCancelled'] == true) continue;
         
-        final branchId = tx['branchId']?.toString();
-        if (branchId == null || branchId.isEmpty) continue;
+        String branchId = tx['branchId']?.toString() ?? '';
+        if (branchId.isEmpty) {
+          branchId = 'legacy_unscoped';
+          // Optionally, we could update the transaction to store 'legacy_unscoped' explicitly,
+          // but the prompt only requires populating branchDebts and mapping it during migration calculation.
+          // Wait, the prompt says "must map null/empty branchIds to the string literal 'legacy_unscoped'".
+          // I will update the transaction document as well to maintain consistency.
+          await txDoc.reference.update({'branchId': 'legacy_unscoped'});
+        }
 
         associatedBranches.add(branchId);
 
         final amount = (tx['amount'] as num?)?.toDouble() ?? 0.0;
         final type = tx['type']?.toString();
 
-        if (type == 'debt_addition') {
+        if (type == 'debt_addition' || type == 'purchase') {
           branchDebts[branchId] = (branchDebts[branchId] ?? 0.0) + amount;
         } else if (type == 'payment') {
           branchDebts[branchId] = (branchDebts[branchId] ?? 0.0) - amount;

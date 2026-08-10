@@ -109,7 +109,6 @@ class CartItem {
       'taxPercentage': taxPercentage,
       'taxMode': taxMode.name,
       'isManufacturedOnDemand': isManufacturedOnDemand,
-      'costPrice': costPrice,
       'lineId': lineId,
       'historicalMtoRecipe': historicalMtoRecipe,
     };

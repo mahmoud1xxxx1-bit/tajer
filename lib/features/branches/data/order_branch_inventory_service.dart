@@ -405,11 +405,11 @@ class OrderBranchInventoryService {
       final snap = snapshots[key]!;
       final isRaw = mutation.itemType == 'raw_material';
 
-      // Low Stock Notification Deduplication Logic (F4)
-      if (!isRaw && mutation.delta < 0) {
-        final productData = products[mutation.itemId];
-        if (productData != null) {
-          final threshold = (productData['lowStockThreshold'] as num?)?.toDouble() ?? 0.0;
+      // Low Stock Notification Deduplication Logic (F4 & F3)
+      if (mutation.delta < 0) {
+        final data = isRaw ? rawMaterials[mutation.itemId] : products[mutation.itemId];
+        if (data != null) {
+          final threshold = (data['lowStockThreshold'] as num?)?.toDouble() ?? 0.0;
           final previousQty = previous[key] ?? 0.0;
           final newQty = next[key] ?? 0.0;
           if (threshold > 0 && previousQty > threshold && newQty <= threshold) {
@@ -418,10 +418,13 @@ class OrderBranchInventoryService {
                 .doc(order.merchantId)
                 .collection('notifications')
                 .doc();
+            final itemName = isRaw
+                ? (rawNames[mutation.itemId] ?? 'مواد خام')
+                : (productNames[mutation.itemId] ?? 'منتج');
             tx.set(notifRef, {
               'title': 'تنبيه انخفاض المخزون | Low Stock Alert',
               'message':
-                  'انخفض مخزون المنتج ${productNames[mutation.itemId]} إلى ما دون الحد الأدنى في $branchNameForNotif.',
+                  'انخفض مخزون $itemName إلى ما دون الحد الأدنى في $branchNameForNotif.',
               'createdAt': FieldValue.serverTimestamp(),
               'isRead': false,
             });

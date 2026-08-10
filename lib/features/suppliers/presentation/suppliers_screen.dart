@@ -317,6 +317,7 @@ class SuppliersScreen extends ConsumerWidget {
 
                 if (nameController.text.isEmpty) return;
 
+                final activeBranchId = ref.read(selectedBranchIdProvider);
                 final initialDebt = double.tryParse(debtController.text) ?? 0.0;
                 final supplier = Supplier(
                   id: Uuid().v4(),
@@ -324,6 +325,8 @@ class SuppliersScreen extends ConsumerWidget {
                   name: nameController.text,
                   phone: phoneController.text,
                   totalDebt: initialDebt,
+                  associatedBranchIds: activeBranchId != null ? [activeBranchId] : [],
+                  branchDebts: activeBranchId != null ? {activeBranchId: initialDebt} : {},
                   createdAt: DateTime.now(),
                 );
 
@@ -334,6 +337,7 @@ class SuppliersScreen extends ConsumerWidget {
                     id: const Uuid().v4(),
                     supplierId: supplier.id,
                     merchantId: supplier.merchantId,
+                    branchId: activeBranchId,
                     amount: initialDebt,
                     type: 'debt_addition',
                     description: 'رصيد افتتاحي / دين أولي',

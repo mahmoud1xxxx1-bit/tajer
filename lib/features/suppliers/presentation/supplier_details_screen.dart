@@ -14,6 +14,7 @@ import '../../expenses/data/expense_repository.dart';
 import '../../shifts/data/shift_repository.dart';
 import '../data/supplier_repository.dart';
 import '../data/supplier_transaction_repository.dart';
+import '../data/purchase_invoice_repository.dart';
 import '../domain/supplier.dart';
 import '../domain/supplier_transaction.dart';
 import 'purchase_invoice_screen.dart';
@@ -383,6 +384,14 @@ class SupplierDetailsScreen extends ConsumerWidget {
           supplierId: currentSupplier.id,
           transactionId: transaction.id,
         );
+      } else if (transaction.type == 'purchase' &&
+          transaction.purchaseInvoiceId != null &&
+          transaction.purchaseInvoiceId!.isNotEmpty) {
+        await ref
+            .read(purchaseInvoiceRepositoryProvider)
+            .reversePurchaseInvoice(
+              invoiceId: transaction.purchaseInvoiceId!,
+            );
       } else if (transaction.type == 'payment') {
         // Legacy v107 payments did not persist an exact expenseId. Preserve
         // the validated compatibility path only for those historical records.

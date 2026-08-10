@@ -131,6 +131,38 @@ class AppOrder {
     };
   }
 
+  Map<String, dynamic> toInternalJson() {
+    return {
+      'id': id,
+      'merchantId': merchantId,
+      'branchId': branchId,
+      'customerId': customerId,
+      'customerName': customerName,
+      'items': items.map((e) => e.toJson()).toList(),
+      'total': total,
+      'discountType': discountType,
+      'discountValue': discountValue,
+      'discountAmount': discountAmount,
+      'status': status,
+      'paidAmount': paidAmount,
+      'isCredit': isCredit,
+      'notes': notes,
+      'creatorId': creatorId,
+      'creatorName': creatorName,
+      'paymentMethod': paymentMethod ?? 'cash',
+      'scheduledDate':
+          scheduledDate != null ? Timestamp.fromDate(scheduledDate!) : null,
+      'shiftId': shiftId,
+      'queueNumber': queueNumber,
+      'tenderedAmount': tenderedAmount,
+      'changeAmount': changeAmount,
+      'splitCashAmount': splitCashAmount,
+      'splitNetworkAmount': splitNetworkAmount,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'returnedQuantities': returnedQuantities,
+    };
+  }
+
   AppOrder copyWith({
     String? id,
     String? merchantId,

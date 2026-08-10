@@ -17,7 +17,7 @@ void main() {
     );
 
     expect(item.toJson()['costPrice'], 7.5);
-    expect(item.toPublicJson()['costPrice'], 7.5);
+    expect(item.toPublicJson()['costPrice'], isNull);
     expect(item.toPublicJson()['isManufacturedOnDemand'], isTrue);
 
     final order = AppOrder(
@@ -32,8 +32,11 @@ void main() {
     );
 
     final serializedItems = order.toJson()['items'] as List<dynamic>;
-    expect((serializedItems.single as Map)['costPrice'], 7.5);
+    expect((serializedItems.single as Map)['costPrice'], isNull, reason: 'order.toJson() MUST NOT expose costPrice');
     expect((serializedItems.single as Map)['isManufacturedOnDemand'], isTrue);
+
+    final internalItems = order.toInternalJson()['items'] as List<dynamic>;
+    expect((internalItems.single as Map)['costPrice'], 7.5, reason: 'order.toInternalJson() MUST preserve costPrice');
   });
 
   test(

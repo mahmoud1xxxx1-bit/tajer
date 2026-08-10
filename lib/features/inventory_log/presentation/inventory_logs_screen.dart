@@ -40,7 +40,10 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
     if (repo != null && appUser != null) {
       await repo.revertLog(log,
           userEmail: appUser.email ?? '',
-          userName: appUser.name ?? appUser.email ?? '');
+          userName: ref.read(globalDisplayResolverProvider).resolveActorName(
+              providedName: appUser.name,
+              isMerchant: appUser.role == 'merchant',
+              isAr: isAr));
       await ActivityLogger.log(
         user: appUser,
         actionType: isAr ? 'تراجع عن سجل مخزون' : 'Inventory Log Reverted',

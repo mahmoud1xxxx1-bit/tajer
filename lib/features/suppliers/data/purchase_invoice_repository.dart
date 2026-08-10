@@ -279,4 +279,164 @@ class PurchaseInvoiceRepository {
 
     return createdInvoice;
   }
+
+  Future<void> reversePurchaseInvoice({
+    required String invoiceId,
+  }) async {
+    final invoiceRef = _invoicesRef.doc(invoiceId);
+    
+    final invoiceSnapshotFirst = await invoiceRef.get();
+    if (!invoiceSnapshotFirst.exists || invoiceSnapshotFirst.data() == null) {
+      throw Exception('Invoice does not exist.');
+    }
+    
+    final supplierId = invoiceSnapshotFirst.data()!['supplierId']?.toString() ?? '';
+    if (supplierId.isEmpty) throw Exception('Missing supplier ID on invoice.');
+    
+    final supplierRef = _suppliersRef.doc(supplierId);
+    
+    final purchaseTxQuery = await supplierRef.collection('transactions')
+        .where('purchaseInvoiceId', isEqualTo: invoiceId)
+        .where('type', isEqualTo: 'purchase')
+        .get();
+        
+    final purchaseTxRef = purchaseTxQuery.docs.isNotEmpty 
+        ? purchaseTxQuery.docs.first.reference 
+        : null;
+
+    await _firestore.runTransaction((tx) async {
+      final invoiceSnapshot = await tx.get(invoiceRef);
+      if (!invoiceSnapshot.exists || invoiceSnapshot.data() == null) {
+        throw Exception('Invoice does not exist.');
+      }
+      final invoiceData = invoiceSnapshot.data()!;
+      if (invoiceData['isCancelled'] == true) {
+        throw Exception('Invoice is already cancelled.');
+      }
+
+      final branchId = invoiceData['branchId']?.toString() ?? '';
+      final totalAmount = (invoiceData['totalAmount'] as num?)?.toDouble() ?? 0.0;
+      final amountPaid = (invoiceData['amountPaid'] as num?)?.toDouble() ?? 0.0;
+      final expenseId = invoiceData['expenseId']?.toString();
+      final supplierPaymentTxId = invoiceData['supplierTransactionId']?.toString();
+      final paymentMethod = invoiceData['paymentMethod']?.toString();
+      final isFromShiftDrawer = invoiceData['isFromShiftDrawer'] == true;
+      final shiftId = invoiceData['shiftId']?.toString();
+
+      if (branchId.isEmpty) {
+        throw Exception('Missing branch ID on invoice.');
+      }
+
+      final supplierSnapshot = await tx.get(supplierRef);
+      if (!supplierSnapshot.exists) {
+        throw Exception('Supplier does not exist.');
+      }
+
+      // Check if inventory can be safely reversed
+      final items = (invoiceData['items'] as List<dynamic>?) ?? [];
+      final branchInventoryRepo = BranchInventoryRepository(_firestore, _merchantId);
+      final inventoryRefs = <String, DocumentReference<Map<String, dynamic>>>{};
+      final existingInventory = <String, Map<String, dynamic>>{};
+
+      for (final itemRaw in items) {
+        final itemMap = Map<String, dynamic>.from(itemRaw as Map);
+        final itemType = itemMap['itemType']?.toString() ?? '';
+        final itemId = itemMap['itemId']?.toString() ?? '';
+        final key = branchInventoryRepo.docId(branchId, itemType, itemId);
+        inventoryRefs[key] = branchInventoryRepo.ref.doc(key);
+      }
+
+      for (final key in inventoryRefs.keys) {
+        final snap = await tx.get(inventoryRefs[key]!);
+        if (snap.exists && snap.data() != null) {
+          existingInventory[key] = snap.data()!;
+        } else {
+          existingInventory[key] = {'quantity': 0.0};
+        }
+      }
+
+      for (final itemRaw in items) {
+        final itemMap = Map<String, dynamic>.from(itemRaw as Map);
+        final itemType = itemMap['itemType']?.toString() ?? '';
+        final itemId = itemMap['itemId']?.toString() ?? '';
+        final delta = (itemMap['quantity'] as num?)?.toDouble() ?? 0.0;
+        final key = branchInventoryRepo.docId(branchId, itemType, itemId);
+        
+        final currentQty = (existingInventory[key]?['quantity'] as num?)?.toDouble() ?? 0.0;
+        if (currentQty < delta) {
+          throw Exception('Inventory cannot be safely reversed. Stock for $itemId is lower than invoice quantity.');
+        }
+      }
+
+      // Reverse Supplier Debt
+      tx.update(supplierRef, {
+        'totalDebt': FieldValue.increment(-totalAmount + amountPaid),
+        'branchDebts.$branchId': FieldValue.increment(-totalAmount + amountPaid),
+      });
+      
+      // Update inventory (Reverse additions)
+      for (final itemRaw in items) {
+        final itemMap = Map<String, dynamic>.from(itemRaw as Map);
+        final itemType = itemMap['itemType']?.toString() ?? '';
+        final itemId = itemMap['itemId']?.toString() ?? '';
+        final delta = (itemMap['quantity'] as num?)?.toDouble() ?? 0.0;
+        final key = branchInventoryRepo.docId(branchId, itemType, itemId);
+        
+        tx.update(inventoryRefs[key]!, {
+          'quantity': FieldValue.increment(-delta),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+        
+        final itemName = itemMap['itemName']?.toString() ?? '';
+        final currentQty = (existingInventory[key]?['quantity'] as num?)?.toDouble() ?? 0.0;
+        
+        final logRef = _firestore
+            .collection('merchants')
+            .doc(_merchantId)
+            .collection('inventory_logs')
+            .doc();
+            
+        tx.set(logRef, {
+          'merchantId': _merchantId,
+          'branchId': branchId,
+          'type': itemType,
+          'itemId': itemId,
+          'itemName': itemName,
+          'change': -delta,
+          'previousQuantity': currentQty,
+          'newQuantity': currentQty - delta,
+          'reason': 'إلغاء فاتورة مشتريات',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      // Reverse shift cash if applicable
+      if (amountPaid > 0 && paymentMethod == 'cash' && isFromShiftDrawer && shiftId != null && shiftId.isNotEmpty) {
+        final shiftRef = _firestore.collection('shifts').doc(shiftId);
+        final shiftSnapshot = await tx.get(shiftRef);
+        if (shiftSnapshot.exists && shiftSnapshot.data()?['status'] == 'open') {
+          tx.update(shiftRef, {
+            'cashSales': FieldValue.increment(amountPaid),
+          });
+        }
+      }
+
+      // Cancel related documents
+      tx.update(invoiceRef, {'isCancelled': true});
+      
+      if (purchaseTxRef != null) {
+        tx.update(purchaseTxRef, {'isCancelled': true});
+      }
+      
+      if (supplierPaymentTxId != null && supplierPaymentTxId.isNotEmpty) {
+        final paymentTxRef = supplierRef.collection('transactions').doc(supplierPaymentTxId);
+        tx.update(paymentTxRef, {'isCancelled': true});
+      }
+      
+      if (expenseId != null && expenseId.isNotEmpty) {
+        final expenseRef = _firestore.collection('merchants').doc(_merchantId).collection('expenses').doc(expenseId);
+        tx.update(expenseRef, {'isCancelled': true});
+      }
+    });
+  }
 }

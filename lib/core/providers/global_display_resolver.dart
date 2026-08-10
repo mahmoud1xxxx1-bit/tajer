@@ -22,7 +22,9 @@ class GlobalDisplayResolver {
     required bool isAr,
   }) {
     if (providedName != null && providedName.trim().isNotEmpty) {
-      return providedName;
+      if (!providedName.contains('@')) {
+        return providedName;
+      }
     }
     if (isMerchant) {
       return isAr ? 'التاجر' : 'Merchant';

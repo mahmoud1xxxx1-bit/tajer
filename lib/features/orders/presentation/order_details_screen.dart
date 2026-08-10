@@ -303,16 +303,17 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                           final taxRate = item.taxPercentage ?? defaultTaxPercentage;
                           final isInclusive = (item.taxPercentage != null && item.taxPercentage! > 0) ? (item.isTaxInclusive ?? defaultIsTaxInclusive) : defaultIsTaxInclusive;
                           
+                          final taxableBase = item.total - (item.discountAmount ?? 0.0);
                           if (taxRate > 0) {
                             hasTax = true;
                             if (isInclusive) {
-                              final tax = item.total - (item.total / (1 + (taxRate / 100)));
+                              final tax = taxableBase - (taxableBase / (1 + (taxRate / 100)));
                               totalTaxAmount += tax;
-                              grandTotal += item.total;
+                              grandTotal += taxableBase;
                             } else {
-                              final tax = item.total * (taxRate / 100);
+                              final tax = taxableBase * (taxRate / 100);
                               totalTaxAmount += tax;
-                              grandTotal += item.total + tax;
+                              grandTotal += taxableBase + tax;
                             }
                           } else {
                             grandTotal += item.total;

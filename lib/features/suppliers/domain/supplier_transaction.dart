@@ -8,12 +8,13 @@ class SupplierTransaction {
   final String branchId;
   final String? expenseId;
   final double amount;
-  final String type; // 'debt_addition', 'payment'
+  final String type; // 'debt_addition', 'payment', 'purchase'
   final String? paymentMethod; // 'cash', 'network'
   final String description;
   final DateTime date;
   final DateTime createdAt;
   final bool isCancelled;
+  final String? purchaseInvoiceId;
 
   SupplierTransaction({
     required this.id,
@@ -28,6 +29,7 @@ class SupplierTransaction {
     required this.date,
     required this.createdAt,
     this.isCancelled = false,
+    this.purchaseInvoiceId,
   });
 
   factory SupplierTransaction.fromJson(Map<String, dynamic> json) {
@@ -44,6 +46,7 @@ class SupplierTransaction {
       date: safeParseDate(json['date']),
       createdAt: safeParseDate(json['createdAt']),
       isCancelled: json['isCancelled'] as bool? ?? false,
+      purchaseInvoiceId: json['purchaseInvoiceId']?.toString(),
     );
   }
 
@@ -61,6 +64,7 @@ class SupplierTransaction {
       'date': Timestamp.fromDate(date),
       'createdAt': Timestamp.fromDate(createdAt),
       'isCancelled': isCancelled,
+      if (purchaseInvoiceId != null) 'purchaseInvoiceId': purchaseInvoiceId,
     };
   }
 
@@ -77,6 +81,7 @@ class SupplierTransaction {
     DateTime? date,
     DateTime? createdAt,
     bool? isCancelled,
+    String? purchaseInvoiceId,
   }) {
     return SupplierTransaction(
       id: id ?? this.id,
@@ -91,6 +96,7 @@ class SupplierTransaction {
       date: date ?? this.date,
       createdAt: createdAt ?? this.createdAt,
       isCancelled: isCancelled ?? this.isCancelled,
+      purchaseInvoiceId: purchaseInvoiceId ?? this.purchaseInvoiceId,
     );
   }
 }

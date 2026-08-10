@@ -175,9 +175,10 @@ class ReportsService {
           final itemTax = item.taxPercentage ?? defaultTaxPercentage;
           if (itemTax <= 0) continue;
           final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
+          final taxableBase = item.total - (item.discountAmount ?? 0.0);
           orderTax += isInclusive
-              ? item.total - (item.total / (1 + (itemTax / 100)))
-              : item.total * (itemTax / 100);
+              ? taxableBase - (taxableBase / (1 + (itemTax / 100)))
+              : taxableBase * (itemTax / 100);
         }
         return sum + orderTax;
       });

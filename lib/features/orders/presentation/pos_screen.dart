@@ -8,6 +8,7 @@ import '../../authentication/data/auth_repository.dart';
 import '../data/order_repository.dart';
 import '../domain/order.dart';
 import '../domain/cart_item.dart';
+import '../domain/discount_validator.dart';
 import '../../customers/domain/customer.dart';
 import '../../customers/data/customer_repository.dart';
 import '../../../core/services/activity_logger.dart';
@@ -1596,6 +1597,35 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                   final paid = _isCredit
                       ? (double.tryParse(_paidController.text) ?? 0.0)
                       : grandTotal;
+
+                  // Validation for Discount Input (Gate 10)
+                  if (!DiscountValidator.isValid(
+                    type: _discountType,
+                    text: _discountValueController.text,
+                    cartSubtotal: cartSubtotal,
+                  )) {
+                    showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                                title: Text(isAr ? 'خطأ في الخصم' : 'Discount Error',
+                                    style: TextStyle(
+                                        fontFamily: 'Tajawal',
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.red)),
+                                content: Text(
+                                    isAr
+                                        ? 'الرجاء إدخال خصم صحيح (النسبة بين 0 و 100، والمبلغ لا يتجاوز الإجمالي).'
+                                        : 'Please enter a valid discount (percentage between 0 and 100, amount not exceeding subtotal).',
+                                    style: TextStyle(fontFamily: 'Tajawal')),
+                                actions: [
+                                  TextButton(
+                                      onPressed: () => Navigator.pop(ctx),
+                                      child: Text(isAr ? 'حسناً' : 'OK',
+                                          style: TextStyle(
+                                              fontFamily: 'Tajawal')))
+                                ]));
+                    return;
+                  }
 
                   // 1. التحقق من الدفع المتعدد (إلزامي في الكاش والآجل معاً)
                   if (_paymentMethod == 'split') {

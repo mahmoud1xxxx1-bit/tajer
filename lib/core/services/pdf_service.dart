@@ -211,10 +211,10 @@ class PdfService {
                         pw.Builder(builder: (context) {
                         double totalTaxAmount = 0.0;
                         double grandTotal = 0.0;
-                        for (var item in order.items) {
-                          final taxRate = item.getEffectiveTax(defaultTaxPercentage);
-                          final isInclusive = (item.taxPercentage != null && item.taxPercentage! > 0) ? (item.isTaxInclusive ?? defaultIsTaxInclusive) : defaultIsTaxInclusive;
-                          final taxableTotal = item.total - item.discountAmount;
+                          for (var item in order.items) {
+                            final taxRate = item.taxPercentage ?? 0.0;
+                            final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
+                            final taxableTotal = item.total - item.discountAmount;
                           if (taxRate > 0) {
                             if (isInclusive) {
                               totalTaxAmount += taxableTotal - (taxableTotal / (1 + (taxRate / 100)));
@@ -271,8 +271,8 @@ class PdfService {
                         double grandTotal = 0.0;
                         bool hasTax = false;
                         for (var item in order.items) {
-                          final taxRate = item.getEffectiveTax(defaultTaxPercentage);
-                          final isInclusive = (item.taxPercentage != null && item.taxPercentage! > 0) ? (item.isTaxInclusive ?? defaultIsTaxInclusive) : defaultIsTaxInclusive;
+                          final taxRate = item.taxPercentage ?? 0.0;
+                          final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
                           final taxableTotal = item.total - item.discountAmount;
                           if (taxRate > 0) {
                             hasTax = true;

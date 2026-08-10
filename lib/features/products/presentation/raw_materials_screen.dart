@@ -29,6 +29,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
     final nameController = TextEditingController(text: rawMaterial?.name ?? '');
     final quantityController =
         TextEditingController(text: rawMaterial?.quantity.toString() ?? '');
+    final lowStockThresholdController = TextEditingController(text: rawMaterial?.lowStockThreshold?.toString() ?? '0');
     String selectedUnit = rawMaterial?.unit ?? 'g';
     final capturedBranchId = ref.read(selectedBranchIdProvider);
     final l10n = AppLocalizations.of(context)!;
@@ -91,6 +92,22 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                       labelStyle:
                           const TextStyle(fontFamily: 'Tajawal', fontSize: 13),
                       prefixIcon: const Icon(Icons.numbers),
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                    ),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: lowStockThresholdController,
+                    decoration: InputDecoration(
+                      labelText: isAr
+                          ? 'الحد الأدنى لتنبيه انخفاض المخزون'
+                          : 'Low stock threshold for alerts',
+                      labelStyle:
+                          const TextStyle(fontFamily: 'Tajawal', fontSize: 13),
+                      prefixIcon: const Icon(Icons.warning_amber),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12)),
                     ),
@@ -162,6 +179,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
               onPressed: () async {
                 final name = nameController.text.trim();
                 final qty = double.tryParse(quantityController.text) ?? 0;
+                final threshold = double.tryParse(lowStockThresholdController.text) ?? 0;
 
                 if (name.isEmpty) {
                   await TajerMessage.show(
@@ -193,6 +211,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                     name: name,
                     quantity: qty,
                     initialQuantity: qty,
+                    lowStockThreshold: threshold,
                     unit: selectedUnit,
                     createdAt: DateTime.now(),
                     updatedAt: DateTime.now(),
@@ -212,7 +231,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                       reason: 'إضافة خام جديد / Add New Raw Material',
                       branchId: operationContext.branchId,
                       userEmail: user?.email,
-                      userName: user?.name ?? user?.email,
+                      userName: user?.name,
                       itemType: 'raw_material',
                     );
                   }
@@ -220,6 +239,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                   final updatedItem = rawMaterial.copyWith(
                     name: name,
                     quantity: qty,
+                    lowStockThreshold: threshold,
                     unit: selectedUnit,
                     updatedAt: DateTime.now(),
                   );
@@ -237,7 +257,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                       reason: 'تحديث يدوي / Manual Update',
                       branchId: operationContext.branchId,
                       userEmail: user?.email,
-                      userName: user?.name ?? user?.email,
+                      userName: user?.name,
                       itemType: 'raw_material',
                     );
                   }

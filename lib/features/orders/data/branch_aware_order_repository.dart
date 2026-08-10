@@ -333,9 +333,10 @@ class BranchAwareOrderRepository extends OrderRepository {
       final tax = item.taxPercentage ?? 0.0;
       if (tax <= 0) continue;
       final inclusive = item.isTaxInclusive ?? true;
+      final taxableBase = item.total - (item.discountAmount ?? 0.0);
       orderTax += inclusive
-          ? item.total - (item.total / (1 + tax / 100))
-          : item.total * (tax / 100);
+          ? taxableBase - (taxableBase / (1 + tax / 100))
+          : taxableBase * (tax / 100);
     }
     return orderTax;
   }

@@ -1,3 +1,4 @@
+import '../domain/order_date_group.dart';
 import '../domain/order.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
@@ -57,52 +58,18 @@ class OrdersScreen extends ConsumerWidget {
                   );
                 }
 
-                final Map<String, List<AppOrder>> groupedOrders = {};
+                final Map<OrderDateGroup, List<AppOrder>> groupedOrders = {};
                 final now = DateTime.now();
-                final today = DateTime(now.year, now.month, now.day);
-                final yesterday = today.subtract(const Duration(days: 1));
-                final startOfWeek =
-                    today.subtract(Duration(days: today.weekday % 7));
 
                 for (var order in orders) {
-                  final d = order.createdAt;
-                  final orderDate = DateTime(d.year, d.month, d.day);
+                  final group = OrderDateGroup.fromDate(
+                    orderDate: order.createdAt,
+                    referenceDate: now,
+                    isScheduled: order.scheduledDate != null,
+                    l10n: l10n,
+                  );
 
-                  String groupKey;
-                  if (order.scheduledDate != null) {
-                    groupKey = l10n.scheduledOrders;
-                  } else if (orderDate == today) {
-                    groupKey = l10n.todayPrefix +
-                        DateFormat('yyyy/MM/dd').format(orderDate);
-                  } else if (orderDate == yesterday) {
-                    groupKey = l10n.yesterdayPrefix +
-                        DateFormat('yyyy/MM/dd').format(orderDate);
-                  } else if (orderDate
-                      .isAfter(startOfWeek.subtract(const Duration(days: 1)))) {
-                    final endOfWeek = startOfWeek.add(const Duration(days: 6));
-                    groupKey = l10n.thisWeekFromTo(
-                        DateFormat('MM/dd').format(startOfWeek),
-                        DateFormat('MM/dd').format(endOfWeek));
-                  } else if (orderDate
-                      .isAfter(today.subtract(const Duration(days: 30)))) {
-                    final diffDays = startOfWeek.difference(orderDate).inDays;
-                    final weeksAgo = (diffDays / 7).floor() + 1;
-                    final wStart =
-                        startOfWeek.subtract(Duration(days: weeksAgo * 7));
-                    final wEnd = wStart.add(const Duration(days: 6));
-                    groupKey = l10n.agoPrefix +
-                        weeksAgo.toString() +
-                        l10n.weekFromTo(DateFormat('MM/dd').format(wStart),
-                            DateFormat('MM/dd').format(wEnd));
-                  } else if (orderDate.year == today.year) {
-                    groupKey =
-                        l10n.monthPrefix + DateFormat('MMMM').format(orderDate);
-                  } else {
-                    groupKey =
-                        l10n.yearPrefix + DateFormat('yyyy').format(orderDate);
-                  }
-
-                  groupedOrders.putIfAbsent(groupKey, () => []).add(order);
+                  groupedOrders.putIfAbsent(group, () => []).add(order);
                 }
 
                 final sortedKeys = groupedOrders.keys.toList()..sort();
@@ -112,11 +79,12 @@ class OrdersScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(16),
                   itemBuilder: (context, index) {
                     final key = sortedKeys[index];
-                    final groupOrders = groupedOrders[key]!;
+                    final groupOrders = groupedOrders[key]!
+                      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
                     final totalRevenue = groupOrders
                         .where((o) => o.status != 'cancelled')
                         .fold(0.0, (sum, o) => sum + o.total);
-                    final displayName = key.substring(3);
+                    final displayName = key.displayName;
 
                     return GlassCard(
                       margin: const EdgeInsets.only(bottom: 12),
