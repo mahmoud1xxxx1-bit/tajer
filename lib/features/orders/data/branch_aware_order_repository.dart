@@ -21,6 +21,7 @@ class BranchAwareOrderRepository extends OrderRepository {
     String? shiftId,
     String? branchId,
   }) async {
+    final canReadCosts = await _canReadCosts();
     final effectiveBranchId = _operationBranch(branchId ?? order.branchId);
     final now = DateTime.now();
     final date =
@@ -53,7 +54,7 @@ class BranchAwareOrderRepository extends OrderRepository {
         queueNumber: queueNumber,
       );
       final orderWithCostSnapshot =
-          await _attachHistoricalCosts(tx, orderWithQueue);
+          await _attachHistoricalCosts(tx, orderWithQueue, canReadCosts: canReadCosts);
 
       DocumentReference<Map<String, dynamic>>? customerRef;
       DocumentSnapshot<Map<String, dynamic>>? customerDoc;
@@ -126,10 +127,27 @@ class BranchAwareOrderRepository extends OrderRepository {
     return createdOrder;
   }
 
+  Future<bool> _canReadCosts() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return false;
+    try {
+      final userDoc = await firestore.collection('users').doc(uid).get();
+      final data = userDoc.data();
+      if (data == null) return false;
+      if (data['role'] == 'merchant') return true;
+      if (data['role'] == 'employee') {
+        final perms = data['permissions'] as Map<String, dynamic>?;
+        return perms?['can_view_cost'] == true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
   Future<AppOrder> _attachHistoricalCosts(
     Transaction tx,
-    AppOrder order,
-  ) async {
+    AppOrder order, {
+    required bool canReadCosts,
+  }) async {
     final productIds = order.items
         .map((item) => item.productId)
         .where((id) => id.isNotEmpty)
@@ -169,25 +187,27 @@ class BranchAwareOrderRepository extends OrderRepository {
       }
     }
 
-    final costIds = {...productIds, ...rawMaterialIds};
     final costs = <String, double>{};
-    for (final id in costIds) {
-      final snap = await tx.get(firestore
-          .collection('merchants')
-          .doc(order.merchantId)
-          .collection('product_costs')
-          .doc('${order.branchId}_$id'));
-      final value = snap.data()?['costPrice'];
-      if (value is num && value >= 0) costs[id] = value.toDouble();
-      if (value is! num) {
-        final legacySnap = await tx.get(firestore
+    if (canReadCosts) {
+      final costIds = {...productIds, ...rawMaterialIds};
+      for (final id in costIds) {
+        final snap = await tx.get(firestore
             .collection('merchants')
             .doc(order.merchantId)
             .collection('product_costs')
-            .doc(id));
-        final legacyValue = legacySnap.data()?['costPrice'];
-        if (legacyValue is num && legacyValue >= 0) {
-          costs[id] = legacyValue.toDouble();
+            .doc('${order.branchId}_$id'));
+        final value = snap.data()?['costPrice'];
+        if (value is num && value >= 0) costs[id] = value.toDouble();
+        if (value is! num) {
+          final legacySnap = await tx.get(firestore
+              .collection('merchants')
+              .doc(order.merchantId)
+              .collection('product_costs')
+              .doc(id));
+          final legacyValue = legacySnap.data()?['costPrice'];
+          if (legacyValue is num && legacyValue >= 0) {
+            costs[id] = legacyValue.toDouble();
+          }
         }
       }
     }
