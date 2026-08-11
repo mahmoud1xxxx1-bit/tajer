@@ -401,6 +401,11 @@ class BranchAwareOrderRepository extends OrderRepository {
           'Order status changed on another device. Please refresh.',
         );
       }
+      if (currentStatus == 'cancelled' && newStatus != 'cancelled') {
+        throw Exception(
+          'A cancelled invoice is final and cannot be reopened. Create a new sale instead.',
+        );
+      }
       if (newStatus == 'cancelled' &&
           canonicalOrder.isCredit &&
           canonicalOrder.paidAmount > 0.01) {
@@ -428,6 +433,12 @@ class BranchAwareOrderRepository extends OrderRepository {
                 canonicalOrder.branchId) {
           throw Exception(
             'Order refund shift does not match the order merchant and branch.',
+          );
+        }
+        if (shiftData['status']?.toString() != 'open' ||
+            shiftData['endTime'] != null) {
+          throw Exception(
+            'A sale cannot be voided after its shift is closed. Use the return workflow so the reversal is recorded in the current shift.',
           );
         }
         refundShiftRef = shiftRef;
