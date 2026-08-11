@@ -89,16 +89,16 @@ void main() {
   });
 
   group('Step 4 Limits - Free Main Tier', () {
-    test('free main should allow 100 orders and block 101st (monthly)', () async {
-      // Simulate 100 previous orders in the current month
+    test('free main should allow 30 orders and block 31st (monthly)', () async {
+      // Simulate 30 previous orders in the current month
       final now = DateTime.now();
       final periodKey = '${now.year}-${now.month.toString().padLeft(2, '0')}';
       await firestore
           .collection('merchants')
           .doc('free_123')
           .collection('entitlement_usage')
-          .doc('main_orders_$periodKey')
-          .set({'count': 100});
+          .doc('global_orders_lifetime')
+          .set({'count': 30});
 
       expect(
         () async => await EntitlementIntegration.checkAndConsumeQuota(
@@ -163,7 +163,7 @@ void main() {
 
     test('trial branch delete/recreate exploit is blocked', () async {
       // Create first order in trial branch
-      for(int i=0; i<100; i++) {
+      for(int i=0; i<30; i++) {
         await EntitlementIntegration.checkAndConsumeQuota(
           firestore: firestore,
           merchantId: 'free_123',
@@ -173,7 +173,7 @@ void main() {
         );
       }
 
-      // Replacement should be denied because trial branch allows 100 orders
+      // Replacement should be denied because trial branch allows 30 orders
       expect(
         () async => await EntitlementIntegration.checkAndConsumeQuota(
           firestore: firestore,

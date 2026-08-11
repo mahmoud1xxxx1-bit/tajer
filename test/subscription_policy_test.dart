@@ -16,7 +16,7 @@ void main() {
 
     test('Free Tier Limits', () {
       final limits = SubscriptionPolicy.getBranchLimits(PlanTier.free, 0);
-      expect(limits.ordersMonthly, 100);
+      expect(limits.ordersLifetime, 30);
       expect(limits.products, 10);
       expect(limits.categories, 5);
       expect(limits.customers, 10);

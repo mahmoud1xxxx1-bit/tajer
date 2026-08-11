@@ -27,6 +27,7 @@ import '../../categories/data/category_repository.dart';
 import '../../branches/presentation/active_branch_selector.dart';
 import '../../branches/presentation/branch_context.dart';
 import '../../../core/providers/global_display_resolver.dart';
+import '../../subscriptions/presentation/paywall_screen.dart';
 
 class PosScreen extends ConsumerStatefulWidget {
   const PosScreen({super.key});
@@ -489,6 +490,36 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
+        if (e.toString().contains('limit_reached_for_plan')) {
+          final l10n = AppLocalizations.of(context)!;
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Text(l10n.freeLimitReachedTitle, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              content: Text(l10n.freeLimitReachedMessage, style: const TextStyle(fontFamily: 'Tajawal')),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(l10n.later, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const PaywallScreen()));
+                  },
+                  child: Text(l10n.viewPlans, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
+                ),
+              ],
+            ),
+          );
+          return;
+        }
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('خطأ: $e',
                 style: const TextStyle(fontFamily: 'Tajawal'))));

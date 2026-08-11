@@ -1566,4 +1566,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pricePendingStore => 'Price available after store connection';
+
+  @override
+  String get freeLimitReachedTitle => 'Free Trial Completed';
+
+  @override
+  String get freeLimitReachedMessage =>
+      'You have reached the maximum number of orders for the free plan.';
+
+  @override
+  String get later => 'Later';
+
+  @override
+  String get viewPlans => 'View Plans';
 }

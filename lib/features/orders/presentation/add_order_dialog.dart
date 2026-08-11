@@ -17,6 +17,7 @@ import '../../../core/services/limits_service.dart';
 import '../../../core/providers/store_profile_provider.dart';
 import '../../../core/providers/effective_merchant.dart';
 import '../../branches/presentation/branch_context.dart';
+import '../../subscriptions/presentation/paywall_screen.dart';
 
 class AddOrderDialog extends ConsumerStatefulWidget {
   const AddOrderDialog({super.key});
@@ -235,6 +236,36 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
+        if (e.toString().contains('limit_reached_for_plan')) {
+          final l10n = AppLocalizations.of(context)!;
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              title: Text(l10n.freeLimitReachedTitle, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              content: Text(l10n.freeLimitReachedMessage, style: const TextStyle(fontFamily: 'Tajawal')),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(l10n.later, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const PaywallScreen()));
+                  },
+                  child: Text(l10n.viewPlans, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
+                ),
+              ],
+            ),
+          );
+          return;
+        }
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

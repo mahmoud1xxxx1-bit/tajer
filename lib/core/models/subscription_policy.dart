@@ -55,7 +55,7 @@ class SubscriptionPolicy {
 
   // FREE
   static const BranchLimits freeMainLimits = BranchLimits(
-    ordersMonthly: 100,
+    ordersLifetime: 30,
     products: 10,
     categories: 5,
     customers: 10,
@@ -165,6 +165,10 @@ class SubscriptionPolicy {
     switch (planString.toLowerCase()) {
       case 'guest':
         return PlanTier.guest;
+      case 'main':
+        return PlanTier.main;
+      case 'multibranch':
+        return PlanTier.multiBranch;
       case 'merchant':
       case 'premium':
       case 'pro':

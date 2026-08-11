@@ -658,5 +658,9 @@
   "paywallMultiDesc4": "Maximum 9 employees total",
   "paywallMultiDesc5": "Full existing multi-branch capabilities",
   "paywallMultiDesc6": "Existing Inventory Transfer preserved",
-  "pricePendingStore": "Price available after store connection"
+  "pricePendingStore": "Price available after store connection",
+  "freeLimitReachedTitle": "Free Trial Completed",
+  "freeLimitReachedMessage": "You have reached the maximum number of orders for the free plan.",
+  "later": "Later",
+  "viewPlans": "View Plans"
 }

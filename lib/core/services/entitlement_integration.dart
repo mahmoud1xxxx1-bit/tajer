@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/plan_tier.dart';
 import '../models/subscription_policy.dart';
+import '../models/branch_mode.dart';
 import 'entitlement_evaluator.dart';
 
 class EntitlementIntegration {
@@ -56,6 +57,24 @@ class EntitlementIntegration {
     String? plan,
   }) async {
     plan ??= await _getPlan(firestore, merchantId);
+    final tier = resolveEffectiveTier(plan);
+
+    if (tier == PlanTier.free && resourceType == 'orders') {
+      final globalLimit = SubscriptionPolicy.freeMainLimits.ordersLifetime!;
+      final globalUsage = await _getCurrentUsage(firestore, merchantId, 'global', 'orders', 'lifetime');
+      if (globalUsage >= globalLimit) return false;
+
+      final branchPosition = await getBranchPosition(firestore, merchantId, branchId);
+      final branchMode = SubscriptionPolicy.getBranchMode(tier, branchPosition - 1);
+      
+      if (branchMode == BranchMode.trial) {
+        final branchLimit = SubscriptionPolicy.trialBranchLimits.ordersLifetime!;
+        final branchUsage = await _getCurrentUsage(firestore, merchantId, branchId, 'orders', 'lifetime');
+        if (branchUsage >= branchLimit) return false;
+      }
+      return true;
+    }
+
     final limitData = await _getLimitAndPeriod(firestore, merchantId, branchId, resourceType, plan);
     if (limitData == null) return true; // unlimited
 
@@ -72,6 +91,62 @@ class EntitlementIntegration {
     WriteBatch? batch,
   }) async {
     plan ??= await _getPlan(firestore, merchantId);
+    final tier = resolveEffectiveTier(plan);
+
+    if (tier == PlanTier.free && resourceType == 'orders') {
+      final globalLimit = SubscriptionPolicy.freeMainLimits.ordersLifetime!;
+      final globalUsage = await _getCurrentUsage(firestore, merchantId, 'global', 'orders', 'lifetime');
+      if (globalUsage >= globalLimit) {
+        throw Exception('limit_reached_for_plan');
+      }
+
+      final branchPosition = await getBranchPosition(firestore, merchantId, branchId);
+      final branchMode = SubscriptionPolicy.getBranchMode(tier, branchPosition - 1);
+      
+      if (branchMode == BranchMode.trial) {
+        final branchLimit = SubscriptionPolicy.trialBranchLimits.ordersLifetime!;
+        final branchUsage = await _getCurrentUsage(firestore, merchantId, branchId, 'orders', 'lifetime');
+        if (branchUsage >= branchLimit) {
+          throw Exception('limit_reached_for_plan');
+        }
+        
+        final branchUsageRef = firestore
+            .collection('merchants')
+            .doc(merchantId)
+            .collection('entitlement_usage')
+            .doc('${branchId}_orders_lifetime');
+        final branchData = {
+          'count': FieldValue.increment(1),
+          'branchId': branchId,
+          'resourceType': 'orders',
+          'periodKey': 'lifetime',
+        };
+        if (batch != null) {
+          batch.set(branchUsageRef, branchData, SetOptions(merge: true));
+        } else {
+          await branchUsageRef.set(branchData, SetOptions(merge: true));
+        }
+      }
+
+      final globalUsageRef = firestore
+          .collection('merchants')
+          .doc(merchantId)
+          .collection('entitlement_usage')
+          .doc('global_orders_lifetime');
+      final globalData = {
+        'count': FieldValue.increment(1),
+        'branchId': 'global',
+        'resourceType': 'orders',
+        'periodKey': 'lifetime',
+      };
+      if (batch != null) {
+        batch.set(globalUsageRef, globalData, SetOptions(merge: true));
+      } else {
+        await globalUsageRef.set(globalData, SetOptions(merge: true));
+      }
+      return;
+    }
+
     final limitData = await _getLimitAndPeriod(firestore, merchantId, branchId, resourceType, plan);
     if (limitData == null) return; // unlimited
 
