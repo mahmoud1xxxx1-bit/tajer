@@ -918,6 +918,59 @@ async function main() {
         { quantity: 8, merchantId: 'merchant-a', branchId: 'branch-a', itemId: 'raw-1', itemType: 'raw_material' },
       ),
     );
+    // Entitlement spoofing tests
+    const newGuest = testEnv.authenticatedContext('new-guest', { email: 'guest@example.test' }).firestore();
+    const newMalicious = testEnv.authenticatedContext('new-malicious', { email: 'bad@example.test' }).firestore();
+
+    // Guest creating themselves safely: ALLOW
+    await assertSucceeds(
+      setDoc(doc(newGuest, 'users', 'new-guest'), {
+        role: 'merchant',
+        plan: 'guest',
+      }),
+    );
+
+    // Self update safely: ALLOW
+    await assertSucceeds(
+      updateDoc(doc(newGuest, 'users', 'new-guest'), {
+        role: 'merchant', // not changing it actually but providing same value
+        plan: 'guest',
+      }),
+    );
+
+    // Guest trying to upgrade themselves: DENY
+    await assertFails(
+      updateDoc(doc(newGuest, 'users', 'new-guest'), {
+        plan: 'premium',
+      }),
+    );
+    await assertFails(
+      updateDoc(doc(newGuest, 'users', 'new-guest'), {
+        tier: 'main',
+      }),
+    );
+
+    // Malicious user trying to create themselves with a paid plan directly: DENY
+    await assertFails(
+      setDoc(doc(newMalicious, 'users', 'new-malicious'), {
+        role: 'merchant',
+        plan: 'premium',
+      }),
+    );
+    await assertFails(
+      setDoc(doc(newMalicious, 'users', 'new-malicious'), {
+        role: 'merchant',
+        plan: 'guest',
+        tier: 'multiBranch'
+      }),
+    );
+
+    // Owner (merchant) trying to change their own plan directly: DENY
+    await assertFails(
+      updateDoc(doc(merchant, 'users', 'merchant-a'), {
+        plan: 'premium',
+      }),
+    );
 
   } finally {
     await testEnv.cleanup();

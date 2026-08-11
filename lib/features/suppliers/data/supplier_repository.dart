@@ -1,3 +1,4 @@
+import '../../../core/services/entitlement_integration.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/effective_merchant.dart';
@@ -40,6 +41,13 @@ class SupplierRepository {
   }
 
   Future<void> addSupplier(Supplier supplier) async {
+    await EntitlementIntegration.checkAndConsumeQuota(
+      firestore: _firestore,
+      merchantId: supplier.merchantId,
+      branchId: supplier.associatedBranchIds.isNotEmpty ? supplier.associatedBranchIds.first : 'main',
+      resourceType: 'suppliers',
+      plan: null,
+    );
     await _suppliersRef.doc(supplier.id).set(supplier.toJson());
   }
 

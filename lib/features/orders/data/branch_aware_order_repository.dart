@@ -1,3 +1,4 @@
+import '../../../core/services/entitlement_integration.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -29,6 +30,13 @@ class BranchAwareOrderRepository extends OrderRepository {
     String? shiftId,
     String? branchId,
   }) async {
+    await EntitlementIntegration.checkAndConsumeQuota(
+      firestore: firestore,
+      merchantId: order.merchantId,
+      branchId: _operationBranch(branchId ?? order.branchId),
+      resourceType: 'orders',
+      plan: null,
+    );
     final canReadCosts = await _canReadCosts();
     final effectiveBranchId = _operationBranch(branchId ?? order.branchId);
     final now = DateTime.now();

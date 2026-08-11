@@ -13,6 +13,9 @@ import 'package:uuid/uuid.dart';
 import '../domain/app_user.dart';
 import '../../../core/services/data_migration_service.dart';
 import '../../../core/providers/effective_merchant.dart';
+import '../../../core/services/entitlement_integration.dart';
+import '../../../core/services/entitlement_evaluator.dart';
+import '../../branches/domain/branch.dart';
 
 part 'auth_repository.g.dart';
 
@@ -438,7 +441,7 @@ class AuthRepository {
   }
 
   Future<void> createEmployee(String merchantEmail, String name, String pin,
-      {Map<String, dynamic> permissions = const {}}) async {
+      {Map<String, dynamic> permissions = const {}, String? branchId}) async {
     try {
       final merchantUid = _auth.currentUser?.uid;
       if (merchantUid == null)
@@ -447,21 +450,50 @@ class AuthRepository {
       // Enforce subscription check
       final merchantDoc =
           await _firestore.collection('users').doc(merchantUid).get();
-      final plan = merchantDoc.data()?['plan'] ?? 'merchant';
-      final email = merchantDoc.data()?['email'] as String?;
-      if (plan != 'premium' &&
-          email?.trim().toLowerCase() != 'love.dotk@gmail.com') {
-        throw Exception("لا يمكنك إضافة موظفين بدون تفعيل الباقة الشهرية.");
+      final plan = merchantDoc.data()?['plan'] as String?;
+      final tier = EntitlementIntegration.resolveEffectiveTier(plan);
+
+      final targetBranchId = branchId ?? 'main';
+
+      // Find branch position
+      int branchPosition = 1;
+      if (targetBranchId != 'main') {
+        final branchesSnap = await _firestore
+            .collection('merchants')
+            .doc(merchantUid)
+            .collection('branches')
+            .get();
+        final branches = branchesSnap.docs.map((d) {
+          final data = d.data();
+          data['id'] = d.id;
+          return Branch.fromJson(data);
+        }).toList();
+
+        branches.sort((a, b) {
+          if (a.isMain != b.isMain) return a.isMain ? -1 : 1;
+          return a.createdAt.compareTo(b.createdAt);
+        });
+
+        for (int i = 0; i < branches.length; i++) {
+          if (branches[i].id == targetBranchId) {
+            branchPosition = i + 1;
+            break;
+          }
+        }
       }
 
-      // Check current employee count
+      // Check current employee count for THIS branch
       final empSnapshot = await _firestore
           .collection('users')
           .doc(merchantUid)
           .collection('employees')
+          .where('assignedBranchIds', arrayContains: targetBranchId)
           .get();
-      if (empSnapshot.docs.length >= 3) {
-        throw Exception("لقد وصلت للحد الأقصى (3 موظفين)");
+      
+      final currentCount = empSnapshot.docs.length;
+
+      if (!EntitlementEvaluator.canAddEmployee(tier, branchPosition, currentCount)) {
+        throw Exception("You have reached the employee limit for this branch.");
       }
 
       final hiddenEmail = _generateEmployeeEmail(merchantEmail, pin);
@@ -491,7 +523,7 @@ class AuthRepository {
             'permissions': permissions,
             'createdAt': FieldValue.serverTimestamp(),
             'merchantUid': merchantUid,
-            'assignedBranchIds': const ['main'],
+            'assignedBranchIds': [targetBranchId],
           });
 
           // Create root user document for the employee so appUserProvider works
@@ -506,7 +538,7 @@ class AuthRepository {
             'email': hiddenEmail,
             'deviceId': await _getDeviceId(),
             'permissions': permissions,
-            'assignedBranchIds': const ['main'],
+            'assignedBranchIds': [targetBranchId],
           });
         }
       } finally {

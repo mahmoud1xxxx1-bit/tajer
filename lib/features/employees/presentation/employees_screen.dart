@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:go_router/go_router.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../orders/data/order_repository.dart';
+import '../../branches/presentation/branch_context.dart';
 import '../domain/employee_permission_catalog.dart';
 
 import '../../../core/services/pin_service.dart';
@@ -135,17 +136,14 @@ Do not share this PIN with anyone!
     Share.share(text);
   }
 
-  void _showAddEmployeeDialog(int currentCount) {
-    if (currentCount >= 3) {
-      showBeautifulUpgradeDialog(context);
-      return;
-    }
+  void _showAddEmployeeDialog(int currentCount, String selectedBranchId) {
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => EmployeeDialog(
         merchantEmail: _merchantEmail,
         ref: ref,
+        selectedBranchId: selectedBranchId,
       ),
     );
   }
@@ -204,6 +202,7 @@ Do not share this PIN with anyone!
     final theme = Theme.of(context);
     final ordersAsync = ref.watch(ordersStreamProvider);
     final currentCurrency = ref.watch(currencyProvider);
+    final selectedBranchId = ref.watch(selectedBranchIdProvider);
     final allOrders = ordersAsync.value ?? [];
 
     return Scaffold(
@@ -227,7 +226,12 @@ Do not share this PIN with anyone!
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                final docs = snapshot.data?.docs ?? [];
+                final allDocs = snapshot.data?.docs ?? [];
+                final docs = allDocs.where((doc) {
+                  final data = doc.data() as Map<String, dynamic>;
+                  final assigned = data['assignedBranchIds'] as List<dynamic>? ?? [];
+                  return assigned.contains(selectedBranchId);
+                }).toList();
                 final currentCount = docs.length;
 
                 return Padding(
@@ -298,15 +302,15 @@ Do not share this PIN with anyone!
                         children: [
                           Text(
                               isAr
-                                  ? "قائمة الموظفين ($currentCount/3)"
-                                  : "Employees List ($currentCount/3)",
+                                  ? "قائمة الموظفين لهذا الفرع ($currentCount)"
+                                  : "Employees List for this branch ($currentCount)",
                               style: const TextStyle(
                                   fontFamily: 'Tajawal',
                                   fontSize: 18,
                                   fontWeight: FontWeight.bold)),
                           ElevatedButton.icon(
                             onPressed: () =>
-                                _showAddEmployeeDialog(currentCount),
+                                _showAddEmployeeDialog(currentCount, selectedBranchId),
                             icon: const Icon(Icons.person_add, size: 20),
                             label: Text(isAr ? "إضافة" : "Add",
                                 style: const TextStyle(fontFamily: 'Tajawal')),
@@ -448,11 +452,13 @@ class EmployeeDialog extends StatefulWidget {
   final WidgetRef ref;
   final Map<String, dynamic>? initialData;
   final String? employeeUid;
+  final String selectedBranchId;
 
   const EmployeeDialog({
     super.key,
     required this.merchantEmail,
     required this.ref,
+    required this.selectedBranchId,
     this.initialData,
     this.employeeUid,
   });
@@ -617,7 +623,8 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
                           .read(authRepositoryProvider)
                           .createEmployee(widget.merchantEmail, name, pin,
                               permissions: EmployeePermissionCatalog
-                                  .leastPrivilegeDefaults);
+                                  .leastPrivilegeDefaults,
+                              branchId: widget.selectedBranchId);
                       if (mounted) Navigator.of(context).pop();
                       _showSuccess(isAr
                           ? "تم إضافة الموظف بنجاح"

@@ -1521,4 +1521,46 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get taxModeExempt => 'معفى من الضريبة';
+
+  @override
+  String get paywallMainPlan => 'الباقة الرئيسية';
+
+  @override
+  String get paywallMainDesc1 => 'فرع رئيسي كامل';
+
+  @override
+  String get paywallMainDesc2 => 'صلاحيات تاجر كاملة للفرع الرئيسي';
+
+  @override
+  String get paywallMainDesc3 => 'حتى 3 موظفين في الفرع الرئيسي';
+
+  @override
+  String get paywallMainDesc4 => 'إمكانية إضافة فروع تجريبية';
+
+  @override
+  String get paywallMainDesc5 => 'الفروع التجريبية تبقى محدودة';
+
+  @override
+  String get paywallMultiPlan => 'باقة متعدد الفروع';
+
+  @override
+  String get paywallMultiDesc1 => 'الرئيسي + 3 فروع إنتاجية إضافية';
+
+  @override
+  String get paywallMultiDesc2 => 'حد أقصى 4 فروع كاملة';
+
+  @override
+  String get paywallMultiDesc3 => 'موظفي الرئيسي = 3، الإضافي = 2 لكل فرع';
+
+  @override
+  String get paywallMultiDesc4 => 'حد أقصى 9 موظفين إجمالاً';
+
+  @override
+  String get paywallMultiDesc5 => 'صلاحيات الفروع المتعددة كاملة';
+
+  @override
+  String get paywallMultiDesc6 => 'حفظ إمكانيات نقل المخزون الحالية';
+
+  @override
+  String get pricePendingStore => 'السعر متاح بعد الاتصال بالمتجر';
 }

@@ -1,3 +1,4 @@
+import '../../../core/services/entitlement_integration.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/providers/effective_merchant.dart';
@@ -40,6 +41,13 @@ class CustomerRepository {
   }
 
   Future<void> addCustomer(Customer customer) async {
+    await EntitlementIntegration.checkAndConsumeQuota(
+      firestore: _firestore,
+      merchantId: customer.merchantId,
+      branchId: customer.branchId,
+      resourceType: 'customers',
+      plan: null,
+    );
     final docRef = _firestore.collection('customers').doc(customer.id);
     await docRef.set(customer.toJson());
   }

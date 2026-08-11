@@ -135,7 +135,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
             throw Exception(AppLocalizations.of(context)!.text47);
           final merchantId = currentEffectiveMerchantId(appUser);
           final canAdd =
-              await ref.read(limitsServiceProvider).canAddCustomer(appUser);
+              await ref.read(limitsServiceProvider).canAddCustomer(appUser, ref.read(selectedBranchIdProvider));
           if (!canAdd) {
             throw Exception(
                 'عفواً، لقد وصلت للحد الأقصى المسموح به للعملاء في باقتك الحالية. لا يمكن إضافة عميل جديد، ولكن يمكنك الاستمرار كـ "عميل عام" بمسح الاسم والرقم.');

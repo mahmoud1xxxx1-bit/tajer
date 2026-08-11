@@ -1,3 +1,4 @@
+import '../../../core/services/entitlement_integration.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/services/legacy_catalog_migration_normalizer.dart';
@@ -442,6 +443,15 @@ class RawMaterialRepository {
     data['quantity'] = 0.0;
     data['initialQuantity'] = 0.0;
     final batch = _firestore.batch();
+    await EntitlementIntegration.checkAndConsumeQuota(
+      firestore: _firestore,
+      merchantId: context.merchantId,
+      branchId: context.branchId,
+      resourceType: 'raw_materials',
+      plan: null,
+      batch: batch,
+    );
+
     data['branchId'] = context.branchId;
     batch.set(
       _branchRawMaterialRef(

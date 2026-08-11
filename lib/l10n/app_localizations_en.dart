@@ -1522,4 +1522,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get taxModeExempt => 'Tax exempt';
+
+  @override
+  String get paywallMainPlan => 'Main Plan';
+
+  @override
+  String get paywallMainDesc1 => 'Full Main Branch';
+
+  @override
+  String get paywallMainDesc2 => 'Full Tajer functionality for Main';
+
+  @override
+  String get paywallMainDesc3 => 'Up to 3 employees in Main';
+
+  @override
+  String get paywallMainDesc4 => 'Additional Trial branches available';
+
+  @override
+  String get paywallMainDesc5 => 'Trial branches remain limited';
+
+  @override
+  String get paywallMultiPlan => 'Multi-Branch Plan';
+
+  @override
+  String get paywallMultiDesc1 =>
+      'Main + 3 additional full production branches';
+
+  @override
+  String get paywallMultiDesc2 => 'Maximum 4 full branches';
+
+  @override
+  String get paywallMultiDesc3 =>
+      'Main employees = 3, Additional = 2 per branch';
+
+  @override
+  String get paywallMultiDesc4 => 'Maximum 9 employees total';
+
+  @override
+  String get paywallMultiDesc5 => 'Full existing multi-branch capabilities';
+
+  @override
+  String get paywallMultiDesc6 => 'Existing Inventory Transfer preserved';
+
+  @override
+  String get pricePendingStore => 'Price available after store connection';
 }

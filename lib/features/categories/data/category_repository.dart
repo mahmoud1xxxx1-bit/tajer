@@ -1,3 +1,4 @@
+import '../../../core/services/entitlement_integration.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/effective_merchant.dart';
@@ -153,6 +154,13 @@ class CategoryRepository {
     Category category, {
     required BranchOperationContext context,
   }) async {
+    await EntitlementIntegration.checkAndConsumeQuota(
+      firestore: _firestore,
+      merchantId: context.merchantId,
+      branchId: context.branchId,
+      resourceType: 'categories',
+      plan: null,
+    );
     if (context.merchantId != _merchantId || context.branchId != _branchId) {
       throw StateError('Category branch context mismatch');
     }

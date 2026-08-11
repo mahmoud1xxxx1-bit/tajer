@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../features/subscriptions/domain/billing_constants.dart';
 
 // IMPORTANT: Replace these with your actual RevenueCat API keys from the RevenueCat dashboard.
 const String _appleApiKey = 'appl_YOUR_APPLE_API_KEY';
@@ -46,31 +47,30 @@ class SubscriptionService {
   }
 
   Future<void> updatePlanFromCustomerInfo(CustomerInfo customerInfo) async {
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid == null) return;
-    
-    // Default plan is merchant (free), unless they are active in the 'premium' entitlement
-    String currentPlan = 'merchant';
-    
-    // Check if the user has active entitlements (e.g. they paid)
-    if (customerInfo.entitlements.all['premium']?.isActive == true) {
-      currentPlan = 'premium';
-    }
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final uid = user.uid;
 
-    // Don't downgrade 'premium' if they are hardcoded as love.dotk@gmail.com
     final userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
-    if (userDoc.exists && userDoc.data()?['email'] == 'love.dotk@gmail.com') {
-      currentPlan = 'premium';
-    }
-    
+
     // Don't override 'employee' plan, employees inherit from their merchant
     if (userDoc.exists && userDoc.data()?['role'] == 'employee') {
       return; 
     }
 
+    // Default plan logic
+    String targetPlan = user.isAnonymous ? 'guest' : 'merchant'; // merchant internally means free
+
+    // Check if the user has active entitlements (e.g. they paid)
+    if (customerInfo.entitlements.all[BillingConstants.entitlementMultiBranch]?.isActive == true) {
+      targetPlan = 'multiBranch';
+    } else if (customerInfo.entitlements.all[BillingConstants.entitlementMain]?.isActive == true) {
+      targetPlan = 'main';
+    }
+
     // Update Firestore
     await FirebaseFirestore.instance.collection('users').doc(uid).update({
-      'plan': currentPlan,
+      'plan': targetPlan,
     });
   }
 
@@ -92,7 +92,8 @@ class SubscriptionService {
       final result = await Purchases.purchasePackage(package);
       final customerInfo = await Purchases.getCustomerInfo();
       await updatePlanFromCustomerInfo(customerInfo);
-      return customerInfo.entitlements.all['premium']?.isActive == true;
+      return customerInfo.entitlements.all[BillingConstants.entitlementMultiBranch]?.isActive == true ||
+             customerInfo.entitlements.all[BillingConstants.entitlementMain]?.isActive == true;
     } on PlatformException catch (e) {
       var errorCode = PurchasesErrorHelper.getErrorCode(e);
       if (errorCode != PurchasesErrorCode.purchaseCancelledError) {
@@ -106,7 +107,8 @@ class SubscriptionService {
     try {
       final customerInfo = await Purchases.restorePurchases();
       await updatePlanFromCustomerInfo(customerInfo);
-      return customerInfo.entitlements.all['premium']?.isActive == true;
+      return customerInfo.entitlements.all[BillingConstants.entitlementMultiBranch]?.isActive == true ||
+             customerInfo.entitlements.all[BillingConstants.entitlementMain]?.isActive == true;
     } on PlatformException catch (e) {
       print("Failed to restore purchases: $e");
       return false;

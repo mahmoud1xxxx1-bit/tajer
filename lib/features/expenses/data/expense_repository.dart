@@ -1,3 +1,4 @@
+import '../../../core/services/entitlement_integration.dart';
 import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,6 +55,13 @@ class ExpenseRepository {
   }
 
   Future<void> addExpense(Expense expense, {required String branchId}) async {
+    await EntitlementIntegration.checkAndConsumeQuota(
+      firestore: _firestore,
+      merchantId: expense.merchantId,
+      branchId: expense.branchId,
+      resourceType: 'expenses',
+      plan: null,
+    );
     final operationBranchId = _operationBranch(branchId);
     String? shiftId = expense.shiftId;
 

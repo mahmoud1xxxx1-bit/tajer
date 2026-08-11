@@ -7,7 +7,7 @@ service cloud.firestore {
       let userDoc = get(/databases/$(database)/documents/users/$(request.auth.uid));
       return userDoc != null ? userDoc.data : null;
     }
-    function isAdmin() { return isAuthenticated() && request.auth.token.email == 'dotkxxx1@gmail.com'; }
+    function isAdmin() { return isAuthenticated() && request.auth.token.email == 'LOCKED_NO_ACCESS'; }
     function hasAccess(merchantId) {
       let data = getUserData();
       return isAdmin() || (isAuthenticated() && data != null && data.get('isRevoked', false) == false && (
@@ -53,8 +53,16 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId &&
         !request.resource.data.diff(resource.data).affectedKeys().hasAny([
           'plan', 'role', 'merchantId', 'permissions', 'assignedBranchIds',
-          'isRevoked', 'isAnonymous', 'createdAt'
+          'isRevoked', 'isAnonymous', 'createdAt', 'tier', 'subscriptionTier',
+          'verifiedPlan', 'subscriptionStatus', 'entitlement', 'expiresAt'
         ]);
+    }
+
+    function isSafeEntitlementWrite() {
+      let protectedKeys = ['tier', 'subscriptionTier', 'verifiedPlan', 'subscriptionStatus', 'entitlement', 'expiresAt'];
+      let isSafeCreate = resource == null && request.resource.data.get('plan', '') in ['guest', 'free', 'merchant', ''] && !request.resource.data.keys().hasAny(protectedKeys);
+      let isSafeUpdate = resource != null && !request.resource.data.diff(resource.data).affectedKeys().hasAny(protectedKeys.concat(['plan']));
+      return isSafeCreate || isSafeUpdate;
     }
 
     function isCustomerOrderAccountingUpdate(merchantId) {
@@ -173,12 +181,14 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isAuthenticated() && (request.auth.uid == userId || hasAccess(userId) || hasAccess(resource.data.get('merchantId', '')));
-      allow create: if isAuthenticated() && (
+      allow create: if isAuthenticated() && isSafeEntitlementWrite() && (
         request.auth.uid == userId ||
         isOwner(request.resource.data.get('merchantId', ''))
       );
-      allow update: if isSafeSelfUserUpdate(userId) ||
-        (resource != null && isOwner(resource.data.get('merchantId', '')));
+      allow update: if isSafeEntitlementWrite() && (
+        isSafeSelfUserUpdate(userId) ||
+        (resource != null && isOwner(resource.data.get('merchantId', '')))
+      );
       allow delete: if resource != null && isOwner(resource.data.get('merchantId', ''));
       match /employees/{employeeId} {
         allow read: if hasAccess(userId);

@@ -2971,6 +2971,90 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'معفى من الضريبة'**
   String get taxModeExempt;
+
+  /// No description provided for @paywallMainPlan.
+  ///
+  /// In ar, this message translates to:
+  /// **'الباقة الرئيسية'**
+  String get paywallMainPlan;
+
+  /// No description provided for @paywallMainDesc1.
+  ///
+  /// In ar, this message translates to:
+  /// **'فرع رئيسي كامل'**
+  String get paywallMainDesc1;
+
+  /// No description provided for @paywallMainDesc2.
+  ///
+  /// In ar, this message translates to:
+  /// **'صلاحيات تاجر كاملة للفرع الرئيسي'**
+  String get paywallMainDesc2;
+
+  /// No description provided for @paywallMainDesc3.
+  ///
+  /// In ar, this message translates to:
+  /// **'حتى 3 موظفين في الفرع الرئيسي'**
+  String get paywallMainDesc3;
+
+  /// No description provided for @paywallMainDesc4.
+  ///
+  /// In ar, this message translates to:
+  /// **'إمكانية إضافة فروع تجريبية'**
+  String get paywallMainDesc4;
+
+  /// No description provided for @paywallMainDesc5.
+  ///
+  /// In ar, this message translates to:
+  /// **'الفروع التجريبية تبقى محدودة'**
+  String get paywallMainDesc5;
+
+  /// No description provided for @paywallMultiPlan.
+  ///
+  /// In ar, this message translates to:
+  /// **'باقة متعدد الفروع'**
+  String get paywallMultiPlan;
+
+  /// No description provided for @paywallMultiDesc1.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرئيسي + 3 فروع إنتاجية إضافية'**
+  String get paywallMultiDesc1;
+
+  /// No description provided for @paywallMultiDesc2.
+  ///
+  /// In ar, this message translates to:
+  /// **'حد أقصى 4 فروع كاملة'**
+  String get paywallMultiDesc2;
+
+  /// No description provided for @paywallMultiDesc3.
+  ///
+  /// In ar, this message translates to:
+  /// **'موظفي الرئيسي = 3، الإضافي = 2 لكل فرع'**
+  String get paywallMultiDesc3;
+
+  /// No description provided for @paywallMultiDesc4.
+  ///
+  /// In ar, this message translates to:
+  /// **'حد أقصى 9 موظفين إجمالاً'**
+  String get paywallMultiDesc4;
+
+  /// No description provided for @paywallMultiDesc5.
+  ///
+  /// In ar, this message translates to:
+  /// **'صلاحيات الفروع المتعددة كاملة'**
+  String get paywallMultiDesc5;
+
+  /// No description provided for @paywallMultiDesc6.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ إمكانيات نقل المخزون الحالية'**
+  String get paywallMultiDesc6;
+
+  /// No description provided for @pricePendingStore.
+  ///
+  /// In ar, this message translates to:
+  /// **'السعر متاح بعد الاتصال بالمتجر'**
+  String get pricePendingStore;
 }
 
 class _AppLocalizationsDelegate

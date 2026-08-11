@@ -5,6 +5,8 @@ import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../domain/branch.dart';
 import '../presentation/branch_context.dart';
+import '../../../core/services/entitlement_integration.dart';
+import '../../../core/services/entitlement_evaluator.dart';
 
 class BranchRepository {
   final FirebaseFirestore _firestore;
@@ -62,6 +64,20 @@ class BranchRepository {
     if (branch.merchantId != merchantId) {
       throw StateError('Branch merchant mismatch');
     }
+
+    // Integrate Entitlement Evaluator
+    final userDoc = await _firestore.collection('users').doc(merchantId).get();
+    final plan = userDoc.data()?['plan'] as String?;
+    final tier = EntitlementIntegration.resolveEffectiveTier(plan);
+
+    final snapshot = await _ref.orderBy('createdAt').get();
+    final branchesCount = snapshot.docs.length;
+    final branchPosition = branchesCount + 1; // logical position
+
+    if (!EntitlementEvaluator.canAccessBranch(tier, branchPosition)) {
+      throw Exception("You have reached the maximum available branches for your current plan.");
+    }
+
     await _guardDuplicateName(branch.name);
     await _ref.doc(branch.id).set(branch.toJson());
   }

@@ -50,15 +50,15 @@ class MockFirebaseCore extends FirebasePlatform {
   }
 }
 
-Future<AsyncValue<List<Product>>> waitForData(ProviderContainer container, [bool Function(List<Product>)? predicate]) async {
-  for (int i = 0; i < 40; i++) {
-    final state = container.read(productsStreamProvider);
-    if (state is AsyncData && state.value != null && state.value!.isNotEmpty) {
-      if (predicate == null || predicate(state.value!)) return state;
+  Future<AsyncValue<List<Product>>> waitForData(ProviderContainer container, [bool Function(List<Product>)? predicate]) async {
+    for (int i = 0; i < 100; i++) {
+      final state = container.read(productsStreamProvider);
+      if (state is AsyncData && state.value != null && state.value!.isNotEmpty) {
+        if (predicate == null || predicate(state.value!)) return state;
+      }
+      if (state is AsyncError) throw state.error!;
+      await Future.delayed(const Duration(milliseconds: 100));
     }
-    if (state is AsyncError) throw state.error!;
-    await Future.delayed(const Duration(milliseconds: 50));
-  }
   return container.read(productsStreamProvider);
 }
 

@@ -644,5 +644,19 @@
   "taxModeTitle": "Tax",
   "taxModeStore": "Use store tax",
   "taxModeCustom": "Custom tax",
-  "taxModeExempt": "Tax exempt"
+  "taxModeExempt": "Tax exempt",
+  "paywallMainPlan": "Main Plan",
+  "paywallMainDesc1": "Full Main Branch",
+  "paywallMainDesc2": "Full Tajer functionality for Main",
+  "paywallMainDesc3": "Up to 3 employees in Main",
+  "paywallMainDesc4": "Additional Trial branches available",
+  "paywallMainDesc5": "Trial branches remain limited",
+  "paywallMultiPlan": "Multi-Branch Plan",
+  "paywallMultiDesc1": "Main + 3 additional full production branches",
+  "paywallMultiDesc2": "Maximum 4 full branches",
+  "paywallMultiDesc3": "Main employees = 3, Additional = 2 per branch",
+  "paywallMultiDesc4": "Maximum 9 employees total",
+  "paywallMultiDesc5": "Full existing multi-branch capabilities",
+  "paywallMultiDesc6": "Existing Inventory Transfer preserved",
+  "pricePendingStore": "Price available after store connection"
 }

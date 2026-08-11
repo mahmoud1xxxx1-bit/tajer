@@ -1,3 +1,4 @@
+import '../../../core/services/entitlement_integration.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../authentication/data/auth_repository.dart';
@@ -502,6 +503,15 @@ class ProductRepository {
     data['branchId'] = context.branchId;
 
     final batch = _firestore.batch();
+    await EntitlementIntegration.checkAndConsumeQuota(
+      firestore: _firestore,
+      merchantId: context.merchantId,
+      branchId: context.branchId,
+      resourceType: 'products',
+      plan: null,
+      batch: batch,
+    );
+
     batch.set(productRef, data);
     if (product.costPrice != null) {
       batch.set(

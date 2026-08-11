@@ -1,11 +1,10 @@
 import '../../../core/theme/glass_card.dart';
 import '../../../core/services/subscription_service.dart';
+import '../domain/billing_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:tajer/l10n/app_localizations.dart';
-
-
 
 class PaywallScreen extends ConsumerStatefulWidget {
   const PaywallScreen({super.key});
@@ -41,7 +40,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     }
   }
 
-  Future<void> _purchasePackage(Package package) async {
+  Future<void> _purchasePackage(Package? package) async {
+    if (package == null) return;
     final l10n = AppLocalizations.of(context)!;
     setState(() => _isLoading = true);
     try {
@@ -55,7 +55,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.purchaseError}: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(content: Text('${l10n.purchaseError}', style: const TextStyle(fontFamily: 'Tajawal'))), // Safe failure message, no raw errors
         );
       }
     }
@@ -82,7 +82,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.restoreError}: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(content: Text('${l10n.restoreError}', style: const TextStyle(fontFamily: 'Tajawal'))), // Safe failure message
         );
       }
     }
@@ -113,9 +113,93 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     );
   }
 
+  Widget _buildPlanCard({
+    required String title,
+    required List<String> features,
+    required Package? package,
+    required Color color,
+    required AppLocalizations l10n,
+  }) {
+    final priceString = package != null ? package.storeProduct.priceString : l10n.pricePendingStore;
+
+    return GlassCard(
+      borderRadius: 24,
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          border: Border.all(color: color.withOpacity(0.5), width: 2),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  title,
+                  style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: color),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            ...features.map((f) => _buildFeatureRow(f)),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: (_isLoading || package == null) ? null : () => _purchasePackage(package),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: color,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                elevation: 0,
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    package != null ? l10n.subscribeFor(priceString) : priceString,
+                    style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.arrow_forward_rounded, size: 20),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Package? _getPackage(String entitlementId) {
+    try {
+      return _packages.firstWhere((p) => p.packageType == PackageType.monthly && p.identifier.contains(entitlementId) || p.identifier == entitlementId);
+    } catch (e) {
+      return _packages.isNotEmpty ? _packages.first : null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    
+    // We try to find the specific packages based on our setup.
+    // If exact IDs aren't matching due to manual setup not done, we fallback safely.
+    Package? mainPackage;
+    Package? multiPackage;
+    
+    try {
+      mainPackage = _packages.firstWhere((p) => p.identifier == BillingConstants.entitlementMain || p.identifier == '\$rc_monthly');
+    } catch (_) {}
+    try {
+      multiPackage = _packages.firstWhere((p) => p.identifier == BillingConstants.entitlementMultiBranch);
+    } catch (_) {}
+
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.subscriptionTitle, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
@@ -157,73 +241,36 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
                         style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), height: 1.5),
                       ),
                       const SizedBox(height: 32),
-                      GlassCard(
-                        borderRadius: 24,
-                        child: Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.amber.withOpacity(0.5), width: 2),
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Center(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.amber.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    l10n.monthlyPlanTitle,
-                                    style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.amber.shade800),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              _buildFeatureRow(l10n.featureUnlimitedOrders),
-                              _buildFeatureRow(l10n.featureInventorySync),
-                              _buildFeatureRow(l10n.featureAdvancedReports),
-                              _buildFeatureRow(l10n.featurePrioritySupport),
-                              const SizedBox(height: 24),
-                              
-                              if (_packages.isNotEmpty)
-                                ..._packages.map((pkg) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: ElevatedButton(
-                                    onPressed: _isLoading ? null : () => _purchasePackage(pkg),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.amber.shade600,
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 16),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                      elevation: 0,
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          l10n.subscribeFor(pkg.storeProduct.priceString),
-                                          style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        const Icon(Icons.arrow_forward_rounded, size: 20),
-                                      ],
-                                    ),
-                                  ),
-                                )).toList()
-                              else
-                                Center(
-                                  child: Text(
-                                    l10n.noPackagesAvailable,
-                                    style: TextStyle(fontFamily: 'Tajawal', color: Theme.of(context).colorScheme.error),
-                                  ),
-                                ),
-                            ],
-                          ),
-                        ),
+                      
+                      _buildPlanCard(
+                        title: (l10n as dynamic).paywallMainPlan,
+                        features: [
+                          (l10n as dynamic).paywallMainDesc1,
+                          (l10n as dynamic).paywallMainDesc2,
+                          (l10n as dynamic).paywallMainDesc3,
+                          (l10n as dynamic).paywallMainDesc4,
+                          (l10n as dynamic).paywallMainDesc5,
+                        ],
+                        package: mainPackage,
+                        color: Colors.amber.shade800,
+                        l10n: l10n,
                       ),
+                      const SizedBox(height: 24),
+                      _buildPlanCard(
+                        title: (l10n as dynamic).paywallMultiPlan,
+                        features: [
+                          (l10n as dynamic).paywallMultiDesc1,
+                          (l10n as dynamic).paywallMultiDesc2,
+                          (l10n as dynamic).paywallMultiDesc3,
+                          (l10n as dynamic).paywallMultiDesc4,
+                          (l10n as dynamic).paywallMultiDesc5,
+                          (l10n as dynamic).paywallMultiDesc6,
+                        ],
+                        package: multiPackage,
+                        color: Colors.purple.shade700,
+                        l10n: l10n,
+                      ),
+
                       const SizedBox(height: 32),
                       TextButton(
                         onPressed: _isLoading ? null : _restorePurchases,

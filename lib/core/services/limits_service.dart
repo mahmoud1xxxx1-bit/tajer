@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../features/authentication/domain/app_user.dart';
 import '../providers/effective_merchant.dart';
+import 'entitlement_integration.dart';
 
 part 'limits_service.g.dart';
 
@@ -10,48 +11,35 @@ class LimitsService {
 
   LimitsService(this._firestore);
 
-  static const int maxCustomers = 10;
-  static const int maxOrders = 20;
-  static const int maxProducts = 10;
-  static const int maxExpenses = 10;
-  static const int maxCategories = 5;
-  static const int maxSuppliers = 5;
-  static const int maxEmployees = 1;
+  Future<bool> canAddCustomer(AppUser user, String branchId) async => _checkQuota(user, branchId, 'customers');
+  Future<bool> canAddOrder(AppUser user, String branchId) async => _checkQuota(user, branchId, 'orders');
+  Future<bool> canAddProduct(AppUser user, String branchId) async => _checkQuota(user, branchId, 'products');
+  Future<bool> canAddExpense(AppUser user, String branchId) async => _checkQuota(user, branchId, 'expenses');
+  Future<bool> canAddCategory(AppUser user, String branchId) async => _checkQuota(user, branchId, 'categories');
+  Future<bool> canAddSupplier(AppUser user, String branchId) async => _checkQuota(user, branchId, 'suppliers');
+  Future<bool> canAddEmployee(AppUser user, String branchId) async => _checkQuota(user, branchId, 'employees');
+  Future<bool> canAddRawMaterial(AppUser user, String branchId) async => _checkQuota(user, branchId, 'raw_materials');
 
-  Future<bool> canAddCustomer(AppUser user) async {
-    return _canAdd(user, 'customers', maxCustomers);
-  }
-
-  Future<bool> canAddOrder(AppUser user) async {
-    return _canAdd(user, 'orders', maxOrders);
-  }
-
-  Future<bool> canAddProduct(AppUser user) async {
-    return _canAdd(user, 'products', maxProducts);
-  }
-
-  Future<bool> canAddExpense(AppUser user) async {
-    return _canAdd(user, 'expenses', maxExpenses);
-  }
-
-  Future<bool> canAddCategory(AppUser user) async {
-    return _canAdd(user, 'categories', maxCategories);
-  }
-
-  Future<bool> canAddSupplier(AppUser user) async {
-    return _canAdd(user, 'suppliers', maxSuppliers);
-  }
-
-  Future<bool> canAddEmployee(AppUser user) async {
-    return _canAdd(user, 'employees', maxEmployees);
-  }
-
-  Future<bool> _canAdd(
-      AppUser user, String collectionName, int maxLimit) async {
-    // Banned devices cannot add anything (0 limit) ONLY if they are anonymous
+  Future<bool> _checkQuota(AppUser user, String branchId, String resourceType) async {
+    // Employees are part of a merchant's team and should never be restricted by limit checking queries
+    // actually, wait! For Guest/Trial, even employees shouldn't bypass branch limits if it's a Trial branch!
+    // But employees don't have their own plan, they use the merchant's plan.
+    // We already use `currentEffectiveMerchantId(user)`.
+    
+    final String merchantId = currentEffectiveMerchantId(user);
+    final String? plan = user.plan; // wait, if employee, plan is 'employee'. 
+    // In actual implementation, effective merchant should provide the plan.
+    // For now, if user is employee, we should fetch merchant plan? No, `EntitlementIntegration` handles it if we pass the owner's plan.
+    // But `user.plan` for employee is 'employee'. Let's just pass `user.plan` and if it's employee, they probably bypass? No, they shouldn't bypass!
+    // Let's keep the existing check for premium/employee.
+    
     if (user.plan == 'banned_device' && user.isAnonymous) return false;
 
-    // Employees are part of a merchant's team and should never be restricted by limit checking queries
+    // Pro/Premium users have unlimited access (except we mapped them to free in resolveLegacyPlan, so this logic is redundant but safe)
+    if (user.plan == 'pro' || user.plan == 'premium' || user.email?.trim().toLowerCase() == 'love.dotk@gmail.com') {
+      return true;
+    }
+
     if (!isOwnerLikeRole(user.role) &&
         (user.role == 'employee' ||
             user.role == 'cashier' ||
@@ -59,77 +47,18 @@ class LimitsService {
             (user.merchantId != null &&
                 user.merchantId!.isNotEmpty &&
                 !user.isAnonymous))) {
+      // In the future, we should check merchant's quota even for employees.
+      // But preserving existing behavior for employees:
       return true;
     }
 
-    final String merchantId = currentEffectiveMerchantId(user);
-    bool isPremium = user.plan == 'pro' ||
-        user.plan == 'premium' ||
-        user.email?.trim().toLowerCase() == 'love.dotk@gmail.com';
-
-    // Pro/Premium users have unlimited access
-    if (isPremium) return true;
-
-    // Check count for free/guest users
-    final isRootCollection =
-        ['products', 'orders', 'customers'].contains(collectionName);
-
-    final Query query = isRootCollection
-        ? _firestore
-            .collection(collectionName)
-            .where('merchantId', isEqualTo: merchantId)
-        : (collectionName == 'employees')
-            ? _firestore
-                .collection('users')
-                .doc(merchantId)
-                .collection(collectionName)
-            : _firestore
-                .collection('merchants')
-                .doc(merchantId)
-                .collection(collectionName);
-
-    // Products and Raw Materials support Soft Delete (isArchived).
-    // We cannot use `.where('isArchived', isEqualTo: false)` because old products without the field would be ignored and NOT counted.
-    // So we fetch the documents and filter locally.
-    try {
-      if (collectionName == 'products' || collectionName == 'raw_materials') {
-        final snapshot = await query.get();
-        int activeCount = 0;
-        for (var doc in snapshot.docs) {
-          final data = doc.data() as Map<String, dynamic>;
-          final isArchived = data['isArchived'] == true;
-          if (!isArchived) activeCount++;
-        }
-        return activeCount < maxLimit;
-      } else {
-        final snapshot = await query.count().get();
-        return (snapshot.count ?? 0) < maxLimit;
-      }
-    } catch (e) {
-      if (e.toString().contains('UNAVAILABLE') ||
-          e.toString().contains('offline') ||
-          e.toString().contains('failed-precondition')) {
-        try {
-          final snapshot =
-              await query.get(const GetOptions(source: Source.cache));
-          if (collectionName == 'products' ||
-              collectionName == 'raw_materials') {
-            int activeCount = 0;
-            for (var doc in snapshot.docs) {
-              final data = doc.data() as Map<String, dynamic>;
-              final isArchived = data['isArchived'] == true;
-              if (!isArchived) activeCount++;
-            }
-            return activeCount < maxLimit;
-          } else {
-            return snapshot.docs.length < maxLimit;
-          }
-        } catch (cacheError) {
-          return true; // Safe fallback to avoid blocking offline usage
-        }
-      }
-      rethrow;
-    }
+    return await EntitlementIntegration.checkQuota(
+      firestore: _firestore,
+      merchantId: merchantId,
+      branchId: branchId,
+      resourceType: resourceType,
+      plan: user.plan,
+    );
   }
 }
 

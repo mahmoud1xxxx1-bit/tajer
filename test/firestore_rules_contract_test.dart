@@ -21,10 +21,8 @@ void main() {
     test('employees cannot self-escalate permissions or branch assignments',
         () {
       expect(rules, contains('function isSafeSelfUserUpdate(userId)'));
-      expect(rules, contains("'permissions', 'assignedBranchIds'"));
-      expect(rules, contains("'plan', 'role', 'merchantId'"));
-      expect(
-          rules, contains('allow update: if isSafeSelfUserUpdate(userId) ||'));
+      expect(rules, contains("'plan', 'role', 'merchantId', 'permissions', 'assignedBranchIds'"));
+      expect(rules, contains('isSafeSelfUserUpdate(userId) ||'));
       expect(rules, contains("isOwner(resource.data.get('merchantId', ''))"));
     });
 

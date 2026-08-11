@@ -644,5 +644,19 @@
   "taxModeTitle": "الضريبة",
   "taxModeStore": "استخدام ضريبة المتجر",
   "taxModeCustom": "ضريبة مخصصة",
-  "taxModeExempt": "معفى من الضريبة"
+  "taxModeExempt": "معفى من الضريبة",
+  "paywallMainPlan": "الباقة الرئيسية",
+  "paywallMainDesc1": "فرع رئيسي كامل",
+  "paywallMainDesc2": "صلاحيات تاجر كاملة للفرع الرئيسي",
+  "paywallMainDesc3": "حتى 3 موظفين في الفرع الرئيسي",
+  "paywallMainDesc4": "إمكانية إضافة فروع تجريبية",
+  "paywallMainDesc5": "الفروع التجريبية تبقى محدودة",
+  "paywallMultiPlan": "باقة متعدد الفروع",
+  "paywallMultiDesc1": "الرئيسي + 3 فروع إنتاجية إضافية",
+  "paywallMultiDesc2": "حد أقصى 4 فروع كاملة",
+  "paywallMultiDesc3": "موظفي الرئيسي = 3، الإضافي = 2 لكل فرع",
+  "paywallMultiDesc4": "حد أقصى 9 موظفين إجمالاً",
+  "paywallMultiDesc5": "صلاحيات الفروع المتعددة كاملة",
+  "paywallMultiDesc6": "حفظ إمكانيات نقل المخزون الحالية",
+  "pricePendingStore": "السعر متاح بعد الاتصال بالمتجر"
 }

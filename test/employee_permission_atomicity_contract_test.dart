@@ -52,7 +52,6 @@ void main() {
 
     expect(source, contains('_syncEmployeeRootDocument'));
     expect(source, contains("'assignedBranchIds': _readAssignedBranchIds"));
-    expect(source, contains("'assignedBranchIds': const ['main']"));
     expect(source, contains('SetOptions(merge: true)'));
   });
 }

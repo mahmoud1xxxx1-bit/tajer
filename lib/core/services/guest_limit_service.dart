@@ -5,43 +5,43 @@ import 'package:go_router/go_router.dart';
 import '../../features/authentication/data/auth_repository.dart';
 import '../../features/authentication/domain/app_user.dart';
 import '../../features/authentication/presentation/auth_controller.dart';
+import '../../features/branches/presentation/branch_context.dart';
 import 'limits_service.dart';
 
 class GuestLimitService {
   static Future<bool> canAddProduct(BuildContext context, WidgetRef ref) async {
-    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddProduct(user as AppUser));
+    return _checkLimit(context, ref, (user, branchId) => ref.read(limitsServiceProvider).canAddProduct(user as AppUser, branchId));
   }
 
   static Future<bool> canAddCustomer(BuildContext context, WidgetRef ref) async {
-    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddCustomer(user as AppUser));
+    return _checkLimit(context, ref, (user, branchId) => ref.read(limitsServiceProvider).canAddCustomer(user as AppUser, branchId));
   }
 
   static Future<bool> canAddOrder(BuildContext context, WidgetRef ref) async {
-    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddOrder(user as AppUser));
+    return _checkLimit(context, ref, (user, branchId) => ref.read(limitsServiceProvider).canAddOrder(user as AppUser, branchId));
   }
 
   static Future<bool> canAddExpense(BuildContext context, WidgetRef ref) async {
-    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddExpense(user as AppUser));
+    return _checkLimit(context, ref, (user, branchId) => ref.read(limitsServiceProvider).canAddExpense(user as AppUser, branchId));
   }
 
   static Future<bool> canAddCategory(BuildContext context, WidgetRef ref) async {
-    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddCategory(user as AppUser));
+    return _checkLimit(context, ref, (user, branchId) => ref.read(limitsServiceProvider).canAddCategory(user as AppUser, branchId));
   }
 
   static Future<bool> canAddSupplier(BuildContext context, WidgetRef ref) async {
-    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddSupplier(user as AppUser));
+    return _checkLimit(context, ref, (user, branchId) => ref.read(limitsServiceProvider).canAddSupplier(user as AppUser, branchId));
   }
 
   static Future<bool> canAddEmployee(BuildContext context, WidgetRef ref) async {
-    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddEmployee(user as AppUser));
+    return _checkLimit(context, ref, (user, branchId) => ref.read(limitsServiceProvider).canAddEmployee(user as AppUser, branchId));
   }
 
   static Future<bool> _checkLimit(
     BuildContext context,
     WidgetRef ref,
-    Future<bool> Function(AppUser user) checkFunction,
+    Future<bool> Function(AppUser user, String branchId) checkFunction,
   ) async {
-    // Show loading
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -55,10 +55,11 @@ class GuestLimitService {
         return false;
       }
 
-      final canAdd = await checkFunction(user);
+      final branchId = ref.read(selectedBranchIdProvider);
+      final canAdd = await checkFunction(user, branchId);
       
       if (context.mounted) {
-        Navigator.pop(context); // close loading
+        Navigator.pop(context); 
       }
 
       if (!canAdd) {
@@ -73,7 +74,7 @@ class GuestLimitService {
       return true;
     } catch (e) {
       if (context.mounted) {
-        Navigator.pop(context); // close loading
+        Navigator.pop(context); 
         final isAr = Localizations.localeOf(context).languageCode == 'ar';
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(isAr ? 'خطأ في التحقق من القيود: $e' : 'Error checking limits: $e')),
@@ -91,8 +92,8 @@ class GuestLimitService {
         title: Text(isAr ? 'ترقية الباقة' : 'Upgrade Plan', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.orange)),
         content: Text(
           isAr 
-            ? 'لقد وصلت للحد الأقصى المسموح به في الباقة المجانية. للتمتع بميزات لا محدودة، يرجى الترقية إلى الباقة الاحترافية (Pro).'
-            : 'You have reached the maximum limit of the free plan. To enjoy unlimited features, please upgrade to the Pro plan.',
+            ? 'لقد وصلت للحد الأقصى المسموح به في الباقة الحالية. للتمتع بميزات لا محدودة، يرجى الترقية.'
+            : 'You have reached the maximum limit for your current plan. To enjoy unlimited features, please upgrade.',
           style: TextStyle(fontFamily: 'Tajawal', height: 1.5),
         ),
         actions: [
@@ -106,7 +107,7 @@ class GuestLimitService {
               context.push('/paywall');
             },
             icon: Icon(Icons.star),
-            label: Text(isAr ? 'الترقية الآن (10\$/شهر)' : 'Upgrade Now (\$10/mo)', style: TextStyle(fontFamily: 'Tajawal')),
+            label: Text(isAr ? 'الترقية الآن' : 'Upgrade Now', style: TextStyle(fontFamily: 'Tajawal')),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
@@ -126,8 +127,8 @@ class GuestLimitService {
         title: Text(isAr ? 'تم استهلاك الباقة المجانية' : 'Free Plan Consumed', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.red)),
         content: Text(
           isAr 
-            ? 'عذراً، لقد تم اكتشاف استخدام سابق للباقة المجانية على هذا الجهاز. يرجى الترقية إلى الباقة الاحترافية (Pro) أو تسجيل الدخول بحسابك السابق لاستعادة بياناتك.'
-            : 'Sorry, previous usage of the free plan on this device was detected. Please upgrade to Pro or login with your previous account.',
+            ? 'عذراً، لقد تم اكتشاف استخدام سابق للباقة المجانية على هذا الجهاز. يرجى الترقية.'
+            : 'Sorry, previous usage of the free plan on this device was detected. Please upgrade.',
           style: TextStyle(fontFamily: 'Tajawal', height: 1.5),
         ),
         actions: [
@@ -141,7 +142,7 @@ class GuestLimitService {
               context.push('/paywall');
             },
             icon: Icon(Icons.star),
-            label: Text(isAr ? 'الترقية الآن (10\$/شهر)' : 'Upgrade Now (\$10/mo)', style: TextStyle(fontFamily: 'Tajawal')),
+            label: Text(isAr ? 'الترقية الآن' : 'Upgrade Now', style: TextStyle(fontFamily: 'Tajawal')),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
