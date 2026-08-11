@@ -1,0 +1,83 @@
+name: Apply Dashboard Today Labels
+
+on:
+  push:
+    branches:
+      - audit/accounting-integrity-109
+    paths:
+      - .github/workflows/apply_dashboard_today_labels.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit/accounting-integrity-109
+          fetch-depth: 0
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.0'
+          channel: stable
+          cache: true
+
+      - name: Apply localized labels
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          values = {
+              'lib/l10n/app_ar.arb': {
+                  'todaySales': 'مبيعات اليوم',
+                  'todayOrders': 'طلبات اليوم',
+              },
+              'lib/l10n/app_en.arb': {
+                  'todaySales': "Today's Sales",
+                  'todayOrders': "Today's Orders",
+              },
+          }
+          for filename, additions in values.items():
+              path = Path(filename)
+              data = json.loads(path.read_text(encoding='utf-8-sig'))
+              data.update(additions)
+              path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          path = Path('lib/features/dashboard/presentation/dashboard_screen.dart')
+          text = path.read_text(encoding='utf-8')
+          text = text.replace('title: l10n.totalSales,', 'title: l10n.todaySales,', 1)
+          text = text.replace('title: l10n.ordersCount,', 'title: l10n.todayOrders,', 1)
+          if 'title: l10n.todaySales,' not in text or 'title: l10n.todayOrders,' not in text:
+              raise SystemExit('Dashboard today label anchors not applied')
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Generate localizations
+        run: |
+          flutter pub get --enforce-lockfile
+          flutter gen-l10n
+
+      - name: Format dashboard
+        run: dart format lib/features/dashboard/presentation/dashboard_screen.dart
+
+      - name: Verify localization and daily metrics
+        run: |
+          flutter test test/localization_integrity_test.dart
+          flutter test test/dashboard_daily_metrics_test.dart
+          flutter analyze lib/features/dashboard --no-fatal-warnings --no-fatal-infos
+
+      - name: Verify diff
+        run: git diff --check
+
+      - name: Commit verified labels
+        run: |
+          git config user.name "tajer-accounting-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add lib/l10n/app_ar.arb lib/l10n/app_en.arb lib/features/dashboard/presentation/dashboard_screen.dart
+          git commit -m "fix(dashboard): label daily sales and orders explicitly"
+          git push origin HEAD:audit/accounting-integrity-109
