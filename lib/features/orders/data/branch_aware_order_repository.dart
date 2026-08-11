@@ -696,6 +696,7 @@ class BranchAwareOrderRepository extends OrderRepository {
         throw Exception('Order not found');
       }
       final canonicalOrder = AppOrder.fromJson(snap.data()!);
+      _guardPaidCreditInvoiceMutation(canonicalOrder, 'إرجاع جزئي');
       final newReturnedQuantities = Map<String, int>.from(canonicalOrder.returnedQuantities);
 
       for (final returnedItem in orderReturn.returnedItems) {
@@ -749,7 +750,21 @@ class BranchAwareOrderRepository extends OrderRepository {
             updates['transferTotal'] = FieldValue.increment(-orderReturn.returnedTotal);
           }
           if (canonicalOrder.paymentMethod == 'split') {
-            updates['cashSales'] = FieldValue.increment(-orderReturn.returnedTotal);
+            final originalCash = canonicalOrder.splitCashAmount ?? 0.0;
+            final originalCard = canonicalOrder.splitNetworkAmount ?? 0.0;
+            final originalSplitPaid = originalCash + originalCard;
+            if (originalSplitPaid <= 0.000001) {
+              throw Exception('بيانات الدفع المقسم الأصلية غير صالحة للمرتجع.');
+            }
+            final cashRefund =
+                orderReturn.returnedTotal * (originalCash / originalSplitPaid);
+            final cardRefund = orderReturn.returnedTotal - cashRefund;
+            if (cashRefund > 0.000001) {
+              updates['cashSales'] = FieldValue.increment(-cashRefund);
+            }
+            if (cardRefund > 0.000001) {
+              updates['cardTotal'] = FieldValue.increment(-cardRefund);
+            }
           }
           if (updates.isNotEmpty) {
             tx.update(shiftRef, updates);
