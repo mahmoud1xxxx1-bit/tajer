@@ -44,21 +44,26 @@ class _PosScreenState extends ConsumerState<PosScreen> {
   String _searchQuery = '';
   String? _selectedCategoryId;
 
-  void _addToCart(Product product,
-      {List<String> selectedModifiers = const []}) {
+  void _addToCart(
+    Product product, {
+    List<String> selectedModifiers = const [],
+  }) {
     final storeProfile = ref.read(storeProfileProvider).value;
     final defaultTax = storeProfile?.defaultTaxPercentage ?? 0.0;
     final defaultIsInclusive = storeProfile?.defaultIsTaxInclusive ?? true;
 
     final finalTax = product.getEffectiveTax(defaultTax);
     final hasCustomTax = product.taxMode == TaxMode.custom;
-    final finalIsInclusive =
-        hasCustomTax ? product.isTaxInclusive : defaultIsInclusive;
+    final finalIsInclusive = hasCustomTax
+        ? product.isTaxInclusive
+        : defaultIsInclusive;
 
     setState(() {
-      final existingIndex = _cart.indexWhere((item) =>
-          item.productId == product.id &&
-          listEquals(item.selectedModifiers, selectedModifiers));
+      final existingIndex = _cart.indexWhere(
+        (item) =>
+            item.productId == product.id &&
+            listEquals(item.selectedModifiers, selectedModifiers),
+      );
       if (existingIndex >= 0) {
         if (product.isManufacturedOnDemand ||
             product.quantity > _cart[existingIndex].quantity) {
@@ -67,29 +72,41 @@ class _PosScreenState extends ConsumerState<PosScreen> {
             total: (_cart[existingIndex].quantity + 1) * product.price,
           );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('الكمية غير متوفرة في المخزون',
-                  style: TextStyle(fontFamily: 'Tajawal'))));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'الكمية غير متوفرة في المخزون',
+                style: TextStyle(fontFamily: 'Tajawal'),
+              ),
+            ),
+          );
         }
       } else {
         if (product.isManufacturedOnDemand || product.quantity > 0) {
-          _cart.add(CartItem(
-            productId: product.id,
-            productName: product.name,
-            quantity: 1,
-            price: product.price,
-            total: product.price,
-            selectedModifiers: List.from(selectedModifiers),
-            isTaxInclusive: finalIsInclusive,
-            taxPercentage: finalTax,
-            taxMode: product.taxMode,
-            costPrice: product.costPrice,
-            isManufacturedOnDemand: product.isManufacturedOnDemand,
-          ));
+          _cart.add(
+            CartItem(
+              productId: product.id,
+              productName: product.name,
+              quantity: 1,
+              price: product.price,
+              total: product.price,
+              selectedModifiers: List.from(selectedModifiers),
+              isTaxInclusive: finalIsInclusive,
+              taxPercentage: finalTax,
+              taxMode: product.taxMode,
+              costPrice: product.costPrice,
+              isManufacturedOnDemand: product.isManufacturedOnDemand,
+            ),
+          );
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text('المنتج نفذ من المخزون',
-                  style: TextStyle(fontFamily: 'Tajawal'))));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'المنتج نفذ من المخزون',
+                style: TextStyle(fontFamily: 'Tajawal'),
+              ),
+            ),
+          );
         }
       }
     });
@@ -102,65 +119,75 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     }
     List<String> selected = [];
     showModalBottomSheet(
-        context: context,
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-        builder: (ctx) {
-          return StatefulBuilder(
-            builder: (context, setSheetState) {
-              return Padding(
-                padding: const EdgeInsets.all(24.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('اختر الإضافات السريعة لـ ${product.name}',
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Tajawal')),
-                    SizedBox(height: 16),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: product.modifiers.map((mod) {
-                        final isSelected = selected.contains(mod);
-                        return FilterChip(
-                          label: Text(mod,
-                              style: TextStyle(fontFamily: 'Tajawal')),
-                          selected: isSelected,
-                          onSelected: (val) {
-                            setSheetState(() {
-                              if (val) {
-                                selected.add(mod);
-                              } else {
-                                selected.remove(mod);
-                              }
-                            });
-                          },
-                        );
-                      }).toList(),
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'اختر الإضافات السريعة لـ ${product.name}',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'Tajawal',
                     ),
-                    SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        _addToCart(product, selectedModifiers: selected);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 50),
+                  ),
+                  SizedBox(height: 16),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: product.modifiers.map((mod) {
+                      final isSelected = selected.contains(mod);
+                      return FilterChip(
+                        label: Text(
+                          mod,
+                          style: TextStyle(fontFamily: 'Tajawal'),
+                        ),
+                        selected: isSelected,
+                        onSelected: (val) {
+                          setSheetState(() {
+                            if (val) {
+                              selected.add(mod);
+                            } else {
+                              selected.remove(mod);
+                            }
+                          });
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _addToCart(product, selectedModifiers: selected);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 50),
+                    ),
+                    child: Text(
+                      'إضافة للسلة',
+                      style: TextStyle(
+                        fontFamily: 'Tajawal',
+                        fontWeight: FontWeight.bold,
                       ),
-                      child: Text('إضافة للسلة',
-                          style: TextStyle(
-                              fontFamily: 'Tajawal',
-                              fontWeight: FontWeight.bold)),
                     ),
-                  ],
-                ),
-              );
-            },
-          );
-        });
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   void _showHeldOrders() {
@@ -172,11 +199,17 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           final held = _heldOrders[index];
           final total = held.fold(0.0, (sum, item) => sum + item.total);
           return ListTile(
-            title: Text('طلب معلق #${index + 1}',
-                style: TextStyle(
-                    fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-            subtitle: Text('عدد المنتجات: ${held.length} - الإجمالي: $total',
-                style: TextStyle(fontFamily: 'Tajawal')),
+            title: Text(
+              'طلب معلق #${index + 1}',
+              style: TextStyle(
+                fontFamily: 'Tajawal',
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            subtitle: Text(
+              'عدد المنتجات: ${held.length} - الإجمالي: $total',
+              style: TextStyle(fontFamily: 'Tajawal'),
+            ),
             trailing: IconButton(
               icon: Icon(Icons.restore, color: Colors.green),
               onPressed: () async {
@@ -187,21 +220,26 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     context: context,
                     builder: (dCtx) => AlertDialog(
                       title: Text(isAr ? 'تنبيه!' : 'Warning!'),
-                      content: Text(isAr
-                          ? 'السلة الحالية غير فارغة. استرجاع هذا الطلب سيؤدي لمسح السلة الحالية بالكامل. هل أنت متأكد؟'
-                          : 'Current cart is not empty. Restoring this order will clear the current cart completely. Are you sure?'),
+                      content: Text(
+                        isAr
+                            ? 'السلة الحالية غير فارغة. استرجاع هذا الطلب سيؤدي لمسح السلة الحالية بالكامل. هل أنت متأكد؟'
+                            : 'Current cart is not empty. Restoring this order will clear the current cart completely. Are you sure?',
+                      ),
                       actions: [
                         TextButton(
-                            onPressed: () => Navigator.pop(dCtx, false),
-                            child: Text(isAr ? 'إلغاء' : 'Cancel')),
+                          onPressed: () => Navigator.pop(dCtx, false),
+                          child: Text(isAr ? 'إلغاء' : 'Cancel'),
+                        ),
                         ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
-                                foregroundColor: Colors.white),
-                            onPressed: () => Navigator.pop(dCtx, true),
-                            child: Text(isAr
-                                ? 'نعم، استرجع وامسح'
-                                : 'Yes, Restore & Clear')),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                          ),
+                          onPressed: () => Navigator.pop(dCtx, true),
+                          child: Text(
+                            isAr ? 'نعم، استرجع وامسح' : 'Yes, Restore & Clear',
+                          ),
+                        ),
                       ],
                     ),
                   );
@@ -230,9 +268,14 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       return;
     }
     if (!product.isManufacturedOnDemand && newQuantity > product.quantity) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('الكمية غير متوفرة في المخزون',
-              style: TextStyle(fontFamily: 'Tajawal'))));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'الكمية غير متوفرة في المخزون',
+            style: TextStyle(fontFamily: 'Tajawal'),
+          ),
+        ),
+      );
       return;
     }
     setState(() {
@@ -268,8 +311,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     if (_cart.isEmpty) return;
 
     final appUser = ref.read(appUserProvider).value;
-    final merchantId =
-        appUser == null ? '' : currentEffectiveMerchantId(appUser);
+    final merchantId = appUser == null
+        ? ''
+        : currentEffectiveMerchantId(appUser);
     final currentShift = ref.read(currentShiftProvider(merchantId)).value;
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
@@ -278,20 +322,25 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: Row(
             children: [
               const Icon(Icons.point_of_sale, color: Colors.orange),
               const SizedBox(width: 8),
               Expanded(
-                  child: Text(isAr ? "درج الكاشير مغلق!" : "Drawer Closed!",
-                      style: TextStyle(
-                          fontFamily: 'Tajawal',
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.orangeAccent
-                              : Colors.orange.shade800))),
+                child: Text(
+                  isAr ? "درج الكاشير مغلق!" : "Drawer Closed!",
+                  style: TextStyle(
+                    fontFamily: 'Tajawal',
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.orangeAccent
+                        : Colors.orange.shade800,
+                  ),
+                ),
+              ),
             ],
           ),
           content: Column(
@@ -303,18 +352,23 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     ? "يجب فتح وردية لاستلام هذه المبيعة. كم يوجد في الدرج الآن لبدء البيع؟"
                     : "You must open a shift to process this sale. How much is in the drawer now?",
                 style: const TextStyle(
-                    fontFamily: 'Tajawal', fontSize: 15, height: 1.5),
+                  fontFamily: 'Tajawal',
+                  fontSize: 15,
+                  height: 1.5,
+                ),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: amountController,
-                keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: InputDecoration(
                   labelText: isAr ? 'المبلغ الافتتاحي' : 'Opening Amount',
                   labelStyle: const TextStyle(fontFamily: 'Tajawal'),
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   prefixIcon: const Icon(Icons.money),
                 ),
               ),
@@ -323,16 +377,21 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text(isAr ? "إلغاء" : "Cancel",
-                  style: const TextStyle(
-                      fontFamily: 'Tajawal', color: Colors.grey)),
+              child: Text(
+                isAr ? "إلغاء" : "Cancel",
+                style: const TextStyle(
+                  fontFamily: 'Tajawal',
+                  color: Colors.grey,
+                ),
+              ),
             ),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.indigo,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               onPressed: () async {
                 final openingAmount =
@@ -354,9 +413,12 @@ class _PosScreenState extends ConsumerState<PosScreen> {
               },
               icon: const Icon(Icons.lock_open),
               label: Text(
-                  isAr ? "افتح الدرج وأكمل البيع" : "Open Drawer & Continue",
-                  style: const TextStyle(
-                      fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                isAr ? "افتح الدرج وأكمل البيع" : "Open Drawer & Continue",
+                style: const TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
@@ -402,10 +464,11 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       for (var item in _cart) {
         cartSubtotal += item.total;
       }
-      
+
       final finalCartItems = _cart.map((item) {
         if (details.discountAmount <= 0 || cartSubtotal <= 0) return item;
-        final itemDiscount = (item.total / cartSubtotal) * details.discountAmount;
+        final itemDiscount =
+            (item.total / cartSubtotal) * details.discountAmount;
         return item.copyWith(
           discountType: details.discountType,
           discountValue: details.discountValue,
@@ -419,7 +482,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         customerId: details.customerId,
         customerName: details.customerName,
         items: finalCartItems,
-        total: details.paidAmount + (details.tenderedAmount != null && details.changeAmount != null ? details.changeAmount! : 0) + (details.isCredit && details.paidAmount < _grandTotal ? (_grandTotal - details.paidAmount) : 0),
+        total: details.orderTotal,
         discountType: details.discountType,
         discountValue: details.discountValue,
         discountAmount: details.discountAmount,
@@ -433,7 +496,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         splitCashAmount: details.splitCashAmount,
         splitNetworkAmount: details.splitNetworkAmount,
         creatorId: appUser.id,
-        creatorName: ref.read(globalDisplayResolverProvider).resolveActorName(
+        creatorName: ref
+            .read(globalDisplayResolverProvider)
+            .resolveActorName(
               providedName: appUser.name,
               isMerchant: appUser.role == 'merchant',
               isAr: isAr,
@@ -447,10 +512,13 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           shift?.branchId ?? ref.read(selectedBranchIdProvider);
       final currency = ref.read(currencyProvider).code;
 
-      final savedOrder = await ref.read(orderRepositoryProvider).createOrder(
-          newOrder,
-          shiftId: shift?.id,
-          branchId: checkoutBranchId);
+      final savedOrder = await ref
+          .read(orderRepositoryProvider)
+          .createOrder(
+            newOrder,
+            shiftId: shift?.id,
+            branchId: checkoutBranchId,
+          );
 
       // Stop loading and clear cart immediately so UI never hangs!
       setState(() {
@@ -459,13 +527,18 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
               'تم إتمام الطلب بنجاح (رقم الانتظار: ${savedOrder.queueNumber ?? savedOrder.id.substring(0, 4)}) 🎉',
               style: const TextStyle(
-                  fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-          backgroundColor: Colors.green,
-        ));
+                fontFamily: 'Tajawal',
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
       }
       final storeProfile = ref.read(storeProfileProvider).value;
       double? tax = storeProfile?.defaultTaxPercentage;
@@ -496,33 +569,66 @@ class _PosScreenState extends ConsumerState<PosScreen> {
             context: context,
             builder: (ctx) => AlertDialog(
               backgroundColor: Theme.of(context).colorScheme.surface,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              title: Text(l10n.freeLimitReachedTitle, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-              content: Text(l10n.freeLimitReachedMessage, style: const TextStyle(fontFamily: 'Tajawal')),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Text(
+                l10n.freeLimitReachedTitle,
+                style: const TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              content: Text(
+                l10n.freeLimitReachedMessage,
+                style: const TextStyle(fontFamily: 'Tajawal'),
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: Text(l10n.later, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                  child: Text(
+                    l10n.later,
+                    style: const TextStyle(
+                      fontFamily: 'Tajawal',
+                      color: Colors.grey,
+                    ),
+                  ),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                   onPressed: () {
                     Navigator.pop(ctx);
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => const PaywallScreen()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const PaywallScreen()),
+                    );
                   },
-                  child: Text(l10n.viewPlans, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white)),
+                  child: Text(
+                    l10n.viewPlans,
+                    style: const TextStyle(
+                      fontFamily: 'Tajawal',
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ],
             ),
           );
           return;
         }
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('خطأ: $e',
-                style: const TextStyle(fontFamily: 'Tajawal'))));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'خطأ: $e',
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
+        );
       }
     }
   }
@@ -544,19 +650,19 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       error: (err, stack) => Scaffold(body: Center(child: Text('Error: $err'))),
       data: (shift) {
         if (shift == null) {
-          return const Scaffold(
-            body: Center(
-              child: StartShiftDialog(),
-            ),
-          );
+          return const Scaffold(body: Center(child: StartShiftDialog()));
         }
 
         return Scaffold(
           drawer: const AppDrawer(),
           appBar: AppBar(
-            title: Text(isAr ? 'نقطة البيع (POS)' : 'Point of Sale (POS)',
-                style: const TextStyle(
-                    fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+            title: Text(
+              isAr ? 'نقطة البيع (POS)' : 'Point of Sale (POS)',
+              style: const TextStyle(
+                fontFamily: 'Tajawal',
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             actions: [
               if (_heldOrders.isNotEmpty)
                 TextButton.icon(
@@ -565,22 +671,30 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     backgroundColor: Colors.red,
                     child: const Icon(Icons.history, color: Colors.amber),
                   ),
-                  label: Text(isAr ? 'المعلقة' : 'Held',
-                      style: const TextStyle(
-                          color: Colors.amber,
-                          fontFamily: 'Tajawal',
-                          fontWeight: FontWeight.bold)),
+                  label: Text(
+                    isAr ? 'المعلقة' : 'Held',
+                    style: const TextStyle(
+                      color: Colors.amber,
+                      fontFamily: 'Tajawal',
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   onPressed: _showHeldOrders,
                 ),
               if (_cart.isNotEmpty)
                 TextButton.icon(
-                  icon: const Icon(Icons.pause_circle_outline,
-                      color: Colors.amber),
-                  label: Text(isAr ? 'تعليق' : 'Hold',
-                      style: const TextStyle(
-                          color: Colors.amber,
-                          fontFamily: 'Tajawal',
-                          fontWeight: FontWeight.bold)),
+                  icon: const Icon(
+                    Icons.pause_circle_outline,
+                    color: Colors.amber,
+                  ),
+                  label: Text(
+                    isAr ? 'تعليق' : 'Hold',
+                    style: const TextStyle(
+                      color: Colors.amber,
+                      fontFamily: 'Tajawal',
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   onPressed: () {
                     setState(() {
                       _heldOrders.add(List.from(_cart));
@@ -588,12 +702,14 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     });
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                          content: Text(
-                              isAr
-                                  ? 'تم تعليق الطلب وحفظه مؤقتاً في الأعلى 📌'
-                                  : 'Order held and saved temporarily 📌',
-                              style: const TextStyle(fontFamily: 'Tajawal')),
-                          backgroundColor: Colors.orange),
+                        content: Text(
+                          isAr
+                              ? 'تم تعليق الطلب وحفظه مؤقتاً في الأعلى 📌'
+                              : 'Order held and saved temporarily 📌',
+                          style: const TextStyle(fontFamily: 'Tajawal'),
+                        ),
+                        backgroundColor: Colors.orange,
+                      ),
                     );
                   },
                 ),
@@ -602,8 +718,10 @@ class _PosScreenState extends ConsumerState<PosScreen> {
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(60),
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: TextField(
                   controller: _searchController,
                   autofocus: false,
@@ -615,8 +733,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     filled: true,
                     fillColor: Theme.of(context).cardColor,
                     border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none),
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                   onChanged: (val) =>
                       setState(() => _searchQuery = val.toLowerCase().trim()),
@@ -624,8 +743,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     final trimmed = val.trim();
                     if (trimmed.isEmpty) return;
                     final products = productsAsync.value ?? [];
-                    final matchedProduct =
-                        products.where((p) => p.barcode == trimmed).firstOrNull;
+                    final matchedProduct = products
+                        .where((p) => p.barcode == trimmed)
+                        .firstOrNull;
                     if (matchedProduct != null) {
                       _addToCart(matchedProduct);
                       _searchController.clear();
@@ -650,13 +770,17 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                       decoration: BoxDecoration(
                         color: Colors.indigo.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(12),
-                        border:
-                            Border.all(color: Colors.indigo.withOpacity(0.3)),
+                        border: Border.all(
+                          color: Colors.indigo.withOpacity(0.3),
+                        ),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.lightbulb_outline,
-                              color: Colors.amber, size: 24),
+                          const Icon(
+                            Icons.lightbulb_outline,
+                            color: Colors.amber,
+                            size: 24,
+                          ),
                           SizedBox(width: 10),
                           Expanded(
                             child: Text(
@@ -664,13 +788,13 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                                   ? '💡 دليل الكاشير: اضغط على المنتج لإضافته للسلة. لحفظ الفاتورة مؤقتاً أثناء انتظام العميل اضغط على زر "تعليق" بالأعلى. لإصدار الفاتورة اضغط "دفع الإجمالي" بالأسفل.'
                                   : '💡 Cashier Guide: Tap product to add to cart. To hold invoice temporarily, tap "Hold" above. To issue invoice, tap "Pay Total" below.',
                               style: TextStyle(
-                                  fontFamily: 'Tajawal',
-                                  fontSize: 12,
-                                  height: 1.4,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
-                                      .withOpacity(0.7)),
+                                fontFamily: 'Tajawal',
+                                fontSize: 12,
+                                height: 1.4,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withOpacity(0.7),
+                              ),
                             ),
                           ),
                         ],
@@ -682,46 +806,61 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                         return Container(
                           height: 50,
                           margin: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 4),
+                            horizontal: 12,
+                            vertical: 4,
+                          ),
                           child: ListView(
                             scrollDirection: Axis.horizontal,
                             children: [
                               Padding(
                                 padding: const EdgeInsets.only(right: 8.0),
                                 child: ChoiceChip(
-                                  label: Text(isAr ? 'الكل' : 'All',
-                                      style: const TextStyle(
-                                          fontFamily: 'Tajawal',
-                                          fontWeight: FontWeight.bold)),
+                                  label: Text(
+                                    isAr ? 'الكل' : 'All',
+                                    style: const TextStyle(
+                                      fontFamily: 'Tajawal',
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                   selected: _selectedCategoryId == null,
                                   onSelected: (selected) {
                                     if (selected)
                                       setState(
-                                          () => _selectedCategoryId = null);
+                                        () => _selectedCategoryId = null,
+                                      );
                                   },
                                 ),
                               ),
-                              ...categories.map((category) => Padding(
-                                    padding: const EdgeInsets.only(right: 8.0),
-                                    child: ChoiceChip(
-                                      label: Text(category.name,
-                                          style: const TextStyle(
-                                              fontFamily: 'Tajawal')),
-                                      selected:
-                                          _selectedCategoryId == category.id,
-                                      onSelected: (selected) {
-                                        setState(() => _selectedCategoryId =
-                                            selected ? category.id : null);
-                                      },
+                              ...categories.map(
+                                (category) => Padding(
+                                  padding: const EdgeInsets.only(right: 8.0),
+                                  child: ChoiceChip(
+                                    label: Text(
+                                      category.name,
+                                      style: const TextStyle(
+                                        fontFamily: 'Tajawal',
+                                      ),
                                     ),
-                                  )),
+                                    selected:
+                                        _selectedCategoryId == category.id,
+                                    onSelected: (selected) {
+                                      setState(
+                                        () => _selectedCategoryId = selected
+                                            ? category.id
+                                            : null,
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         );
                       },
                       loading: () => const SizedBox(
-                          height: 50,
-                          child: Center(child: CircularProgressIndicator())),
+                        height: 50,
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
                       error: (_, __) => const SizedBox.shrink(),
                     ),
                     Expanded(
@@ -730,29 +869,32 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                           final filtered = products.where((p) {
                             final matchesSearch =
                                 p.name.toLowerCase().contains(_searchQuery) ||
-                                    (p.barcode != null &&
-                                        p.barcode!
-                                            .toLowerCase()
-                                            .contains(_searchQuery));
+                                (p.barcode != null &&
+                                    p.barcode!.toLowerCase().contains(
+                                      _searchQuery,
+                                    ));
                             final matchesCategory =
                                 _selectedCategoryId == null ||
-                                    p.categoryId == _selectedCategoryId;
+                                p.categoryId == _selectedCategoryId;
                             return matchesSearch && matchesCategory;
                           }).toList();
                           if (filtered.isEmpty)
                             return const Center(
-                                child: Text('لا توجد منتجات',
-                                    style: TextStyle(fontFamily: 'Tajawal')));
+                              child: Text(
+                                'لا توجد منتجات',
+                                style: TextStyle(fontFamily: 'Tajawal'),
+                              ),
+                            );
 
                           return GridView.builder(
                             padding: const EdgeInsets.all(12),
                             gridDelegate:
                                 SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: isTablet ? 4 : 2,
-                              childAspectRatio: 0.9,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                            ),
+                                  crossAxisCount: isTablet ? 4 : 2,
+                                  childAspectRatio: 0.9,
+                                  crossAxisSpacing: 12,
+                                  mainAxisSpacing: 12,
+                                ),
                             itemCount: filtered.length,
                             itemBuilder: (context, index) {
                               final product = filtered[index];
@@ -766,37 +908,47 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
                                       children: [
-                                        Icon(Icons.inventory_2_outlined,
-                                            size: 40,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary),
+                                        Icon(
+                                          Icons.inventory_2_outlined,
+                                          size: 40,
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.primary,
+                                        ),
                                         const SizedBox(height: 8),
-                                        Text(product.name,
-                                            textAlign: TextAlign.center,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                                fontFamily: 'Tajawal',
-                                                fontWeight: FontWeight.bold)),
-                                        const Spacer(),
-                                        Text('${product.price}',
-                                            style: const TextStyle(
-                                                color: Colors.green,
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16)),
                                         Text(
-                                            product.isManufacturedOnDemand
-                                                ? (isAr
+                                          product.name,
+                                          textAlign: TextAlign.center,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: const TextStyle(
+                                            fontFamily: 'Tajawal',
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const Spacer(),
+                                        Text(
+                                          '${product.price}',
+                                          style: const TextStyle(
+                                            color: Colors.green,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        Text(
+                                          product.isManufacturedOnDemand
+                                              ? (isAr
                                                     ? 'يصنع عند الطلب'
                                                     : 'Made to order')
-                                                : (isAr
+                                              : (isAr
                                                     ? 'المتبقي: ${product.quantity}'
                                                     : 'Left: ${product.quantity}'),
-                                            style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.grey,
-                                                fontFamily: 'Tajawal')),
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.grey,
+                                            fontFamily: 'Tajawal',
+                                          ),
+                                        ),
                                       ],
                                     ),
                                   ),
@@ -808,8 +960,11 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                         loading: () =>
                             const Center(child: CircularProgressIndicator()),
                         error: (e, st) => Center(
-                            child: Text(isAr ? 'خطأ: $e' : 'Error: $e',
-                                style: const TextStyle(fontFamily: 'Tajawal'))),
+                          child: Text(
+                            isAr ? 'خطأ: $e' : 'Error: $e',
+                            style: const TextStyle(fontFamily: 'Tajawal'),
+                          ),
+                        ),
                       ),
                     ),
                     if (_cart.isNotEmpty)
@@ -818,12 +973,14 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                         decoration: BoxDecoration(
                           color: Theme.of(context).cardColor,
                           borderRadius: const BorderRadius.vertical(
-                              top: Radius.circular(24)),
+                            top: Radius.circular(24),
+                          ),
                           boxShadow: [
                             BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, -5))
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, -5),
+                            ),
                           ],
                         ),
                         child: Column(
@@ -835,52 +992,73 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                                   final item = _cart[index];
                                   final product = productsAsync.value
                                       ?.firstWhere(
-                                          (p) => p.id == item.productId);
+                                        (p) => p.id == item.productId,
+                                      );
                                   return ListTile(
                                     title: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        Text(item.productName,
-                                            style: const TextStyle(
-                                                fontFamily: 'Tajawal',
-                                                fontWeight: FontWeight.bold)),
+                                        Text(
+                                          item.productName,
+                                          style: const TextStyle(
+                                            fontFamily: 'Tajawal',
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
                                         if (item.selectedModifiers.isNotEmpty)
                                           Text(
-                                              item.selectedModifiers.join('، '),
-                                              style: const TextStyle(
-                                                  fontFamily: 'Tajawal',
-                                                  fontSize: 12,
-                                                  color: Colors.blue)),
+                                            item.selectedModifiers.join('، '),
+                                            style: const TextStyle(
+                                              fontFamily: 'Tajawal',
+                                              fontSize: 12,
+                                              color: Colors.blue,
+                                            ),
+                                          ),
                                       ],
                                     ),
                                     subtitle: Text(
-                                        '${item.price} x ${item.quantity} = ${item.total}',
-                                        style: const TextStyle(
-                                            color: Colors.green)),
+                                      '${item.price} x ${item.quantity} = ${item.total}',
+                                      style: const TextStyle(
+                                        color: Colors.green,
+                                      ),
+                                    ),
                                     trailing: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         IconButton(
-                                            icon: const Icon(
-                                                Icons.remove_circle_outline,
-                                                color: Colors.red),
-                                            onPressed: () => product != null
-                                                ? _updateQuantity(index,
-                                                    item.quantity - 1, product)
-                                                : null),
-                                        Text('${item.quantity}',
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 16)),
+                                          icon: const Icon(
+                                            Icons.remove_circle_outline,
+                                            color: Colors.red,
+                                          ),
+                                          onPressed: () => product != null
+                                              ? _updateQuantity(
+                                                  index,
+                                                  item.quantity - 1,
+                                                  product,
+                                                )
+                                              : null,
+                                        ),
+                                        Text(
+                                          '${item.quantity}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
                                         IconButton(
-                                            icon: const Icon(
-                                                Icons.add_circle_outline,
-                                                color: Colors.green),
-                                            onPressed: () => product != null
-                                                ? _updateQuantity(index,
-                                                    item.quantity + 1, product)
-                                                : null),
+                                          icon: const Icon(
+                                            Icons.add_circle_outline,
+                                            color: Colors.green,
+                                          ),
+                                          onPressed: () => product != null
+                                              ? _updateQuantity(
+                                                  index,
+                                                  item.quantity + 1,
+                                                  product,
+                                                )
+                                              : null,
+                                        ),
                                       ],
                                     ),
                                   );
@@ -892,23 +1070,27 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                               child: ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   minimumSize: const Size(double.infinity, 50),
-                                  backgroundColor:
-                                      Theme.of(context).colorScheme.primary,
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primary,
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(16)),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
                                 ),
                                 onPressed: _checkout,
                                 child: Text(
-                                    isAr
-                                        ? 'دفع الإجمالي: ${_grandTotal.toStringAsFixed(2)}'
-                                        : 'Pay Total: ${_grandTotal.toStringAsFixed(2)}',
-                                    style: const TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        fontFamily: 'Tajawal')),
+                                  isAr
+                                      ? 'دفع الإجمالي: ${_grandTotal.toStringAsFixed(2)}'
+                                      : 'Pay Total: ${_grandTotal.toStringAsFixed(2)}',
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    fontFamily: 'Tajawal',
+                                  ),
+                                ),
                               ),
-                            )
+                            ),
                           ],
                         ),
                       ),
@@ -924,6 +1106,7 @@ class OrderDetails {
   final String customerId;
   final String customerName;
   final double paidAmount;
+  final double orderTotal;
   final bool isCredit;
   final String? notes;
   final String paymentMethod;
@@ -936,21 +1119,23 @@ class OrderDetails {
   final double? discountValue;
   final double discountAmount;
 
-  OrderDetails(
-      {required this.customerId,
-      required this.customerName,
-      required this.paidAmount,
-      required this.isCredit,
-      this.notes,
-      this.paymentMethod = 'cash',
-      this.scheduledDate,
-      this.tenderedAmount,
-      this.changeAmount,
-      this.splitCashAmount,
-      this.splitNetworkAmount,
-      this.discountType,
-      this.discountValue,
-      this.discountAmount = 0.0});
+  OrderDetails({
+    required this.customerId,
+    required this.customerName,
+    required this.paidAmount,
+    required this.orderTotal,
+    required this.isCredit,
+    this.notes,
+    this.paymentMethod = 'cash',
+    this.scheduledDate,
+    this.tenderedAmount,
+    this.changeAmount,
+    this.splitCashAmount,
+    this.splitNetworkAmount,
+    this.discountType,
+    this.discountValue,
+    this.discountAmount = 0.0,
+  });
 }
 
 class _CheckoutSheet extends ConsumerStatefulWidget {
@@ -959,11 +1144,12 @@ class _CheckoutSheet extends ConsumerStatefulWidget {
   final List<Customer> customers;
   final Function(OrderDetails) onCheckoutComplete;
 
-  const _CheckoutSheet(
-      {required this.cart,
-      required this.total,
-      required this.customers,
-      required this.onCheckoutComplete});
+  const _CheckoutSheet({
+    required this.cart,
+    required this.total,
+    required this.customers,
+    required this.onCheckoutComplete,
+  });
 
   @override
   ConsumerState<_CheckoutSheet> createState() => _CheckoutSheetState();
@@ -1034,24 +1220,28 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('إضافة عميل سريع',
-            style:
-                TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        title: Text(
+          'إضافة عميل سريع',
+          style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameController,
               decoration: const InputDecoration(
-                  labelText: 'اسم العميل', border: OutlineInputBorder()),
+                labelText: 'اسم العميل',
+                border: OutlineInputBorder(),
+              ),
             ),
             const SizedBox(height: 12),
             TextField(
               controller: phoneController,
               keyboardType: TextInputType.phone,
               decoration: const InputDecoration(
-                  labelText: 'رقم الهاتف (اختياري)',
-                  border: OutlineInputBorder()),
+                labelText: 'رقم الهاتف (اختياري)',
+                border: OutlineInputBorder(),
+              ),
             ),
           ],
         ),
@@ -1095,8 +1285,11 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                 });
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content: Text('تم إضافة العميل ${newCustomer.name} بنجاح',
-                          style: const TextStyle(fontFamily: 'Tajawal'))),
+                    content: Text(
+                      'تم إضافة العميل ${newCustomer.name} بنجاح',
+                      style: const TextStyle(fontFamily: 'Tajawal'),
+                    ),
+                  ),
                 );
               }
             },
@@ -1141,11 +1334,11 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
     double grandTotal = 0.0;
     for (var item in widget.cart) {
       final itemTax = item.getEffectiveTax(defaultTaxPercentage);
-      final isInclusive = item.taxMode == TaxMode.custom
-          ? (item.isTaxInclusive ?? defaultIsTaxInclusive)
-          : defaultIsTaxInclusive;
-      
-      final itemDiscount = cartSubtotal > 0 ? (item.total / cartSubtotal) * discountAmount : 0.0;
+      final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
+
+      final itemDiscount = cartSubtotal > 0
+          ? (item.total / cartSubtotal) * discountAmount
+          : 0.0;
       final discountedTotal = item.total - itemDiscount;
 
       if (isInclusive) {
@@ -1155,12 +1348,14 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
       }
     }
 
-    final requiredAmount =
-        _isCredit ? (double.tryParse(_paidController.text) ?? 0.0) : grandTotal;
+    final requiredAmount = _isCredit
+        ? (double.tryParse(_paidController.text) ?? 0.0)
+        : grandTotal;
 
     return Padding(
-      padding:
-          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
@@ -1172,12 +1367,15 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(isAr ? 'إنهاء الطلب' : 'Checkout',
-                  style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Tajawal'),
-                  textAlign: TextAlign.center),
+              Text(
+                isAr ? 'إنهاء الطلب' : 'Checkout',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Tajawal',
+                ),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 24),
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
@@ -1187,124 +1385,150 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                       ? Colors.red.withOpacity(0.1)
                       : Colors.transparent,
                   border: Border.all(
-                      color:
-                          _highlightCustomer ? Colors.red : Colors.transparent,
-                      width: 2),
+                    color: _highlightCustomer ? Colors.red : Colors.transparent,
+                    width: 2,
+                  ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
                   children: [
                     Expanded(
-                      child: LayoutBuilder(builder: (context, constraints) {
-                        return Autocomplete<Customer>(
-                          optionsBuilder: (TextEditingValue textEditingValue) {
-                            if (textEditingValue.text.isEmpty) {
-                              return const Iterable<Customer>.empty();
-                            }
-                            return _localCustomers.where((Customer customer) {
-                              return customer.name.toLowerCase().contains(
-                                      textEditingValue.text.toLowerCase()) ||
-                                  customer.phone
-                                      .contains(textEditingValue.text);
-                            });
-                          },
-                          displayStringForOption: (Customer option) =>
-                              option.name,
-                          onSelected: (Customer selection) {
-                            setState(() {
-                              _selectedCustomerId = selection.id;
-                            });
-                          },
-                          fieldViewBuilder: (BuildContext context,
-                              TextEditingController textEditingController,
-                              FocusNode focusNode,
-                              VoidCallback onFieldSubmitted) {
-                            if (_selectedCustomerId != null) {
-                              final currentCustomer =
-                                  _localCustomers.firstWhere(
-                                      (c) => c.id == _selectedCustomerId,
-                                      orElse: () => Customer(
-                                          id: '',
-                                          merchantId: '',
-                                          name: '',
-                                          phone: '',
-                                          createdAt: DateTime.now()));
-                              if (currentCustomer.id.isNotEmpty &&
-                                  textEditingController.text !=
-                                      currentCustomer.name) {
-                                textEditingController.text =
-                                    currentCustomer.name;
-                              }
-                            }
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          return Autocomplete<Customer>(
+                            optionsBuilder:
+                                (TextEditingValue textEditingValue) {
+                                  if (textEditingValue.text.isEmpty) {
+                                    return const Iterable<Customer>.empty();
+                                  }
+                                  return _localCustomers.where((
+                                    Customer customer,
+                                  ) {
+                                    return customer.name.toLowerCase().contains(
+                                          textEditingValue.text.toLowerCase(),
+                                        ) ||
+                                        customer.phone.contains(
+                                          textEditingValue.text,
+                                        );
+                                  });
+                                },
+                            displayStringForOption: (Customer option) =>
+                                option.name,
+                            onSelected: (Customer selection) {
+                              setState(() {
+                                _selectedCustomerId = selection.id;
+                              });
+                            },
+                            fieldViewBuilder:
+                                (
+                                  BuildContext context,
+                                  TextEditingController textEditingController,
+                                  FocusNode focusNode,
+                                  VoidCallback onFieldSubmitted,
+                                ) {
+                                  if (_selectedCustomerId != null) {
+                                    final currentCustomer = _localCustomers
+                                        .firstWhere(
+                                          (c) => c.id == _selectedCustomerId,
+                                          orElse: () => Customer(
+                                            id: '',
+                                            merchantId: '',
+                                            name: '',
+                                            phone: '',
+                                            createdAt: DateTime.now(),
+                                          ),
+                                        );
+                                    if (currentCustomer.id.isNotEmpty &&
+                                        textEditingController.text !=
+                                            currentCustomer.name) {
+                                      textEditingController.text =
+                                          currentCustomer.name;
+                                    }
+                                  }
 
-                            return TextFormField(
-                              controller: textEditingController,
-                              focusNode: focusNode,
-                              decoration: InputDecoration(
-                                labelText: isAr
-                                    ? 'ابحث عن اسم أو رقم العميل'
-                                    : 'Search customer name or phone',
-                                border: const OutlineInputBorder(),
-                                labelStyle: TextStyle(
-                                    fontFamily: 'Tajawal',
-                                    color:
-                                        _highlightCustomer ? Colors.red : null),
-                                suffixIcon: IconButton(
-                                  icon: const Icon(Icons.clear),
-                                  onPressed: () {
-                                    textEditingController.clear();
-                                    setState(() {
-                                      _selectedCustomerId = null;
-                                    });
-                                  },
-                                ),
-                              ),
-                              onFieldSubmitted: (String value) {
-                                onFieldSubmitted();
-                              },
-                            );
-                          },
-                          optionsViewBuilder: (BuildContext context,
-                              AutocompleteOnSelected<Customer> onSelected,
-                              Iterable<Customer> options) {
-                            return Align(
-                              alignment: Alignment.topLeft,
-                              child: Material(
-                                elevation: 4.0,
-                                borderRadius: BorderRadius.circular(8),
-                                child: ConstrainedBox(
-                                  constraints: BoxConstraints(
-                                    maxHeight: 200,
-                                    maxWidth: constraints.maxWidth,
-                                  ),
-                                  child: ListView.builder(
-                                    padding: EdgeInsets.zero,
-                                    shrinkWrap: true,
-                                    itemCount: options.length,
-                                    itemBuilder:
-                                        (BuildContext context, int index) {
-                                      final Customer option =
-                                          options.elementAt(index);
-                                      return ListTile(
-                                        title: Text(option.name,
-                                            style: const TextStyle(
-                                                fontFamily: 'Tajawal')),
-                                        subtitle: Text(option.phone,
-                                            style: const TextStyle(
-                                                fontFamily: 'Tajawal',
-                                                fontSize: 12)),
-                                        onTap: () {
-                                          onSelected(option);
+                                  return TextFormField(
+                                    controller: textEditingController,
+                                    focusNode: focusNode,
+                                    decoration: InputDecoration(
+                                      labelText: isAr
+                                          ? 'ابحث عن اسم أو رقم العميل'
+                                          : 'Search customer name or phone',
+                                      border: const OutlineInputBorder(),
+                                      labelStyle: TextStyle(
+                                        fontFamily: 'Tajawal',
+                                        color: _highlightCustomer
+                                            ? Colors.red
+                                            : null,
+                                      ),
+                                      suffixIcon: IconButton(
+                                        icon: const Icon(Icons.clear),
+                                        onPressed: () {
+                                          textEditingController.clear();
+                                          setState(() {
+                                            _selectedCustomerId = null;
+                                          });
                                         },
-                                      );
+                                      ),
+                                    ),
+                                    onFieldSubmitted: (String value) {
+                                      onFieldSubmitted();
                                     },
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      }),
+                                  );
+                                },
+                            optionsViewBuilder:
+                                (
+                                  BuildContext context,
+                                  AutocompleteOnSelected<Customer> onSelected,
+                                  Iterable<Customer> options,
+                                ) {
+                                  return Align(
+                                    alignment: Alignment.topLeft,
+                                    child: Material(
+                                      elevation: 4.0,
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: ConstrainedBox(
+                                        constraints: BoxConstraints(
+                                          maxHeight: 200,
+                                          maxWidth: constraints.maxWidth,
+                                        ),
+                                        child: ListView.builder(
+                                          padding: EdgeInsets.zero,
+                                          shrinkWrap: true,
+                                          itemCount: options.length,
+                                          itemBuilder:
+                                              (
+                                                BuildContext context,
+                                                int index,
+                                              ) {
+                                                final Customer option = options
+                                                    .elementAt(index);
+                                                return ListTile(
+                                                  title: Text(
+                                                    option.name,
+                                                    style: const TextStyle(
+                                                      fontFamily: 'Tajawal',
+                                                    ),
+                                                  ),
+                                                  subtitle: Text(
+                                                    option.phone,
+                                                    style: const TextStyle(
+                                                      fontFamily: 'Tajawal',
+                                                      fontSize: 12,
+                                                    ),
+                                                  ),
+                                                  onTap: () {
+                                                    onSelected(option);
+                                                  },
+                                                );
+                                              },
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                          );
+                        },
+                      ),
                     ),
                     const SizedBox(width: 8),
                     if (canManageCustomers)
@@ -1313,19 +1537,21 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                         decoration: BoxDecoration(
                           color: _highlightCustomer
                               ? Colors.red.withOpacity(0.2)
-                              : Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withOpacity(0.1),
+                              : Theme.of(
+                                  context,
+                                ).colorScheme.primary.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: IconButton(
-                          icon: Icon(Icons.person_add,
-                              color: _highlightCustomer
-                                  ? Colors.red
-                                  : Theme.of(context).colorScheme.primary),
-                          tooltip:
-                              isAr ? 'إضافة عميل جديد' : 'Add New Customer',
+                          icon: Icon(
+                            Icons.person_add,
+                            color: _highlightCustomer
+                                ? Colors.red
+                                : Theme.of(context).colorScheme.primary,
+                          ),
+                          tooltip: isAr
+                              ? 'إضافة عميل جديد'
+                              : 'Add New Customer',
                           onPressed: _showQuickAddCustomerDialog,
                         ),
                       ),
@@ -1339,20 +1565,25 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                     ? Colors.blueGrey.withOpacity(0.1)
                     : Colors.blue.withOpacity(0.05),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? Colors.blueGrey.withOpacity(0.3)
-                            : Colors.blue.shade100)),
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.blueGrey.withOpacity(0.3)
+                        : Colors.blue.shade100,
+                  ),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(isAr ? 'خصم على الفاتورة' : 'Invoice Discount',
-                          style: TextStyle(
-                              fontFamily: 'Tajawal',
-                              fontWeight: FontWeight.bold)),
+                      Text(
+                        isAr ? 'خصم على الفاتورة' : 'Invoice Discount',
+                        style: TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       const SizedBox(height: 8),
                       Row(
                         children: [
@@ -1365,17 +1596,32 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                               ),
                               items: [
                                 DropdownMenuItem(
-                                    value: null,
-                                    child: Text(isAr ? 'بدون خصم' : 'No Discount',
-                                        style: const TextStyle(fontFamily: 'Tajawal'))),
+                                  value: null,
+                                  child: Text(
+                                    isAr ? 'بدون خصم' : 'No Discount',
+                                    style: const TextStyle(
+                                      fontFamily: 'Tajawal',
+                                    ),
+                                  ),
+                                ),
                                 DropdownMenuItem(
-                                    value: 'percentage',
-                                    child: Text(isAr ? 'نسبة (%)' : 'Percentage (%)',
-                                        style: const TextStyle(fontFamily: 'Tajawal'))),
+                                  value: 'percentage',
+                                  child: Text(
+                                    isAr ? 'نسبة (%)' : 'Percentage (%)',
+                                    style: const TextStyle(
+                                      fontFamily: 'Tajawal',
+                                    ),
+                                  ),
+                                ),
                                 DropdownMenuItem(
-                                    value: 'amount',
-                                    child: Text(isAr ? 'مبلغ ثابت' : 'Fixed Amount',
-                                        style: const TextStyle(fontFamily: 'Tajawal'))),
+                                  value: 'amount',
+                                  child: Text(
+                                    isAr ? 'مبلغ ثابت' : 'Fixed Amount',
+                                    style: const TextStyle(
+                                      fontFamily: 'Tajawal',
+                                    ),
+                                  ),
+                                ),
                               ],
                               onChanged: (val) {
                                 setState(() {
@@ -1405,9 +1651,14 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                       if (discountAmount > 0) ...[
                         const SizedBox(height: 8),
                         Text(
-                          isAr ? 'قيمة الخصم الإجمالية: ${discountAmount.toStringAsFixed(2)}' : 'Total Discount: ${discountAmount.toStringAsFixed(2)}',
+                          isAr
+                              ? 'قيمة الخصم الإجمالية: ${discountAmount.toStringAsFixed(2)}'
+                              : 'Total Discount: ${discountAmount.toStringAsFixed(2)}',
                           style: const TextStyle(
-                              fontFamily: 'Tajawal', color: Colors.green, fontWeight: FontWeight.bold),
+                            fontFamily: 'Tajawal',
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ],
@@ -1416,15 +1667,21 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
               ),
               const SizedBox(height: 16),
               SwitchListTile(
-                title: Text(isAr ? 'طلب مجدول 🗓' : 'Scheduled Order 🗓',
-                    style: TextStyle(
-                        fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                subtitle: _isScheduled &&
+                title: Text(
+                  isAr ? 'طلب مجدول 🗓' : 'Scheduled Order 🗓',
+                  style: TextStyle(
+                    fontFamily: 'Tajawal',
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle:
+                    _isScheduled &&
                         _scheduledDate != null &&
                         _scheduledTime != null
                     ? Text(
                         '${_scheduledDate!.toString().split(' ')[0]} - ${_scheduledTime!.format(context)}',
-                        style: TextStyle(color: Colors.blue))
+                        style: TextStyle(color: Colors.blue),
+                      )
                     : null,
                 value: _isScheduled,
                 onChanged: (val) {
@@ -1435,9 +1692,13 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                 },
               ),
               const SizedBox(height: 16),
-              Text(isAr ? 'طريقة الدفع' : 'Payment Method',
-                  style: TextStyle(
-                      fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              Text(
+                isAr ? 'طريقة الدفع' : 'Payment Method',
+                style: TextStyle(
+                  fontFamily: 'Tajawal',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
@@ -1474,8 +1735,8 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                     onSelected: (val) {
                       setState(() {
                         _paymentMethod = 'split';
-                        _splitNetworkController.text =
-                            requiredAmount.toStringAsFixed(2);
+                        _splitNetworkController.text = requiredAmount
+                            .toStringAsFixed(2);
                         _splitCashController.text = '0';
                       });
                     },
@@ -1491,9 +1752,10 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                         controller: _splitCashController,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
-                            labelText: isAr ? 'نقدي (كاش)' : 'Cash',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.money)),
+                          labelText: isAr ? 'نقدي (كاش)' : 'Cash',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.money),
+                        ),
                         onChanged: (val) {
                           final cash = double.tryParse(val) ?? 0.0;
                           if (cash <= requiredAmount) {
@@ -1510,9 +1772,10 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                         controller: _splitNetworkController,
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
-                            labelText: isAr ? 'شبكة (بطاقة)' : 'Network',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.credit_card)),
+                          labelText: isAr ? 'شبكة (بطاقة)' : 'Network',
+                          border: OutlineInputBorder(),
+                          prefixIcon: Icon(Icons.credit_card),
+                        ),
                         onChanged: (val) {
                           final network = double.tryParse(val) ?? 0.0;
                           if (network <= requiredAmount) {
@@ -1525,29 +1788,36 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                     ),
                   ],
                 ),
-                Builder(builder: (context) {
-                  final cash =
-                      double.tryParse(_splitCashController.text) ?? 0.0;
-                  final network =
-                      double.tryParse(_splitNetworkController.text) ?? 0.0;
-                  final diff = requiredAmount - (cash + network);
-                  if (diff.abs() > 0.01) {
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
+                Builder(
+                  builder: (context) {
+                    final cash =
+                        double.tryParse(_splitCashController.text) ?? 0.0;
+                    final network =
+                        double.tryParse(_splitNetworkController.text) ?? 0.0;
+                    final diff = requiredAmount - (cash + network);
+                    if (diff.abs() > 0.01) {
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
                           'المجموع لا يساوي المبلغ المدفوع (${requiredAmount.toStringAsFixed(2)})',
                           style: TextStyle(
-                              color: Colors.red, fontFamily: 'Tajawal')),
-                    );
-                  }
-                  return const SizedBox.shrink();
-                })
+                            color: Colors.red,
+                            fontFamily: 'Tajawal',
+                          ),
+                        ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
               ],
               const SizedBox(height: 16),
               if (canSellOnCredit)
                 SwitchListTile(
-                  title: Text(isAr ? 'دفع آجل؟ (دين)' : 'Pay Later? (Credit)',
-                      style: TextStyle(fontFamily: 'Tajawal')),
+                  title: Text(
+                    isAr ? 'دفع آجل؟ (دين)' : 'Pay Later? (Credit)',
+                    style: TextStyle(fontFamily: 'Tajawal'),
+                  ),
                   value: _isCredit,
                   onChanged: (val) => setState(() => _isCredit = val),
                 ),
@@ -1556,9 +1826,9 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                   controller: _paidController,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
-                      labelText:
-                          isAr ? 'المبلغ المدفوع الان' : 'Amount Paid Now',
-                      border: OutlineInputBorder()),
+                    labelText: isAr ? 'المبلغ المدفوع الان' : 'Amount Paid Now',
+                    border: OutlineInputBorder(),
+                  ),
                   onChanged: (val) => setState(() {
                     if (_paymentMethod == 'split') {
                       final newPaid = double.tryParse(val) ?? 0.0;
@@ -1566,7 +1836,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                       _splitCashController.text = '0';
                     }
                   }),
-                )
+                ),
               ],
               if (_paymentMethod == 'cash') ...[
                 const SizedBox(height: 16),
@@ -1574,46 +1844,54 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                   controller: _tenderedController,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
-                      labelText: isAr
-                          ? 'المبلغ المستلم فعلياً (لحساب الباقي)'
-                          : 'Tendered Amount (Cash only)',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.payments_outlined)),
+                    labelText: isAr
+                        ? 'المبلغ المستلم فعلياً (لحساب الباقي)'
+                        : 'Tendered Amount (Cash only)',
+                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(Icons.payments_outlined),
+                  ),
                   onChanged: (val) => setState(() {}),
                 ),
                 if (_tenderedController.text.isNotEmpty) ...[
                   const SizedBox(height: 8),
-                  Builder(builder: (context) {
-                    final tendered =
-                        double.tryParse(_tenderedController.text) ?? 0.0;
-                    final change = tendered - requiredAmount;
-                    if (tendered > 0 && change >= 0) {
-                      return Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
+                  Builder(
+                    builder: (context) {
+                      final tendered =
+                          double.tryParse(_tenderedController.text) ?? 0.0;
+                      final change = tendered - requiredAmount;
+                      if (tendered > 0 && change >= 0) {
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
                             color: Colors.green.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: Colors.green)),
-                        child: Text(
-                          'المتبقي للعميل: ${change.toStringAsFixed(2)}',
-                          style: const TextStyle(
+                            border: Border.all(color: Colors.green),
+                          ),
+                          child: Text(
+                            'المتبقي للعميل: ${change.toStringAsFixed(2)}',
+                            style: const TextStyle(
                               fontFamily: 'Tajawal',
                               fontWeight: FontWeight.bold,
                               color: Colors.green,
-                              fontSize: 16),
-                          textAlign: TextAlign.center,
-                        ),
-                      );
-                    } else if (tendered > 0 && change < 0) {
-                      return Text('المبلغ غير كافٍ',
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        );
+                      } else if (tendered > 0 && change < 0) {
+                        return Text(
+                          'المبلغ غير كافٍ',
                           style: const TextStyle(
-                              color: Colors.red,
-                              fontFamily: 'Tajawal',
-                              fontWeight: FontWeight.bold),
-                          textAlign: TextAlign.center);
-                    }
-                    return const SizedBox.shrink();
-                  }),
+                            color: Colors.red,
+                            fontFamily: 'Tajawal',
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
                 ],
               ],
               const SizedBox(height: 24),
@@ -1636,25 +1914,33 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                     cartSubtotal: cartSubtotal,
                   )) {
                     showDialog(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                                title: Text(isAr ? 'خطأ في الخصم' : 'Discount Error',
-                                    style: TextStyle(
-                                        fontFamily: 'Tajawal',
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.red)),
-                                content: Text(
-                                    isAr
-                                        ? 'الرجاء إدخال خصم صحيح (النسبة بين 0 و 100، والمبلغ لا يتجاوز الإجمالي).'
-                                        : 'Please enter a valid discount (percentage between 0 and 100, amount not exceeding subtotal).',
-                                    style: TextStyle(fontFamily: 'Tajawal')),
-                                actions: [
-                                  TextButton(
-                                      onPressed: () => Navigator.pop(ctx),
-                                      child: Text(isAr ? 'حسناً' : 'OK',
-                                          style: TextStyle(
-                                              fontFamily: 'Tajawal')))
-                                ]));
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: Text(
+                          isAr ? 'خطأ في الخصم' : 'Discount Error',
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
+                        ),
+                        content: Text(
+                          isAr
+                              ? 'الرجاء إدخال خصم صحيح (النسبة بين 0 و 100، والمبلغ لا يتجاوز الإجمالي).'
+                              : 'Please enter a valid discount (percentage between 0 and 100, amount not exceeding subtotal).',
+                          style: TextStyle(fontFamily: 'Tajawal'),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: Text(
+                              isAr ? 'حسناً' : 'OK',
+                              style: TextStyle(fontFamily: 'Tajawal'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
                     return;
                   }
 
@@ -1667,25 +1953,33 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                     final diff = requiredAmount - (cash + network);
                     if (diff.abs() > 0.01) {
                       showDialog(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                                  title: Text(isAr ? 'تنبيه' : 'Warning',
-                                      style: TextStyle(
-                                          fontFamily: 'Tajawal',
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.red)),
-                                  content: Text(
-                                      isAr
-                                          ? 'يجب أن يتطابق مجموع المبالغ مع المبلغ المدفوع (${requiredAmount.toStringAsFixed(2)}).'
-                                          : 'Split amounts must match the paid amount.',
-                                      style: TextStyle(fontFamily: 'Tajawal')),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: () => Navigator.pop(ctx),
-                                        child: Text(isAr ? 'حسناً' : 'OK',
-                                            style: TextStyle(
-                                                fontFamily: 'Tajawal')))
-                                  ]));
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: Text(
+                            isAr ? 'تنبيه' : 'Warning',
+                            style: TextStyle(
+                              fontFamily: 'Tajawal',
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                            ),
+                          ),
+                          content: Text(
+                            isAr
+                                ? 'يجب أن يتطابق مجموع المبالغ مع المبلغ المدفوع (${requiredAmount.toStringAsFixed(2)}).'
+                                : 'Split amounts must match the paid amount.',
+                            style: TextStyle(fontFamily: 'Tajawal'),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: Text(
+                                isAr ? 'حسناً' : 'OK',
+                                style: TextStyle(fontFamily: 'Tajawal'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
                       return;
                     }
                   }
@@ -1696,25 +1990,33 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                     final tendered = double.tryParse(_tenderedController.text);
                     if (tendered == null || tendered < requiredAmount) {
                       showDialog(
-                          context: context,
-                          builder: (ctx) => AlertDialog(
-                                  title: Text(isAr ? 'تنبيه' : 'Warning',
-                                      style: TextStyle(
-                                          fontFamily: 'Tajawal',
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.red)),
-                                  content: Text(
-                                      isAr
-                                          ? 'المبلغ المستلم من العميل غير كافٍ لتغطية المطلوب.'
-                                          : 'Tendered amount is insufficient.',
-                                      style: TextStyle(fontFamily: 'Tajawal')),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: () => Navigator.pop(ctx),
-                                        child: Text(isAr ? 'حسناً' : 'OK',
-                                            style: TextStyle(
-                                                fontFamily: 'Tajawal')))
-                                  ]));
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: Text(
+                            isAr ? 'تنبيه' : 'Warning',
+                            style: TextStyle(
+                              fontFamily: 'Tajawal',
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                            ),
+                          ),
+                          content: Text(
+                            isAr
+                                ? 'المبلغ المستلم من العميل غير كافٍ لتغطية المطلوب.'
+                                : 'Tendered amount is insufficient.',
+                            style: TextStyle(fontFamily: 'Tajawal'),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: Text(
+                                isAr ? 'حسناً' : 'OK',
+                                style: TextStyle(fontFamily: 'Tajawal'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
                       return;
                     }
                   }
@@ -1723,48 +2025,62 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                   if (_isCredit && _selectedCustomerId == null) {
                     _triggerHighlight();
                     showDialog(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                              title: Text('تنبيه',
-                                  style: TextStyle(
-                                      fontFamily: 'Tajawal',
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.orange)),
-                              content: Text(
-                                  'لا يمكن تسجيل فاتورة آجلة لعميل عام.\nيرجى اختيار العميل من القائمة أو إضافة عميل جديد بالضغط على علامة (+).',
-                                  style: TextStyle(fontFamily: 'Tajawal')),
-                              actions: [
-                                TextButton(
-                                    onPressed: () => Navigator.pop(ctx),
-                                    child: Text('حسناً',
-                                        style:
-                                            TextStyle(fontFamily: 'Tajawal')))
-                              ],
-                            ));
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: Text(
+                          'تنبيه',
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange,
+                          ),
+                        ),
+                        content: Text(
+                          'لا يمكن تسجيل فاتورة آجلة لعميل عام.\nيرجى اختيار العميل من القائمة أو إضافة عميل جديد بالضغط على علامة (+).',
+                          style: TextStyle(fontFamily: 'Tajawal'),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: Text(
+                              'حسناً',
+                              style: TextStyle(fontFamily: 'Tajawal'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
                     return;
                   }
 
                   if (paid < grandTotal && _selectedCustomerId == null) {
                     _triggerHighlight();
                     showDialog(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                              title: Text('تنبيه',
-                                  style: TextStyle(
-                                      fontFamily: 'Tajawal',
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.orange)),
-                              content: Text(
-                                  'المبلغ المدفوع أقل من الإجمالي.\nيرجى إضافة العميل لتسجيل المتبقي كدين في حسابه.',
-                                  style: TextStyle(fontFamily: 'Tajawal')),
-                              actions: [
-                                TextButton(
-                                    onPressed: () => Navigator.pop(ctx),
-                                    child: Text('حسناً',
-                                        style:
-                                            TextStyle(fontFamily: 'Tajawal')))
-                              ],
-                            ));
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: Text(
+                          'تنبيه',
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange,
+                          ),
+                        ),
+                        content: Text(
+                          'المبلغ المدفوع أقل من الإجمالي.\nيرجى إضافة العميل لتسجيل المتبقي كدين في حسابه.',
+                          style: TextStyle(fontFamily: 'Tajawal'),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: Text(
+                              'حسناً',
+                              style: TextStyle(fontFamily: 'Tajawal'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
                     return;
                   }
                   // -------------------------------------
@@ -1774,61 +2090,73 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                       _scheduledDate != null &&
                       _scheduledTime != null) {
                     finalSchedule = DateTime(
-                        _scheduledDate!.year,
-                        _scheduledDate!.month,
-                        _scheduledDate!.day,
-                        _scheduledTime!.hour,
-                        _scheduledTime!.minute);
+                      _scheduledDate!.year,
+                      _scheduledDate!.month,
+                      _scheduledDate!.day,
+                      _scheduledTime!.hour,
+                      _scheduledTime!.minute,
+                    );
                   }
                   String finalCustomerId = 'walk_in';
                   String finalCustomerName = 'عميل عام';
                   if (_selectedCustomerId != null) {
                     final customer = _localCustomers.firstWhere(
-                        (c) => c.id == _selectedCustomerId,
-                        orElse: () => Customer(
-                            id: _selectedCustomerId!,
-                            merchantId: '',
-                            name: 'عميل عام',
-                            phone: '',
-                            createdAt: DateTime.now()));
+                      (c) => c.id == _selectedCustomerId,
+                      orElse: () => Customer(
+                        id: _selectedCustomerId!,
+                        merchantId: '',
+                        name: 'عميل عام',
+                        phone: '',
+                        createdAt: DateTime.now(),
+                      ),
+                    );
                     finalCustomerId = customer.id;
                     finalCustomerName = customer.name;
                   }
 
-                  widget.onCheckoutComplete(OrderDetails(
-                    customerId: finalCustomerId,
-                    customerName: finalCustomerName,
-                    paidAmount: paid,
-                    isCredit: _isCredit || paid < grandTotal,
-                    notes: '',
-                    paymentMethod: _paymentMethod,
-                    scheduledDate: finalSchedule,
-                    tenderedAmount: _paymentMethod == 'cash' &&
-                            _tenderedController.text.isNotEmpty
-                        ? double.tryParse(_tenderedController.text)
-                        : null,
-                    changeAmount: _paymentMethod == 'cash' &&
-                            _tenderedController.text.isNotEmpty
-                        ? (double.tryParse(_tenderedController.text) ?? 0) -
-                            paid
-                        : null,
-                    splitCashAmount: _paymentMethod == 'split'
-                        ? (double.tryParse(_splitCashController.text) ?? 0)
-                        : null,
-                    splitNetworkAmount: _paymentMethod == 'split'
-                        ? (double.tryParse(_splitNetworkController.text) ?? 0)
-                        : null,
-                    discountType: _discountType,
-                    discountValue: double.tryParse(_discountValueController.text),
-                    discountAmount: discountAmount,
-                  ));
+                  widget.onCheckoutComplete(
+                    OrderDetails(
+                      customerId: finalCustomerId,
+                      customerName: finalCustomerName,
+                      paidAmount: paid,
+                      orderTotal: grandTotal,
+                      isCredit: _isCredit || paid < grandTotal,
+                      notes: '',
+                      paymentMethod: _paymentMethod,
+                      scheduledDate: finalSchedule,
+                      tenderedAmount:
+                          _paymentMethod == 'cash' &&
+                              _tenderedController.text.isNotEmpty
+                          ? double.tryParse(_tenderedController.text)
+                          : null,
+                      changeAmount:
+                          _paymentMethod == 'cash' &&
+                              _tenderedController.text.isNotEmpty
+                          ? (double.tryParse(_tenderedController.text) ?? 0) -
+                                paid
+                          : null,
+                      splitCashAmount: _paymentMethod == 'split'
+                          ? (double.tryParse(_splitCashController.text) ?? 0)
+                          : null,
+                      splitNetworkAmount: _paymentMethod == 'split'
+                          ? (double.tryParse(_splitNetworkController.text) ?? 0)
+                          : null,
+                      discountType: _discountType,
+                      discountValue: double.tryParse(
+                        _discountValueController.text,
+                      ),
+                      discountAmount: discountAmount,
+                    ),
+                  );
                 },
                 child: Text(
-                    isAr ? 'تأكيد وإصدار الفاتورة' : 'Confirm & Issue Invoice',
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontFamily: 'Tajawal',
-                        fontWeight: FontWeight.bold)),
+                  isAr ? 'تأكيد وإصدار الفاتورة' : 'Confirm & Issue Invoice',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontFamily: 'Tajawal',
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),

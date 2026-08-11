@@ -27,16 +27,12 @@ class QuotaConsumption {
   void apply(Transaction transaction) {
     for (final entry in _nextCounts) {
       final requirement = entry.key;
-      transaction.set(
-        requirement.ref,
-        {
-          'count': entry.value,
-          'branchId': requirement.branchId,
-          'resourceType': requirement.resourceType,
-          'periodKey': requirement.periodKey,
-        },
-        SetOptions(merge: true),
-      );
+      transaction.set(requirement.ref, {
+        'count': entry.value,
+        'branchId': requirement.branchId,
+        'resourceType': requirement.resourceType,
+        'periodKey': requirement.periodKey,
+      }, SetOptions(merge: true));
     }
   }
 }
@@ -61,8 +57,7 @@ class QuotaReservation {
     final nextCounts = <MapEntry<QuotaRequirement, int>>[];
     for (var i = 0; i < requirements.length; i++) {
       final requirement = requirements[i];
-      final current =
-          (snapshots[i].data()?['count'] as num?)?.toInt() ?? 0;
+      final current = (snapshots[i].data()?['count'] as num?)?.toInt() ?? 0;
       if (current >= requirement.limit) {
         throw Exception('limit_reached_for_plan');
       }
@@ -132,8 +127,10 @@ class EntitlementIntegration {
     } catch (_) {}
 
     try {
-      final mDoc =
-          await firestore.collection('merchants').doc(merchantId).get();
+      final mDoc = await firestore
+          .collection('merchants')
+          .doc(merchantId)
+          .get();
       final plan = mDoc.data()?['plan']?.toString();
       if (plan != null && plan.isNotEmpty) return plan;
     } catch (_) {}
@@ -162,13 +159,19 @@ class EntitlementIntegration {
       );
       if (globalUsage >= globalLimit) return false;
 
-      final branchPosition =
-          await getBranchPosition(firestore, merchantId, branchId);
-      final branchMode =
-          SubscriptionPolicy.getBranchMode(tier, branchPosition - 1);
+      final branchPosition = await getBranchPosition(
+        firestore,
+        merchantId,
+        branchId,
+      );
+      final branchMode = SubscriptionPolicy.getBranchMode(
+        tier,
+        branchPosition - 1,
+      );
 
       if (branchMode == BranchMode.trial) {
-        final branchLimit = SubscriptionPolicy.trialBranchLimits.ordersLifetime!;
+        final branchLimit =
+            SubscriptionPolicy.trialBranchLimits.ordersLifetime!;
         final branchUsage = await _getCurrentUsage(
           firestore,
           merchantId,
@@ -229,10 +232,15 @@ class EntitlementIntegration {
         ),
       ];
 
-      final branchPosition =
-          await getBranchPosition(firestore, merchantId, branchId);
-      final branchMode =
-          SubscriptionPolicy.getBranchMode(tier, branchPosition - 1);
+      final branchPosition = await getBranchPosition(
+        firestore,
+        merchantId,
+        branchId,
+      );
+      final branchMode = SubscriptionPolicy.getBranchMode(
+        tier,
+        branchPosition - 1,
+      );
       if (branchMode == BranchMode.trial) {
         requirements.add(
           QuotaRequirement(
@@ -303,10 +311,12 @@ class EntitlementIntegration {
     String? plan,
   ) async {
     final tier = resolveEffectiveTier(plan);
-    final branchPosition =
-        await getBranchPosition(firestore, merchantId, branchId);
-    final limits =
-        SubscriptionPolicy.getBranchLimits(tier, branchPosition - 1);
+    final branchPosition = await getBranchPosition(
+      firestore,
+      merchantId,
+      branchId,
+    );
+    final limits = SubscriptionPolicy.getBranchLimits(tier, branchPosition - 1);
 
     int? limit;
     String periodKey = 'lifetime';
@@ -316,8 +326,7 @@ class EntitlementIntegration {
         limit = limits.ordersMonthly ?? limits.ordersLifetime;
         if (limits.ordersMonthly != null) {
           final now = DateTime.now();
-          periodKey =
-              '${now.year}-${now.month.toString().padLeft(2, '0')}';
+          periodKey = '${now.year}-${now.month.toString().padLeft(2, '0')}';
         }
         break;
       case 'products':
@@ -339,8 +348,7 @@ class EntitlementIntegration {
         limit = limits.expensesMonthly ?? limits.expensesLifetime;
         if (limits.expensesMonthly != null) {
           final now = DateTime.now();
-          periodKey =
-              '${now.year}-${now.month.toString().padLeft(2, '0')}';
+          periodKey = '${now.year}-${now.month.toString().padLeft(2, '0')}';
         }
         break;
     }
@@ -370,8 +378,9 @@ class EntitlementIntegration {
           e.toString().contains('offline') ||
           e.toString().contains('failed-precondition')) {
         try {
-          final snap =
-              await usageRef.get(const GetOptions(source: Source.cache));
+          final snap = await usageRef.get(
+            const GetOptions(source: Source.cache),
+          );
           return (snap.data()?['count'] as num?)?.toInt() ?? 0;
         } catch (_) {}
       } else {
