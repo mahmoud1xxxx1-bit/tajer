@@ -1,0 +1,23 @@
+name: Accounting Integrity 109 Test
+
+on:
+  push:
+    branches:
+      - audit/accounting-integrity-109
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.0'
+          channel: stable
+          cache: true
+      - name: Dependencies
+        run: flutter pub get --enforce-lockfile
+      - name: Return report accounting test
+        run: flutter test test/accounting_return_report_integrity_test.dart
+      - name: Analyze accounting files
+        run: flutter analyze lib/features/reports/data/reports_service.dart lib/features/orders/data/order_return_repository.dart lib/features/orders/data/return_cost_snapshot_repository.dart --no-fatal-warnings --no-fatal-infos
