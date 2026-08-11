@@ -84,8 +84,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final bool canCreateOrders = policy.canCreateOrders;
     final migrationBootstrap =
         (appUser.role == 'merchant' || appUser.role == 'admin')
-        ? ref.watch(branchCatalogMigrationBootstrapProvider)
-        : const AsyncData<void>(null);
+            ? ref.watch(branchCatalogMigrationBootstrapProvider)
+            : const AsyncData<void>(null);
 
     if (migrationBootstrap.isLoading || migrationBootstrap.hasError) {
       return BranchCatalogMigrationGate(
@@ -279,8 +279,7 @@ class DashboardHome extends ConsumerWidget {
               ),
             );
           } else {
-            final lowStockProducts =
-                productsAsync.value
+            final lowStockProducts = productsAsync.value
                     ?.where((p) => !p.isManufacturedOnDemand && p.quantity <= 5)
                     .toList() ??
                 [];
@@ -401,7 +400,7 @@ class DashboardHome extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: _StatCard(
-                        title: l10n.totalSales,
+                        title: l10n.todaySales,
                         value: '$totalSales ${currentCurrency.code}',
                         icon: Icons.account_balance_wallet_outlined,
                         color: Theme.of(context).colorScheme.primary,
@@ -410,7 +409,7 @@ class DashboardHome extends ConsumerWidget {
                     SizedBox(width: 16),
                     Expanded(
                       child: _StatCard(
-                        title: l10n.ordersCount,
+                        title: l10n.todayOrders,
                         value: '$ordersCount',
                         icon: Icons.shopping_bag_outlined,
                         color: Theme.of(context).colorScheme.secondary,
@@ -542,12 +541,12 @@ class DashboardHome extends ConsumerWidget {
                         icon: Icons.archive,
                         label:
                             Localizations.localeOf(context).languageCode == 'ar'
-                            ? (policy.canViewShiftArchive
-                                  ? 'أرشيف الورديات'
-                                  : 'وردياتي')
-                            : (policy.canViewShiftArchive
-                                  ? 'Shift Archive'
-                                  : 'My Shifts'),
+                                ? (policy.canViewShiftArchive
+                                    ? 'أرشيف الورديات'
+                                    : 'وردياتي')
+                                : (policy.canViewShiftArchive
+                                    ? 'Shift Archive'
+                                    : 'My Shifts'),
                         color: Colors.brown,
                         onTap: () {
                           context.push(

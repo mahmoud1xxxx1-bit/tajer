@@ -662,5 +662,7 @@
   "freeLimitReachedTitle": "اكتملت تجربتك المجانية",
   "freeLimitReachedMessage": "لقد وصلت للحد الأقصى من الطلبات المسموح بها في الباقة المجانية.",
   "later": "لاحقاً",
-  "viewPlans": "عرض الباقات"
+  "viewPlans": "عرض الباقات",
+  "todaySales": "مبيعات اليوم",
+  "todayOrders": "طلبات اليوم"
 }

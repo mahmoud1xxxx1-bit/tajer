@@ -662,5 +662,7 @@
   "freeLimitReachedTitle": "Free Trial Completed",
   "freeLimitReachedMessage": "You have reached the maximum number of orders for the free plan.",
   "later": "Later",
-  "viewPlans": "View Plans"
+  "viewPlans": "View Plans",
+  "todaySales": "Today's Sales",
+  "todayOrders": "Today's Orders"
 }
