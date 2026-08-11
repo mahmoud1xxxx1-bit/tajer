@@ -55,6 +55,9 @@ class ExpenseRepository {
   }
 
   Future<void> addExpense(Expense expense, {required String branchId}) async {
+    if (expense.amount <= 0 || !expense.amount.isFinite) {
+      throw Exception('قيمة المصروف يجب أن تكون أكبر من صفر.');
+    }
     await EntitlementIntegration.checkAndConsumeQuota(
       firestore: _firestore,
       merchantId: expense.merchantId,
@@ -84,12 +87,15 @@ class ExpenseRepository {
           .collection('shifts')
           .doc(normalized.shiftId)
           .get(const GetOptions(source: Source.serverAndCache));
-      if (!shift.exists)
+      if (!shift.exists) {
         throw Exception('الوردية المرتبطة بالمصروف غير موجودة.');
+      }
       final data = shift.data()!;
       final shiftBranchId = data['branchId']?.toString() ?? 'main';
       final status = data['status']?.toString();
-      if (shiftBranchId != normalized.branchId || status != 'open') {
+      if (shiftBranchId != normalized.branchId ||
+          status != 'open' ||
+          data['endTime'] != null) {
         throw Exception('لا يمكن تسجيل المصروف على وردية مغلقة أو فرع مختلف.');
       }
     }
@@ -98,7 +104,43 @@ class ExpenseRepository {
   }
 
   Future<void> updateExpense(Expense expense) async {
-    await _expensesRef.doc(expense.id).update(expense.toJson());
+    if (expense.amount <= 0 || !expense.amount.isFinite) {
+      throw Exception('قيمة المصروف يجب أن تكون أكبر من صفر.');
+    }
+    final ref = _expensesRef.doc(expense.id);
+    final current = await ref.get(const GetOptions(source: Source.serverAndCache));
+    if (!current.exists || current.data() == null) {
+      throw Exception('المصروف غير موجود.');
+    }
+    final currentExpense = Expense.fromJson(current.data()!);
+    if (currentExpense.isCancelled) {
+      throw Exception('لا يمكن تعديل مصروف ملغى.');
+    }
+    if (currentExpense.isSupplierPayment || expense.isSupplierPayment) {
+      throw Exception(
+          'مصروف سداد المورد مرتبط بحركة المورد ولا يمكن تعديله منفرداً. استخدم عملية المورد الأصلية.');
+    }
+    if (currentExpense.branchId != expense.branchId ||
+        currentExpense.shiftId != expense.shiftId ||
+        currentExpense.merchantId != expense.merchantId ||
+        currentExpense.createdAt != expense.createdAt) {
+      throw Exception('لا يمكن تغيير مرجع الفرع أو الوردية أو هوية المصروف.');
+    }
+    if (currentExpense.shiftId != null && currentExpense.shiftId!.isNotEmpty) {
+      final shift = await _firestore
+          .collection('shifts')
+          .doc(currentExpense.shiftId)
+          .get(const GetOptions(source: Source.serverAndCache));
+      final data = shift.data();
+      if (!shift.exists ||
+          data == null ||
+          data['status']?.toString() != 'open' ||
+          data['endTime'] != null ||
+          (data['branchId']?.toString() ?? 'main') != currentExpense.branchId) {
+        throw Exception('لا يمكن تعديل مصروف مرتبط بوردية مغلقة أو فرع مختلف.');
+      }
+    }
+    await ref.update(expense.toJson());
   }
 
   Future<void> cancelExpense(Expense expense) async {
@@ -177,6 +219,12 @@ class ExpenseRepository {
   }
 
   Future<void> deleteExpense(String expenseId) async {
+    final snap = await _expensesRef.doc(expenseId).get();
+    if (!snap.exists || snap.data() == null) return;
+    final expense = Expense.fromJson(snap.data()!);
+    if (!expense.isCancelled) {
+      throw Exception('يجب إلغاء المصروف أولاً قبل الحذف النهائي.');
+    }
     await _expensesRef.doc(expenseId).delete();
   }
 }
