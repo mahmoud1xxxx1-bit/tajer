@@ -69,9 +69,15 @@ old_rules = """      match /product_costs/{productId} {
       }
 """
 new_rules = """      match /product_costs/{costId} {
+        // Legacy merchant-wide cost docs have no branchId. Keep their reads
+        // compatible for users who already have can_view_cost, but scope all
+        // new branch-aware docs by branch access.
         allow read: if resource != null &&
           hasPermission(merchantId, 'can_view_cost') &&
-          hasBranchAccess(merchantId, resource.data.get('branchId', 'main'));
+          (
+            resource.data.get('branchId', null) == null ||
+            hasBranchAccess(merchantId, resource.data.get('branchId', 'main'))
+          );
         allow create, update: if hasPermission(merchantId, 'can_manage_products') &&
           hasPermission(merchantId, 'can_view_cost') &&
           request.resource.data.keys().hasOnly([
@@ -90,12 +96,16 @@ new_rules = """      match /product_costs/{costId} {
              hasBranchAccess(merchantId, request.resource.data.get('branchId', 'main'))) ||
             (request.resource.data.get('branchId', null) == null &&
              costId == request.resource.data.get('productId', '') &&
-             hasBranchAccess(merchantId, 'main'))
+             isOwner(merchantId))
           );
         allow delete: if resource != null &&
           hasPermission(merchantId, 'can_manage_products') &&
           hasPermission(merchantId, 'can_view_cost') &&
-          hasBranchAccess(merchantId, resource.data.get('branchId', 'main'));
+          (
+            (resource.data.get('branchId', null) == null && isOwner(merchantId)) ||
+            (resource.data.get('branchId', null) is string &&
+             hasBranchAccess(merchantId, resource.data.get('branchId', 'main')))
+          );
       }
 """
 if old_rules not in s:
