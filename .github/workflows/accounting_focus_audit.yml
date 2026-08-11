@@ -1,0 +1,32 @@
+name: Accounting Focus Audit
+
+on:
+  push:
+    branches: ["audit/pre-google-play-414"]
+
+permissions:
+  contents: read
+
+jobs:
+  accounting:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.0'
+          channel: stable
+          cache: true
+      - run: flutter pub get --enforce-lockfile
+      - name: Core accounting matrix
+        run: flutter test test/pre_release_accounting_matrix_test.dart --reporter expanded
+      - name: Accounting edge cases
+        run: flutter test test/pre_release_accounting_edge_cases_test.dart --reporter expanded
+      - name: Supplier branch debt
+        run: flutter test test/pre_release_supplier_branch_debt_test.dart --reporter expanded
+      - name: Supplier reversal
+        run: flutter test test/pre_release_supplier_reversal_test.dart --reporter expanded
+      - name: Partial return integration
+        run: flutter test test/pre_release_partial_return_integration_test.dart --reporter expanded
+      - name: Free quota atomicity
+        run: flutter test test/pre_release_free_quota_atomicity_test.dart --reporter expanded
