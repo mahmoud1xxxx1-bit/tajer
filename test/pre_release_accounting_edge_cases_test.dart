@@ -37,7 +37,7 @@ void main() {
     );
     final store = CartItem(
       productId: 's', productName: 'Store', quantity: 1,
-      price: 115, total: 115, taxMode: TaxMode.storeDefault,
+      price: 115, total: 115, taxMode: TaxMode.store,
       taxPercentage: null, isTaxInclusive: true,
     );
     final custom = CartItem(
