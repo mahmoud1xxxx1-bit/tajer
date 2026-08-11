@@ -1,0 +1,105 @@
+name: Temporary Arabic Encoding Repair 414
+
+on:
+  push:
+    branches:
+      - feature/v108-stable-189
+
+permissions:
+  contents: write
+
+jobs:
+  repair-arabic:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact branch
+        uses: actions/checkout@v4
+        with:
+          ref: feature/v108-stable-189
+          fetch-depth: 0
+
+      - name: Repair only proven mojibake values
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path('lib/l10n/app_ar.arb')
+          with path.open('r', encoding='utf-8-sig') as f:
+              data = json.load(f)
+
+          before_keys = list(data.keys())
+          suspicious_markers = ('Ã', 'Â', 'Ø', 'Ù', 'â', 'ðŸ', 'ï¸', 'ï¿½', '�')
+
+          def suspicious_score(text):
+              return sum(text.count(m) for m in suspicious_markers)
+
+          changed = []
+          for key, value in list(data.items()):
+              if not isinstance(value, str):
+                  continue
+              original_score = suspicious_score(value)
+              if original_score == 0:
+                  continue
+
+              best = value
+              best_score = original_score
+              for enc in ('cp1252', 'latin-1'):
+                  try:
+                      candidate = value.encode(enc).decode('utf-8')
+                  except (UnicodeEncodeError, UnicodeDecodeError):
+                      continue
+                  score = suspicious_score(candidate)
+                  if score < best_score:
+                      best = candidate
+                      best_score = score
+
+              if best != value:
+                  data[key] = best
+                  changed.append(key)
+
+          if list(data.keys()) != before_keys:
+              raise SystemExit('FAIL: ARB key order/set changed')
+
+          remaining = []
+          for key, value in data.items():
+              if isinstance(value, str) and suspicious_score(value) > 0:
+                  remaining.append((key, value))
+
+          if remaining:
+              print('Remaining suspicious values:')
+              for key, value in remaining:
+                  print(f'{key}: {value!r}')
+              raise SystemExit(f'FAIL: {len(remaining)} suspicious values remain')
+
+          with path.open('w', encoding='utf-8', newline='\n') as f:
+              json.dump(data, f, ensure_ascii=False, indent=2)
+              f.write('\n')
+
+          print(f'KEY_COUNT={len(before_keys)}')
+          print(f'CHANGED_VALUES={len(changed)}')
+          print('CHANGED_KEYS=' + ','.join(changed))
+          PY
+
+      - name: Verify JSON and scope
+        shell: bash
+        run: |
+          python -m json.tool lib/l10n/app_ar.arb >/dev/null
+          echo 'Changed files before cleanup:'
+          git diff --name-only
+          if [ "$(git diff --name-only)" != "lib/l10n/app_ar.arb" ]; then
+            echo 'FAIL: unexpected production file changed'
+            exit 1
+          fi
+
+      - name: Remove temporary workflow and publish isolated repair
+        shell: bash
+        run: |
+          rm .github/workflows/temp_fix_arabic_414.yml
+          git config user.name 'Tajer Repair Bot'
+          git config user.email 'bot@tajer.local'
+          git add lib/l10n/app_ar.arb .github/workflows/temp_fix_arabic_414.yml
+          git diff --cached --name-status
+          git commit -m 'fix(l10n): repair Arabic UTF-8 encoding for build 414'
+          git push origin HEAD:feature/v108-stable-189
