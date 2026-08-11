@@ -1,0 +1,49 @@
+name: Apply Proven Audit Fixes
+
+on:
+  push:
+    branches: ["audit/pre-google-play-414"]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply proven fixes only
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          reports = Path('lib/features/reports/data/reports_service.dart')
+          s = reports.read_text(encoding='utf-8')
+          old = "final itemTax = item.taxPercentage ?? defaultTaxPercentage;"
+          new = "final itemTax = item.getEffectiveTax(defaultTaxPercentage);"
+          if s.count(old) != 1:
+              raise SystemExit(f'Expected exactly one report tax target, found {s.count(old)}')
+          reports.write_text(s.replace(old, new), encoding='utf-8')
+
+          supplier = Path('lib/features/suppliers/data/supplier_repository.dart')
+          s = supplier.read_text(encoding='utf-8')
+          needle = """      if (amountPaid > currentDebt) {\n        throw Exception('مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق.');\n      }\n\n      if (needsOpenShift) {"""
+          replacement = """      if (amountPaid > currentDebt) {\n        throw Exception('مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق.');\n      }\n\n      final rawBranchDebts = supplierSnapshot.data()?['branchDebts'];\n      final branchDebts = rawBranchDebts is Map\n          ? Map<String, dynamic>.from(rawBranchDebts)\n          : const <String, dynamic>{};\n      final currentBranchDebt =\n          (branchDebts[branchId] as num?)?.toDouble() ?? 0.0;\n      if (amountPaid > currentBranchDebt) {\n        throw Exception('مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق في هذا الفرع.');\n      }\n\n      if (needsOpenShift) {"""
+          if s.count(needle) != 1:
+              raise SystemExit(f'Expected exactly one branch-settlement target, found {s.count(needle)}')
+          supplier.write_text(s.replace(needle, replacement), encoding='utf-8')
+          PY
+
+          git diff --check
+          git diff --name-only
+          test "$(git diff --name-only | sort)" = $'lib/features/reports/data/reports_service.dart\nlib/features/suppliers/data/supplier_repository.dart'
+      - name: Commit fixes to audit branch
+        run: |
+          git config user.name "Tajer Audit Bot"
+          git config user.email "bot@tajer.local"
+          git add lib/features/reports/data/reports_service.dart lib/features/suppliers/data/supplier_repository.dart
+          git commit -m "fix: close proven VAT-exempt and supplier branch-debt accounting gaps"
+          git push origin HEAD:audit/pre-google-play-414
