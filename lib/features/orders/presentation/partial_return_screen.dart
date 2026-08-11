@@ -9,6 +9,7 @@ import '../data/order_repository.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/services/activity_logger.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../shifts/data/shift_repository.dart';
 
 class PartialReturnScreen extends ConsumerStatefulWidget {
   final AppOrder order;
@@ -16,7 +17,8 @@ class PartialReturnScreen extends ConsumerStatefulWidget {
   const PartialReturnScreen({super.key, required this.order});
 
   @override
-  ConsumerState<PartialReturnScreen> createState() => _PartialReturnScreenState();
+  ConsumerState<PartialReturnScreen> createState() =>
+      _PartialReturnScreenState();
 }
 
 class _PartialReturnScreenState extends ConsumerState<PartialReturnScreen> {
@@ -53,6 +55,24 @@ class _PartialReturnScreenState extends ConsumerState<PartialReturnScreen> {
   }
 
   Future<void> _submitReturn() async {
+    final currentShift =
+        ref.read(currentShiftProvider(widget.order.merchantId)).value;
+    if (currentShift == null ||
+        currentShift.status != 'open' ||
+        currentShift.branchId != widget.order.branchId) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'يجب فتح وردية في نفس الفرع قبل تسجيل المرتجع.',
+              style: TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
     final returnedItems = <CartItem>[];
     double returnedTotal = 0.0;
     double returnedTax = 0.0;
@@ -62,35 +82,45 @@ class _PartialReturnScreenState extends ConsumerState<PartialReturnScreen> {
       final lineId = originalItem.lineId ?? '${widget.order.id}_$i';
       final returnQty = _returnQuantities[lineId] ?? 0;
 
-      if (returnQty > 0) {
-        final double unitDiscount = originalItem.quantity > 0 ? (originalItem.discountAmount / originalItem.quantity) : 0.0;
-        final double unitPrice = originalItem.price - unitDiscount;
-        final double totalLineReturn = unitPrice * returnQty;
-        final double returnedDiscount = unitDiscount * returnQty;
+      if (returnQty <= 0) continue;
 
-        double lineTax = 0.0;
-        if (originalItem.taxPercentage != null && originalItem.taxPercentage! > 0) {
-          final isInclusive = originalItem.isTaxInclusive ?? true;
-          if (isInclusive) {
-            lineTax = totalLineReturn - (totalLineReturn / (1 + (originalItem.taxPercentage! / 100)));
-          } else {
-            lineTax = totalLineReturn * (originalItem.taxPercentage! / 100);
-          }
-        }
+      final unitDiscount = originalItem.quantity > 0
+          ? originalItem.discountAmount / originalItem.quantity
+          : 0.0;
+      final discountedUnitPrice = originalItem.price - unitDiscount;
+      final lineAmountBeforeExclusiveTax = discountedUnitPrice * returnQty;
+      final returnedDiscount = unitDiscount * returnQty;
 
-        returnedTotal += totalLineReturn;
-        if (originalItem.taxPercentage != null && originalItem.taxPercentage! > 0 && !(originalItem.isTaxInclusive ?? true)) {
-           returnedTotal += lineTax;
-        }
-        returnedTax += lineTax;
+      // POS stores the effective tax snapshot in CartItem.taxPercentage. Going
+      // through getEffectiveTax still respects TaxMode.exempt and avoids ever
+      // re-applying the merchant's current tax setting to a historical sale.
+      final effectiveTax = originalItem.getEffectiveTax(0.0);
+      final isInclusive = originalItem.isTaxInclusive ?? true;
+      double lineTax = 0.0;
+      if (effectiveTax > 0) {
+        lineTax = isInclusive
+            ? lineAmountBeforeExclusiveTax -
+                (lineAmountBeforeExclusiveTax / (1 + effectiveTax / 100))
+            : lineAmountBeforeExclusiveTax * (effectiveTax / 100);
+      }
 
-        returnedItems.add(originalItem.copyWith(
+      final lineRefundTotal = isInclusive
+          ? lineAmountBeforeExclusiveTax
+          : lineAmountBeforeExclusiveTax + lineTax;
+
+      returnedTotal += lineRefundTotal;
+      returnedTax += lineTax;
+
+      returnedItems.add(
+        originalItem.copyWith(
           quantity: returnQty,
-          total: totalLineReturn,
+          total: lineAmountBeforeExclusiveTax,
           lineId: lineId,
           discountAmount: returnedDiscount,
-        ));
-      }
+          taxPercentage: effectiveTax,
+          isTaxInclusive: isInclusive,
+        ),
+      );
     }
 
     if (returnedItems.isEmpty) return;
@@ -109,7 +139,7 @@ class _PartialReturnScreenState extends ConsumerState<PartialReturnScreen> {
         returnedItems: returnedItems,
         returnedTotal: returnedTotal,
         returnedTax: returnedTax,
-        shiftId: widget.order.shiftId,
+        shiftId: currentShift.id,
         employeeId: appUser?.id,
         paymentMethod: widget.order.paymentMethod ?? 'cash',
         reason: 'Partial Return',
@@ -122,7 +152,8 @@ class _PartialReturnScreenState extends ConsumerState<PartialReturnScreen> {
         await ActivityLogger.log(
           user: appUser,
           actionType: 'إرجاع جزئي لفاتورة',
-          description: 'تم الإرجاع الجزئي للفاتورة رقم #${widget.order.queueNumber ?? widget.order.id.substring(0, 6)} بقيمة ${returnedTotal.toStringAsFixed(2)}',
+          description:
+              'تم الإرجاع الجزئي للفاتورة رقم #${widget.order.queueNumber ?? widget.order.id.substring(0, 6)} بقيمة ${returnedTotal.toStringAsFixed(2)}',
           amount: returnedTotal,
         );
       }
@@ -130,13 +161,23 @@ class _PartialReturnScreenState extends ConsumerState<PartialReturnScreen> {
       if (mounted) {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم إرجاع الأصناف بنجاح', style: TextStyle(fontFamily: 'Tajawal'))),
+          const SnackBar(
+            content: Text(
+              'تم إرجاع الأصناف بنجاح',
+              style: TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(
+            content: Text(
+              'خطأ: $e',
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
         );
       }
     } finally {
@@ -159,7 +200,10 @@ class _PartialReturnScreenState extends ConsumerState<PartialReturnScreen> {
       appBar: AppBar(
         title: Text(
           isAr ? 'إرجاع جزئي للفاتورة' : 'Partial Return',
-          style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            fontFamily: 'Tajawal',
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: _isSubmitting
@@ -170,7 +214,8 @@ class _PartialReturnScreenState extends ConsumerState<PartialReturnScreen> {
               itemBuilder: (context, index) {
                 final item = widget.order.items[index];
                 final lineId = item.lineId ?? '${widget.order.id}_$index';
-                final alreadyReturned = widget.order.returnedQuantities[lineId] ?? 0;
+                final alreadyReturned =
+                    widget.order.returnedQuantities[lineId] ?? 0;
                 final maxAllowed = item.quantity - alreadyReturned;
                 final currentlyReturning = _returnQuantities[lineId] ?? 0;
 
@@ -184,17 +229,40 @@ class _PartialReturnScreenState extends ConsumerState<PartialReturnScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(item.productName, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),
+                              Text(
+                                item.productName,
+                                style: const TextStyle(
+                                  fontFamily: 'Tajawal',
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
                               const SizedBox(height: 4),
                               Text(
                                 '${isAr ? 'المتاح للإرجاع' : 'Available to return'}: $maxAllowed',
-                                style: TextStyle(color: maxAllowed > 0 ? Colors.green : Colors.grey, fontFamily: 'Tajawal'),
+                                style: TextStyle(
+                                  color: maxAllowed > 0
+                                      ? Colors.green
+                                      : Colors.grey,
+                                  fontFamily: 'Tajawal',
+                                ),
                               ),
                               if (alreadyReturned > 0)
                                 Text(
                                   '${isAr ? 'تم إرجاعه مسبقاً' : 'Already returned'}: $alreadyReturned',
-                                  style: const TextStyle(color: Colors.orange, fontFamily: 'Tajawal', fontSize: 12),
+                                  style: const TextStyle(
+                                    color: Colors.orange,
+                                    fontFamily: 'Tajawal',
+                                    fontSize: 12,
+                                  ),
                                 ),
+                              Text(
+                                '${(item.price * currentlyReturning).toStringAsFixed(2)} $currency',
+                                style: const TextStyle(
+                                  fontFamily: 'Tajawal',
+                                  fontSize: 12,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -202,18 +270,36 @@ class _PartialReturnScreenState extends ConsumerState<PartialReturnScreen> {
                           Row(
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.remove_circle_outline, color: Colors.red),
+                                icon: const Icon(
+                                  Icons.remove_circle_outline,
+                                  color: Colors.red,
+                                ),
                                 onPressed: () => _decrement(lineId),
                               ),
-                              Text('$currentlyReturning', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              Text(
+                                '$currentlyReturning',
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               IconButton(
-                                icon: const Icon(Icons.add_circle_outline, color: Colors.green),
+                                icon: const Icon(
+                                  Icons.add_circle_outline,
+                                  color: Colors.green,
+                                ),
                                 onPressed: () => _increment(lineId, maxAllowed),
                               ),
                             ],
                           )
                         else
-                          Text(isAr ? 'مسترجع بالكامل' : 'Fully Returned', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                          Text(
+                            isAr ? 'مسترجع بالكامل' : 'Fully Returned',
+                            style: const TextStyle(
+                              fontFamily: 'Tajawal',
+                              color: Colors.grey,
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -228,12 +314,19 @@ class _PartialReturnScreenState extends ConsumerState<PartialReturnScreen> {
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     backgroundColor: theme.colorScheme.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                   onPressed: _submitReturn,
                   child: Text(
                     isAr ? 'تأكيد الإرجاع' : 'Confirm Return',
-                    style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white),
+                    style: const TextStyle(
+                      fontFamily: 'Tajawal',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
