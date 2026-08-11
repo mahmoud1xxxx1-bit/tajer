@@ -7,7 +7,7 @@ const {
 } = require('@firebase/rules-unit-testing');
 const { doc, getDoc, setDoc } = require('firebase/firestore');
 
-const projectId = 'demo-tajer-product-cost-rules';
+const projectId = 'demo-tajer-rules';
 
 async function main() {
   const testEnv = await initializeTestEnvironment({
@@ -102,9 +102,6 @@ async function main() {
       updatedAt: new Date(),
     }));
 
-    // Legacy costs remain readable to cost-authorized users for backward
-    // compatibility, but only the merchant owner may create merchant-wide
-    // legacy cost documents going forward.
     await assertSucceeds(getDoc(doc(
       auditorA,
       'merchants', 'merchant-a', 'product_costs', 'legacy-prod',
