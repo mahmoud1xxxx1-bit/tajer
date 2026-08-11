@@ -33,8 +33,14 @@ void main() {
     expect(
         repository, contains('final existingOrder = await tx.get(orderRef)'));
     expect(repository, contains('return AppOrder.fromJson(existingData)'));
-    expect(repository,
-        contains('await _attachHistoricalCosts(tx, orderWithQueue, canReadCosts: canReadCosts)'));
+    expect(
+      repository,
+      matches(
+        RegExp(
+          r'await\s+_attachHistoricalCosts\(\s*tx,\s*orderWithQueue,\s*canReadCosts:\s*canReadCosts,\s*\)',
+        ),
+      ),
+    );
     expect(repository, contains('applySaleInTransaction('));
     expect(repository,
         contains('tx.set(orderRef, orderWithCostSnapshot.toJson())'));
