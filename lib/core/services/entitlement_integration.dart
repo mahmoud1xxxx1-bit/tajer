@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/plan_tier.dart';
 import '../models/subscription_policy.dart';
@@ -70,6 +72,7 @@ class QuotaReservation {
 
 class EntitlementIntegration {
   static PlanTier? _testInjectedTier;
+  static final Map<String, Future<void>> _quotaTails = {};
 
   static void injectTestTier(PlanTier tier) => _testInjectedTier = tier;
   static void clearTestTier() => _testInjectedTier = null;
@@ -77,6 +80,38 @@ class EntitlementIntegration {
   static PlanTier resolveEffectiveTier(String? plan) {
     if (_testInjectedTier != null) return _testInjectedTier!;
     return SubscriptionPolicy.resolveLegacyPlan(plan);
+  }
+
+  /// Serializes same-process mutations that compete for one merchant resource
+  /// quota. Firestore transactions remain the cross-device/cross-client guard;
+  /// this lock prevents two callbacks in the same app isolate from both racing
+  /// on the final slot and also makes the local/fake Firestore behavior match
+  /// production intent deterministically.
+  static Future<T> runWithQuotaLock<T>({
+    required String merchantId,
+    required String resourceType,
+    required Future<T> Function() action,
+  }) async {
+    final key = '$merchantId|$resourceType';
+    final previous = _quotaTails[key] ?? Future<void>.value();
+    final completer = Completer<void>();
+    final currentTail = completer.future;
+    _quotaTails[key] = currentTail;
+
+    try {
+      await previous;
+    } catch (_) {
+      // A previous operation must never poison the queue for the next one.
+    }
+
+    try {
+      return await action();
+    } finally {
+      if (!completer.isCompleted) completer.complete();
+      if (identical(_quotaTails[key], currentTail)) {
+        _quotaTails.remove(key);
+      }
+    }
   }
 
   static Future<int> getBranchPosition(
@@ -283,24 +318,30 @@ class EntitlementIntegration {
     required String resourceType,
     String? plan,
     WriteBatch? batch,
-  }) async {
-    final reservation = await prepareQuotaReservation(
-      firestore: firestore,
+  }) {
+    return runWithQuotaLock<void>(
       merchantId: merchantId,
-      branchId: branchId,
       resourceType: resourceType,
-      plan: plan,
-    );
-    if (reservation.isUnlimited) return;
+      action: () async {
+        final reservation = await prepareQuotaReservation(
+          firestore: firestore,
+          merchantId: merchantId,
+          branchId: branchId,
+          resourceType: resourceType,
+          plan: plan,
+        );
+        if (reservation.isUnlimited) return;
 
-    // A WriteBatch cannot make a prior quota read atomic. Always reserve the
-    // slot in a transaction. Repositories that require all-or-nothing coupling
-    // with their business write should use prepareQuotaReservation(),
-    // validate() and apply() inside their existing transaction instead.
-    await firestore.runTransaction<void>((transaction) async {
-      final consumption = await reservation.validate(transaction);
-      consumption.apply(transaction);
-    });
+        // A WriteBatch cannot make a prior quota read atomic. Always reserve
+        // the slot in a transaction. Repositories that require all-or-nothing
+        // coupling with a business write use the same keyed lock plus
+        // prepareQuotaReservation()/validate()/apply() in their transaction.
+        await firestore.runTransaction<void>((transaction) async {
+          final consumption = await reservation.validate(transaction);
+          consumption.apply(transaction);
+        });
+      },
+    );
   }
 
   static Future<Map<String, dynamic>?> _getLimitAndPeriod(
