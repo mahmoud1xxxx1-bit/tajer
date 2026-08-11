@@ -744,7 +744,7 @@ class BranchAwareOrderRepository extends OrderRepository {
     final returnRef = firestore
         .collection('merchants')
         .doc(originalOrder.merchantId)
-        .collection('returns')
+        .collection('order_returns')
         .doc(orderReturn.id);
 
     return firestore.runTransaction<AppOrder>((tx) async {
@@ -772,21 +772,28 @@ class BranchAwareOrderRepository extends OrderRepository {
         newReturnedQuantities[lineId] = currentReturned + returnedItem.quantity;
       }
 
-      // DO ALL READS FIRST
+      // Returns are new accounting events and must be posted to the
+      // CURRENT open shift, never back into the original sale's closed shift.
       DocumentReference<Map<String, dynamic>>? shiftRef;
-      DocumentSnapshot<Map<String, dynamic>>? shiftSnap;
       if (orderReturn.returnedTotal > 0) {
-        final shiftId = canonicalOrder.shiftId;
-        if (shiftId != null && shiftId.isNotEmpty) {
-          shiftRef = firestore.collection('shifts').doc(shiftId);
-          shiftSnap = await tx.get(shiftRef);
-          if (shiftSnap.exists) {
-            final shiftBranchId =
-                shiftSnap.data()?['branchId']?.toString() ?? 'main';
-            if (shiftBranchId != canonicalOrder.branchId) {
-              throw Exception('Order branch does not match the active shift');
-            }
-          }
+        final shiftId = orderReturn.shiftId;
+        if (shiftId == null || shiftId.isEmpty) {
+          throw Exception('An open shift is required to record a return.');
+        }
+        shiftRef = firestore.collection('shifts').doc(shiftId);
+        final shiftSnap = await tx.get(shiftRef);
+        if (!shiftSnap.exists || shiftSnap.data() == null) {
+          throw Exception('Return shift not found.');
+        }
+        final shiftData = shiftSnap.data()!;
+        final shiftBranchId = shiftData['branchId']?.toString() ?? 'main';
+        final shiftStatus = shiftData['status']?.toString();
+        if (shiftBranchId != canonicalOrder.branchId ||
+            shiftStatus != 'open' ||
+            shiftData['endTime'] != null) {
+          throw Exception(
+            'Return must be recorded in the current open shift of the sale branch.',
+          );
         }
       }
 
@@ -801,11 +808,13 @@ class BranchAwareOrderRepository extends OrderRepository {
 
       // NOW DO ALL WRITES
       if (orderReturn.returnedTotal > 0) {
-        if (shiftRef != null && shiftSnap != null && shiftSnap.exists) {
-          final updates = <String, dynamic>{};
+        if (shiftRef != null) {
+          final updates = <String, dynamic>{
+            'totalTax': FieldValue.increment(-orderReturn.returnedTax),
+          };
           if (canonicalOrder.paymentMethod == 'cash') {
-            updates['cashSales'] = FieldValue.increment(
-              -orderReturn.returnedTotal,
+            updates['refundsCash'] = FieldValue.increment(
+              orderReturn.returnedTotal,
             );
           }
           if ([
@@ -813,13 +822,13 @@ class BranchAwareOrderRepository extends OrderRepository {
             'mada',
             'apple_pay',
           ].contains(canonicalOrder.paymentMethod)) {
-            updates['cardTotal'] = FieldValue.increment(
-              -orderReturn.returnedTotal,
+            updates['refundsCard'] = FieldValue.increment(
+              orderReturn.returnedTotal,
             );
           }
           if (canonicalOrder.paymentMethod == 'transfer') {
-            updates['transferTotal'] = FieldValue.increment(
-              -orderReturn.returnedTotal,
+            updates['refundsTransfer'] = FieldValue.increment(
+              orderReturn.returnedTotal,
             );
           }
           if (canonicalOrder.paymentMethod == 'split') {
@@ -833,15 +842,13 @@ class BranchAwareOrderRepository extends OrderRepository {
                 orderReturn.returnedTotal * (originalCash / originalSplitPaid);
             final cardRefund = orderReturn.returnedTotal - cashRefund;
             if (cashRefund > 0.000001) {
-              updates['cashSales'] = FieldValue.increment(-cashRefund);
+              updates['refundsCash'] = FieldValue.increment(cashRefund);
             }
             if (cardRefund > 0.000001) {
-              updates['cardTotal'] = FieldValue.increment(-cardRefund);
+              updates['refundsCard'] = FieldValue.increment(cardRefund);
             }
           }
-          if (updates.isNotEmpty) {
-            tx.update(shiftRef, updates);
-          }
+          tx.update(shiftRef, updates);
         }
 
         final customerId = canonicalOrder.customerId;
