@@ -30,124 +30,136 @@ class BranchAwareOrderRepository extends OrderRepository {
     String? shiftId,
     String? branchId,
   }) async {
-    final effectiveBranchId = _operationBranch(branchId ?? order.branchId);
-    final quotaReservation =
-        await EntitlementIntegration.prepareQuotaReservation(
-          firestore: firestore,
-          merchantId: order.merchantId,
-          branchId: effectiveBranchId,
-          resourceType: 'orders',
-          plan: null,
-        );
-    final canReadCosts = await _canReadCosts();
-    final now = DateTime.now();
-    final date =
-        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    return EntitlementIntegration.runWithQuotaLock<AppOrder>(
+      merchantId: order.merchantId,
+      resourceType: 'orders',
+      action: () async {
+        final effectiveBranchId = _operationBranch(branchId ?? order.branchId);
+        final quotaReservation =
+            await EntitlementIntegration.prepareQuotaReservation(
+              firestore: firestore,
+              merchantId: order.merchantId,
+              branchId: effectiveBranchId,
+              resourceType: 'orders',
+              plan: null,
+            );
+        final canReadCosts = await _canReadCosts();
+        final now = DateTime.now();
+        final date =
+            '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
-    final orderRef = firestore.collection('orders').doc(order.id);
-    final counterRef = firestore
-        .collection('merchants')
-        .doc(order.merchantId)
-        .collection('counters')
-        .doc('daily_orders_$effectiveBranchId');
+        final orderRef = firestore.collection('orders').doc(order.id);
+        final counterRef = firestore
+            .collection('merchants')
+            .doc(order.merchantId)
+            .collection('counters')
+            .doc('daily_orders_$effectiveBranchId');
 
-    final createdOrder = await firestore.runTransaction<AppOrder>((tx) async {
-      final existingOrder = await tx.get(orderRef);
-      if (existingOrder.exists && existingOrder.data() != null) {
-        final existingData = Map<String, dynamic>.from(existingOrder.data()!);
-        existingData['id'] = existingOrder.id;
-        return AppOrder.fromJson(existingData);
-      }
-
-      // Read and validate quota inside this transaction. The write is deferred
-      // until every business read has completed, so a failed order consumes no slot.
-      final quotaConsumption = await quotaReservation.validate(tx);
-
-      final counterSnap = await tx.get(counterRef);
-      final counterData = counterSnap.data();
-      final current = counterData?['date'] == date
-          ? (counterData?['lastNumber'] as num?)?.toInt() ?? 0
-          : 0;
-      final queueNumber = current + 1;
-      final orderWithQueue = order.copyWith(
-        branchId: effectiveBranchId,
-        shiftId: shiftId,
-        queueNumber: queueNumber,
-      );
-      final orderWithCostSnapshot = await _attachHistoricalCosts(
-        tx,
-        orderWithQueue,
-        canReadCosts: canReadCosts,
-      );
-
-      DocumentReference<Map<String, dynamic>>? customerRef;
-      DocumentSnapshot<Map<String, dynamic>>? customerDoc;
-      if (orderWithQueue.customerId != 'walk_in' &&
-          orderWithQueue.customerId.isNotEmpty) {
-        customerRef = firestore
-            .collection('customers')
-            .doc(orderWithQueue.customerId);
-        customerDoc = await tx.get(customerRef);
-        if (customerDoc.exists && customerDoc.data() != null) {
-          final customerBranchId =
-              customerDoc.data()?['branchId']?.toString() ?? 'main';
-          if (customerBranchId != effectiveBranchId) {
-            throw Exception('Customer account belongs to a different branch.');
+        final createdOrder = await firestore.runTransaction<AppOrder>((
+          tx,
+        ) async {
+          final existingOrder = await tx.get(orderRef);
+          if (existingOrder.exists && existingOrder.data() != null) {
+            final existingData = Map<String, dynamic>.from(
+              existingOrder.data()!,
+            );
+            existingData['id'] = existingOrder.id;
+            return AppOrder.fromJson(existingData);
           }
-        }
-      }
 
-      DocumentReference<Map<String, dynamic>>? shiftRef;
-      if (shiftId != null && shiftId.isNotEmpty) {
-        shiftRef = firestore.collection('shifts').doc(shiftId);
-        final shiftSnap = await tx.get(shiftRef);
-        if (!shiftSnap.exists) {
-          throw Exception('Shift not found');
-        }
-        final shiftBranchId =
-            shiftSnap.data()?['branchId']?.toString() ?? 'main';
-        final shiftStatus = shiftSnap.data()?['status']?.toString();
-        if (shiftBranchId != effectiveBranchId || shiftStatus != 'open') {
-          throw Exception('Order branch does not match the active shift');
-        }
-      }
+          // Read and validate quota inside this transaction. The write is deferred
+          // until every business read has completed, so a failed order consumes no slot.
+          final quotaConsumption = await quotaReservation.validate(tx);
 
-      await OrderBranchInventoryService(firestore).applySaleInTransaction(
-        tx,
-        orderWithCostSnapshot,
-        queueNumber: queueNumber,
-      );
+          final counterSnap = await tx.get(counterRef);
+          final counterData = counterSnap.data();
+          final current = counterData?['date'] == date
+              ? (counterData?['lastNumber'] as num?)?.toInt() ?? 0
+              : 0;
+          final queueNumber = current + 1;
+          final orderWithQueue = order.copyWith(
+            branchId: effectiveBranchId,
+            shiftId: shiftId,
+            queueNumber: queueNumber,
+          );
+          final orderWithCostSnapshot = await _attachHistoricalCosts(
+            tx,
+            orderWithQueue,
+            canReadCosts: canReadCosts,
+          );
 
-      tx.set(counterRef, {
-        'date': date,
-        'lastNumber': queueNumber,
-        'branchId': effectiveBranchId,
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
+          DocumentReference<Map<String, dynamic>>? customerRef;
+          DocumentSnapshot<Map<String, dynamic>>? customerDoc;
+          if (orderWithQueue.customerId != 'walk_in' &&
+              orderWithQueue.customerId.isNotEmpty) {
+            customerRef = firestore
+                .collection('customers')
+                .doc(orderWithQueue.customerId);
+            customerDoc = await tx.get(customerRef);
+            if (customerDoc.exists && customerDoc.data() != null) {
+              final customerBranchId =
+                  customerDoc.data()?['branchId']?.toString() ?? 'main';
+              if (customerBranchId != effectiveBranchId) {
+                throw Exception(
+                  'Customer account belongs to a different branch.',
+                );
+              }
+            }
+          }
 
-      if (customerRef != null && customerDoc?.exists == true) {
-        final debtIncrease = orderWithQueue.isCredit
-            ? (orderWithQueue.total - orderWithQueue.paidAmount)
-            : 0.0;
-        tx.update(customerRef, {
-          'totalPurchases': FieldValue.increment(orderWithQueue.total),
-          'orderCount': FieldValue.increment(1),
-          'totalDebt': FieldValue.increment(debtIncrease),
-          'lastPurchaseDate': FieldValue.serverTimestamp(),
+          DocumentReference<Map<String, dynamic>>? shiftRef;
+          if (shiftId != null && shiftId.isNotEmpty) {
+            shiftRef = firestore.collection('shifts').doc(shiftId);
+            final shiftSnap = await tx.get(shiftRef);
+            if (!shiftSnap.exists) {
+              throw Exception('Shift not found');
+            }
+            final shiftBranchId =
+                shiftSnap.data()?['branchId']?.toString() ?? 'main';
+            final shiftStatus = shiftSnap.data()?['status']?.toString();
+            if (shiftBranchId != effectiveBranchId || shiftStatus != 'open') {
+              throw Exception('Order branch does not match the active shift');
+            }
+          }
+
+          await OrderBranchInventoryService(firestore).applySaleInTransaction(
+            tx,
+            orderWithCostSnapshot,
+            queueNumber: queueNumber,
+          );
+
+          tx.set(counterRef, {
+            'date': date,
+            'lastNumber': queueNumber,
+            'branchId': effectiveBranchId,
+            'updatedAt': FieldValue.serverTimestamp(),
+          }, SetOptions(merge: true));
+
+          if (customerRef != null && customerDoc?.exists == true) {
+            final debtIncrease = orderWithQueue.isCredit
+                ? (orderWithQueue.total - orderWithQueue.paidAmount)
+                : 0.0;
+            tx.update(customerRef, {
+              'totalPurchases': FieldValue.increment(orderWithQueue.total),
+              'orderCount': FieldValue.increment(1),
+              'totalDebt': FieldValue.increment(debtIncrease),
+              'lastPurchaseDate': FieldValue.serverTimestamp(),
+            });
+          }
+
+          if (shiftRef != null) {
+            final updates = _saleShiftUpdates(orderWithCostSnapshot);
+            if (updates.isNotEmpty) tx.update(shiftRef, updates);
+          }
+
+          quotaConsumption.apply(tx);
+          tx.set(orderRef, orderWithCostSnapshot.toJson());
+          return orderWithCostSnapshot;
         });
-      }
 
-      if (shiftRef != null) {
-        final updates = _saleShiftUpdates(orderWithCostSnapshot);
-        if (updates.isNotEmpty) tx.update(shiftRef, updates);
-      }
-
-      quotaConsumption.apply(tx);
-      tx.set(orderRef, orderWithCostSnapshot.toJson());
-      return orderWithCostSnapshot;
-    });
-
-    return createdOrder;
+        return createdOrder;
+      },
+    );
   }
 
   Future<bool> _canReadCosts() async {
