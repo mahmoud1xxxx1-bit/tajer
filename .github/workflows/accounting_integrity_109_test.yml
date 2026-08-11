@@ -6,18 +6,76 @@ on:
       - audit/accounting-integrity-109
 
 jobs:
-  test:
+  accounting-integrity:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.44.0'
           channel: stable
           cache: true
+
       - name: Dependencies
         run: flutter pub get --enforce-lockfile
-      - name: Return report accounting test
-        run: flutter test test/accounting_return_report_integrity_test.dart
-      - name: Analyze accounting files
-        run: flutter analyze lib/features/reports/data/reports_service.dart lib/features/orders/data/order_return_repository.dart lib/features/orders/data/return_cost_snapshot_repository.dart --no-fatal-warnings --no-fatal-infos
+
+      - name: Core accounting reference models
+        run: |
+          flutter test test/accounting_reference_model_test.dart
+          flutter test test/accounting_return_report_integrity_test.dart
+          flutter test test/pre_release_accounting_matrix_test.dart
+          flutter test test/pre_release_accounting_edge_cases_test.dart
+
+      - name: Customer debt and collections
+        run: |
+          flutter test test/customer_branch_debt_isolation_test.dart
+          flutter test test/customer_debt_payment_test.dart
+
+      - name: Sales, discounts and returns
+        run: |
+          flutter test test/discount_validation_test.dart
+          flutter test test/partial_return_test.dart
+          flutter test test/pre_release_partial_return_integration_test.dart
+
+      - name: Supplier debt, settlements and purchase invoices
+        run: |
+          flutter test test/pre_release_supplier_branch_debt_test.dart
+          flutter test test/pre_release_supplier_reversal_test.dart
+          flutter test test/purchase_invoice_test.dart
+
+      - name: Reports and shift reconciliation
+        run: |
+          flutter test test/report_cashflow_ledger_test.dart
+          flutter test test/report_scope_policy_test.dart
+          flutter test test/reports_service_test.dart
+          flutter test test/shift_report_reconciliation_test.dart
+          flutter test test/trusted_cogs_backend_contract_test.dart
+
+      - name: Localization integrity
+        run: flutter test test/localization_integrity_test.dart
+
+      - name: Analyze accounting surfaces
+        run: >-
+          flutter analyze
+          lib/features/orders
+          lib/features/customers
+          lib/features/suppliers
+          lib/features/expenses
+          lib/features/shifts
+          lib/features/reports
+          lib/core/services/excel_service.dart
+          --no-fatal-warnings
+          --no-fatal-infos
+
+      - name: Build Android test APK
+        run: flutter build apk --debug
+
+      - name: Upload Tajer accounting audit APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tajer-1.1.109-accounting-audit-apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
