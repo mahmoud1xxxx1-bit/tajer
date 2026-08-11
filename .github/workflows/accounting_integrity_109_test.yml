@@ -5,12 +5,40 @@ on:
     branches:
       - audit/accounting-integrity-109
 
+permissions:
+  contents: write
+
 jobs:
   accounting-integrity:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: audit/accounting-integrity-109
+          fetch-depth: 0
+
+      - name: Persist selected purchase date wiring
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('lib/features/suppliers/presentation/purchase_invoice_screen.dart')
+          text = path.read_text()
+          old = """        isFromShiftDrawer: _isFromShiftDrawer,\n        shiftId: shiftId,\n"""
+          new = """        isFromShiftDrawer: _isFromShiftDrawer,\n        occurredAt: _purchaseDate,\n        shiftId: shiftId,\n"""
+          if 'occurredAt: _purchaseDate' not in text:
+              if old not in text:
+                  raise SystemExit('Purchase date wiring anchor not found')
+              path.write_text(text.replace(old, new, 1))
+          PY
+          if ! git diff --quiet -- lib/features/suppliers/presentation/purchase_invoice_screen.dart; then
+            git config user.name "tajer-accounting-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add lib/features/suppliers/presentation/purchase_invoice_screen.dart
+            git commit -m "fix(accounting): honor selected purchase invoice date"
+            git push origin HEAD:audit/accounting-integrity-109
+          fi
 
       - uses: subosito/flutter-action@v2
         with:
