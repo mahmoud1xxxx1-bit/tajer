@@ -1,0 +1,40 @@
+name: Apply Printer Tax Snapshot Fix
+
+on:
+  push:
+    branches:
+      - audit/pre-google-play-414
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit/pre-google-play-414
+          fetch-depth: 0
+      - name: Patch printer tax calculation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/core/services/printer_service.dart')
+          text = p.read_text()
+          old = '      final taxRate = item.taxPercentage ?? 0.0;'
+          new = '      final taxRate = item.getEffectiveTax(taxPercentage ?? 0.0);'
+          count = text.count(old)
+          if count != 1:
+              raise SystemExit(f'Expected exactly one printer tax match, found {count}')
+          p.write_text(text.replace(old, new, 1))
+          PY
+      - name: Commit printer fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/core/services/printer_service.dart
+          git commit -m 'fix: honor tax mode in printed receipt'
+          git push origin HEAD:audit/pre-google-play-414
