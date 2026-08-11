@@ -1,0 +1,100 @@
+name: Accounting Integrity 109 Signed Release
+
+on:
+  push:
+    branches:
+      - audit/accounting-integrity-109
+    paths:
+      - .github/workflows/accounting_integrity_109_release.yml
+
+jobs:
+  signed-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout audited source
+        uses: actions/checkout@v4
+        with:
+          ref: audit/accounting-integrity-109
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '21'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.0'
+          channel: stable
+          cache: true
+
+      - name: Decode official Android release keystore
+        shell: bash
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+          test -s android/app/upload-keystore.jks
+
+      - name: Verify signing certificate is registered for Google Sign-In
+        shell: bash
+        env:
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          keytool -list -v \
+            -keystore android/app/upload-keystore.jks \
+            -storepass "$STORE_PASSWORD" \
+            -alias "$KEY_ALIAS" > /tmp/keytool.txt
+          grep -E 'SHA1:|SHA256:' /tmp/keytool.txt
+          python3 - <<'PY'
+          import json, re, subprocess
+          with open('android/app/google-services.json', encoding='utf-8') as f:
+              cfg = json.load(f)
+          registered = {
+              c['android_info']['certificate_hash'].lower()
+              for client in cfg.get('client', [])
+              for c in client.get('oauth_client', [])
+              if c.get('client_type') == 1 and c.get('android_info', {}).get('certificate_hash')
+          }
+          text = open('/tmp/keytool.txt', encoding='utf-8').read()
+          m = re.search(r'SHA1:\s*([0-9A-F:]+)', text)
+          if not m:
+              raise SystemExit('FAIL: could not read release SHA-1')
+          sha1 = m.group(1).replace(':','').lower()
+          print('RELEASE_SHA1=' + sha1)
+          print('REGISTERED_SHA1S=' + ','.join(sorted(registered)))
+          if sha1 not in registered:
+              raise SystemExit('FAIL: official release signing SHA-1 is not registered in google-services.json')
+          print('GOOGLE_SIGN_IN_CERTIFICATE_MATCH=PASS')
+          PY
+
+      - name: Clean and get dependencies
+        run: |
+          flutter clean
+          flutter pub get --enforce-lockfile
+          flutter gen-l10n
+
+      - name: Build signed Release APK
+        run: flutter build apk --release
+        env:
+          TAJER_STOREFILE: upload-keystore.jks
+          TAJER_STOREPASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          TAJER_KEYALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          TAJER_KEYPASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Verify APK
+        shell: bash
+        run: |
+          test -s build/app/outputs/flutter-apk/app-release.apk
+          sha256sum build/app/outputs/flutter-apk/app-release.apk
+          ls -lh build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload signed Release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tajer-1.1.109-accounting-audit-signed-release
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
