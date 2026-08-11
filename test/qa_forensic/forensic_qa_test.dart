@@ -955,7 +955,7 @@ void main() {
           price: 20,
           total: 20,
           costPrice: 5)
-    ]).toJson();
+    ]).toInternalJson();
     final decoded = AppOrder.fromJson(orderJson);
     evidence.checkBool('QA-079-ORDER-ROUNDTRIP', 'legacy',
         'order round trip preserves branch and cost snapshot',
