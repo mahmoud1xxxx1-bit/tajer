@@ -7,9 +7,15 @@ import '../features/authentication/application/session_identity.dart';
 import '../features/authentication/presentation/startup_screen.dart';
 import '../features/authentication/presentation/upgrade_account_screen.dart';
 import '../features/dashboard/presentation/dashboard_screen.dart';
+import '../features/dashboard/presentation/business_overview_screen.dart';
 import '../features/products/presentation/raw_materials_screen.dart';
 import '../features/subscriptions/presentation/paywall_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/stocktake/presentation/stocktakes_screen.dart';
+import '../features/stocktake/presentation/stocktake_session_screen.dart';
+import '../features/action_center/presentation/action_center_screen.dart';
+import '../features/purchasing/presentation/reorder_center_screen.dart';
+import '../features/reports/presentation/daily_summaries_screen.dart';
 import '../features/settings/presentation/backup_security_screen.dart';
 import '../features/settings/presentation/printer_settings_screen.dart';
 import '../features/settings/presentation/store_branding_screen.dart';
@@ -54,6 +60,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           path: '/dashboard',
           builder: (context, state) => const DashboardScreen()),
       GoRoute(
+          path: '/business_overview',
+          builder: (context, state) =>
+              const _RouteAccess(ownerOnly: true, child: BusinessOverviewScreen())),
+      GoRoute(
+          path: '/action_center',
+          builder: (context, state) =>
+              const _RouteAccess(ownerOnly: true, child: ActionCenterScreen())),
+      GoRoute(
+          path: '/reorder_center',
+          builder: (context, state) =>
+              const _RouteAccess(ownerOnly: true, child: ReorderCenterScreen())),
+      GoRoute(
+          path: '/daily_summaries',
+          builder: (context, state) =>
+              const _RouteAccess(ownerOnly: true, child: DailySummariesScreen())),
+      GoRoute(
           path: '/settings',
           builder: (context, state) =>
               const _RouteAccess(ownerOnly: true, child: SettingsScreen())),
@@ -84,6 +106,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           builder: (context, state) => const _RouteAccess(
               permission: 'can_manage_inventory',
               child: InventoryManagementScreen())),
+      GoRoute(
+          path: '/stocktakes',
+          builder: (context, state) => const _RouteAccess(
+              permission: 'can_manage_inventory',
+              child: StocktakesScreen())),
+      GoRoute(
+          path: '/stocktake_session/:id',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return _RouteAccess(
+                permission: 'can_manage_inventory',
+                child: StocktakeSessionScreen(sessionId: id));
+          }),
       GoRoute(
           path: '/inventory_history',
           builder: (context, state) => const _RouteAccess(

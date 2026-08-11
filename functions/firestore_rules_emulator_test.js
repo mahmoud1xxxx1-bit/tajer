@@ -919,6 +919,69 @@ async function main() {
       ),
     );
 
+    // F11 Stocktake Rules Tests
+    await testEnv.withSecurityRulesDisabled(async (context) => {
+      const db = context.firestore();
+      await setDoc(doc(db, 'merchants', 'merchant-a', 'stocktakes', 'session-a'), {
+        merchantId: 'merchant-a',
+        branchId: 'branch-a',
+        status: 'counting',
+      });
+      await setDoc(doc(db, 'merchants', 'merchant-a', 'stocktakes', 'session-b'), {
+        merchantId: 'merchant-a',
+        branchId: 'branch-b',
+        status: 'counting',
+      });
+      await setDoc(doc(db, 'merchants', 'merchant-a', 'stocktakes', 'session-a', 'lines', 'line-1'), {
+        itemType: 'product',
+        itemId: 'prod-1',
+        difference: 1,
+      });
+      await setDoc(doc(db, 'merchants', 'merchant-a', 'stocktakes', 'session-b', 'lines', 'line-1'), {
+        itemType: 'product',
+        itemId: 'prod-1',
+        difference: 1,
+      });
+    });
+
+    // employee assigned Branch A:
+    // Stocktake A session read/write ALLOW
+    await assertSucceeds(getDoc(doc(stock, 'merchants', 'merchant-a', 'stocktakes', 'session-a')));
+    await assertSucceeds(
+      updateDoc(doc(stock, 'merchants', 'merchant-a', 'stocktakes', 'session-a'), {
+        status: 'completed',
+        branchId: 'branch-a',
+        merchantId: 'merchant-a'
+      })
+    );
+    // Stocktake A lines read/write ALLOW
+    await assertSucceeds(getDoc(doc(stock, 'merchants', 'merchant-a', 'stocktakes', 'session-a', 'lines', 'line-1')));
+    await assertSucceeds(
+      updateDoc(doc(stock, 'merchants', 'merchant-a', 'stocktakes', 'session-a', 'lines', 'line-1'), {
+        difference: 2,
+      })
+    );
+
+    // same employee:
+    // Stocktake B session DENY
+    await assertFails(getDoc(doc(stock, 'merchants', 'merchant-a', 'stocktakes', 'session-b')));
+    // Stocktake B lines direct GET DENY
+    await assertFails(getDoc(doc(stock, 'merchants', 'merchant-a', 'stocktakes', 'session-b', 'lines', 'line-1')));
+    // Stocktake B lines direct WRITE DENY
+    await assertFails(
+      updateDoc(doc(stock, 'merchants', 'merchant-a', 'stocktakes', 'session-b', 'lines', 'line-1'), {
+        difference: 2,
+      })
+    );
+
+    // attempt to mutate Stocktake A branchId to B: DENY
+    await assertFails(
+      updateDoc(doc(stock, 'merchants', 'merchant-a', 'stocktakes', 'session-a'), {
+        branchId: 'branch-b',
+        merchantId: 'merchant-a'
+      })
+    );
+
   } finally {
     await testEnv.cleanup();
   }

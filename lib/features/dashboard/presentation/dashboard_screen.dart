@@ -476,6 +476,15 @@ class DashboardHome extends ConsumerWidget {
                   spacing: 8,
                   runSpacing: 16,
                   children: [
+                    if (policy.isOwnerLike)
+                      _QuickAction(
+                        icon: Icons.insert_chart_outlined,
+                        label: l10n.businessOverview ?? 'Business Overview',
+                        color: Colors.blueGrey,
+                        onTap: () {
+                          context.push('/business_overview');
+                        },
+                      ),
                     if (policy.canManageExpenses)
                       _QuickAction(
                         icon: Icons.money_off,

@@ -1521,4 +1521,70 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get taxModeExempt => 'معفى من الضريبة';
+
+  @override
+  String get businessOverview => 'نظرة عامة على الأعمال';
+
+  @override
+  String get last7Days => 'آخر 7 أيام';
+
+  @override
+  String get last30Days => 'آخر 30 يوم';
+
+  @override
+  String get custom => 'مخصص';
+
+  @override
+  String get costDataIncomplete => 'بيانات التكلفة غير مكتملة';
+
+  @override
+  String get branchPerformance => 'أداء الفروع';
+
+  @override
+  String get moneyPosition => 'الوضع المالي';
+
+  @override
+  String get customerReceivables => 'مستحقات العملاء';
+
+  @override
+  String get supplierPayables => 'مستحقات الموردين';
+
+  @override
+  String get inventoryHealth => 'حالة المخزون';
+
+  @override
+  String get outOfStock => 'نفذت الكمية';
+
+  @override
+  String get lowStock => 'مخزون منخفض';
+
+  @override
+  String get lowRawMaterials => 'مواد خام منخفضة';
+
+  @override
+  String get needsReorder => 'يحتاج إعادة طلب';
+
+  @override
+  String get shiftStatus => 'حالة الورديات';
+
+  @override
+  String get openShifts => 'ورديات مفتوحة';
+
+  @override
+  String get recentDiscrepancies => 'عجوزات حديثة';
+
+  @override
+  String get attentionRequired => 'يتطلب الانتباه';
+
+  @override
+  String get actionCenter => 'مركز الإجراءات';
+
+  @override
+  String get reorderCenter => 'مركز إعادة الطلب';
+
+  @override
+  String get dailySummaries => 'الملخصات اليومية';
+
+  @override
+  String get stocktake => 'جرد المخزون';
 }

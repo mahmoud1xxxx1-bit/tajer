@@ -32,7 +32,7 @@ void main() {
     );
 
     final serializedItems = order.toJson()['items'] as List<dynamic>;
-    expect((serializedItems.single as Map)['costPrice'], isNull, reason: 'order.toJson() MUST NOT expose costPrice');
+    expect((serializedItems.single as Map)['costPrice'], isNull, reason: 'order.toJson() MUST NOT expose costPrice to public /orders');
     expect((serializedItems.single as Map)['isManufacturedOnDemand'], isTrue);
 
     final internalItems = order.toInternalJson()['items'] as List<dynamic>;

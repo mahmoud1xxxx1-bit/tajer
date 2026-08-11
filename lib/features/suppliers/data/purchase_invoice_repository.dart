@@ -44,6 +44,7 @@ class PurchaseInvoiceRepository {
     String? shiftId,
     String? creatorId,
     String? creatorName,
+    Future<void> Function(Transaction tx, String invoiceId)? onTransactionRead,
   }) async {
     if (branchId.trim().isEmpty) {
       throw Exception('Branch ID is required.');
@@ -141,6 +142,10 @@ class PurchaseInvoiceRepository {
             legacyMainQuantity: (existingInventory[key]?['quantity'] as num?)?.toDouble() ?? 0.0,
           ),
         );
+      }
+
+      if (onTransactionRead != null) {
+        await onTransactionRead(tx, invoiceId);
       }
 
       // WRITE OPERATIONS
@@ -273,7 +278,7 @@ class PurchaseInvoiceRepository {
       );
 
       tx.set(invoiceRef, invoice.toJson());
-
+      
       return invoice;
     });
 

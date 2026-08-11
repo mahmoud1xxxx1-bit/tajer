@@ -160,6 +160,18 @@ class AppDrawer extends ConsumerWidget {
                 context.push('/branches');
               },
             ),
+          if (policy.isOwnerLike)
+            ListTile(
+              leading: const Icon(Icons.insert_chart_outlined),
+              title: Text(
+                l10n.businessOverview ?? 'Business Overview',
+                style: const TextStyle(fontFamily: 'Tajawal'),
+              ),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/business_overview');
+              },
+            ),
           if (policy.canManageExpenses)
             ListTile(
               leading: const Icon(Icons.money_off),

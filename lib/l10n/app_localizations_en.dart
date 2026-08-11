@@ -1522,4 +1522,70 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get taxModeExempt => 'Tax exempt';
+
+  @override
+  String get businessOverview => 'Business Overview';
+
+  @override
+  String get last7Days => 'Last 7 Days';
+
+  @override
+  String get last30Days => 'Last 30 Days';
+
+  @override
+  String get custom => 'Custom';
+
+  @override
+  String get costDataIncomplete => 'Cost data incomplete';
+
+  @override
+  String get branchPerformance => 'Branch Performance';
+
+  @override
+  String get moneyPosition => 'Money Position';
+
+  @override
+  String get customerReceivables => 'Customer Receivables';
+
+  @override
+  String get supplierPayables => 'Supplier Payables';
+
+  @override
+  String get inventoryHealth => 'Inventory Health';
+
+  @override
+  String get outOfStock => 'Out of Stock';
+
+  @override
+  String get lowStock => 'Low Stock';
+
+  @override
+  String get lowRawMaterials => 'Low Raw Materials';
+
+  @override
+  String get needsReorder => 'Needs Reorder';
+
+  @override
+  String get shiftStatus => 'Shift Status';
+
+  @override
+  String get openShifts => 'Open Shifts';
+
+  @override
+  String get recentDiscrepancies => 'Recent Discrepancies';
+
+  @override
+  String get attentionRequired => 'Attention Required';
+
+  @override
+  String get actionCenter => 'Action Center';
+
+  @override
+  String get reorderCenter => 'Reorder Center';
+
+  @override
+  String get dailySummaries => 'Daily Summaries';
+
+  @override
+  String get stocktake => 'Stocktake';
 }

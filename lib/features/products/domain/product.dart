@@ -21,6 +21,8 @@ class Product {
   final double? costPrice; // Task 6
   final bool isArchived;
   final TaxMode taxMode;
+  final int? targetQuantity;
+  final String? preferredSupplierId;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -41,6 +43,8 @@ class Product {
     this.costPrice,
     this.isArchived = false,
     this.taxMode = TaxMode.store,
+    this.targetQuantity,
+    this.preferredSupplierId,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -63,6 +67,8 @@ class Product {
       costPrice: json['costPrice'] != null ? (json['costPrice'] as num).toDouble() : null,
       isArchived: json['isArchived'] as bool? ?? false,
       taxMode: _parseTaxMode(json['taxMode']),
+      targetQuantity: (json['targetQuantity'] as num?)?.toInt(),
+      preferredSupplierId: json['preferredSupplierId'] as String?,
       createdAt: _parseDate(json['createdAt']),
       updatedAt: _parseDate(json['updatedAt']),
     );
@@ -108,6 +114,8 @@ class Product {
       'costPrice': costPrice,
       'isArchived': isArchived,
       'taxMode': taxMode.name,
+      if (targetQuantity != null) 'targetQuantity': targetQuantity,
+      if (preferredSupplierId != null) 'preferredSupplierId': preferredSupplierId,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
     };
@@ -130,6 +138,8 @@ class Product {
     double? costPrice,
     bool? isArchived,
     TaxMode? taxMode,
+    int? targetQuantity,
+    String? preferredSupplierId,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -150,6 +160,8 @@ class Product {
       costPrice: costPrice ?? this.costPrice,
       isArchived: isArchived ?? this.isArchived,
       taxMode: taxMode ?? this.taxMode,
+      targetQuantity: targetQuantity ?? this.targetQuantity,
+      preferredSupplierId: preferredSupplierId ?? this.preferredSupplierId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

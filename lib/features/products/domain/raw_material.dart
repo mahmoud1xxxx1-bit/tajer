@@ -11,6 +11,8 @@ class RawMaterial {
   final double? lowStockThreshold;
   final String unit; // 'g', 'ml', 'piece'
   final bool isArchived;
+  final double? targetQuantity;
+  final String? preferredSupplierId;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -23,6 +25,8 @@ class RawMaterial {
     this.lowStockThreshold,
     required this.unit,
     this.isArchived = false,
+    this.targetQuantity,
+    this.preferredSupplierId,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -37,6 +41,8 @@ class RawMaterial {
       lowStockThreshold: (json['lowStockThreshold'] as num?)?.toDouble(),
       unit: json['unit'] as String,
       isArchived: json['isArchived'] as bool? ?? false,
+      targetQuantity: (json['targetQuantity'] as num?)?.toDouble(),
+      preferredSupplierId: json['preferredSupplierId'] as String?,
       createdAt: safeParseDate(json['createdAt']),
       updatedAt: safeParseDate(json['updatedAt']),
     );
@@ -52,6 +58,8 @@ class RawMaterial {
       'lowStockThreshold': lowStockThreshold,
       'unit': unit,
       'isArchived': isArchived,
+      if (targetQuantity != null) 'targetQuantity': targetQuantity,
+      if (preferredSupplierId != null) 'preferredSupplierId': preferredSupplierId,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
     };
@@ -66,6 +74,8 @@ class RawMaterial {
     double? lowStockThreshold,
     String? unit,
     bool? isArchived,
+    double? targetQuantity,
+    String? preferredSupplierId,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -78,6 +88,8 @@ class RawMaterial {
       lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
       unit: unit ?? this.unit,
       isArchived: isArchived ?? this.isArchived,
+      targetQuantity: targetQuantity ?? this.targetQuantity,
+      preferredSupplierId: preferredSupplierId ?? this.preferredSupplierId,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

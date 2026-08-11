@@ -262,6 +262,28 @@ service cloud.firestore {
         allow read: if hasAccess(merchantId);
         allow create, update, delete: if hasPermission(merchantId, 'can_manage_products');
       }
+      match /alerts/{alertId} {
+        allow read, write: if isOwner(merchantId);
+      }
+      match /purchase_orders/{orderId} {
+        allow read, write: if isOwner(merchantId);
+      }
+      match /daily_summaries/{summaryId} {
+        allow read, write: if isOwner(merchantId);
+      }
+      match /stocktakes/{sessionId} {
+        allow read: if hasPermission(merchantId, 'can_manage_inventory') && hasDataBranchAccess(merchantId, resource.data);
+        allow create: if hasPermission(merchantId, 'can_manage_inventory') && hasDataBranchAccess(merchantId, request.resource.data) && request.resource.data.get('merchantId', '') == merchantId;
+        allow update: if hasPermission(merchantId, 'can_manage_inventory') && hasDataBranchAccess(merchantId, resource.data) &&
+          hasDataBranchAccess(merchantId, request.resource.data) &&
+          request.resource.data.get('branchId', 'main') == resource.data.get('branchId', 'main') &&
+          request.resource.data.get('merchantId', '') == resource.data.get('merchantId', '');
+        match /lines/{lineId} {
+          allow read, write: if hasPermission(merchantId, 'can_manage_inventory') &&
+            get(/databases/$(database)/documents/merchants/$(merchantId)/stocktakes/$(sessionId)) != null &&
+            hasDataBranchAccess(merchantId, get(/databases/$(database)/documents/merchants/$(merchantId)/stocktakes/$(sessionId)).data);
+        }
+      }
       match /migration_state/{stateId} {
         allow get: if (resource == null && isOwner(merchantId)) ||
           (resource != null &&

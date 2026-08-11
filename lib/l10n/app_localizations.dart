@@ -2971,6 +2971,138 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'معفى من الضريبة'**
   String get taxModeExempt;
+
+  /// No description provided for @businessOverview.
+  ///
+  /// In ar, this message translates to:
+  /// **'نظرة عامة على الأعمال'**
+  String get businessOverview;
+
+  /// No description provided for @last7Days.
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر 7 أيام'**
+  String get last7Days;
+
+  /// No description provided for @last30Days.
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر 30 يوم'**
+  String get last30Days;
+
+  /// No description provided for @custom.
+  ///
+  /// In ar, this message translates to:
+  /// **'مخصص'**
+  String get custom;
+
+  /// No description provided for @costDataIncomplete.
+  ///
+  /// In ar, this message translates to:
+  /// **'بيانات التكلفة غير مكتملة'**
+  String get costDataIncomplete;
+
+  /// No description provided for @branchPerformance.
+  ///
+  /// In ar, this message translates to:
+  /// **'أداء الفروع'**
+  String get branchPerformance;
+
+  /// No description provided for @moneyPosition.
+  ///
+  /// In ar, this message translates to:
+  /// **'الوضع المالي'**
+  String get moneyPosition;
+
+  /// No description provided for @customerReceivables.
+  ///
+  /// In ar, this message translates to:
+  /// **'مستحقات العملاء'**
+  String get customerReceivables;
+
+  /// No description provided for @supplierPayables.
+  ///
+  /// In ar, this message translates to:
+  /// **'مستحقات الموردين'**
+  String get supplierPayables;
+
+  /// No description provided for @inventoryHealth.
+  ///
+  /// In ar, this message translates to:
+  /// **'حالة المخزون'**
+  String get inventoryHealth;
+
+  /// No description provided for @outOfStock.
+  ///
+  /// In ar, this message translates to:
+  /// **'نفذت الكمية'**
+  String get outOfStock;
+
+  /// No description provided for @lowStock.
+  ///
+  /// In ar, this message translates to:
+  /// **'مخزون منخفض'**
+  String get lowStock;
+
+  /// No description provided for @lowRawMaterials.
+  ///
+  /// In ar, this message translates to:
+  /// **'مواد خام منخفضة'**
+  String get lowRawMaterials;
+
+  /// No description provided for @needsReorder.
+  ///
+  /// In ar, this message translates to:
+  /// **'يحتاج إعادة طلب'**
+  String get needsReorder;
+
+  /// No description provided for @shiftStatus.
+  ///
+  /// In ar, this message translates to:
+  /// **'حالة الورديات'**
+  String get shiftStatus;
+
+  /// No description provided for @openShifts.
+  ///
+  /// In ar, this message translates to:
+  /// **'ورديات مفتوحة'**
+  String get openShifts;
+
+  /// No description provided for @recentDiscrepancies.
+  ///
+  /// In ar, this message translates to:
+  /// **'عجوزات حديثة'**
+  String get recentDiscrepancies;
+
+  /// No description provided for @attentionRequired.
+  ///
+  /// In ar, this message translates to:
+  /// **'يتطلب الانتباه'**
+  String get attentionRequired;
+
+  /// No description provided for @actionCenter.
+  ///
+  /// In ar, this message translates to:
+  /// **'مركز الإجراءات'**
+  String get actionCenter;
+
+  /// No description provided for @reorderCenter.
+  ///
+  /// In ar, this message translates to:
+  /// **'مركز إعادة الطلب'**
+  String get reorderCenter;
+
+  /// No description provided for @dailySummaries.
+  ///
+  /// In ar, this message translates to:
+  /// **'الملخصات اليومية'**
+  String get dailySummaries;
+
+  /// No description provided for @stocktake.
+  ///
+  /// In ar, this message translates to:
+  /// **'جرد المخزون'**
+  String get stocktake;
 }
 
 class _AppLocalizationsDelegate

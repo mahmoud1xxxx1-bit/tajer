@@ -51,6 +51,20 @@ class InventoryManagementScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           _InventoryActionCard(
+            icon: Icons.checklist_rtl_rounded,
+            title: isAr ? 'الجرد الفعلي' : 'Physical Stocktake',
+            subtitle: canManageInventory
+                ? (isAr
+                    ? 'جرد المنتجات والمواد الخام وتحديث الأرصدة دفعة واحدة.'
+                    : 'Count products and raw materials to bulk-update inventory balances.')
+                : (isAr
+                    ? 'تحتاج صلاحية إدارة المخزون لتنفيذ الجرد.'
+                    : 'Inventory management permission is required to perform stocktakes.'),
+            enabled: canManageInventory,
+            onTap: () => context.push('/stocktakes'),
+          ),
+          const SizedBox(height: 12),
+          _InventoryActionCard(
             icon: Icons.swap_horiz_rounded,
             title: isAr ? 'تحويل المخزون بين الفروع' : 'Inter-Branch Stock Transfer',
             subtitle: canManageInventory
