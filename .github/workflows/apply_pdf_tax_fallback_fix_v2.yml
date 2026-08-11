@@ -1,0 +1,53 @@
+name: Apply PDF Tax Fallback Fix V2
+
+on:
+  push:
+    branches:
+      - audit/pre-google-play-414
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit/pre-google-play-414
+          fetch-depth: 0
+      - name: Patch PDF tax fallback safely
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('lib/core/services/pdf_service.dart')
+          text = p.read_text()
+          marker = '  static pw.Document _buildInvoiceDoc('
+          if text.count(marker) != 1:
+              raise SystemExit(f'Expected one _buildInvoiceDoc marker, found {text.count(marker)}')
+          head, tail = text.split(marker, 1)
+          count = tail.count('taxPercentage ?? 0.0')
+          if count != 2:
+              raise SystemExit(f'Expected exactly 2 invalid fallback references in _buildInvoiceDoc, found {count}')
+          tail = tail.replace('taxPercentage ?? 0.0', 'defaultTaxPercentage')
+          p.write_text(head + marker + tail)
+          print('patched invalid PDF fallback references:', count)
+          PY
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.0'
+          channel: stable
+          cache: true
+      - name: Format
+        run: dart format lib/core/services/pdf_service.dart
+      - name: Analyze touched file
+        run: flutter analyze lib/core/services/pdf_service.dart --no-fatal-warnings --no-fatal-infos
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add lib/core/services/pdf_service.dart
+          git commit -m 'fix: use valid PDF tax fallback inside invoice builder'
+          git push origin HEAD:audit/pre-google-play-414
