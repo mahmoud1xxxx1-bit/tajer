@@ -172,7 +172,7 @@ class ReportsService {
           .fold(0.0, (sum, order) {
         double orderTax = 0.0;
         for (final item in order.items) {
-          final itemTax = item.taxPercentage ?? defaultTaxPercentage;
+          final itemTax = item.getEffectiveTax(defaultTaxPercentage);
           if (itemTax <= 0) continue;
           final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
           final taxableBase = item.total - (item.discountAmount ?? 0.0);

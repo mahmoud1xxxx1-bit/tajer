@@ -173,6 +173,16 @@ class SupplierRepository {
         throw Exception('مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق.');
       }
 
+      final rawBranchDebts = supplierSnapshot.data()?['branchDebts'];
+      final branchDebts = rawBranchDebts is Map
+          ? Map<String, dynamic>.from(rawBranchDebts)
+          : const <String, dynamic>{};
+      final currentBranchDebt =
+          (branchDebts[branchId] as num?)?.toDouble() ?? 0.0;
+      if (amountPaid > currentBranchDebt) {
+        throw Exception('مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق في هذا الفرع.');
+      }
+
       if (needsOpenShift) {
         if (shiftRef == null) {
           throw Exception(
