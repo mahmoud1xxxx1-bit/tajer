@@ -29,6 +29,9 @@ void main() {
       'cashSales': 100.0,
       'cardTotal': 50.0,
       'transferTotal': 0.0,
+      'refundsCash': 0.0,
+      'refundsCard': 0.0,
+      'refundsTransfer': 0.0,
     });
 
     // Seed Customer
@@ -86,7 +89,7 @@ void main() {
           isManufacturedOnDemand: true,
           lineId: 'line_2',
           historicalMtoRecipe: [
-            {'rawMaterialId': 'raw_1', 'amountRequired': 5.0} // 10 total consumed
+            {'rawMaterialId': 'raw_1', 'amountRequired': 5.0}
           ],
         ),
       ],
@@ -105,7 +108,7 @@ void main() {
           lineId: 'line_1',
           productId: 'product_1',
           productName: 'product_1',
-          quantity: 1, // Returning 1 out of 2
+          quantity: 1,
           price: 10.0,
           total: 10.0,
         ),
@@ -113,7 +116,7 @@ void main() {
           lineId: 'line_2',
           productId: 'mto_1',
           productName: 'mto_1',
-          quantity: 1, // Returning 1 out of 2
+          quantity: 1,
           price: 40.0,
           total: 40.0,
         ),
@@ -127,46 +130,47 @@ void main() {
 
     final updatedOrder = await repo.returnOrderItems(order, orderReturn);
 
-    // Assert AppOrder returnedQuantities updated
     expect(updatedOrder.returnedQuantities['line_1'], 1);
     expect(updatedOrder.returnedQuantities['line_2'], 1);
 
-    // Assert Firestore order updated
     final orderDoc = await firestore.collection('orders').doc('order_1').get();
     expect(orderDoc.data()?['returnedQuantities']['line_1'], 1);
     expect(orderDoc.data()?['returnedQuantities']['line_2'], 1);
 
-    // Assert Shift cashSales decreased by 50
+    // Gross sales remain immutable; the refund is a separate cash-out event.
     final shiftDoc = await firestore.collection('shifts').doc(shiftId).get();
-    expect(shiftDoc.data()?['cashSales'], 50.0);
+    expect(shiftDoc.data()?['cashSales'], 100.0);
+    expect(shiftDoc.data()?['refundsCash'], 50.0);
+    expect(shiftDoc.data()?['cardTotal'], 50.0);
+    expect(shiftDoc.data()?['refundsCard'], 0.0);
+    expect(shiftDoc.data()?['transferTotal'], 0.0);
+    expect(shiftDoc.data()?['refundsTransfer'], 0.0);
 
-    // Assert Customer totalPurchases decreased by 50
+    // Customer lifetime purchase value is net of returns.
     final custDoc = await firestore.collection('customers').doc(customerId).get();
     expect(custDoc.data()?['totalPurchases'], 50.0);
 
-    // Assert Inventory (Ready Product) restored by 1
     final p1Doc = await firestore
         .collection('merchants')
         .doc(merchantId)
         .collection('branch_inventory')
         .doc('${branchId}_product_product_1')
         .get();
-    expect(p1Doc.data()?['quantity'], 6); // 5 + 1
+    expect(p1Doc.data()?['quantity'], 6);
 
-    // Assert Inventory (Raw Material) restored by 5.0
     final r1Doc = await firestore
         .collection('merchants')
         .doc(merchantId)
         .collection('branch_inventory')
         .doc('${branchId}_raw_material_raw_1')
         .get();
-    expect(r1Doc.data()?['quantity'], 105.0); // 100 + 5.0
+    expect(r1Doc.data()?['quantity'], 105.0);
   });
 
   test('partial return prevents returning more than sold', () async {
     const merchantId = 'merchant_123';
     const branchId = 'branch_A';
-    
+
     final order = AppOrder(
       id: 'order_1',
       merchantId: merchantId,
@@ -193,16 +197,16 @@ void main() {
     await firestore.collection('orders').doc('order_1').set(order.toJson());
 
     final orderReturn = OrderReturn(
-      id: 'return_1',
+      id: 'return_2',
       originalOrderId: 'order_1',
       merchantId: merchantId,
       branchId: branchId,
-      returnedItems: [
-        const CartItem(
+      returnedItems: const [
+        CartItem(
           lineId: 'line_1',
           productId: 'product_1',
-          productName: 'product_1',
-          quantity: 3, // EXCEEDS SOLD (2)
+          productName: 'Ready Product',
+          quantity: 3,
           price: 5.0,
           total: 15.0,
         ),
@@ -211,11 +215,12 @@ void main() {
       returnedTax: 0.0,
       paymentMethod: 'cash',
       createdAt: DateTime.now(),
+      shiftId: 'shift_missing',
     );
 
-    expect(
-      () => repo.returnOrderItems(order, orderReturn),
-      throwsException,
+    await expectLater(
+      repo.returnOrderItems(order, orderReturn),
+      throwsA(isA<Exception>()),
     );
   });
 }
