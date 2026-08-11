@@ -1,0 +1,142 @@
+name: Apply Accounting Integrity Hardening
+
+on:
+  push:
+    branches:
+      - audit/accounting-integrity-109
+    paths:
+      - .github/workflows/apply_accounting_integrity_hardening.yml
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit/accounting-integrity-109
+          fetch-depth: 0
+      - name: Harden purchase invoice accounting and tests
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          repo = Path('lib/features/suppliers/data/purchase_invoice_repository.dart')
+          s = repo.read_text()
+
+          old_sig = """    required bool isFromShiftDrawer,\n    String? shiftId,\n    String? creatorId,\n    String? creatorName,\n  }) async {\n    if (branchId.trim().isEmpty) {\n      throw Exception('Branch ID is required.');\n    }\n    if (totalAmount <= 0 && items.isEmpty) {\n      throw Exception('Cannot create an empty purchase invoice.');\n    }\n    if (amountPaid < 0) {\n"""
+          new_sig = """    required bool isFromShiftDrawer,\n    DateTime? occurredAt,\n    String? shiftId,\n    String? creatorId,\n    String? creatorName,\n  }) async {\n    if (branchId.trim().isEmpty) {\n      throw Exception('Branch ID is required.');\n    }\n    if (items.isEmpty) {\n      throw Exception('Cannot create an empty purchase invoice.');\n    }\n    for (final item in items) {\n      if (item.quantity <= 0) {\n        throw Exception('Purchase invoice item quantity must be greater than zero.');\n      }\n      if (item.unitCost < 0 || item.totalCost < 0) {\n        throw Exception('Purchase invoice item cost cannot be negative.');\n      }\n      final calculatedLineTotal = item.quantity * item.unitCost;\n      if ((item.totalCost - calculatedLineTotal).abs() > 0.01) {\n        throw Exception('Purchase invoice item total does not match quantity × unit cost.');\n      }\n    }\n    final calculatedInvoiceTotal =\n        items.fold<double>(0.0, (sum, item) => sum + item.totalCost);\n    if (calculatedInvoiceTotal <= 0) {\n      throw Exception('Purchase invoice total must be greater than zero.');\n    }\n    if ((totalAmount - calculatedInvoiceTotal).abs() > 0.01) {\n      throw Exception('Purchase invoice total does not match the sum of its items.');\n    }\n    if (amountPaid < 0) {\n"""
+          if old_sig not in s:
+              raise SystemExit('purchase repository signature anchor not found')
+          s = s.replace(old_sig, new_sig, 1)
+          s = s.replace("    final occurredAt = DateTime.now();\n", "    final invoiceOccurredAt = occurredAt ?? DateTime.now();\n", 1)
+          s = s.replace("Timestamp.fromDate(occurredAt)", "Timestamp.fromDate(invoiceOccurredAt)")
+          s = s.replace("        createdAt: occurredAt,\n", "        createdAt: invoiceOccurredAt,\n", 1)
+          repo.write_text(s)
+
+          ui = Path('lib/features/suppliers/presentation/purchase_invoice_screen.dart')
+          u = ui.read_text()
+          anchor = """        isFromShiftDrawer: _isFromShiftDrawer,\n        shiftId: shiftId,\n"""
+          replacement = """        isFromShiftDrawer: _isFromShiftDrawer,\n        occurredAt: _purchaseDate,\n        shiftId: shiftId,\n"""
+          if anchor not in u:
+              raise SystemExit('purchase UI call anchor not found')
+          u = u.replace(anchor, replacement, 1)
+          ui.write_text(u)
+
+          test = Path('test/purchase_invoice_test.dart')
+          t = test.read_text()
+          t = t.replace("""      totalAmount: 1000,\n      amountPaid: 200,\n""", """      totalAmount: 100,\n      amountPaid: 20,\n""", 1)
+          t = t.replace("expect((supplier['totalDebt'] as num).toDouble(), 900);", "expect((supplier['totalDebt'] as num).toDouble(), 180);", 1)
+          t = t.replace("      825,\n", "      105,\n", 1)
+
+          extra = r'''
+
+  test('repository rejects invoice totals that disagree with item totals', () async {
+    await seedSupplier(totalDebt: 100, branchDebts: const {'branch_A': 100});
+
+    await expectLater(
+      repo.createPurchaseInvoice(
+        branchId: 'branch_A',
+        supplierId: 'supp_123',
+        supplierName: 'Test Supplier',
+        invoiceNumber: 'INV-BAD-TOTAL',
+        items: const [item],
+        totalAmount: 1000,
+        amountPaid: 0,
+        paymentMethod: 'cash',
+        isFromShiftDrawer: false,
+      ),
+      throwsA(isA<Exception>()),
+    );
+  });
+
+  test('selected purchase date is persisted to invoice and linked supplier entries', () async {
+    const branchId = 'branch_A';
+    final selectedDate = DateTime(2026, 7, 3, 14, 30);
+    await seedSupplier(totalDebt: 100, branchDebts: const {branchId: 100});
+
+    final invoice = await repo.createPurchaseInvoice(
+      branchId: branchId,
+      supplierId: 'supp_123',
+      supplierName: 'Test Supplier',
+      invoiceNumber: 'INV-DATED',
+      items: const [item],
+      totalAmount: 100,
+      amountPaid: 20,
+      paymentMethod: 'network',
+      isFromShiftDrawer: false,
+      occurredAt: selectedDate,
+    );
+
+    expect(invoice.createdAt, selectedDate);
+
+    final savedInvoice = (await firestore
+            .collection('merchants')
+            .doc('merchant_123')
+            .collection('purchase_invoices')
+            .doc(invoice.id)
+            .get())
+        .data()!;
+    expect((savedInvoice['createdAt'] as dynamic).toDate(), selectedDate);
+
+    final txs = await firestore
+        .collection('merchants')
+        .doc('merchant_123')
+        .collection('suppliers')
+        .doc('supp_123')
+        .collection('transactions')
+        .get();
+    expect(txs.docs, isNotEmpty);
+    for (final tx in txs.docs) {
+      expect((tx.data()['date'] as dynamic).toDate(), selectedDate);
+    }
+
+    final expenses = await firestore
+        .collection('merchants')
+        .doc('merchant_123')
+        .collection('expenses')
+        .get();
+    expect(expenses.docs, hasLength(1));
+    expect((expenses.docs.single.data()['date'] as dynamic).toDate(), selectedDate);
+  });
+'''
+          idx = t.rfind('\n}')
+          if idx < 0:
+              raise SystemExit('purchase test closing anchor not found')
+          t = t[:idx] + extra + t[idx:]
+          test.write_text(t)
+
+          Path('.github/workflows/apply_accounting_integrity_hardening.yml').unlink()
+          PY
+
+          git config user.name "tajer-accounting-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add lib/features/suppliers/data/purchase_invoice_repository.dart \
+                  lib/features/suppliers/presentation/purchase_invoice_screen.dart \
+                  test/purchase_invoice_test.dart \
+                  .github/workflows/apply_accounting_integrity_hardening.yml
+          git commit -m "fix(accounting): enforce purchase invoice totals and dates"
+          git push origin HEAD:audit/accounting-integrity-109
