@@ -119,4 +119,36 @@ void main() {
     expect(totals['card'], 60);
     expect(totals.containsKey('split'), isFalse);
   });
+
+  test('Mada, network and Apple Pay are normalized to card totals', () {
+    final totals = ReportCashflowLedger.paymentMethods(
+      orders: [
+        sale(
+          id: 'mada-sale',
+          branchId: 'main',
+          total: 100,
+          paymentMethod: 'mada',
+        ),
+        sale(
+          id: 'apple-sale',
+          branchId: 'main',
+          total: 50,
+          paymentMethod: 'apple_pay',
+        ),
+      ],
+      debtPayments: [
+        debtPayment(
+          id: 'network-debt',
+          branchId: 'main',
+          amount: 25,
+          paymentMethod: 'network',
+        ),
+      ],
+    );
+
+    expect(totals['card'], 175);
+    expect(totals.containsKey('mada'), isFalse);
+    expect(totals.containsKey('network'), isFalse);
+    expect(totals.containsKey('apple_pay'), isFalse);
+  });
 }
