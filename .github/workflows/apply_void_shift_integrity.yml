@@ -1,0 +1,34 @@
+name: Apply Void Shift Integrity
+
+on:
+  push:
+    paths:
+      - tool/patch_void_shift_integrity.py
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit/accounting-integrity-109
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.0'
+          channel: stable
+      - name: Apply patch
+        run: python tool/patch_void_shift_integrity.py
+      - name: Format
+        run: dart format lib/features/orders/data/branch_aware_order_repository.dart
+      - name: Verify
+        run: git diff --check
+      - name: Commit
+        run: |
+          git config user.name 'Tajer Accounting Audit'
+          git config user.email 'audit@tajer.local'
+          git add lib/features/orders/data/branch_aware_order_repository.dart
+          git commit -m 'fix(accounting): keep closed shifts immutable on voids'
+          git push origin HEAD:audit/accounting-integrity-109
