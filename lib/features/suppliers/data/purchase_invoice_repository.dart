@@ -41,6 +41,7 @@ class PurchaseInvoiceRepository {
     required double amountPaid,
     required String paymentMethod,
     required bool isFromShiftDrawer,
+    DateTime? occurredAt,
     String? shiftId,
     String? creatorId,
     String? creatorName,
@@ -48,8 +49,30 @@ class PurchaseInvoiceRepository {
     if (branchId.trim().isEmpty) {
       throw Exception('Branch ID is required.');
     }
-    if (totalAmount <= 0 && items.isEmpty) {
+    if (items.isEmpty) {
       throw Exception('Cannot create an empty purchase invoice.');
+    }
+    for (final item in items) {
+      if (item.quantity <= 0) {
+        throw Exception('Purchase invoice item quantity must be greater than zero.');
+      }
+      if (item.unitCost < 0 || item.totalCost < 0) {
+        throw Exception('Purchase invoice item cost cannot be negative.');
+      }
+      final calculatedLineTotal = item.quantity * item.unitCost;
+      if ((item.totalCost - calculatedLineTotal).abs() > 0.01) {
+        throw Exception(
+            'Purchase invoice item total does not match quantity × unit cost.');
+      }
+    }
+    final calculatedInvoiceTotal =
+        items.fold<double>(0.0, (sum, item) => sum + item.totalCost);
+    if (calculatedInvoiceTotal <= 0) {
+      throw Exception('Purchase invoice total must be greater than zero.');
+    }
+    if ((totalAmount - calculatedInvoiceTotal).abs() > 0.01) {
+      throw Exception(
+          'Purchase invoice total does not match the sum of its items.');
     }
     if (amountPaid < 0) {
       throw Exception('Amount paid cannot be negative.');
@@ -59,7 +82,7 @@ class PurchaseInvoiceRepository {
     }
 
     final invoiceId = const Uuid().v4();
-    final occurredAt = DateTime.now();
+    final invoiceOccurredAt = occurredAt ?? DateTime.now();
     final needsOpenShift =
         paymentMethod == 'cash' && isFromShiftDrawer && amountPaid > 0;
     final outstandingDebt = totalAmount - amountPaid;
@@ -171,8 +194,8 @@ class PurchaseInvoiceRepository {
         'amount': totalAmount,
         'type': 'purchase',
         'description': 'فاتورة مشتريات رقم $invoiceNumber',
-        'date': Timestamp.fromDate(occurredAt),
-        'createdAt': Timestamp.fromDate(occurredAt),
+        'date': Timestamp.fromDate(invoiceOccurredAt),
+        'createdAt': Timestamp.fromDate(invoiceOccurredAt),
         'isCancelled': false,
         'purchaseInvoiceId': invoiceId,
       });
@@ -191,8 +214,8 @@ class PurchaseInvoiceRepository {
           'paymentMethod': paymentMethod,
           'description':
               'دفعة سداد ديون للمورد${paymentMethod == 'cash' ? (isFromShiftDrawer ? ' (من الدرج)' : ' (خارج الدرج)') : ''}',
-          'date': Timestamp.fromDate(occurredAt),
-          'createdAt': Timestamp.fromDate(occurredAt),
+          'date': Timestamp.fromDate(invoiceOccurredAt),
+          'createdAt': Timestamp.fromDate(invoiceOccurredAt),
           'isCancelled': false,
           'purchaseInvoiceId': invoiceId,
         });
@@ -210,8 +233,8 @@ class PurchaseInvoiceRepository {
           'creatorName': creatorName ?? 'المدير',
           'isSupplierPayment': true,
           'paymentMethod': paymentMethod,
-          'date': Timestamp.fromDate(occurredAt),
-          'createdAt': Timestamp.fromDate(occurredAt),
+          'date': Timestamp.fromDate(invoiceOccurredAt),
+          'createdAt': Timestamp.fromDate(invoiceOccurredAt),
           'isFromShiftDrawer': isFromShiftDrawer,
           'isCancelled': false,
           'supplierTransactionId': paymentTxId,
@@ -271,7 +294,7 @@ class PurchaseInvoiceRepository {
         supplierTransactionId: paymentTxId,
         creatorId: creatorId,
         creatorName: creatorName,
-        createdAt: occurredAt,
+        createdAt: invoiceOccurredAt,
       );
 
       tx.set(invoiceRef, invoice.toJson());
