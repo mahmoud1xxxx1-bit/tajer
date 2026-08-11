@@ -1,0 +1,40 @@
+name: Apply Partial Return Fixes
+on:
+  push:
+    branches: ["audit/pre-google-play-414"]
+permissions:
+  contents: write
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Patch only proven return defects
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('lib/features/orders/data/branch_aware_order_repository.dart')
+          s=p.read_text(encoding='utf-8')
+
+          old1="""      final canonicalOrder = AppOrder.fromJson(snap.data()!);\n      final newReturnedQuantities = Map<String, int>.from(canonicalOrder.returnedQuantities);"""
+          new1="""      final canonicalOrder = AppOrder.fromJson(snap.data()!);\n      _guardPaidCreditInvoiceMutation(canonicalOrder, 'إرجاع جزئي');\n      final newReturnedQuantities = Map<String, int>.from(canonicalOrder.returnedQuantities);"""
+          if s.count(old1)!=1: raise SystemExit(f'guard target count={s.count(old1)}')
+          s=s.replace(old1,new1)
+
+          old2="""          if (canonicalOrder.paymentMethod == 'split') {\n            updates['cashSales'] = FieldValue.increment(-orderReturn.returnedTotal);\n          }"""
+          new2="""          if (canonicalOrder.paymentMethod == 'split') {\n            final originalCash = canonicalOrder.splitCashAmount ?? 0.0;\n            final originalCard = canonicalOrder.splitNetworkAmount ?? 0.0;\n            final originalSplitPaid = originalCash + originalCard;\n            if (originalSplitPaid <= 0.000001) {\n              throw Exception('بيانات الدفع المقسم الأصلية غير صالحة للمرتجع.');\n            }\n            final cashRefund =\n                orderReturn.returnedTotal * (originalCash / originalSplitPaid);\n            final cardRefund = orderReturn.returnedTotal - cashRefund;\n            if (cashRefund > 0.000001) {\n              updates['cashSales'] = FieldValue.increment(-cashRefund);\n            }\n            if (cardRefund > 0.000001) {\n              updates['cardTotal'] = FieldValue.increment(-cardRefund);\n            }\n          }"""
+          if s.count(old2)!=1: raise SystemExit(f'split target count={s.count(old2)}')
+          p.write_text(s.replace(old2,new2),encoding='utf-8')
+          PY
+          git diff --check
+          test "$(git diff --name-only)" = "lib/features/orders/data/branch_aware_order_repository.dart"
+      - name: Commit audit-branch fix
+        run: |
+          git config user.name "Tajer Audit Bot"
+          git config user.email "bot@tajer.local"
+          git add lib/features/orders/data/branch_aware_order_repository.dart
+          git commit -m "fix: preserve split tender and paid-credit integrity on partial returns"
+          git push origin HEAD:audit/pre-google-play-414
