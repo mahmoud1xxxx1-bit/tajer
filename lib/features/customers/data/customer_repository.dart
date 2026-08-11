@@ -57,11 +57,6 @@ class CustomerRepository {
     await docRef.update(customer.toJson());
   }
 
-  /// Returns the complete merchant-wide order history for one customer.
-  ///
-  /// Customer balances are merchant-wide in Tajer, so customer statements must
-  /// never be built from the branch-scoped order stream. Legacy orders without
-  /// branchId remain readable through AppOrder's main-branch fallback.
   Future<List<AppOrder>> getCustomerOrdersAcrossBranches({
     required String merchantId,
     required String customerId,
@@ -140,15 +135,14 @@ class CustomerRepository {
           .where('customerId', isEqualTo: customerId)
           .get();
 
-      bool hasUnpaid = unpaidOrders.docs.any((doc) {
+      final hasUnpaid = unpaidOrders.docs.any((doc) {
         final orderData = doc.data();
-        final paymentMethod = orderData['paymentMethod'] as String?;
-        final status = orderData['status'] as String?;
+        final paymentMethod = orderData['paymentMethod']?.toString();
+        final isCredit = orderData['isCredit'] == true || paymentMethod == 'credit';
+        final status = orderData['status']?.toString();
         final orderBranchId = orderData['branchId']?.toString() ?? 'main';
 
-        if (paymentMethod != 'credit' ||
-            status == 'cancelled' ||
-            orderBranchId != branchId) {
+        if (!isCredit || status == 'cancelled' || orderBranchId != branchId) {
           return false;
         }
 
