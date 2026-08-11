@@ -1,5 +1,6 @@
 from pathlib import Path
 
+# Triggered one-shot patch for the accounting audit branch.
 p = Path('lib/features/orders/data/branch_aware_order_repository.dart')
 s = p.read_text()
 
