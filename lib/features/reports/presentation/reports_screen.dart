@@ -67,8 +67,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     if (!policy.canViewReports) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(AppLocalizations.of(context)!.text104,
-              style: const TextStyle(fontFamily: 'Tajawal')),
+          title: Text(
+            AppLocalizations.of(context)!.text104,
+            style: const TextStyle(fontFamily: 'Tajawal'),
+          ),
         ),
         body: Center(
           child: Padding(
@@ -91,9 +93,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     final canViewAllBranches = policy.isOwnerLike;
 
     if (baseReportsService == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final reportsService = _getFilteredService(baseReportsService);
@@ -102,8 +102,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.text104,
-            style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(
+          AppLocalizations.of(context)!.text104,
+          style: TextStyle(fontFamily: 'Tajawal'),
+        ),
         actions: [
           IconButton(
             icon: Icon(Icons.table_view, color: Colors.green),
@@ -112,11 +114,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               try {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content: Text(
-                          isAr
-                              ? 'جاري تجهيز التقرير (إكسل)...'
-                              : 'Preparing Excel report...',
-                          style: const TextStyle(fontFamily: 'Tajawal'))),
+                    content: Text(
+                      isAr
+                          ? 'جاري تجهيز التقرير (إكسل)...'
+                          : 'Preparing Excel report...',
+                      style: const TextStyle(fontFamily: 'Tajawal'),
+                    ),
+                  ),
                 );
                 await ExcelService.exportToExcel(
                   reportsService,
@@ -131,11 +135,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
               } catch (e) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content: Text(
-                          isAr
-                              ? 'حدث خطأ أثناء تصدير إكسل: $e'
-                              : 'Error exporting to Excel: $e',
-                          style: const TextStyle(fontFamily: 'Tajawal'))),
+                    content: Text(
+                      isAr
+                          ? 'حدث خطأ أثناء تصدير إكسل: $e'
+                          : 'Error exporting to Excel: $e',
+                      style: const TextStyle(fontFamily: 'Tajawal'),
+                    ),
+                  ),
                 );
               }
             },
@@ -152,8 +158,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
 
               if (storeProfile?.defaultTaxPercentage == null ||
                   storeProfile?.defaultTaxPercentage == 0.0) {
-                final result = await TaxDialog.show(context,
-                    showVatNumberField: vatNumber.isEmpty);
+                final result = await TaxDialog.show(
+                  context,
+                  showVatNumberField: vatNumber.isEmpty,
+                );
                 if (result == null) return; // user cancelled
                 taxPercentage = result.percentage;
                 isInclusive = result.isInclusive;
@@ -167,11 +175,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     Localizations.localeOf(context).languageCode == 'ar';
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content: Text(
-                          isAr
-                              ? 'جاري تجهيز التقرير (PDF)...'
-                              : 'Preparing PDF Report...',
-                          style: const TextStyle(fontFamily: 'Tajawal'))),
+                    content: Text(
+                      isAr
+                          ? 'جاري تجهيز التقرير (PDF)...'
+                          : 'Preparing PDF Report...',
+                      style: const TextStyle(fontFamily: 'Tajawal'),
+                    ),
+                  ),
                 );
                 final pdfData = await PdfService.generateReportPdf(
                   reportsService,
@@ -192,11 +202,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     Localizations.localeOf(context).languageCode == 'ar';
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                      content: Text(
-                          isAr
-                              ? 'حدث خطأ أثناء استخراج التقرير'
-                              : 'Error generating report',
-                          style: const TextStyle(fontFamily: 'Tajawal'))),
+                    content: Text(
+                      isAr
+                          ? 'حدث خطأ أثناء استخراج التقرير'
+                          : 'Error generating report',
+                      style: const TextStyle(fontFamily: 'Tajawal'),
+                    ),
+                  ),
                 );
               }
             },
@@ -244,47 +256,50 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 const SizedBox(width: 12),
                 DropdownButton<String>(
                   value: _selectedFilter,
-                  items: [
-                    'اليوم',
-                    'أمس',
-                    'قبل يومين',
-                    'أسبوع',
-                    'شهر',
-                    'نصف سنوي',
-                    'سنة'
-                  ].map((String value) {
-                    String displayValue = value;
-                    if (!isAr) {
-                      switch (value) {
-                        case 'اليوم':
-                          displayValue = 'Today';
-                          break;
-                        case 'أمس':
-                          displayValue = 'Yesterday';
-                          break;
-                        case 'قبل يومين':
-                          displayValue = '2 days ago';
-                          break;
-                        case 'أسبوع':
-                          displayValue = 'Week';
-                          break;
-                        case 'شهر':
-                          displayValue = 'Month';
-                          break;
-                        case 'نصف سنوي':
-                          displayValue = 'Half year';
-                          break;
-                        case 'سنة':
-                          displayValue = 'Year';
-                          break;
-                      }
-                    }
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(displayValue,
-                          style: const TextStyle(fontFamily: 'Tajawal')),
-                    );
-                  }).toList(),
+                  items:
+                      [
+                        'اليوم',
+                        'أمس',
+                        'قبل يومين',
+                        'أسبوع',
+                        'شهر',
+                        'نصف سنوي',
+                        'سنة',
+                      ].map((String value) {
+                        String displayValue = value;
+                        if (!isAr) {
+                          switch (value) {
+                            case 'اليوم':
+                              displayValue = 'Today';
+                              break;
+                            case 'أمس':
+                              displayValue = 'Yesterday';
+                              break;
+                            case 'قبل يومين':
+                              displayValue = '2 days ago';
+                              break;
+                            case 'أسبوع':
+                              displayValue = 'Week';
+                              break;
+                            case 'شهر':
+                              displayValue = 'Month';
+                              break;
+                            case 'نصف سنوي':
+                              displayValue = 'Half year';
+                              break;
+                            case 'سنة':
+                              displayValue = 'Year';
+                              break;
+                          }
+                        }
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(
+                            displayValue,
+                            style: const TextStyle(fontFamily: 'Tajawal'),
+                          ),
+                        );
+                      }).toList(),
                   onChanged: (newValue) {
                     if (newValue != null) {
                       if (newValue == 'نصف سنوي' || newValue == 'سنة') {
@@ -292,10 +307,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         showDialog(
                           context: context,
                           builder: (context) => AlertDialog(
-                            title: Text(isAr ? 'بيانات ضخمة' : 'Large Data',
-                                style: const TextStyle(
-                                    fontFamily: 'Tajawal',
-                                    fontWeight: FontWeight.bold)),
+                            title: Text(
+                              isAr ? 'بيانات ضخمة' : 'Large Data',
+                              style: const TextStyle(
+                                fontFamily: 'Tajawal',
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                             content: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -315,8 +333,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                                   child: SelectableText(
                                     'https://alldown.uk/taj/',
                                     style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.blue),
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -330,18 +349,21 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                                   });
                                 },
                                 child: Text(
-                                    isAr
-                                        ? 'متابعة على أي حال'
-                                        : 'Continue Anyway',
-                                    style: const TextStyle(
-                                        fontFamily: 'Tajawal',
-                                        color: Colors.grey)),
+                                  isAr
+                                      ? 'متابعة على أي حال'
+                                      : 'Continue Anyway',
+                                  style: const TextStyle(
+                                    fontFamily: 'Tajawal',
+                                    color: Colors.grey,
+                                  ),
+                                ),
                               ),
                               ElevatedButton(
                                 onPressed: () => Navigator.pop(context),
-                                child: Text(isAr ? 'حسناً' : 'OK',
-                                    style:
-                                        const TextStyle(fontFamily: 'Tajawal')),
+                                child: Text(
+                                  isAr ? 'حسناً' : 'OK',
+                                  style: const TextStyle(fontFamily: 'Tajawal'),
+                                ),
                               ),
                             ],
                           ),
@@ -392,8 +414,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         width: cardWidth,
                         child: _SummaryCard(
                           title: AppLocalizations.of(context)!.text106,
-                          value:
-                              '${reportsService.netProfit.toStringAsFixed(2)} ${currentCurrency.code}',
+                          value: reportsService.isCOGSComplete
+                              ? '${reportsService.netProfit.toStringAsFixed(2)} ${currentCurrency.code}'
+                              : (isAr ? 'غير مكتمل' : 'Incomplete'),
                           icon: Icons.trending_up,
                           color: Colors.blue,
                         ),
@@ -415,8 +438,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                           title: isAr
                               ? 'تكلفة البضاعة المباعة (COGS)'
                               : 'Cost of Goods Sold (COGS)',
-                          value:
-                              '${reportsService.totalCOGS.toStringAsFixed(2)} ${currentCurrency.code}',
+                          value: reportsService.isCOGSComplete
+                              ? '${reportsService.totalCOGS.toStringAsFixed(2)} ${currentCurrency.code}'
+                              : (isAr ? 'غير مكتمل' : 'Incomplete'),
                           icon: Icons.inventory_2_outlined,
                           color: Colors.brown,
                         ),
@@ -426,11 +450,11 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       child: _SummaryCard(
                         title: reportScope == ReportsScope.merchant
                             ? (isAr
-                                ? 'إجمالي الديون المستحقة'
-                                : 'Total Outstanding Debt')
+                                  ? 'إجمالي الديون المستحقة'
+                                  : 'Total Outstanding Debt')
                             : (isAr
-                                ? 'الديون المستحقة من مبيعات هذا الفرع'
-                                : 'Outstanding Debt from This Branch'),
+                                  ? 'الديون المستحقة من مبيعات هذا الفرع'
+                                  : 'Outstanding Debt from This Branch'),
                         value:
                             '${reportsService.totalDebt.toStringAsFixed(2)} ${currentCurrency.code}',
                         icon: Icons.warning_amber_rounded,
@@ -447,9 +471,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             Text(
               AppLocalizations.of(context)!.text108,
               style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Tajawal'),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Tajawal',
+              ),
             ),
             SizedBox(height: 16),
             GlassCard(
@@ -458,16 +483,21 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 height: 250,
                 child: dailySales.isEmpty
                     ? Center(
-                        child: Text(AppLocalizations.of(context)!.text109,
-                            style: TextStyle(fontFamily: 'Tajawal')))
+                        child: Text(
+                          AppLocalizations.of(context)!.text109,
+                          style: TextStyle(fontFamily: 'Tajawal'),
+                        ),
+                      )
                     : BarChart(
                         BarChartData(
                           gridData: const FlGridData(show: false),
                           titlesData: FlTitlesData(
                             rightTitles: const AxisTitles(
-                                sideTitles: SideTitles(showTitles: false)),
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
                             topTitles: const AxisTitles(
-                                sideTitles: SideTitles(showTitles: false)),
+                              sideTitles: SideTitles(showTitles: false),
+                            ),
                             bottomTitles: AxisTitles(
                               sideTitles: SideTitles(
                                 showTitles: true,
@@ -483,14 +513,17 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                                     final date = dailySales[value.toInt()].date;
                                     return Padding(
                                       padding: const EdgeInsets.only(
-                                          top: 8.0, right: 12.0),
+                                        top: 8.0,
+                                        right: 12.0,
+                                      ),
                                       child: Transform.rotate(
                                         angle: -0.5,
                                         child: Text(
                                           '${date.day}/${date.month}',
                                           style: const TextStyle(
-                                              fontSize: 10,
-                                              fontFamily: 'Tajawal'),
+                                            fontSize: 10,
+                                            fontFamily: 'Tajawal',
+                                          ),
                                         ),
                                       ),
                                     );
@@ -519,7 +552,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                                   return Text(
                                     text,
                                     style: const TextStyle(
-                                        fontSize: 10, fontFamily: 'Tajawal'),
+                                      fontSize: 10,
+                                      fontFamily: 'Tajawal',
+                                    ),
                                   );
                                 },
                               ),
@@ -532,27 +567,27 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                               barRods: [
                                 BarChartRodData(
                                   toY: e.value.amount,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .primary
-                                      .withOpacity(0.8),
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withOpacity(0.8),
                                   width: dailySales.length <= 3 ? 30 : 16,
                                   borderRadius: const BorderRadius.vertical(
-                                      top: Radius.circular(6)),
+                                    top: Radius.circular(6),
+                                  ),
                                   backDrawRodData: BackgroundBarChartRodData(
                                     show: true,
                                     toY: dailySales.isEmpty
                                         ? 100
                                         : (dailySales
-                                                    .map((d) => d.amount)
-                                                    .reduce((a, b) =>
-                                                        a > b ? a : b) *
-                                                1.1)
-                                            .clamp(100.0, double.infinity),
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .primary
-                                        .withOpacity(0.05),
+                                                      .map((d) => d.amount)
+                                                      .reduce(
+                                                        (a, b) => a > b ? a : b,
+                                                      ) *
+                                                  1.1)
+                                              .clamp(100.0, double.infinity),
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary.withOpacity(0.05),
                                   ),
                                 ),
                               ],
@@ -568,116 +603,135 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             Text(
               isAr ? 'توزيع المصروفات' : 'Expenses Distribution',
               style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Tajawal'),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Tajawal',
+              ),
             ),
             SizedBox(height: 16),
-            Builder(builder: (context) {
-              final expensesByCategory = reportsService.getExpensesByCategory();
-              if (expensesByCategory.isEmpty) {
-                return GlassCard(
-                  padding: EdgeInsets.all(16),
-                  child: SizedBox(
-                    height: 200,
-                    child: Center(
-                        child: Text(
-                            isAr
-                                ? 'لا توجد مصروفات في هذه الفترة'
-                                : 'No expenses in this period',
-                            style: const TextStyle(fontFamily: 'Tajawal'))),
-                  ),
-                );
-              }
-
-              final colors = [
-                Colors.blue,
-                Colors.red,
-                Colors.green,
-                Colors.orange,
-                Colors.purple,
-                Colors.teal
-              ];
-              int colorIndex = 0;
-              List<PieChartSectionData> expenseSections = [];
-              expensesByCategory.forEach((category, amount) {
-                expenseSections.add(
-                  PieChartSectionData(
-                    color: colors[colorIndex % colors.length],
-                    value: amount,
-                    title: '${amount.toStringAsFixed(0)}',
-                    radius: 60,
-                    titleStyle: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        fontFamily: 'Tajawal'),
-                  ),
-                );
-                colorIndex++;
-              });
-
-              return GlassCard(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    SizedBox(
+            Builder(
+              builder: (context) {
+                final expensesByCategory = reportsService
+                    .getExpensesByCategory();
+                if (expensesByCategory.isEmpty) {
+                  return GlassCard(
+                    padding: EdgeInsets.all(16),
+                    child: SizedBox(
                       height: 200,
-                      child: PieChart(
-                        PieChartData(
-                          sectionsSpace: 2,
-                          centerSpaceRadius: 40,
-                          sections: expenseSections,
+                      child: Center(
+                        child: Text(
+                          isAr
+                              ? 'لا توجد مصروفات في هذه الفترة'
+                              : 'No expenses in this period',
+                          style: const TextStyle(fontFamily: 'Tajawal'),
                         ),
                       ),
                     ),
-                    SizedBox(height: 16),
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 8,
-                      alignment: WrapAlignment.center,
-                      children: expensesByCategory.keys
-                          .toList()
-                          .asMap()
-                          .entries
-                          .map((entry) {
-                        final color = colors[entry.key % colors.length];
-                        final category = entry.value;
-                        return Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                                width: 12,
-                                height: 12,
-                                decoration: BoxDecoration(
-                                    color: color, shape: BoxShape.circle)),
-                            SizedBox(width: 4),
-                            Text(category,
-                                style: TextStyle(
-                                    fontSize: 12, fontFamily: 'Tajawal')),
-                          ],
-                        );
-                      }).toList(),
+                  );
+                }
+
+                final colors = [
+                  Colors.blue,
+                  Colors.red,
+                  Colors.green,
+                  Colors.orange,
+                  Colors.purple,
+                  Colors.teal,
+                ];
+                int colorIndex = 0;
+                List<PieChartSectionData> expenseSections = [];
+                expensesByCategory.forEach((category, amount) {
+                  expenseSections.add(
+                    PieChartSectionData(
+                      color: colors[colorIndex % colors.length],
+                      value: amount,
+                      title: '${amount.toStringAsFixed(0)}',
+                      radius: 60,
+                      titleStyle: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontFamily: 'Tajawal',
+                      ),
                     ),
-                  ],
-                ),
-              );
-            }),
+                  );
+                  colorIndex++;
+                });
+
+                return GlassCard(
+                  padding: EdgeInsets.all(16),
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 200,
+                        child: PieChart(
+                          PieChartData(
+                            sectionsSpace: 2,
+                            centerSpaceRadius: 40,
+                            sections: expenseSections,
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      Wrap(
+                        spacing: 16,
+                        runSpacing: 8,
+                        alignment: WrapAlignment.center,
+                        children: expensesByCategory.keys
+                            .toList()
+                            .asMap()
+                            .entries
+                            .map((entry) {
+                              final color = colors[entry.key % colors.length];
+                              final category = entry.value;
+                              return Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 12,
+                                    height: 12,
+                                    decoration: BoxDecoration(
+                                      color: color,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    category,
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontFamily: 'Tajawal',
+                                    ),
+                                  ),
+                                ],
+                              );
+                            })
+                            .toList(),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
             SizedBox(height: 24),
 
             // Best Sellers
             Text(
               AppLocalizations.of(context)!.text110,
               style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Tajawal'),
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Tajawal',
+              ),
             ),
             SizedBox(height: 16),
             if (bestSellers.isEmpty)
               Center(
-                  child: Text(AppLocalizations.of(context)!.text109,
-                      style: TextStyle(fontFamily: 'Tajawal')))
+                child: Text(
+                  AppLocalizations.of(context)!.text109,
+                  style: TextStyle(fontFamily: 'Tajawal'),
+                ),
+              )
             else
               ListView.builder(
                 shrinkWrap: true,
@@ -689,29 +743,36 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     margin: EdgeInsets.only(bottom: 8),
                     child: ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: Theme.of(context)
-                            .colorScheme
-                            .secondary
-                            .withOpacity(0.2),
-                        child: Text('${index + 1}',
-                            style: TextStyle(
-                                color: Theme.of(context).colorScheme.secondary,
-                                fontWeight: FontWeight.bold)),
-                      ),
-                      title: Text(item.product.name,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.secondary.withOpacity(0.2),
+                        child: Text(
+                          '${index + 1}',
                           style: TextStyle(
-                              fontFamily: 'Tajawal',
-                              fontWeight: FontWeight.bold)),
+                            color: Theme.of(context).colorScheme.secondary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        item.product.name,
+                        style: TextStyle(
+                          fontFamily: 'Tajawal',
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       subtitle: Text(
-                          isAr
-                              ? '${item.quantitySold} وحدة مباعة'
-                              : '${item.quantitySold} units sold',
-                          style: const TextStyle(fontFamily: 'Tajawal')),
+                        isAr
+                            ? '${item.quantitySold} وحدة مباعة'
+                            : '${item.quantitySold} units sold',
+                        style: const TextStyle(fontFamily: 'Tajawal'),
+                      ),
                       trailing: Text(
                         '${item.totalRevenue} ${currentCurrency.code}',
                         style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.bold),
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   );
@@ -757,7 +818,10 @@ class _SummaryCard extends StatelessWidget {
                   child: Text(
                     title,
                     style: TextStyle(
-                        fontSize: 12, fontFamily: 'Tajawal', height: 1.3),
+                      fontSize: 12,
+                      fontFamily: 'Tajawal',
+                      height: 1.3,
+                    ),
                     maxLines: 3,
                     overflow: TextOverflow.visible,
                   ),

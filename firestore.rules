@@ -249,17 +249,44 @@ service cloud.firestore {
     }
 
     match /merchants/{merchantId} {
-      match /product_costs/{productId} {
-        allow read: if hasPermission(merchantId, 'can_view_cost');
+      match /product_costs/{costId} {
+        // Legacy merchant-wide cost docs have no branchId. Keep their reads
+        // compatible for users who already have can_view_cost, but scope all
+        // new branch-aware docs by branch access.
+        allow read: if resource != null &&
+          hasPermission(merchantId, 'can_view_cost') &&
+          (
+            resource.data.get('branchId', null) == null ||
+            hasBranchAccess(merchantId, resource.data.get('branchId', 'main'))
+          );
         allow create, update: if hasPermission(merchantId, 'can_manage_products') &&
           hasPermission(merchantId, 'can_view_cost') &&
-          request.resource.data.keys().hasOnly(['merchantId', 'productId', 'costPrice', 'updatedAt']) &&
+          request.resource.data.keys().hasOnly([
+            'merchantId', 'branchId', 'productId', 'costPrice', 'updatedAt',
+            'migratedFromLegacyProduct'
+          ]) &&
           request.resource.data.get('merchantId', '') == merchantId &&
-          request.resource.data.get('productId', '') == productId &&
+          request.resource.data.get('productId', '') is string &&
+          request.resource.data.get('productId', '') != '' &&
           request.resource.data.get('costPrice', -1) is number &&
-          request.resource.data.get('costPrice', -1) >= 0;
-        allow delete: if hasPermission(merchantId, 'can_manage_products') &&
-          hasPermission(merchantId, 'can_view_cost');
+          request.resource.data.get('costPrice', -1) >= 0 &&
+          (
+            (request.resource.data.get('branchId', null) is string &&
+             request.resource.data.get('branchId', '') != '' &&
+             costId == request.resource.data.get('branchId', '') + '_' + request.resource.data.get('productId', '') &&
+             hasBranchAccess(merchantId, request.resource.data.get('branchId', 'main'))) ||
+            (request.resource.data.get('branchId', null) == null &&
+             costId == request.resource.data.get('productId', '') &&
+             isOwner(merchantId))
+          );
+        allow delete: if resource != null &&
+          hasPermission(merchantId, 'can_manage_products') &&
+          hasPermission(merchantId, 'can_view_cost') &&
+          (
+            (resource.data.get('branchId', null) == null && isOwner(merchantId)) ||
+            (resource.data.get('branchId', null) is string &&
+             hasBranchAccess(merchantId, resource.data.get('branchId', 'main')))
+          );
       }
       match /order_cost_snapshots/{orderId} {
         allow read: if resource != null &&

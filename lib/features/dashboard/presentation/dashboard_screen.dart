@@ -6,6 +6,7 @@ import '../../customers/presentation/customers_screen.dart';
 import '../../orders/presentation/orders_screen.dart';
 import '../../orders/presentation/pos_screen.dart';
 import '../../reports/presentation/reports_screen.dart';
+import '../domain/dashboard_daily_metrics.dart';
 import '../../orders/data/order_repository.dart';
 import '../../products/data/product_repository.dart';
 import '../../../core/theme/glass_card.dart';
@@ -57,9 +58,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         !branchContext.isReady ||
         !identityReady ||
         !policy.isReady) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     if (policy.isEmployee && appUser.assignedBranchIds.isEmpty) {
@@ -85,8 +84,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final bool canCreateOrders = policy.canCreateOrders;
     final migrationBootstrap =
         (appUser.role == 'merchant' || appUser.role == 'admin')
-            ? ref.watch(branchCatalogMigrationBootstrapProvider)
-            : const AsyncData<void>(null);
+        ? ref.watch(branchCatalogMigrationBootstrapProvider)
+        : const AsyncData<void>(null);
 
     if (migrationBootstrap.isLoading || migrationBootstrap.hasError) {
       return BranchCatalogMigrationGate(
@@ -98,14 +97,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     final List<Widget> screens = [
       DashboardHome(
-          canManageCustomers: canManageCustomers,
-          canViewReports: canViewReports,
-          canCreateOrders: canCreateOrders,
-          onNavigateToTab: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          }),
+        canManageCustomers: canManageCustomers,
+        canViewReports: canViewReports,
+        canCreateOrders: canCreateOrders,
+        onNavigateToTab: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+      ),
       OrdersScreen(), // Removed const to ensure rebuild
       ProductsScreen(),
       if (canManageCustomers) CustomersScreen(),
@@ -119,24 +119,32 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         final shouldPop = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text(l10n.confirmExit,
-                style: TextStyle(
-                    fontFamily: 'Tajawal',
-                    fontWeight: FontWeight.bold,
-                    color: Colors.indigo.shade900)),
-            content: Text(l10n.confirmExitMessage,
-                style: TextStyle(fontFamily: 'Tajawal')),
+            title: Text(
+              l10n.confirmExit,
+              style: TextStyle(
+                fontFamily: 'Tajawal',
+                fontWeight: FontWeight.bold,
+                color: Colors.indigo.shade900,
+              ),
+            ),
+            content: Text(
+              l10n.confirmExitMessage,
+              style: TextStyle(fontFamily: 'Tajawal'),
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child:
-                    Text(l10n.cancel, style: TextStyle(fontFamily: 'Tajawal')),
+                child: Text(
+                  l10n.cancel,
+                  style: TextStyle(fontFamily: 'Tajawal'),
+                ),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(true),
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade600,
-                    foregroundColor: Colors.white),
+                  backgroundColor: Colors.red.shade600,
+                  foregroundColor: Colors.white,
+                ),
                 child: Text(l10n.exit, style: TextStyle(fontFamily: 'Tajawal')),
               ),
             ],
@@ -147,10 +155,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         }
       },
       child: Scaffold(
-        body: IndexedStack(
-          index: _currentIndex,
-          children: screens,
-        ),
+        body: IndexedStack(index: _currentIndex, children: screens),
         bottomNavigationBar: NavigationBar(
           selectedIndex: _currentIndex,
           onDestinationSelected: (index) {
@@ -199,12 +204,13 @@ class DashboardHome extends ConsumerWidget {
   final bool canManageCustomers;
   final bool canViewReports;
   final bool canCreateOrders;
-  const DashboardHome(
-      {super.key,
-      required this.onNavigateToTab,
-      required this.canManageCustomers,
-      required this.canViewReports,
-      required this.canCreateOrders});
+  const DashboardHome({
+    super.key,
+    required this.onNavigateToTab,
+    required this.canManageCustomers,
+    required this.canViewReports,
+    required this.canCreateOrders,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -240,14 +246,9 @@ class DashboardHome extends ConsumerWidget {
       drawer: const AppDrawer(),
       body: ordersAsync.when(
         data: (orders) {
-          final liveOrders = orders
-              .where((order) =>
-                  order.status != 'cancelled' &&
-                  order.status != 'debt_repayment')
-              .toList();
-          final totalSales =
-              liveOrders.fold<double>(0, (sum, order) => sum + order.total);
-          final ordersCount = liveOrders.length;
+          final dailyMetrics = DashboardDailyMetrics.fromOrders(orders);
+          final totalSales = dailyMetrics.totalSales;
+          final ordersCount = dailyMetrics.ordersCount;
 
           // Low stock calculation and widget
           Widget? lowStockWidget;
@@ -268,16 +269,18 @@ class DashboardHome extends ConsumerWidget {
                     child: Text(
                       l10n.errorFetchingInventory,
                       style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Tajawal'),
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Tajawal',
+                      ),
                     ),
                   ),
                 ],
               ),
             );
           } else {
-            final lowStockProducts = productsAsync.value
+            final lowStockProducts =
+                productsAsync.value
                     ?.where((p) => !p.isManufacturedOnDemand && p.quantity <= 5)
                     .toList() ??
                 [];
@@ -298,16 +301,21 @@ class DashboardHome extends ConsumerWidget {
                       child: Text(
                         l10n.lowStockAlert(lowStockProducts.length.toString()),
                         style: TextStyle(
-                            color: Colors.red,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Tajawal'),
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontFamily: 'Tajawal',
+                        ),
                       ),
                     ),
                     TextButton(
                       onPressed: () => onNavigateToTab(2),
-                      child: Text(AppLocalizations.of(context)!.text63,
-                          style: TextStyle(
-                              color: Colors.red, fontFamily: 'Tajawal')),
+                      child: Text(
+                        AppLocalizations.of(context)!.text63,
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontFamily: 'Tajawal',
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -355,20 +363,24 @@ class DashboardHome extends ConsumerWidget {
                           child: Text(
                             l10n.completeStoreBrandingAlert,
                             style: TextStyle(
-                                color: Colors.orange,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: 'Tajawal'),
+                              color: Colors.orange,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: 'Tajawal',
+                            ),
                           ),
                         ),
                         TextButton(
                           onPressed: () {
                             context.push('/store_branding');
                           },
-                          child: Text(l10n.completeNow,
-                              style: TextStyle(
-                                  color: Colors.orange,
-                                  fontFamily: 'Tajawal',
-                                  fontWeight: FontWeight.bold)),
+                          child: Text(
+                            l10n.completeNow,
+                            style: TextStyle(
+                              color: Colors.orange,
+                              fontFamily: 'Tajawal',
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -379,9 +391,10 @@ class DashboardHome extends ConsumerWidget {
                 Text(
                   l10n.reports,
                   style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Tajawal'),
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Tajawal',
+                  ),
                 ),
                 SizedBox(height: 16),
                 Row(
@@ -409,9 +422,10 @@ class DashboardHome extends ConsumerWidget {
                 Text(
                   l10n.quickActions,
                   style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Tajawal'),
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Tajawal',
+                  ),
                 ),
                 SizedBox(height: 16),
                 Wrap(
@@ -428,7 +442,8 @@ class DashboardHome extends ConsumerWidget {
                           final shouldGoToOrders = await Navigator.push<bool>(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const PosScreen()),
+                              builder: (context) => const PosScreen(),
+                            ),
                           );
                           if (shouldGoToOrders == true) {
                             onNavigateToTab(1); // 1 is the index of Orders tab
@@ -466,9 +481,10 @@ class DashboardHome extends ConsumerWidget {
                 Text(
                   l10n.managementAndInventory,
                   style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: 'Tajawal'),
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Tajawal',
+                  ),
                 ),
                 SizedBox(height: 16),
                 Wrap(
@@ -526,17 +542,19 @@ class DashboardHome extends ConsumerWidget {
                         icon: Icons.archive,
                         label:
                             Localizations.localeOf(context).languageCode == 'ar'
-                                ? (policy.canViewShiftArchive
-                                    ? 'أرشيف الورديات'
-                                    : 'وردياتي')
-                                : (policy.canViewShiftArchive
-                                    ? 'Shift Archive'
-                                    : 'My Shifts'),
+                            ? (policy.canViewShiftArchive
+                                  ? 'أرشيف الورديات'
+                                  : 'وردياتي')
+                            : (policy.canViewShiftArchive
+                                  ? 'Shift Archive'
+                                  : 'My Shifts'),
                         color: Colors.brown,
                         onTap: () {
-                          context.push(policy.canViewShiftArchive
-                              ? '/shifts_archive'
-                              : '/my_shifts');
+                          context.push(
+                            policy.canViewShiftArchive
+                                ? '/shifts_archive'
+                                : '/my_shifts',
+                          );
                         },
                       ),
                     ],
@@ -585,19 +603,25 @@ class _StatCard extends StatelessWidget {
               child: Icon(icon, size: 28, color: color),
             ),
             SizedBox(height: 12),
-            Text(title,
-                style: TextStyle(
-                    fontFamily: 'Tajawal', color: Colors.grey, fontSize: 14),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis),
+            Text(
+              title,
+              style: TextStyle(
+                fontFamily: 'Tajawal',
+                color: Colors.grey,
+                fontSize: 14,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
             SizedBox(height: 4),
             Expanded(
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerRight,
-                child: Text(value,
-                    style:
-                        TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                child: Text(
+                  value,
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ],
@@ -632,9 +656,13 @@ class _QuickAction extends StatelessWidget {
             child: Icon(icon, color: color, size: 30),
           ),
           SizedBox(height: 8),
-          Text(label,
-              style: TextStyle(
-                  fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+          Text(
+            label,
+            style: TextStyle(
+              fontFamily: 'Tajawal',
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );

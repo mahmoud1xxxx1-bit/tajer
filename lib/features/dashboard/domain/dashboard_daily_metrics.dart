@@ -17,13 +17,15 @@ class DashboardDailyMetrics {
     final start = DateTime(localNow.year, localNow.month, localNow.day);
     final end = start.add(const Duration(days: 1));
 
-    final todayOrders = orders.where((order) {
-      if (order.status == 'cancelled' || order.status == 'debt_repayment') {
-        return false;
-      }
-      final createdAt = order.createdAt.toLocal();
-      return !createdAt.isBefore(start) && createdAt.isBefore(end);
-    }).toList(growable: false);
+    final todayOrders = orders
+        .where((order) {
+          if (order.status == 'cancelled' || order.status == 'debt_repayment') {
+            return false;
+          }
+          final createdAt = order.createdAt.toLocal();
+          return !createdAt.isBefore(start) && createdAt.isBefore(end);
+        })
+        .toList(growable: false);
 
     return DashboardDailyMetrics(
       totalSales: todayOrders.fold<double>(
