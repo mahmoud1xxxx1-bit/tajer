@@ -1,0 +1,68 @@
+name: Build Audited Release APK
+
+on:
+  push:
+    branches:
+      - audit/pre-google-play-414
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout audited branch
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '21'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.0'
+          channel: stable
+          cache: true
+
+      - name: Get dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Decode official Android release keystore
+        run: |
+          test -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}"
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+          test -s android/app/upload-keystore.jks
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Run build runner
+        run: dart run build_runner build -d
+
+      - name: Build signed Release APK
+        run: flutter build apk --release --no-pub
+        env:
+          TAJER_STOREFILE: upload-keystore.jks
+          TAJER_STOREPASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          TAJER_KEYALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          TAJER_KEYPASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Verify APK exists
+        run: |
+          test -s build/app/outputs/flutter-apk/app-release.apk
+          sha256sum build/app/outputs/flutter-apk/app-release.apk
+          ls -lh build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload signed audited APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tajer-1.1.109-build109-audited-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 7
