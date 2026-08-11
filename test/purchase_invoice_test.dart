@@ -98,8 +98,8 @@ void main() {
       supplierName: 'Test Supplier',
       invoiceNumber: 'INV-002',
       items: const [item],
-      totalAmount: 1000,
-      amountPaid: 200,
+      totalAmount: 100,
+      amountPaid: 20,
       paymentMethod: 'transfer',
       isFromShiftDrawer: false,
     );
@@ -111,10 +111,10 @@ void main() {
             .doc('supp_123')
             .get())
         .data()!;
-    expect((supplier['totalDebt'] as num).toDouble(), 900);
+    expect((supplier['totalDebt'] as num).toDouble(), 180);
     expect(
       ((supplier['branchDebts'] as Map)['branch_A'] as num).toDouble(),
-      825,
+      105,
     );
   });
 
@@ -138,8 +138,8 @@ void main() {
       supplierName: 'Test Supplier',
       invoiceNumber: 'INV-003',
       items: const [item],
-      totalAmount: 200,
-      amountPaid: 200,
+      totalAmount: 100,
+      amountPaid: 100,
       paymentMethod: 'cash',
       isFromShiftDrawer: true,
       shiftId: shiftId,
@@ -156,16 +156,15 @@ void main() {
         .collection('expenses')
         .get();
     expect(expenses.docs.length, 1);
-    expect((expenses.docs.single.data()['amount'] as num).toDouble(), 200);
+    expect((expenses.docs.single.data()['amount'] as num).toDouble(), 100);
     expect(expenses.docs.single.data()['isSupplierPayment'], isTrue);
     expect(expenses.docs.single.data()['isFromShiftDrawer'], isTrue);
 
-    // Drawer equation: opening 100 + gross cash sales 500 - supplier cash-out 200.
     const opening = 100.0;
     final expectedCash = opening +
         (shift['cashSales'] as num).toDouble() -
         (expenses.docs.single.data()['amount'] as num).toDouble();
-    expect(expectedCash, 400);
+    expect(expectedCash, 500);
   });
 
   test('reverse invoice restores outstanding debt and inventory exactly once',
@@ -232,7 +231,6 @@ void main() {
       isFromShiftDrawer: false,
     );
 
-    // Simulate a later supplier settlement that already consumed most debt.
     await firestore
         .collection('merchants')
         .doc('merchant_123')
@@ -284,5 +282,74 @@ void main() {
       repo.reversePurchaseInvoice(invoiceId: invoice.id),
       throwsA(isA<Exception>()),
     );
+  });
+
+  test('repository rejects invoice totals that disagree with item totals', () async {
+    await seedSupplier(totalDebt: 100, branchDebts: const {'branch_A': 100});
+
+    await expectLater(
+      repo.createPurchaseInvoice(
+        branchId: 'branch_A',
+        supplierId: 'supp_123',
+        supplierName: 'Test Supplier',
+        invoiceNumber: 'INV-BAD-TOTAL',
+        items: const [item],
+        totalAmount: 1000,
+        amountPaid: 0,
+        paymentMethod: 'cash',
+        isFromShiftDrawer: false,
+      ),
+      throwsA(isA<Exception>()),
+    );
+  });
+
+  test('selected purchase date is persisted to invoice and linked entries', () async {
+    const branchId = 'branch_A';
+    final selectedDate = DateTime(2026, 7, 3, 14, 30);
+    await seedSupplier(totalDebt: 100, branchDebts: const {branchId: 100});
+
+    final invoice = await repo.createPurchaseInvoice(
+      branchId: branchId,
+      supplierId: 'supp_123',
+      supplierName: 'Test Supplier',
+      invoiceNumber: 'INV-DATED',
+      items: const [item],
+      totalAmount: 100,
+      amountPaid: 20,
+      paymentMethod: 'network',
+      isFromShiftDrawer: false,
+      occurredAt: selectedDate,
+    );
+
+    expect(invoice.createdAt, selectedDate);
+
+    final savedInvoice = (await firestore
+            .collection('merchants')
+            .doc('merchant_123')
+            .collection('purchase_invoices')
+            .doc(invoice.id)
+            .get())
+        .data()!;
+    expect((savedInvoice['createdAt'] as dynamic).toDate(), selectedDate);
+
+    final txs = await firestore
+        .collection('merchants')
+        .doc('merchant_123')
+        .collection('suppliers')
+        .doc('supp_123')
+        .collection('transactions')
+        .get();
+    expect(txs.docs, isNotEmpty);
+    for (final tx in txs.docs) {
+      expect((tx.data()['date'] as dynamic).toDate(), selectedDate);
+    }
+
+    final expenses = await firestore
+        .collection('merchants')
+        .doc('merchant_123')
+        .collection('expenses')
+        .get();
+    expect(expenses.docs, hasLength(1));
+    expect((expenses.docs.single.data()['date'] as dynamic).toDate(), selectedDate);
   });
 }
