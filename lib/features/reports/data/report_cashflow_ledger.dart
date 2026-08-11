@@ -11,6 +11,30 @@ import '../../orders/domain/order.dart';
 class ReportCashflowLedger {
   const ReportCashflowLedger._();
 
+  /// Tajer historically used more than one persisted name for non-cash payment
+  /// methods. Reports must group equivalent methods under one stable key so a
+  /// Mada sale cannot silently disappear into a separate/unlabelled bucket.
+  static String normalizePaymentMethod(String? raw) {
+    switch ((raw ?? 'cash').trim().toLowerCase()) {
+      case 'cash':
+        return 'cash';
+      case 'mada':
+      case 'card':
+      case 'network':
+      case 'apple_pay':
+      case 'applepay':
+        return 'card';
+      case 'transfer':
+      case 'bank_transfer':
+      case 'bank transfer':
+        return 'transfer';
+      default:
+        return (raw == null || raw.trim().isEmpty)
+            ? 'cash'
+            : raw.trim().toLowerCase();
+    }
+  }
+
   static Map<String, double> paymentMethods({
     required List<AppOrder> orders,
     required List<CustomerDebtPayment> debtPayments,
@@ -18,9 +42,10 @@ class ReportCashflowLedger {
   }) {
     final result = <String, double>{};
 
-    void add(String method, double amount) {
+    void add(String? method, double amount) {
       if (amount <= 0) return;
-      result[method] = (result[method] ?? 0.0) + amount;
+      final normalized = normalizePaymentMethod(method);
+      result[normalized] = (result[normalized] ?? 0.0) + amount;
     }
 
     for (final order in orders) {
