@@ -1,8 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/providers/effective_merchant.dart';
-import '../../authentication/data/auth_repository.dart';
-import '../../authentication/application/access_policy.dart';
 import '../../orders/domain/order.dart';
 import '../../expenses/domain/expense.dart';
 import '../../customers/domain/customer_debt_payment.dart';

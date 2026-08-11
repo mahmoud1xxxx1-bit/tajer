@@ -66,16 +66,16 @@ class SupplierDetailsScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: (activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0) : currentSupplier.totalDebt) > 0
-                            ? Colors.red.withOpacity(0.1)
-                            : Colors.green.withOpacity(0.1),
+                        color: ((currentSupplier.branchDebts[activeBranchId] ?? 0)) > 0
+                            ? Colors.red.withValues(alpha: 0.1)
+                            : Colors.green.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        (activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0) : currentSupplier.totalDebt) > 0
+                        ((currentSupplier.branchDebts[activeBranchId] ?? 0)) > 0
                             ? Icons.money_off
                             : Icons.check_circle,
-                        color: (activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0) : currentSupplier.totalDebt) > 0
+                        color: ((currentSupplier.branchDebts[activeBranchId] ?? 0)) > 0
                             ? Colors.red
                             : Colors.green,
                         size: 32,
@@ -96,11 +96,11 @@ class SupplierDetailsScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0) : currentSupplier.totalDebt} ${currentCurrency.code}',
+                            '${(currentSupplier.branchDebts[activeBranchId] ?? 0)} ${currentCurrency.code}',
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: (activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0) : currentSupplier.totalDebt) > 0
+                              color: ((currentSupplier.branchDebts[activeBranchId] ?? 0)) > 0
                                   ? Colors.red
                                   : Colors.green,
                               fontFamily: 'Tajawal',
@@ -166,8 +166,8 @@ class SupplierDetailsScreen extends ConsumerWidget {
                           return ListTile(
                             leading: CircleAvatar(
                               backgroundColor: isPayment
-                                  ? Colors.green.withOpacity(0.1)
-                                  : Colors.red.withOpacity(0.1),
+                                  ? Colors.green.withValues(alpha: 0.1)
+                                  : Colors.red.withValues(alpha: 0.1),
                               child: Icon(
                                 isPayment
                                     ? Icons.arrow_downward
@@ -550,7 +550,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
     final activeBranchId = ref.read(selectedBranchIdProvider);
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final amountController = TextEditingController(
-      text: (activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0.0) : currentSupplier.totalDebt).toString(),
+      text: ((currentSupplier.branchDebts[activeBranchId] ?? 0.0)).toString(),
     );
     String paymentMethod = 'cash';
     bool isFromShiftDrawer = true;
@@ -652,7 +652,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
               onPressed: () async {
                 final paid = double.tryParse(amountController.text.trim()) ?? 0;
                 if (paid <= 0) return;
-                final maxDebt = activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0.0) : currentSupplier.totalDebt;
+                final maxDebt = (currentSupplier.branchDebts[activeBranchId] ?? 0.0);
                 if (paid > maxDebt) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(

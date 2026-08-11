@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../features/authentication/domain/app_user.dart';
@@ -23,8 +24,11 @@ String effectiveMerchantIdFor(AppUser user, {String? authUid}) {
 }
 
 String currentEffectiveMerchantId(AppUser user) {
-  return effectiveMerchantIdFor(
-    user,
-    authUid: FirebaseAuth.instance.currentUser?.uid,
-  );
+  String? uid;
+  try {
+    if (Firebase.apps.isNotEmpty) {
+      uid = FirebaseAuth.instance.currentUser?.uid;
+    }
+  } catch (_) {}
+  return effectiveMerchantIdFor(user, authUid: uid);
 }

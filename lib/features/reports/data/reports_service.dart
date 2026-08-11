@@ -110,17 +110,81 @@ class ReportsService {
     );
   }
 
+  double getOrderEffectiveRevenue(AppOrder order) {
+    if (order.returnedQuantities.isEmpty) return order.total;
+    double returnedValue = 0.0;
+    for (final item in order.items) {
+      final retQty = order.returnedQuantities[item.lineId] ?? 0;
+      if (retQty > 0 && item.quantity > 0) {
+        returnedValue += (item.total / item.quantity) * retQty;
+      }
+    }
+    return order.total - returnedValue;
+  }
+
+  double getOrderEffectiveCOGS(AppOrder order) {
+    final protected = protectedOrderCosts[order.id];
+    if (protected != null) {
+      if (order.returnedQuantities.isEmpty) return protected;
+      // We don't have item-level protected costs, so we approximate the returned COGS
+      // based on the proportion of items returned.
+      double originalQty = 0;
+      double returnedQty = 0;
+      for (final item in order.items) {
+        originalQty += item.quantity;
+        returnedQty += (order.returnedQuantities[item.lineId] ?? 0);
+      }
+      if (originalQty == 0) return protected;
+      final ratio = (originalQty - returnedQty) / originalQty;
+      return protected * ratio;
+    }
+    
+    // Legacy calculation
+    return order.items.fold<double>(
+      0.0,
+      (itemSum, item) {
+        final retQty = order.returnedQuantities[item.lineId] ?? 0;
+        final effectiveQty = item.quantity - retQty;
+        return itemSum + ((item.costPrice ?? 0.0) * effectiveQty);
+      }
+    );
+  }
+
+  double getOrderEffectiveTax(AppOrder order) {
+    double orderTax = 0.0;
+    for (final item in order.items) {
+      final retQty = order.returnedQuantities[item.lineId] ?? 0;
+      final effectiveQty = item.quantity - retQty;
+      if (effectiveQty <= 0) continue;
+      
+      final itemTax = item.taxPercentage ?? defaultTaxPercentage;
+      if (itemTax <= 0) continue;
+      
+      final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
+      
+      // We calculate the taxable base for the effective quantity
+      final itemTotalForQty = (item.total / item.quantity) * effectiveQty;
+      final discountForQty = (item.discountAmount ?? 0.0) > 0 ? ((item.discountAmount ?? 0.0) / item.quantity) * effectiveQty : 0.0;
+      final taxableBase = itemTotalForQty - discountForQty;
+      
+      orderTax += isInclusive
+          ? taxableBase - (taxableBase / (1 + (itemTax / 100)))
+          : taxableBase * (itemTax / 100);
+    }
+    return orderTax;
+  }
+
   double get totalRevenue => orders
       .where((order) =>
           order.status != 'cancelled' && order.status != 'debt_repayment')
-      .fold(0.0, (sum, order) => sum + order.total);
+      .fold(0.0, (sum, order) => sum + getOrderEffectiveRevenue(order));
 
   double get netSalesRevenue => totalRevenue - totalTaxCollected;
 
   double get totalDebt {
     final orderOutstanding = orders
         .where((order) => order.status != 'cancelled' && order.isCredit)
-        .fold(0.0, (sum, order) => sum + (order.total - order.paidAmount));
+        .fold(0.0, (sum, order) => sum + (getOrderEffectiveRevenue(order) - order.paidAmount));
     final standaloneCollections = debtPayments
         .where((payment) => payment.allocations.isEmpty)
         .fold(0.0, (sum, payment) => sum + payment.amount);
@@ -141,15 +205,7 @@ class ReportsService {
     return orders
         .where((order) =>
             order.status != 'cancelled' && order.status != 'debt_repayment')
-        .fold(0.0, (sum, order) {
-      final protected = protectedOrderCosts[order.id];
-      if (protected != null) return sum + protected;
-      final legacy = order.items.fold<double>(
-        0.0,
-        (itemSum, item) => itemSum + ((item.costPrice ?? 0.0) * item.quantity),
-      );
-      return sum + legacy;
-    });
+        .fold(0.0, (sum, order) => sum + getOrderEffectiveCOGS(order));
   }
 
   /// True only when every non-cancelled sale has an auditable historical cost
@@ -169,19 +225,7 @@ class ReportsService {
   double get totalTaxCollected => orders
           .where((order) =>
               order.status != 'cancelled' && order.status != 'debt_repayment')
-          .fold(0.0, (sum, order) {
-        double orderTax = 0.0;
-        for (final item in order.items) {
-          final itemTax = item.taxPercentage ?? defaultTaxPercentage;
-          if (itemTax <= 0) continue;
-          final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
-          final taxableBase = item.total - (item.discountAmount ?? 0.0);
-          orderTax += isInclusive
-              ? taxableBase - (taxableBase / (1 + (itemTax / 100)))
-              : taxableBase * (itemTax / 100);
-        }
-        return sum + orderTax;
-      });
+          .fold(0.0, (sum, order) => sum + getOrderEffectiveTax(order));
 
   double get netProfit =>
       totalRevenue - totalTaxCollected - totalCOGS - totalExpenses;
@@ -193,7 +237,7 @@ class ReportsService {
         continue;
       final dateStr =
           '${order.createdAt.year}-${order.createdAt.month.toString().padLeft(2, '0')}-${order.createdAt.day.toString().padLeft(2, '0')}';
-      dailyMap[dateStr] = (dailyMap[dateStr] ?? 0.0) + order.total;
+      dailyMap[dateStr] = (dailyMap[dateStr] ?? 0.0) + getOrderEffectiveRevenue(order);
     }
     final result = dailyMap.entries.map((entry) {
       final parts = entry.key.split('-');
@@ -213,9 +257,13 @@ class ReportsService {
       if (order.status == 'cancelled' || order.status == 'debt_repayment')
         continue;
       for (final item in order.items) {
-        qtyMap[item.productId] = (qtyMap[item.productId] ?? 0) + item.quantity;
+        final retQty = order.returnedQuantities[item.lineId] ?? 0;
+        final effectiveQty = item.quantity - retQty;
+        if (effectiveQty <= 0) continue;
+        
+        qtyMap[item.productId] = (qtyMap[item.productId] ?? 0) + effectiveQty;
         revenueMap[item.productId] =
-            (revenueMap[item.productId] ?? 0.0) + item.total;
+            (revenueMap[item.productId] ?? 0.0) + ((item.total / item.quantity) * effectiveQty);
       }
     }
     final List<ProductSales> bestSellers = [];

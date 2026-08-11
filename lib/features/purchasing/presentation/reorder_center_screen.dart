@@ -80,7 +80,7 @@ class ReorderCenterScreen extends ConsumerWidget {
                   itemType: 'product',
                   orderedQuantity: needed.toDouble(),
                   receivedQuantity: 0,
-                  unitCost: p.costPrice ?? 0.0,
+                  unitCost: p.costPrice,
                 ));
               }
             }
@@ -98,7 +98,6 @@ class ReorderCenterScreen extends ConsumerWidget {
                   itemType: 'raw_material',
                   orderedQuantity: needed.toDouble(),
                   receivedQuantity: 0,
-                  unitCost: 0.0, // Materials might not have default cost easily available here
                 ));
               }
             }

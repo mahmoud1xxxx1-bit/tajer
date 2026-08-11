@@ -2975,7 +2975,7 @@ abstract class AppLocalizations {
   /// No description provided for @businessOverview.
   ///
   /// In ar, this message translates to:
-  /// **'نظرة عامة على الأعمال'**
+  /// **'نظرة شاملة'**
   String get businessOverview;
 
   /// No description provided for @last7Days.

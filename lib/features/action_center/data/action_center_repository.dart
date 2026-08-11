@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
+import '../../authentication/application/access_policy.dart';
 import '../domain/action_alert.dart';
 import '../application/action_center_evaluator.dart';
 
@@ -72,27 +73,35 @@ class ActionCenterRepository {
   }
 
   Future<void> acknowledgeAlert(String merchantId, String alertId) async {
-    await _firestore
+    final docRef = _firestore
         .collection('merchants')
         .doc(merchantId)
         .collection('alerts')
-        .doc(alertId)
-        .update({
-      'status': 'acknowledged',
-      'acknowledgedAt': FieldValue.serverTimestamp(),
-    });
+        .doc(alertId);
+        
+    final doc = await docRef.get();
+    if (doc.exists) {
+      await docRef.update({
+        'status': 'acknowledged',
+        'acknowledgedAt': FieldValue.serverTimestamp(),
+      });
+    }
   }
 
   Future<void> resolveAlert(String merchantId, String alertId) async {
-    await _firestore
+    final docRef = _firestore
         .collection('merchants')
         .doc(merchantId)
         .collection('alerts')
-        .doc(alertId)
-        .update({
-      'status': 'resolved',
-      'resolvedAt': FieldValue.serverTimestamp(),
-    });
+        .doc(alertId);
+        
+    final doc = await docRef.get();
+    if (doc.exists) {
+      await docRef.update({
+        'status': 'resolved',
+        'resolvedAt': FieldValue.serverTimestamp(),
+      });
+    }
   }
 }
 
@@ -106,6 +115,9 @@ final openAlertsProvider = StreamProvider.family<List<ActionAlert>, String?>((re
   
   ref.watch(actionCenterEvaluatorProvider);
   
+  final policy = ref.watch(accessPolicyProvider);
+  final effectiveBranchId = policy.isOwnerLike ? null : branchId;
+  
   final merchantId = currentEffectiveMerchantId(appUser);
-  return ref.watch(actionCenterRepositoryProvider).watchOpenAlerts(merchantId, branchId: branchId);
+  return ref.watch(actionCenterRepositoryProvider).watchOpenAlerts(merchantId, branchId: effectiveBranchId);
 });

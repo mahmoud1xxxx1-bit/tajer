@@ -256,9 +256,9 @@ class DashboardHome extends ConsumerWidget {
               margin: EdgeInsets.only(bottom: 16),
               padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
+                color: Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.red.withOpacity(0.5)),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
               ),
               child: Row(
                 children: [
@@ -286,9 +286,9 @@ class DashboardHome extends ConsumerWidget {
                 margin: EdgeInsets.only(bottom: 16),
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
+                  color: Colors.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.red.withOpacity(0.5)),
+                  border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
                 ),
                 child: Row(
                   children: [
@@ -343,9 +343,9 @@ class DashboardHome extends ConsumerWidget {
                     margin: EdgeInsets.only(bottom: 16),
                     padding: EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.orange.withOpacity(0.1),
+                      color: Colors.orange.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                      border: Border.all(color: Colors.orange.withValues(alpha: 0.5)),
                     ),
                     child: Row(
                       children: [
@@ -588,7 +588,7 @@ class _StatCard extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, size: 28, color: color),

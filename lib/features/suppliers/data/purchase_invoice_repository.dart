@@ -153,6 +153,8 @@ class PurchaseInvoiceRepository {
       // A. Increase Debt for Purchase
       tx.update(supplierRef, {
         'totalDebt': FieldValue.increment(totalAmount),
+        'branchDebts.$branchId': FieldValue.increment(totalAmount),
+        'associatedBranchIds': FieldValue.arrayUnion([branchId]),
       });
 
       tx.set(supplierPurchaseTxRef, {
@@ -173,6 +175,7 @@ class PurchaseInvoiceRepository {
       if (amountPaid > 0 && supplierPaymentTxRef != null && expenseRef != null) {
         tx.update(supplierRef, {
           'totalDebt': FieldValue.increment(-amountPaid),
+          'branchDebts.$branchId': FieldValue.increment(-amountPaid),
         });
 
         tx.set(supplierPaymentTxRef, {

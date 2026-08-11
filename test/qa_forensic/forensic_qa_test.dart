@@ -13,7 +13,6 @@ import 'package:tajer/features/expenses/domain/expense.dart';
 import 'package:tajer/features/orders/data/branch_aware_order_repository.dart';
 import 'package:tajer/features/orders/domain/cart_item.dart';
 import 'package:tajer/features/orders/domain/order.dart';
-import 'package:tajer/features/products/domain/product.dart';
 import 'package:tajer/features/reports/data/reports_service.dart';
 
 const merchantId = 'qa_merchant';
@@ -955,7 +954,7 @@ void main() {
           price: 20,
           total: 20,
           costPrice: 5)
-    ]).toJson();
+    ]).toInternalJson();
     final decoded = AppOrder.fromJson(orderJson);
     evidence.checkBool('QA-079-ORDER-ROUNDTRIP', 'legacy',
         'order round trip preserves branch and cost snapshot',

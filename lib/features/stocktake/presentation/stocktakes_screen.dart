@@ -29,69 +29,58 @@ class StocktakesScreen extends ConsumerWidget {
             padding: EdgeInsets.all(16.0),
             child: ActiveBranchSelector(compact: true),
           ),
-          if (branchId == null)
-            Expanded(
-              child: Center(
-                child: Text(
-                  isAr ? 'الرجاء اختيار فرع للبدء' : 'Please select a branch to start',
-                  style: const TextStyle(fontFamily: 'Tajawal'),
-                ),
-              ),
-            )
-          else
-            Expanded(
-              child: Consumer(
-                builder: (context, ref, child) {
-                  final sessionsAsync = ref.watch(stocktakeSessionsProvider(branchId));
-                  return sessionsAsync.when(
-                    data: (sessions) {
-                      if (sessions.isEmpty) {
-                        return Center(
-                          child: Text(
-                            isAr ? 'لا يوجد عمليات جرد سابقة.' : 'No previous stocktakes.',
-                            style: const TextStyle(fontFamily: 'Tajawal'),
+          Expanded(
+            child: Consumer(
+              builder: (context, ref, child) {
+                final sessionsAsync = ref.watch(stocktakeSessionsProvider(branchId));
+                return sessionsAsync.when(
+                  data: (sessions) {
+                    if (sessions.isEmpty) {
+                      return Center(
+                        child: Text(
+                          isAr ? 'لا يوجد عمليات جرد سابقة.' : 'No previous stocktakes.',
+                          style: const TextStyle(fontFamily: 'Tajawal'),
+                        ),
+                      );
+                    }
+                    
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: sessions.length,
+                      itemBuilder: (context, index) {
+                        final session = sessions[index];
+                        final color = _getStatusColor(session.status);
+                        
+                        return GlassCard(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: ListTile(
+                            leading: CircleAvatar(backgroundColor: color.withValues(alpha: 0.2), child: Icon(Icons.assignment, color: color)),
+                            title: Text(
+                              '${isAr ? 'جرد' : 'Stocktake'} - ${session.createdAt.toLocal().toString().split('.')[0]}',
+                              style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(
+                              '${isAr ? 'الحالة' : 'Status'}: ${_getStatusName(session.status, isAr)} | ${isAr ? 'بواسطة' : 'By'}: ${session.createdByName}',
+                              style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12),
+                            ),
+                            trailing: const Icon(Icons.chevron_right),
+                            onTap: () {
+                              context.push('/stocktake_session/${session.id}');
+                            },
                           ),
                         );
-                      }
-                      
-                      return ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: sessions.length,
-                        itemBuilder: (context, index) {
-                          final session = sessions[index];
-                          final color = _getStatusColor(session.status);
-                          
-                          return GlassCard(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            child: ListTile(
-                              leading: CircleAvatar(backgroundColor: color.withOpacity(0.2), child: Icon(Icons.assignment, color: color)),
-                              title: Text(
-                                '${isAr ? 'جرد' : 'Stocktake'} - ${session.createdAt.toLocal().toString().split('.')[0]}',
-                                style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
-                              ),
-                              subtitle: Text(
-                                '${isAr ? 'الحالة' : 'Status'}: ${_getStatusName(session.status, isAr)} | ${isAr ? 'بواسطة' : 'By'}: ${session.createdByName}',
-                                style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12),
-                              ),
-                              trailing: const Icon(Icons.chevron_right),
-                              onTap: () {
-                                context.push('/stocktake_session/${session.id}');
-                              },
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (e, st) => Center(child: Text('Error: $e')),
-                  );
-                },
-              ),
+                      },
+                    );
+                  },
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (e, st) => Center(child: Text('Error: $e')),
+                );
+              },
             ),
+          ),
         ],
       ),
-      floatingActionButton: branchId != null
-          ? FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton.extended(
               onPressed: () async {
                 final user = ref.read(appUserProvider).value;
                 if (user == null) return;
@@ -119,8 +108,7 @@ class StocktakesScreen extends ConsumerWidget {
               },
               icon: const Icon(Icons.add),
               label: Text(isAr ? 'بدء جرد جديد' : 'New Stocktake', style: const TextStyle(fontFamily: 'Tajawal')),
-            )
-          : null,
+            ),
     );
   }
   

@@ -1523,7 +1523,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get taxModeExempt => 'معفى من الضريبة';
 
   @override
-  String get businessOverview => 'نظرة عامة على الأعمال';
+  String get businessOverview => 'نظرة شاملة';
 
   @override
   String get last7Days => 'آخر 7 أيام';

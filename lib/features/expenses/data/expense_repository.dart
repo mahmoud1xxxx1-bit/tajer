@@ -1,4 +1,3 @@
-import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/effective_merchant.dart';
@@ -37,7 +36,6 @@ class ExpenseRepository {
 
   Stream<List<Expense>> watchExpenses({String branchId = 'main'}) {
     return _expensesRef
-        .where('branchId', isEqualTo: branchId)
         .orderBy('date', descending: true)
         .withConverter(
           fromFirestore: (snapshot, _) {
@@ -50,7 +48,10 @@ class ExpenseRepository {
           toFirestore: (expense, _) => expense.toJson(),
         )
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+        .map((snapshot) {
+          final all = snapshot.docs.map((doc) => doc.data()).toList();
+          return all.where((e) => e.branchId == branchId).toList();
+        });
   }
 
   Future<void> addExpense(Expense expense, {required String branchId}) async {

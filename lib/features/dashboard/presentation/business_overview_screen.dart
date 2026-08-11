@@ -1,5 +1,7 @@
+import 'package:tajer/features/action_center/data/action_center_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/glass_card.dart';
@@ -8,6 +10,7 @@ import '../../../core/providers/effective_merchant.dart';
 import '../../../core/providers/store_profile_provider.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../authentication/application/access_policy.dart';
+import '../../branches/presentation/branch_context.dart';
 import '../../branches/data/branch_repository.dart';
 import '../../branches/domain/branch.dart';
 import '../../products/data/product_repository.dart';
@@ -164,8 +167,33 @@ class _HealthSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
+    final activeBranchId = ref.watch(selectedBranchIdProvider);
+    final alertsAsync = ref.watch(openAlertsProvider(activeBranchId ?? 'main'));
     
-    // For now we will mock F12 alerts and F13 reorder, we will build those next.
+    int lowStockCount = 0;
+    int reorderCount = 0;
+    int outOfStockCount = 0;
+    int attentionCount = 0;
+    
+    if (alertsAsync.hasValue) {
+      final alerts = alertsAsync.value!;
+      for (final alert in alerts) {
+        if (alert.type == 'low_stock') {
+          lowStockCount++;
+        } else if (alert.type == 'reorder_needed' || alert.type == 'reorder_configuration_required') {
+          reorderCount++;
+        } else if (alert.type == 'out_of_stock') {
+          outOfStockCount++;
+        } else if (alert.type == 'stocktake_conflict') {
+          // Only count stocktake conflicts for the currently active branch
+          if (alert.branchId == activeBranchId) {
+            attentionCount++;
+          }
+        } else {
+          attentionCount++;
+        }
+      }
+    }
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -182,25 +210,25 @@ class _HealthSection extends ConsumerWidget {
                   _HealthIcon(
                       icon: Icons.warning_amber, 
                       label: l10n.lowStock ?? 'Low Stock', 
-                      count: 0, 
+                      count: lowStockCount, 
                       color: Colors.orange,
                       onTap: () => context.push('/reorder_center')),
                   _HealthIcon(
                       icon: Icons.shopping_cart_outlined, 
                       label: l10n.needsReorder ?? 'Needs Reorder', 
-                      count: 0, 
+                      count: reorderCount, 
                       color: Colors.blue,
                       onTap: () => context.push('/reorder_center')),
                   _HealthIcon(
                       icon: Icons.error_outline, 
                       label: l10n.outOfStock ?? 'Out of Stock', 
-                      count: 0, 
+                      count: outOfStockCount, 
                       color: Colors.red,
                       onTap: () => context.push('/action_center')),
                   _HealthIcon(
                       icon: Icons.report_problem, 
                       label: l10n.attentionRequired ?? 'Action Center', 
-                      count: 0, 
+                      count: attentionCount, 
                       color: Colors.purple,
                       onTap: () => context.push('/action_center')),
                   _HealthIcon(
@@ -271,11 +299,13 @@ class _MetricsSection extends ConsumerWidget {
           final profit = reports.netProfit;
           final cogs = reports.totalCOGS;
           
+          final currencyFormat = NumberFormat.currency(symbol: currency.code, decimalDigits: 2);
+          
           return Column(
             children: [
               Row(
                 children: [
-                  Expanded(child: _MetricCard(title: l10n.totalSales, value: '${reports.netSalesRevenue.toStringAsFixed(2)} ${currency.code}', icon: Icons.attach_money, color: Colors.green)),
+                  Expanded(child: _MetricCard(title: l10n.totalSales, value: currencyFormat.format(reports.netSalesRevenue), icon: Icons.attach_money, color: Colors.green)),
                   const SizedBox(width: 8),
                   Expanded(child: _MetricCard(title: l10n.ordersCount, value: '${reports.orders.where((o) => o.status != 'cancelled' && o.status != 'debt_repayment').length}', icon: Icons.shopping_bag, color: Colors.blue)),
                 ],
@@ -283,18 +313,18 @@ class _MetricsSection extends ConsumerWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Expanded(child: _MetricCard(title: l10n.expenses, value: '${reports.totalExpenses.toStringAsFixed(2)} ${currency.code}', icon: Icons.money_off, color: Colors.red)),
+                  Expanded(child: _MetricCard(title: l10n.expenses, value: currencyFormat.format(reports.totalExpenses), icon: Icons.money_off, color: Colors.red)),
                   const SizedBox(width: 8),
-                  Expanded(child: _MetricCard(title: 'VAT', value: '${reports.totalTaxCollected.toStringAsFixed(2)} ${currency.code}', icon: Icons.account_balance, color: Colors.purple)),
+                  Expanded(child: _MetricCard(title: 'VAT', value: currencyFormat.format(reports.totalTaxCollected), icon: Icons.account_balance, color: Colors.purple)),
                 ],
               ),
               const SizedBox(height: 8),
               if (reports.canViewCost)
                 Row(
                   children: [
-                    Expanded(child: _MetricCard(title: 'COGS', value: reports.isCOGSComplete ? '${cogs.toStringAsFixed(2)} ${currency.code}' : (l10n.costDataIncomplete ?? 'Incomplete'), icon: Icons.inventory, color: Colors.grey)),
+                    Expanded(child: _MetricCard(title: 'COGS', value: reports.isCOGSComplete ? currencyFormat.format(cogs) : (l10n.costDataIncomplete ?? 'Incomplete'), icon: Icons.inventory, color: Colors.grey)),
                     const SizedBox(width: 8),
-                    Expanded(child: _MetricCard(title: l10n.text106, value: reports.isCOGSComplete ? '${profit.toStringAsFixed(2)} ${currency.code}' : (l10n.costDataIncomplete ?? 'Incomplete'), icon: Icons.trending_up, color: Colors.teal)),
+                    Expanded(child: _MetricCard(title: l10n.text106, value: reports.isCOGSComplete ? currencyFormat.format(profit) : (l10n.costDataIncomplete ?? 'Incomplete'), icon: Icons.trending_up, color: Colors.teal)),
                   ],
                 ),
               const SizedBox(height: 16),
@@ -372,15 +402,13 @@ class _BranchPerformanceSection extends ConsumerWidget {
       if (order.status == 'cancelled' || order.status == 'debt_repayment') continue;
       final bId = order.branchId;
       if (branchStats.containsKey(bId)) {
-        branchStats[bId]!['sales'] += order.total;
+        branchStats[bId]!['sales'] += reports.getOrderEffectiveRevenue(order);
         branchStats[bId]!['orders'] += 1;
         
+        branchStats[bId]!['cogs'] += reports.getOrderEffectiveCOGS(order);
+        
         final protected = reports.protectedOrderCosts[order.id];
-        if (protected != null) {
-          branchStats[bId]!['cogs'] += protected;
-        } else {
-          final legacy = order.items.fold<double>(0.0, (s, item) => s + ((item.costPrice ?? 0.0) * item.quantity));
-          branchStats[bId]!['cogs'] += legacy;
+        if (protected == null) {
           if (order.items.isNotEmpty && order.items.any((item) => item.costPrice == null)) {
             branchStats[bId]!['cogsComplete'] = false;
           }
@@ -398,6 +426,8 @@ class _BranchPerformanceSection extends ConsumerWidget {
     
     final sortedBranches = branchStats.values.toList()
       ..sort((a, b) => (b['sales'] as double).compareTo(a['sales'] as double));
+      
+    final currencyFormat = NumberFormat.currency(symbol: currency.code, decimalDigits: 2);
       
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -422,7 +452,7 @@ class _BranchPerformanceSection extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(stats['name'], style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-                      Text('${sales.toStringAsFixed(2)} ${currency.code}', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                      Text(currencyFormat.format(sales), style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
                     ],
                   ),
                   const Divider(),
@@ -430,9 +460,9 @@ class _BranchPerformanceSection extends ConsumerWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text('${l10n.ordersCount}: ${stats['orders']}', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12)),
-                      Text('${l10n.expenses}: ${expenses.toStringAsFixed(2)}', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.red)),
+                      Text('${l10n.expenses}: ${currencyFormat.format(expenses)}', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.red)),
                       if (reports.canViewCost)
-                        Text('${l10n.text106}: ${isComplete ? profit.toStringAsFixed(2) : (l10n.costDataIncomplete ?? "-")}', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.teal)),
+                        Text('${l10n.text106}: ${isComplete ? currencyFormat.format(profit) : (l10n.costDataIncomplete ?? "-")}', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Colors.teal)),
                     ],
                   ),
                 ],
@@ -462,6 +492,8 @@ class _MoneyPositionSection extends ConsumerWidget {
     final suppliers = reports.suppliers;
     final supplierDebt = suppliers.fold<double>(0, (sum, s) => sum + s.totalDebt);
 
+    final currencyFormat = NumberFormat.currency(symbol: currency.code, decimalDigits: 2);
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -480,7 +512,7 @@ class _MoneyPositionSection extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Text(l10n.customerReceivables ?? 'Customer Receivables', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12), textAlign: TextAlign.center),
                       const SizedBox(height: 4),
-                      Text('${customerDebt.toStringAsFixed(2)} ${currency.code}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text(currencyFormat.format(customerDebt), style: const TextStyle(fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),
@@ -495,7 +527,7 @@ class _MoneyPositionSection extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Text(l10n.supplierPayables ?? 'Supplier Payables', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12), textAlign: TextAlign.center),
                       const SizedBox(height: 4),
-                      Text('${supplierDebt.toStringAsFixed(2)} ${currency.code}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text(currencyFormat.format(supplierDebt), style: const TextStyle(fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ),

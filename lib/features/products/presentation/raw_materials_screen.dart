@@ -6,7 +6,6 @@ import '../domain/raw_material.dart';
 import '../data/raw_material_repository.dart';
 import '../../inventory_log/data/inventory_log_repository.dart';
 import '../../authentication/data/auth_repository.dart';
-import '../../branches/data/branch_repository.dart';
 import '../../branches/domain/branch_operation_context.dart';
 import '../../branches/presentation/branch_context.dart';
 import '../../../core/providers/effective_merchant.dart';
@@ -120,7 +119,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                           fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
-                    value: selectedUnit,
+                    initialValue: selectedUnit,
                     decoration: InputDecoration(
                       prefixIcon: const Icon(Icons.scale),
                       border: OutlineInputBorder(
@@ -308,9 +307,9 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
             margin: const EdgeInsets.all(12),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.indigo.withOpacity(0.15),
+              color: Colors.indigo.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.indigo.withOpacity(0.3)),
+              border: Border.all(color: Colors.indigo.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -327,7 +326,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                         color: Theme.of(context)
                             .colorScheme
                             .onSurface
-                            .withOpacity(0.7)),
+                            .withValues(alpha: 0.7)),
                   ),
                 ),
               ],
@@ -374,8 +373,8 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                       child: ListTile(
                         leading: CircleAvatar(
                           backgroundColor: isLowStock
-                              ? Colors.red.withOpacity(0.2)
-                              : Colors.amber.withOpacity(0.2),
+                              ? Colors.red.withValues(alpha: 0.2)
+                              : Colors.amber.withValues(alpha: 0.2),
                           child: Icon(
                               isLowStock
                                   ? Icons.warning_amber_rounded

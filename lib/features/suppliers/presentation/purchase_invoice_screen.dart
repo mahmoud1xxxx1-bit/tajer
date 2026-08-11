@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:uuid/uuid.dart';
 
 import '../../authentication/application/session_identity.dart';
 import '../../../core/providers/settings_provider.dart';
@@ -9,7 +8,6 @@ import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../branches/presentation/branch_context.dart';
 import '../../products/data/product_repository.dart';
-import '../../products/domain/product.dart';
 import '../../products/data/raw_material_repository.dart';
 import '../../products/domain/raw_material.dart';
 import '../../shifts/data/shift_repository.dart';
@@ -389,7 +387,7 @@ class _PurchaseInvoiceScreenState extends ConsumerState<PurchaseInvoiceScreen> {
                   ),
                 ),
               );
-            }).toList(),
+            }),
             ElevatedButton.icon(
               onPressed: _addLine,
               icon: const Icon(Icons.add),

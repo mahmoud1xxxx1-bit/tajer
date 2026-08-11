@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:tajer/features/purchasing/data/purchase_order_repository.dart';
 import 'package:tajer/features/purchasing/domain/purchase_order.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() {
   group('F13 Purchase Order Production Logic Tests', () {
@@ -37,7 +36,7 @@ void main() {
       await repo.createPurchaseOrder(order);
       final query = await firestore.collection('merchants').doc('m1').collection('purchase_orders').get();
       final fetched = PurchaseOrder.fromJson(query.docs.first.data()..['id'] = query.docs.first.id);
-      expect(fetched!.status, 'draft');
+      expect(fetched.status, 'draft');
       expect(fetched.lines.first.orderedQuantity, 10);
     });
 
@@ -90,7 +89,7 @@ void main() {
 
       final query = await firestore.collection('merchants').doc('m1').collection('purchase_orders').get();
       final fetched = PurchaseOrder.fromJson(query.docs.first.data()..['id'] = query.docs.first.id);
-      expect(fetched!.status, 'partiallyReceived');
+      expect(fetched.status, 'partiallyReceived');
       expect(fetched.lines.first.receivedQuantity, 5);
 
       // Check if invoice was created

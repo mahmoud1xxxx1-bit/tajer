@@ -11,12 +11,17 @@ class PurchaseOrderRepository {
 
   PurchaseOrderRepository(this._firestore);
 
-  Stream<List<PurchaseOrder>> watchPurchaseOrders(String merchantId, String branchId) {
-    return _firestore
+  Stream<List<PurchaseOrder>> watchPurchaseOrders(String merchantId, String? branchId) {
+    Query<Map<String, dynamic>> query = _firestore
         .collection('merchants')
         .doc(merchantId)
-        .collection('purchase_orders')
-        .where('branchId', isEqualTo: branchId)
+        .collection('purchase_orders');
+    
+    if (branchId != null) {
+      query = query.where('branchId', isEqualTo: branchId);
+    }
+    
+    return query
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) => snapshot.docs.map((doc) {
@@ -78,6 +83,9 @@ class PurchaseOrderRepository {
 
       final currentLine = order.lines[idx];
       final cost = receiptLine.unitCost ?? currentLine.unitCost ?? 0;
+      if (cost <= 0) {
+        throw Exception('Cannot receive item ${currentLine.itemNameSnapshot} with zero or missing cost.');
+      }
       
       newInvoiceLines.add(PurchaseInvoiceItem(
         itemId: currentLine.itemId,
@@ -176,7 +184,7 @@ final purchaseOrderRepositoryProvider = Provider((ref) {
   return PurchaseOrderRepository(FirebaseFirestore.instance);
 });
 
-final purchaseOrdersProvider = StreamProvider.family<List<PurchaseOrder>, String>((ref, branchId) {
+final purchaseOrdersProvider = StreamProvider.family<List<PurchaseOrder>, String?>((ref, branchId) {
   final appUser = ref.watch(appUserProvider).value;
   if (appUser == null) return Stream.value([]);
   final merchantId = currentEffectiveMerchantId(appUser);

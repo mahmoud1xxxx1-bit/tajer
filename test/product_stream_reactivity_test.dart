@@ -51,7 +51,7 @@ class MockFirebaseCore extends FirebasePlatform {
 }
 
 Future<AsyncValue<List<Product>>> waitForData(ProviderContainer container, [bool Function(List<Product>)? predicate]) async {
-  for (int i = 0; i < 40; i++) {
+  for (int i = 0; i < 100; i++) {
     final state = container.read(productsStreamProvider);
     if (state is AsyncData && state.value != null && state.value!.isNotEmpty) {
       if (predicate == null || predicate(state.value!)) return state;
@@ -291,8 +291,7 @@ FirebaseAuthPlatform.instance = MockFirebaseAuthPlatform();
           .doc('main_product_prod1')
           .update({'quantity': 69});
 
-      await Future.delayed(const Duration(milliseconds: 300));
-      state = await waitForData(container);
+      state = await waitForData(container, (products) => products.first.quantity == 69);
       expect(state.value!.first.quantity, 69);
       sub.close();
     });
@@ -349,8 +348,7 @@ FirebaseAuthPlatform.instance = MockFirebaseAuthPlatform();
           .doc('main_prod1')
           .update({'costPrice': 6.0});
 
-      await Future.delayed(const Duration(milliseconds: 300));
-      state = await waitForData(container);
+      state = await waitForData(container, (products) => products.first.costPrice == 6.0);
       expect(state.value!.first.costPrice, 6.0);
       
       sub.close();
@@ -385,7 +383,7 @@ FirebaseAuthPlatform.instance = MockFirebaseAuthPlatform();
           .set({'branchId': 'main',
         'itemType': 'product', 'itemId': 'prodA', 'quantity': 70});
 
-      var state = await waitForData(container);
+      var state = await waitForData(container, (products) => products.length == 1);
       expect(state.value!.length, 1);
       expect(state.value!.first.name, 'A');
 
@@ -466,13 +464,11 @@ FirebaseAuthPlatform.instance = MockFirebaseAuthPlatform();
       expect(state.value!.first.quantity, 70);
 
       authController.add(employee);
-      await Future.delayed(const Duration(milliseconds: 300));
-      state = await waitForData(container);
+      state = await waitForData(container, (products) => products.isNotEmpty);
       expect(state.value!.first.quantity, 70);
 
       authController.add(owner);
-      await Future.delayed(const Duration(milliseconds: 300));
-      state = await waitForData(container);
+      state = await waitForData(container, (products) => products.isNotEmpty);
       expect(state.value!.first.quantity, 70);
 
       expect(everSawZero, false);

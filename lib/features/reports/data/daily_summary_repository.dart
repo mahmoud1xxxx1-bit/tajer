@@ -109,7 +109,7 @@ class DailySummaryRepository {
       final status = data['status'] as String?;
       if (status == 'cancelled' || status == 'debt_repayment') continue; // F14: cancelled and debt_repayment excluded from sales
 
-      final branchId = data['branchId'] as String;
+      final branchId = data['branchId']?.toString() ?? 'main';
       branchBreakdown.putIfAbsent(branchId, () => {'sales': 0.0, 'orders': 0, 'expenses': 0.0});
 
       final total = (data['total'] as num).toDouble();
@@ -138,7 +138,7 @@ class DailySummaryRepository {
       branchBreakdown[branchId]!['sales'] = (branchBreakdown[branchId]!['sales'] as double) + total;
       branchBreakdown[branchId]!['orders'] = (branchBreakdown[branchId]!['orders'] as int) + 1;
 
-      // F14 Canonical COGS from Snapshot
+      // F14 Canonical COGS from Snapshot or Fallback
       final orderId = doc.id;
       if (orderCostsComplete.containsKey(orderId)) {
         if (orderCostsComplete[orderId] == true) {
@@ -147,7 +147,24 @@ class DailySummaryRepository {
           cogsIncomplete = true;
         }
       } else {
-        cogsIncomplete = true;
+        bool embeddedComplete = items.isNotEmpty;
+        double embeddedCogs = 0.0;
+        for (final raw in items) {
+          final item = raw as Map<String, dynamic>;
+          final costPrice = (item['costPrice'] as num?)?.toDouble();
+          if (costPrice == null) {
+            embeddedComplete = false;
+            break;
+          }
+          final qty = (item['quantity'] as num?)?.toDouble() ?? 1.0;
+          embeddedCogs += costPrice * qty;
+        }
+        
+        if (embeddedComplete) {
+          cogs += embeddedCogs;
+        } else {
+          cogsIncomplete = true;
+        }
       }
     }
 
@@ -162,11 +179,9 @@ class DailySummaryRepository {
         supplierPayments += amt;
       } else {
         totalExpenses += amt;
-        final branchId = data['branchId'] as String?;
-        if (branchId != null) {
-          branchBreakdown.putIfAbsent(branchId, () => {'sales': 0.0, 'orders': 0, 'expenses': 0.0});
-          branchBreakdown[branchId]!['expenses'] = (branchBreakdown[branchId]!['expenses'] as double) + amt;
-        }
+        final branchId = data['branchId']?.toString() ?? 'main';
+        branchBreakdown.putIfAbsent(branchId, () => {'sales': 0.0, 'orders': 0, 'expenses': 0.0});
+        branchBreakdown[branchId]!['expenses'] = (branchBreakdown[branchId]!['expenses'] as double) + amt;
       }
     }
     
@@ -197,7 +212,9 @@ class DailySummaryRepository {
     // Branch reconciliation logic enforces idempotency and deterministic doc ID.
     // Ensure sum(branch sales) == merchant sales.
     double reconciledBranchSales = 0;
-    for (var b in branchBreakdown.values) reconciledBranchSales += (b['sales'] as double);
+    for (var b in branchBreakdown.values) {
+      reconciledBranchSales += (b['sales'] as double);
+    }
     
     // In rare floating point mismatches, the branch breakdown always sums exactly to the merchant total.
     if ((reconciledBranchSales - sales).abs() > 0.01) {

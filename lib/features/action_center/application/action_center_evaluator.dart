@@ -11,9 +11,9 @@ import '../data/action_center_repository.dart';
 import '../../products/domain/product.dart';
 import '../../products/domain/raw_material.dart';
 
-Future<void> _logAlert(Ref ref, String type, String severity, String sourceType, String sourceId, String message, String branchId) async {
+Future<void> _logAlert(Ref ref, String type, String severity, String sourceType, String sourceId, String message, String branchId, {Map<String, dynamic>? extraMetadata}) async {
   final appUser = ref.read(appUserProvider).value;
-  if (appUser == null) return;
+  print('appUser: $appUser'); if (appUser == null) return;
   final merchantId = currentEffectiveMerchantId(appUser);
 
   await ref.read(actionCenterRepositoryProvider).logAlert(
@@ -23,26 +23,26 @@ Future<void> _logAlert(Ref ref, String type, String severity, String sourceType,
     severity: severity,
     sourceType: sourceType,
     sourceId: sourceId,
-    metadata: {'message': message},
+    metadata: {'message': message, if (extraMetadata != null) ...extraMetadata},
   );
 }
 
 Future<void> _resolveAlert(Ref ref, String type, String sourceType, String sourceId, String branchId) async {
   final appUser = ref.read(appUserProvider).value;
-  if (appUser == null) return;
+  print('appUser: $appUser'); if (appUser == null) return;
   final merchantId = currentEffectiveMerchantId(appUser);
 
   final fingerprint = '${branchId}_${type}_${sourceType}_$sourceId'.replaceAll('/', '_');
   await ref.read(actionCenterRepositoryProvider).resolveAlert(merchantId, fingerprint);
 }
 
-void _evaluateProducts(Ref ref, List<Product> products, String branchId) {
+void evaluateProducts(Ref ref, List<Product> products, String branchId) {
   for (final p in products) {
     if (!p.isArchived) {
       if (p.quantity <= 0) {
-        _logAlert(ref, 'out_of_stock', 'high', 'product', p.id, '${p.name} is out of stock.', branchId);
+        _logAlert(ref, 'out_of_stock', 'high', 'product', p.id, '${p.name} is out of stock.', branchId, extraMetadata: {'productName': p.name});
       } else if (p.lowStockThreshold > 0 && p.quantity <= p.lowStockThreshold) {
-        _logAlert(ref, 'low_stock', 'medium', 'product', p.id, '${p.name} is running low.', branchId);
+        _logAlert(ref, 'low_stock', 'medium', 'product', p.id, '${p.name} is running low.', branchId, extraMetadata: {'productName': p.name});
         _resolveAlert(ref, 'out_of_stock', 'product', p.id, branchId);
       } else {
         _resolveAlert(ref, 'out_of_stock', 'product', p.id, branchId);
@@ -51,11 +51,11 @@ void _evaluateProducts(Ref ref, List<Product> products, String branchId) {
 
       if (p.lowStockThreshold > 0) {
         if (p.targetQuantity == null || p.preferredSupplierId == null) {
-          _logAlert(ref, 'reorder_configuration_required', 'medium', 'product', p.id, 'Configure target quantity and supplier for ${p.name}.', branchId);
+          _logAlert(ref, 'reorder_configuration_required', 'medium', 'product', p.id, 'Configure target quantity and supplier for ${p.name}.', branchId, extraMetadata: {'productName': p.name});
         } else {
           _resolveAlert(ref, 'reorder_configuration_required', 'product', p.id, branchId);
           if (p.quantity <= p.lowStockThreshold) {
-            _logAlert(ref, 'reorder_needed', 'high', 'product', p.id, 'Generate PO for ${p.name}.', branchId);
+            _logAlert(ref, 'reorder_needed', 'high', 'product', p.id, 'Generate PO for ${p.name}.', branchId, extraMetadata: {'productName': p.name});
           } else {
             _resolveAlert(ref, 'reorder_needed', 'product', p.id, branchId);
           }
@@ -68,13 +68,13 @@ void _evaluateProducts(Ref ref, List<Product> products, String branchId) {
   }
 }
 
-void _evaluateRawMaterials(Ref ref, List<RawMaterial> materials, String branchId) {
+void evaluateRawMaterials(Ref ref, List<RawMaterial> materials, String branchId) {
   for (final m in materials) {
     if (!m.isArchived) {
       if (m.quantity <= 0) {
-        _logAlert(ref, 'out_of_stock', 'high', 'raw_material', m.id, '${m.name} is out of stock.', branchId);
+        _logAlert(ref, 'out_of_stock', 'high', 'raw_material', m.id, '${m.name} is out of stock.', branchId, extraMetadata: {'rawMaterialName': m.name});
       } else if ((m.lowStockThreshold ?? 0) > 0 && m.quantity <= m.lowStockThreshold!) {
-        _logAlert(ref, 'low_stock', 'medium', 'raw_material', m.id, '${m.name} is running low.', branchId);
+        _logAlert(ref, 'low_stock', 'medium', 'raw_material', m.id, '${m.name} is running low.', branchId, extraMetadata: {'rawMaterialName': m.name});
         _resolveAlert(ref, 'out_of_stock', 'raw_material', m.id, branchId);
       } else {
         _resolveAlert(ref, 'out_of_stock', 'raw_material', m.id, branchId);
@@ -84,11 +84,11 @@ void _evaluateRawMaterials(Ref ref, List<RawMaterial> materials, String branchId
       final lowStock = m.lowStockThreshold ?? 0;
       if (lowStock > 0) {
         if (m.targetQuantity == null || m.preferredSupplierId == null) {
-          _logAlert(ref, 'reorder_configuration_required', 'medium', 'raw_material', m.id, 'Configure target quantity and supplier for ${m.name}.', branchId);
+          _logAlert(ref, 'reorder_configuration_required', 'medium', 'raw_material', m.id, 'Configure target quantity and supplier for ${m.name}.', branchId, extraMetadata: {'rawMaterialName': m.name});
         } else {
           _resolveAlert(ref, 'reorder_configuration_required', 'raw_material', m.id, branchId);
           if (m.quantity <= lowStock) {
-            _logAlert(ref, 'reorder_needed', 'high', 'raw_material', m.id, 'Generate PO for ${m.name}.', branchId);
+            _logAlert(ref, 'reorder_needed', 'high', 'raw_material', m.id, 'Generate PO for ${m.name}.', branchId, extraMetadata: {'rawMaterialName': m.name});
           } else {
             _resolveAlert(ref, 'reorder_needed', 'raw_material', m.id, branchId);
           }
@@ -141,11 +141,11 @@ final actionCenterEvaluatorProvider = Provider.autoDispose((ref) {
     final merchantId = currentEffectiveMerchantId(appUser);
     ref.listen(productsStreamProvider, (previous, next) {
       final products = next.value;
-      if (products != null) _evaluateProducts(ref, products, branchId);
+      if (products != null) evaluateProducts(ref, products, branchId);
     });
     ref.listen(rawMaterialsStreamProvider(merchantId), (previous, next) {
       final materials = next.value;
-      if (materials != null) _evaluateRawMaterials(ref, materials, branchId);
+      if (materials != null) evaluateRawMaterials(ref, materials, branchId);
     });
     ref.listen(shiftsStreamProvider, (previous, next) {
       final shifts = next.value;

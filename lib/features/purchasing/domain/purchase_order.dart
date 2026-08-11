@@ -67,6 +67,7 @@ class PurchaseOrder {
   final String merchantId;
   final String branchId;
   final String supplierId;
+  final String? supplierNameSnapshot;
   final String status; // draft, ordered, partiallyReceived, received, cancelled
   final DateTime createdAt;
   final String createdByUid;
@@ -77,6 +78,7 @@ class PurchaseOrder {
     required this.merchantId,
     required this.branchId,
     required this.supplierId,
+    this.supplierNameSnapshot,
     required this.status,
     required this.createdAt,
     required this.createdByUid,
@@ -89,6 +91,7 @@ class PurchaseOrder {
       merchantId: json['merchantId'] as String,
       branchId: json['branchId'] as String,
       supplierId: json['supplierId'] as String,
+      supplierNameSnapshot: json['supplierNameSnapshot'] as String?,
       status: json['status'] as String,
       createdAt: (json['createdAt'] as Timestamp).toDate(),
       createdByUid: json['createdByUid'] as String,
@@ -104,6 +107,7 @@ class PurchaseOrder {
       'merchantId': merchantId,
       'branchId': branchId,
       'supplierId': supplierId,
+      if (supplierNameSnapshot != null) 'supplierNameSnapshot': supplierNameSnapshot,
       'status': status,
       'createdAt': Timestamp.fromDate(createdAt),
       'createdByUid': createdByUid,
@@ -115,12 +119,14 @@ class PurchaseOrder {
     String? id,
     String? status,
     List<PurchaseOrderLine>? lines,
+    String? supplierNameSnapshot,
   }) {
     return PurchaseOrder(
       id: id ?? this.id,
       merchantId: merchantId,
       branchId: branchId,
       supplierId: supplierId,
+      supplierNameSnapshot: supplierNameSnapshot ?? this.supplierNameSnapshot,
       status: status ?? this.status,
       createdAt: createdAt,
       createdByUid: createdByUid,
