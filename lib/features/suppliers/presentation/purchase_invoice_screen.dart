@@ -155,6 +155,7 @@ class _PurchaseInvoiceScreenState extends ConsumerState<PurchaseInvoiceScreen> {
         amountPaid: amountPaid,
         paymentMethod: _paymentMethod,
         isFromShiftDrawer: _isFromShiftDrawer,
+        occurredAt: _purchaseDate,
         shiftId: shiftId,
         creatorId: appUser?.id,
         creatorName: appUser?.name,
