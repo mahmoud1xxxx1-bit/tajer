@@ -6,6 +6,7 @@ on:
       - audit/accounting-integrity-109
     paths:
       - tool/patch_dashboard_cogs_integrity.py
+      - functions/product_cost_rules_test.js
       - .github/workflows/apply_dashboard_cogs_integrity.yml
 
 permissions:
@@ -61,7 +62,11 @@ jobs:
         run: npm ci
 
       - name: Firestore rules emulator tests
-        run: npx firebase-tools emulators:exec --project demo-tajer-rules --only firestore "npm --prefix functions run test:rules"
+        run: >-
+          npx firebase-tools emulators:exec
+          --project demo-tajer-rules
+          --only firestore
+          "npm --prefix functions run test:rules && node functions/product_cost_rules_test.js"
 
       - name: Analyze touched application surfaces
         run: flutter analyze lib/features/dashboard lib/features/reports --no-fatal-warnings --no-fatal-infos
