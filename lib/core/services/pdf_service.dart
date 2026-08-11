@@ -319,7 +319,7 @@ class PdfService {
                         double grandTotal = 0.0;
                         for (var item in order.items) {
                           final taxRate = item.getEffectiveTax(
-                            taxPercentage ?? 0.0,
+                            defaultTaxPercentage,
                           );
                           final isInclusive =
                               item.isTaxInclusive ?? defaultIsTaxInclusive;
@@ -405,7 +405,7 @@ class PdfService {
                           bool hasTax = false;
                           for (var item in order.items) {
                             final taxRate = item.getEffectiveTax(
-                              taxPercentage ?? 0.0,
+                              defaultTaxPercentage,
                             );
                             final isInclusive =
                                 item.isTaxInclusive ?? defaultIsTaxInclusive;
