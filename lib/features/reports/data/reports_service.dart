@@ -14,7 +14,10 @@ import '../../expenses/data/expense_repository.dart';
 import '../../expenses/domain/expense.dart';
 import '../../orders/data/order_cost_snapshot_repository.dart';
 import '../../orders/data/order_repository.dart';
+import '../../orders/data/order_return_repository.dart';
+import '../../orders/data/return_cost_snapshot_repository.dart';
 import '../../orders/domain/order.dart';
+import '../../orders/domain/order_return.dart';
 import '../../products/data/product_repository.dart';
 import '../../products/domain/product.dart';
 import '../../suppliers/data/supplier_repository.dart';
@@ -62,7 +65,10 @@ class ReportsService {
   final List<Customer> customers;
   final List<Supplier> suppliers;
   final List<CustomerDebtPayment> debtPayments;
+  final List<OrderReturn> returns;
+  final List<OrderReturn> balanceReturns;
   final Map<String, double> protectedOrderCosts;
+  final Map<String, double> protectedReturnCosts;
   final bool canViewCost;
   final double defaultTaxPercentage;
   final bool defaultIsTaxInclusive;
@@ -74,11 +80,14 @@ class ReportsService {
     this.customers,
     this.suppliers, {
     this.debtPayments = const [],
+    this.returns = const [],
+    List<OrderReturn>? balanceReturns,
     this.protectedOrderCosts = const {},
+    this.protectedReturnCosts = const {},
     this.canViewCost = true,
     this.defaultTaxPercentage = 0.0,
     this.defaultIsTaxInclusive = true,
-  });
+  }) : balanceReturns = balanceReturns ?? returns;
 
   ReportsService filterByDate(DateTime start, DateTime end) {
     bool withinRange(DateTime value) =>
@@ -90,10 +99,17 @@ class ReportsService {
     final filteredDebtPayments = debtPayments
         .where((payment) => withinRange(payment.createdAt))
         .toList();
+    final filteredReturns =
+        returns.where((value) => withinRange(value.createdAt)).toList();
     final filteredIds = filteredOrders.map((order) => order.id).toSet();
+    final filteredReturnIds = filteredReturns.map((value) => value.id).toSet();
     final filteredProtectedCosts = <String, double>{
       for (final entry in protectedOrderCosts.entries)
         if (filteredIds.contains(entry.key)) entry.key: entry.value,
+    };
+    final filteredProtectedReturnCosts = <String, double>{
+      for (final entry in protectedReturnCosts.entries)
+        if (filteredReturnIds.contains(entry.key)) entry.key: entry.value,
     };
 
     return ReportsService(
@@ -103,24 +119,50 @@ class ReportsService {
       customers,
       suppliers,
       debtPayments: filteredDebtPayments,
+      returns: filteredReturns,
+      balanceReturns: balanceReturns,
       protectedOrderCosts: filteredProtectedCosts,
+      protectedReturnCosts: filteredProtectedReturnCosts,
       canViewCost: canViewCost,
       defaultTaxPercentage: defaultTaxPercentage,
       defaultIsTaxInclusive: defaultIsTaxInclusive,
     );
   }
 
-  double get totalRevenue => orders
+  /// Gross sale value including tax before any return transactions in scope.
+  double get grossRevenue => orders
       .where((order) =>
           order.status != 'cancelled' && order.status != 'debt_repayment')
       .fold(0.0, (sum, order) => sum + order.total);
 
+  /// Return value including tax recorded in the report period.
+  double get totalReturns =>
+      returns.fold(0.0, (sum, value) => sum + value.returnedTotal);
+
+  /// Net sale value including tax after period returns.
+  double get totalRevenue => grossRevenue - totalReturns;
+
+  /// Net sale value before tax after period returns.
   double get netSalesRevenue => totalRevenue - totalTaxCollected;
 
+  /// Current unpaid balance attributable to the credit sales in this report's
+  /// order scope. Returns are considered even when they happened after the sale
+  /// period so an already-returned item cannot remain as fictitious receivable.
   double get totalDebt {
+    final returnedByOrder = <String, double>{};
+    for (final value in balanceReturns) {
+      returnedByOrder[value.originalOrderId] =
+          (returnedByOrder[value.originalOrderId] ?? 0.0) +
+              value.returnedTotal;
+    }
     final orderOutstanding = orders
         .where((order) => order.status != 'cancelled' && order.isCredit)
-        .fold(0.0, (sum, order) => sum + (order.total - order.paidAmount));
+        .fold(0.0, (sum, order) {
+      final outstanding = order.total -
+          order.paidAmount -
+          (returnedByOrder[order.id] ?? 0.0);
+      return sum + (outstanding > 0 ? outstanding : 0.0);
+    });
     final standaloneCollections = debtPayments
         .where((payment) => payment.allocations.isEmpty)
         .fold(0.0, (sum, payment) => sum + payment.amount);
@@ -132,11 +174,8 @@ class ReportsService {
       .where((expense) => !expense.isSupplierPayment && !expense.isCancelled)
       .fold(0.0, (sum, expense) => sum + expense.amount);
 
-  /// Cost is never inferred from current product prices. A protected historical
-  /// snapshot wins. Legacy in-memory item cost is accepted only as a v107
-  /// compatibility fallback until the merchant migration has copied it into the
-  /// protected collection.
-  double get totalCOGS {
+  /// Historical cost of sales before COGS reversals from returns.
+  double get grossCOGS {
     if (!canViewCost) return 0.0;
     return orders
         .where((order) =>
@@ -146,27 +185,45 @@ class ReportsService {
       if (protected != null) return sum + protected;
       final legacy = order.items.fold<double>(
         0.0,
-        (itemSum, item) => itemSum + ((item.costPrice ?? 0.0) * item.quantity),
+        (itemSum, item) =>
+            itemSum + ((item.costPrice ?? 0.0) * item.quantity),
       );
       return sum + legacy;
     });
   }
 
-  /// True only when every non-cancelled sale has an auditable historical cost
-  /// source. Callers can use this to avoid presenting a misleading profit.
+  double get returnedCOGS {
+    if (!canViewCost) return 0.0;
+    return returns.fold(
+      0.0,
+      (sum, value) => sum + (protectedReturnCosts[value.id] ?? 0.0),
+    );
+  }
+
+  /// Net historical COGS after return reversals in the report period.
+  double get totalCOGS => grossCOGS - returnedCOGS;
+
+  /// True only when every sale and every return in scope has an auditable
+  /// historical cost source. This prevents presenting a misleading profit while
+  /// a trusted return-cost snapshot is still pending.
   bool get isCOGSComplete {
     if (!canViewCost) return false;
     for (final order in orders.where((order) =>
         order.status != 'cancelled' && order.status != 'debt_repayment')) {
       if (protectedOrderCosts.containsKey(order.id)) continue;
       if (order.items.isNotEmpty &&
-          order.items.every((item) => item.costPrice != null)) continue;
+          order.items.every((item) => item.costPrice != null)) {
+        continue;
+      }
       return false;
+    }
+    for (final value in returns) {
+      if (!protectedReturnCosts.containsKey(value.id)) return false;
     }
     return true;
   }
 
-  double get totalTaxCollected => orders
+  double get grossTaxCollected => orders
           .where((order) =>
               order.status != 'cancelled' && order.status != 'debt_repayment')
           .fold(0.0, (sum, order) {
@@ -175,7 +232,7 @@ class ReportsService {
           final itemTax = item.getEffectiveTax(defaultTaxPercentage);
           if (itemTax <= 0) continue;
           final isInclusive = item.isTaxInclusive ?? defaultIsTaxInclusive;
-          final taxableBase = item.total - (item.discountAmount ?? 0.0);
+          final taxableBase = item.total - item.discountAmount;
           orderTax += isInclusive
               ? taxableBase - (taxableBase / (1 + (itemTax / 100)))
               : taxableBase * (itemTax / 100);
@@ -183,17 +240,29 @@ class ReportsService {
         return sum + orderTax;
       });
 
+  double get returnedTax =>
+      returns.fold(0.0, (sum, value) => sum + value.returnedTax);
+
+  double get totalTaxCollected => grossTaxCollected - returnedTax;
+
   double get netProfit =>
-      totalRevenue - totalTaxCollected - totalCOGS - totalExpenses;
+      netSalesRevenue - totalCOGS - totalExpenses;
 
   List<SalesData> getDailySales() {
     final Map<String, double> dailyMap = {};
     for (final order in orders) {
-      if (order.status == 'cancelled' || order.status == 'debt_repayment')
+      if (order.status == 'cancelled' || order.status == 'debt_repayment') {
         continue;
+      }
       final dateStr =
           '${order.createdAt.year}-${order.createdAt.month.toString().padLeft(2, '0')}-${order.createdAt.day.toString().padLeft(2, '0')}';
       dailyMap[dateStr] = (dailyMap[dateStr] ?? 0.0) + order.total;
+    }
+    for (final value in returns) {
+      final dateStr =
+          '${value.createdAt.year}-${value.createdAt.month.toString().padLeft(2, '0')}-${value.createdAt.day.toString().padLeft(2, '0')}';
+      dailyMap[dateStr] =
+          (dailyMap[dateStr] ?? 0.0) - value.returnedTotal;
     }
     final result = dailyMap.entries.map((entry) {
       final parts = entry.key.split('-');
@@ -210,21 +279,32 @@ class ReportsService {
     final Map<String, int> qtyMap = {};
     final Map<String, double> revenueMap = {};
     for (final order in orders) {
-      if (order.status == 'cancelled' || order.status == 'debt_repayment')
+      if (order.status == 'cancelled' || order.status == 'debt_repayment') {
         continue;
+      }
       for (final item in order.items) {
         qtyMap[item.productId] = (qtyMap[item.productId] ?? 0) + item.quantity;
         revenueMap[item.productId] =
             (revenueMap[item.productId] ?? 0.0) + item.total;
       }
     }
+    for (final value in returns) {
+      for (final item in value.returnedItems) {
+        qtyMap[item.productId] =
+            (qtyMap[item.productId] ?? 0) - item.quantity;
+        revenueMap[item.productId] =
+            (revenueMap[item.productId] ?? 0.0) - item.total;
+      }
+    }
     final List<ProductSales> bestSellers = [];
     for (final product in products) {
       if (!qtyMap.containsKey(product.id)) continue;
+      final quantity = qtyMap[product.id] ?? 0;
+      if (quantity <= 0) continue;
       bestSellers.add(ProductSales(
         product,
-        qtyMap[product.id]!,
-        revenueMap[product.id]!,
+        quantity,
+        revenueMap[product.id] ?? 0.0,
       ));
     }
     bestSellers.sort((a, b) => b.quantitySold.compareTo(a.quantitySold));
@@ -242,6 +322,8 @@ class ReportsService {
     return expensesByCategory;
   }
 
+  /// Gross money received. Refunds are intentionally separate cash-out
+  /// movements and are not subtracted here.
   Map<String, double> get paymentMethodsBreakdown =>
       ReportCashflowLedger.paymentMethods(
         orders: orders,
@@ -276,9 +358,34 @@ final merchantOrderCostsProvider = StreamProvider<Map<String, double>>((ref) {
       .watchOrderCosts(merchantId);
 });
 
+final branchReturnCostsProvider = StreamProvider<Map<String, double>>((ref) {
+  final appUser = ref.watch(appUserProvider).value;
+  final policy = ref.watch(accessPolicyProvider);
+  if (appUser == null || !policy.canViewCosts || !policy.canViewReports) {
+    return Stream.value(const <String, double>{});
+  }
+  final merchantId = currentEffectiveMerchantId(appUser);
+  final branchId = ref.watch(selectedBranchIdProvider);
+  return ReturnCostSnapshotRepository(FirebaseFirestore.instance)
+      .watchBranchReturnCosts(merchantId, branchId);
+});
+
+final merchantReturnCostsProvider = StreamProvider<Map<String, double>>((ref) {
+  final appUser = ref.watch(appUserProvider).value;
+  final policy = ref.watch(accessPolicyProvider);
+  if (appUser == null ||
+      !policy.isOwnerLike ||
+      !policy.canViewCosts ||
+      !policy.canViewReports) {
+    return Stream.value(const <String, double>{});
+  }
+  final merchantId = currentEffectiveMerchantId(appUser);
+  return ReturnCostSnapshotRepository(FirebaseFirestore.instance)
+      .watchReturnCosts(merchantId);
+});
+
 final reportsServiceProvider = Provider<ReportsService?>((ref) {
   if (!_canViewReports(ref)) return null;
-  final appUser = ref.watch(appUserProvider).value!;
   final ordersState = ref.watch(ordersStreamProvider);
   final productsState = ref.watch(productsStreamProvider);
   final expensesState = ref.watch(expensesStreamProvider);
@@ -288,8 +395,10 @@ final reportsServiceProvider = Provider<ReportsService?>((ref) {
       ? ref.watch(suppliersStreamProvider)
       : const AsyncValue.data(<Supplier>[]);
   final debtPaymentsState = ref.watch(branchCustomerDebtPaymentsProvider);
+  final returnsState = ref.watch(branchOrderReturnsProvider);
   final storeProfileState = ref.watch(storeProfileProvider);
   final costsState = ref.watch(branchOrderCostsProvider);
+  final returnCostsState = ref.watch(branchReturnCostsProvider);
   final canViewCost = policy.canViewCosts;
 
   if (ordersState.value == null ||
@@ -298,7 +407,9 @@ final reportsServiceProvider = Provider<ReportsService?>((ref) {
       customersState.value == null ||
       suppliersState.value == null ||
       debtPaymentsState.value == null ||
-      (canViewCost && costsState.value == null)) {
+      returnsState.value == null ||
+      (canViewCost &&
+          (costsState.value == null || returnCostsState.value == null))) {
     return null;
   }
 
@@ -309,7 +420,9 @@ final reportsServiceProvider = Provider<ReportsService?>((ref) {
     customersState.value!,
     suppliersState.value!,
     debtPayments: debtPaymentsState.value!,
+    returns: returnsState.value!,
     protectedOrderCosts: costsState.value ?? const {},
+    protectedReturnCosts: returnCostsState.value ?? const {},
     canViewCost: canViewCost,
     defaultTaxPercentage: storeProfileState.value?.defaultTaxPercentage ?? 0.0,
     defaultIsTaxInclusive:
@@ -373,8 +486,10 @@ final consolidatedReportsServiceProvider = Provider<ReportsService?>((ref) {
       ? ref.watch(suppliersStreamProvider)
       : const AsyncValue.data(<Supplier>[]);
   final debtPaymentsState = ref.watch(merchantCustomerDebtPaymentsProvider);
+  final returnsState = ref.watch(merchantOrderReturnsProvider);
   final storeProfileState = ref.watch(storeProfileProvider);
   final costsState = ref.watch(merchantOrderCostsProvider);
+  final returnCostsState = ref.watch(merchantReturnCostsProvider);
   final canViewCost = policy.canViewCosts;
 
   if (ordersState.value == null ||
@@ -383,7 +498,9 @@ final consolidatedReportsServiceProvider = Provider<ReportsService?>((ref) {
       customersState.value == null ||
       suppliersState.value == null ||
       debtPaymentsState.value == null ||
-      (canViewCost && costsState.value == null)) {
+      returnsState.value == null ||
+      (canViewCost &&
+          (costsState.value == null || returnCostsState.value == null))) {
     return null;
   }
 
@@ -394,7 +511,9 @@ final consolidatedReportsServiceProvider = Provider<ReportsService?>((ref) {
     customersState.value!,
     suppliersState.value!,
     debtPayments: debtPaymentsState.value!,
+    returns: returnsState.value!,
     protectedOrderCosts: costsState.value ?? const {},
+    protectedReturnCosts: returnCostsState.value ?? const {},
     canViewCost: canViewCost,
     defaultTaxPercentage: storeProfileState.value?.defaultTaxPercentage ?? 0.0,
     defaultIsTaxInclusive:
