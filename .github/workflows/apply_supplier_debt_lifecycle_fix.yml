@@ -1,0 +1,394 @@
+name: Apply Supplier Debt Lifecycle Fix
+
+on:
+  push:
+    branches: [ "audit/pre-google-play-414" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit/pre-google-play-414
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.7'
+          channel: stable
+          cache: true
+
+      - name: Dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Apply guarded repository and UI patch
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          repo = Path('lib/features/suppliers/data/supplier_repository.dart')
+          s = repo.read_text(encoding='utf-8')
+
+          anchor = """  Future<void> paySupplierDebt({
+"""
+          method = """  Future<void> reverseSupplierDebtAddition({
+    required String supplierId,
+    required String transactionId,
+  }) async {
+    final supplierRef = _suppliersRef.doc(supplierId);
+    final supplierTxRef =
+        supplierRef.collection('transactions').doc(transactionId);
+
+    await _firestore.runTransaction((transaction) async {
+      final supplierSnapshot = await transaction.get(supplierRef);
+      final txSnapshot = await transaction.get(supplierTxRef);
+      if (!supplierSnapshot.exists || supplierSnapshot.data() == null) {
+        throw Exception('المورد غير موجود.');
+      }
+      if (!txSnapshot.exists || txSnapshot.data() == null) {
+        throw Exception('عملية الدين غير موجودة.');
+      }
+
+      final txData = txSnapshot.data()!;
+      if (txData['type']?.toString() != 'debt_addition') {
+        throw Exception('هذه العملية ليست إضافة دين مورد.');
+      }
+      if (txData['isCancelled'] == true) {
+        throw Exception('عملية الدين ملغاة بالفعل.');
+      }
+
+      final amount = (txData['amount'] as num?)?.toDouble() ?? 0.0;
+      if (!amount.isFinite || amount <= 0) {
+        throw Exception('قيمة عملية الدين غير صالحة للإلغاء.');
+      }
+      final branchId = txData['branchId']?.toString().trim();
+      if (branchId == null || branchId.isEmpty) {
+        throw Exception('تعذر تحديد فرع عملية الدين.');
+      }
+
+      final supplierData = supplierSnapshot.data()!;
+      final currentTotalDebt =
+          (supplierData['totalDebt'] as num?)?.toDouble() ?? 0.0;
+      final rawBranchDebts = supplierData['branchDebts'];
+      final branchDebts = rawBranchDebts is Map
+          ? Map<String, dynamic>.from(rawBranchDebts)
+          : const <String, dynamic>{};
+      final currentBranchDebt =
+          (branchDebts[branchId] as num?)?.toDouble() ?? 0.0;
+
+      const epsilon = 0.000001;
+      if (currentTotalDebt + epsilon < amount ||
+          currentBranchDebt + epsilon < amount) {
+        throw Exception(
+          'لا يمكن إلغاء إضافة الدين بعد استخدام أو سداد جزء من رصيدها.',
+        );
+      }
+
+      transaction.update(supplierRef, {
+        'totalDebt': FieldValue.increment(-amount),
+        'branchDebts.$branchId': FieldValue.increment(-amount),
+      });
+      transaction.update(supplierTxRef, {
+        'isCancelled': true,
+        'cancelledAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
+"""
+          assert s.count(anchor) == 1, 'paySupplierDebt anchor mismatch'
+          assert 'reverseSupplierDebtAddition' not in s, 'reverseSupplierDebtAddition already exists'
+          s = s.replace(anchor, method + anchor, 1)
+          repo.write_text(s, encoding='utf-8')
+
+          ui = Path('lib/features/suppliers/presentation/supplier_details_screen.dart')
+          u = ui.read_text(encoding='utf-8')
+
+          legacy_old = """        await ref
+            .read(supplierTransactionRepositoryProvider)
+            ?.updateTransaction(
+              transaction.copyWith(isCancelled: true),
+            );
+        await repository.updateSupplier(
+          currentSupplier.copyWith(
+            totalDebt: currentSupplier.totalDebt + transaction.amount,
+          ),
+        );
+      } else {
+        await ref
+            .read(supplierTransactionRepositoryProvider)
+            ?.updateTransaction(
+              transaction.copyWith(isCancelled: true),
+            );
+        final newDebt = currentSupplier.totalDebt - transaction.amount;
+        await repository.updateSupplier(
+          currentSupplier.copyWith(totalDebt: newDebt < 0 ? 0 : newDebt),
+        );
+      }
+"""
+          legacy_new = """        await repository.reverseSupplierPayment(
+          supplierId: currentSupplier.id,
+          transactionId: transaction.id,
+        );
+      } else if (transaction.type == 'debt_addition') {
+        await repository.reverseSupplierDebtAddition(
+          supplierId: currentSupplier.id,
+          transactionId: transaction.id,
+        );
+      } else {
+        throw Exception('هذا النوع من عمليات المورد لا يدعم الإلغاء من هذه الشاشة.');
+      }
+"""
+          assert u.count(legacy_old) == 1, 'supplier cancellation block mismatch'
+          u = u.replace(legacy_old, legacy_new, 1)
+
+          add_old = """              final user = ref.read(appUserProvider).value;
+              final merchantId =
+                  user == null ? '' : currentEffectiveMerchantId(user);
+              final branchId = ref.read(selectedBranchIdProvider);
+
+              final updatedSupplier = currentSupplier.copyWith(
+                totalDebt: currentSupplier.totalDebt + amount,
+              );
+              await ref
+                  .read(supplierRepositoryProvider)
+                  ?.updateSupplier(updatedSupplier);
+
+              await ref
+                  .read(supplierTransactionRepositoryProvider)
+                  ?.addTransaction(
+                    SupplierTransaction(
+                      id: const Uuid().v4(),
+                      supplierId: currentSupplier.id,
+                      merchantId: merchantId,
+                      branchId: branchId,
+                      amount: amount,
+                      type: 'debt_addition',
+                      description: descriptionController.text.trim().isEmpty
+                          ? (isAr ? 'إضافة دين' : 'Debt added')
+                          : descriptionController.text.trim(),
+                      date: DateTime.now(),
+                      createdAt: DateTime.now(),
+                    ),
+                  );
+              if (context.mounted) Navigator.pop(context);
+"""
+          add_new = """              final branchId = ref.read(selectedBranchIdProvider);
+              final repository = ref.read(supplierRepositoryProvider);
+              if (repository == null) return;
+              final now = DateTime.now();
+
+              try {
+                await repository.addSupplierDebt(
+                  supplierId: currentSupplier.id,
+                  amount: amount,
+                  branchId: branchId,
+                  transactionId: const Uuid().v4(),
+                  description: descriptionController.text.trim().isEmpty
+                      ? (isAr ? 'إضافة دين' : 'Debt added')
+                      : descriptionController.text.trim(),
+                  occurredAt: now,
+                );
+                if (context.mounted) Navigator.pop(context);
+              } catch (e) {
+                if (context.mounted) {
+                  await TajerMessage.show(
+                    context,
+                    AppErrorMapper.fromError(e, domain: 'supplier'),
+                  );
+                }
+              }
+"""
+          assert u.count(add_old) == 1, 'supplier add-debt UI block mismatch'
+          u = u.replace(add_old, add_new, 1)
+
+          assert 'currentSupplier.copyWith(\n            totalDebt: currentSupplier.totalDebt + transaction.amount' not in u
+          assert 'final newDebt = currentSupplier.totalDebt - transaction.amount' not in u
+          ui.write_text(u, encoding='utf-8')
+          PY
+
+      - name: Add supplier debt lifecycle regression test
+        shell: bash
+        run: |
+          cat > test/supplier_debt_lifecycle_atomicity_test.dart <<'DART'
+          import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+          import 'package:flutter_test/flutter_test.dart';
+          import 'package:tajer/features/suppliers/data/supplier_repository.dart';
+
+          void main() {
+            test('add and reverse supplier debt keep total and branch ledger atomic', () async {
+              final db = FakeFirebaseFirestore();
+              final supplierRef = db
+                  .collection('merchants')
+                  .doc('m1')
+                  .collection('suppliers')
+                  .doc('s1');
+              await supplierRef.set({
+                'id': 's1',
+                'merchantId': 'm1',
+                'name': 'Supplier',
+                'phone': '',
+                'totalDebt': 20.0,
+                'branchDebts': {'branch-a': 20.0},
+                'associatedBranchIds': ['branch-a'],
+                'createdAt': DateTime(2026, 8, 12),
+              });
+
+              final repository = SupplierRepository(db, 'm1');
+              await repository.addSupplierDebt(
+                supplierId: 's1',
+                amount: 80,
+                branchId: 'branch-a',
+                transactionId: 'debt-1',
+                description: 'Debt added',
+                occurredAt: DateTime(2026, 8, 12),
+              );
+
+              var data = (await supplierRef.get()).data()!;
+              expect((data['totalDebt'] as num).toDouble(), 100);
+              expect(
+                (Map<String, dynamic>.from(data['branchDebts'] as Map)['branch-a'] as num)
+                    .toDouble(),
+                100,
+              );
+              final txRef = supplierRef.collection('transactions').doc('debt-1');
+              var tx = (await txRef.get()).data()!;
+              expect(tx['type'], 'debt_addition');
+              expect(tx['branchId'], 'branch-a');
+              expect(tx['isCancelled'], isFalse);
+
+              await repository.reverseSupplierDebtAddition(
+                supplierId: 's1',
+                transactionId: 'debt-1',
+              );
+
+              data = (await supplierRef.get()).data()!;
+              expect((data['totalDebt'] as num).toDouble(), 20);
+              expect(
+                (Map<String, dynamic>.from(data['branchDebts'] as Map)['branch-a'] as num)
+                    .toDouble(),
+                20,
+              );
+              tx = (await txRef.get()).data()!;
+              expect(tx['isCancelled'], isTrue);
+
+              await expectLater(
+                repository.reverseSupplierDebtAddition(
+                  supplierId: 's1',
+                  transactionId: 'debt-1',
+                ),
+                throwsA(isA<Exception>()),
+              );
+              data = (await supplierRef.get()).data()!;
+              expect((data['totalDebt'] as num).toDouble(), 20);
+              expect(
+                (Map<String, dynamic>.from(data['branchDebts'] as Map)['branch-a'] as num)
+                    .toDouble(),
+                20,
+              );
+            });
+
+            test('debt reversal is rejected after later payment consumes that debt', () async {
+              final db = FakeFirebaseFirestore();
+              final supplierRef = db
+                  .collection('merchants')
+                  .doc('m1')
+                  .collection('suppliers')
+                  .doc('s1');
+              await supplierRef.set({
+                'id': 's1',
+                'merchantId': 'm1',
+                'name': 'Supplier',
+                'phone': '',
+                'totalDebt': 0.0,
+                'branchDebts': {'branch-a': 0.0},
+                'associatedBranchIds': ['branch-a'],
+                'createdAt': DateTime(2026, 8, 12),
+              });
+              final repository = SupplierRepository(db, 'm1');
+              await repository.addSupplierDebt(
+                supplierId: 's1',
+                amount: 100,
+                branchId: 'branch-a',
+                transactionId: 'debt-1',
+                description: 'Debt added',
+                occurredAt: DateTime(2026, 8, 12),
+              );
+              await repository.settleSupplierDebt(
+                supplierId: 's1',
+                supplierName: 'Supplier',
+                amountPaid: 40,
+                paymentMethod: 'transfer',
+                isFromShiftDrawer: false,
+                branchId: 'branch-a',
+                transactionId: 'pay-1',
+                expenseId: 'exp-1',
+                occurredAt: DateTime(2026, 8, 12),
+              );
+
+              await expectLater(
+                repository.reverseSupplierDebtAddition(
+                  supplierId: 's1',
+                  transactionId: 'debt-1',
+                ),
+                throwsA(isA<Exception>()),
+              );
+
+              final data = (await supplierRef.get()).data()!;
+              expect((data['totalDebt'] as num).toDouble(), 60);
+              expect(
+                (Map<String, dynamic>.from(data['branchDebts'] as Map)['branch-a'] as num)
+                    .toDouble(),
+                60,
+              );
+              expect((await supplierRef.collection('transactions').doc('debt-1').get()).data()?['isCancelled'], isFalse);
+            });
+          }
+          DART
+
+      - name: Format changed Dart files
+        run: dart format lib/features/suppliers/data/supplier_repository.dart lib/features/suppliers/presentation/supplier_details_screen.dart test/supplier_debt_lifecycle_atomicity_test.dart
+
+      - name: Analyze changed supplier code
+        run: flutter analyze lib/features/suppliers/data/supplier_repository.dart lib/features/suppliers/presentation/supplier_details_screen.dart test/supplier_debt_lifecycle_atomicity_test.dart --no-fatal-warnings --no-fatal-infos
+
+      - name: Supplier accounting regression tests
+        run: |
+          flutter test test/supplier_debt_lifecycle_atomicity_test.dart --reporter expanded
+          flutter test test/pre_release_supplier_branch_debt_test.dart --reporter expanded
+          flutter test test/pre_release_supplier_reversal_test.dart --reporter expanded
+          flutter test test/supplier_creation_atomicity_test.dart --reporter expanded
+          flutter test test/pre_release_accounting_matrix_test.dart --reporter expanded
+
+      - name: Verify intended diff only
+        shell: bash
+        run: |
+          git status --short
+          python - <<'PY'
+          import subprocess
+          changed = set(subprocess.check_output(['git','status','--porcelain'], text=True).splitlines())
+          paths = {line[3:] for line in changed}
+          expected = {
+            'lib/features/suppliers/data/supplier_repository.dart',
+            'lib/features/suppliers/presentation/supplier_details_screen.dart',
+            'test/supplier_debt_lifecycle_atomicity_test.dart',
+          }
+          assert paths == expected, (paths, expected)
+          PY
+
+      - name: Commit verified accounting repair
+        shell: bash
+        run: |
+          git config user.name "Tajer Audit Bot"
+          git config user.email "actions@github.com"
+          git add lib/features/suppliers/data/supplier_repository.dart \
+                  lib/features/suppliers/presentation/supplier_details_screen.dart \
+                  test/supplier_debt_lifecycle_atomicity_test.dart
+          git commit -m "fix: make supplier debt lifecycle branch-atomic"
+          git push origin HEAD:audit/pre-google-play-414
