@@ -64,6 +64,8 @@ class GuestLimitService {
       if (!canAdd) {
         if (user.plan == 'banned_device') {
           if (context.mounted) _showBannedDeviceDialog(context, ref);
+        } else if (user.isAnonymous) {
+          if (context.mounted) _showLoginToContinueDialog(context, ref);
         } else {
           if (context.mounted) _showUpgradeDialog(context, ref);
         }
@@ -144,6 +146,40 @@ class GuestLimitService {
             label: Text(isAr ? 'الترقية الآن (25\$/شهر)' : 'Upgrade Now (\$25/mo)', style: TextStyle(fontFamily: 'Tajawal')),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static void _showLoginToContinueDialog(BuildContext context, WidgetRef ref) {
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(isAr ? 'الحد الأقصى للزوار' : 'Guest Limit Reached', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.blue)),
+        content: Text(
+          isAr 
+            ? 'لقد وصلت للحد الأقصى المسموح به للزوار. قم بتأمين بياناتك وربط حسابك بجوجل مجاناً لتحصل على ضعف المميزات (10 منتجات، 20 طلباً... إلخ).'
+            : 'You have reached the maximum guest limit. Secure your data and link your account to Google for free to get double the features.',
+          style: TextStyle(fontFamily: 'Tajawal', height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(isAr ? 'إلغاء' : 'Cancel', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+          ),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              context.push('/upgrade');
+            },
+            icon: Icon(Icons.g_mobiledata, size: 32),
+            label: Text(isAr ? 'ربط الحساب مجاناً' : 'Link Account Free', style: TextStyle(fontFamily: 'Tajawal')),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
               foregroundColor: Colors.white,
             ),
           ),

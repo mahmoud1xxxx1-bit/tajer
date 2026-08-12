@@ -10,40 +10,55 @@ class LimitsService {
 
   LimitsService(this._firestore);
 
-  static const int maxCustomers = 10;
-  static const int maxOrders = 20;
-  static const int maxProducts = 10;
-  static const int maxExpenses = 10;
-  static const int maxCategories = 5;
-  static const int maxSuppliers = 5;
-  static const int maxEmployees = 1;
+  static const int freeMaxCustomers = 10;
+  static const int freeMaxOrders = 20;
+  static const int freeMaxProducts = 10;
+  static const int freeMaxExpenses = 10;
+  static const int freeMaxCategories = 5;
+  static const int freeMaxSuppliers = 5;
+  static const int freeMaxEmployees = 0; // Employees locked for free users (must subscribe)
+
+  static const int guestMaxCustomers = 5;
+  static const int guestMaxOrders = 10;
+  static const int guestMaxProducts = 5;
+  static const int guestMaxExpenses = 5;
+  static const int guestMaxCategories = 3;
+  static const int guestMaxSuppliers = 2;
+  static const int guestMaxEmployees = 0; // Employees locked for guest users
 
   Future<bool> canAddCustomer(AppUser user) async {
-    return _canAdd(user, 'customers', maxCustomers);
+    final limit = user.isAnonymous ? guestMaxCustomers : freeMaxCustomers;
+    return _canAdd(user, 'customers', limit);
   }
 
   Future<bool> canAddOrder(AppUser user) async {
-    return _canAdd(user, 'orders', maxOrders);
+    final limit = user.isAnonymous ? guestMaxOrders : freeMaxOrders;
+    return _canAdd(user, 'orders', limit);
   }
 
   Future<bool> canAddProduct(AppUser user) async {
-    return _canAdd(user, 'products', maxProducts);
+    final limit = user.isAnonymous ? guestMaxProducts : freeMaxProducts;
+    return _canAdd(user, 'products', limit);
   }
 
   Future<bool> canAddExpense(AppUser user) async {
-    return _canAdd(user, 'expenses', maxExpenses);
+    final limit = user.isAnonymous ? guestMaxExpenses : freeMaxExpenses;
+    return _canAdd(user, 'expenses', limit);
   }
 
   Future<bool> canAddCategory(AppUser user) async {
-    return _canAdd(user, 'categories', maxCategories);
+    final limit = user.isAnonymous ? guestMaxCategories : freeMaxCategories;
+    return _canAdd(user, 'categories', limit);
   }
 
   Future<bool> canAddSupplier(AppUser user) async {
-    return _canAdd(user, 'suppliers', maxSuppliers);
+    final limit = user.isAnonymous ? guestMaxSuppliers : freeMaxSuppliers;
+    return _canAdd(user, 'suppliers', limit);
   }
 
   Future<bool> canAddEmployee(AppUser user) async {
-    return _canAdd(user, 'employees', maxEmployees);
+    final limit = user.isAnonymous ? guestMaxEmployees : freeMaxEmployees;
+    return _canAdd(user, 'employees', limit);
   }
 
   Future<bool> _canAdd(AppUser user, String collectionName, int maxLimit) async {
