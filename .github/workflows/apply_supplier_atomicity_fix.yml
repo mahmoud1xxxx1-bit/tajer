@@ -1,0 +1,91 @@
+name: Apply Supplier Atomicity Fix
+
+on:
+  push:
+    branches: ["audit/pre-google-play-414"]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply supplier creation atomicity repair
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          repo = Path('lib/features/suppliers/data/supplier_repository.dart')
+          s = repo.read_text(encoding='utf-8')
+
+          import_old = "import '../domain/supplier.dart';\n"
+          import_new = "import '../domain/supplier.dart';\nimport '../domain/supplier_transaction.dart';\n"
+          if s.count(import_old) != 1:
+              raise SystemExit(f'supplier import target count={s.count(import_old)}')
+          s = s.replace(import_old, import_new, 1)
+
+          old_method = """  Future<void> addSupplier(Supplier supplier) async {\n    await EntitlementIntegration.checkAndConsumeQuota(\n      firestore: _firestore,\n      merchantId: supplier.merchantId,\n      branchId: supplier.associatedBranchIds.isNotEmpty ? supplier.associatedBranchIds.first : 'main',\n      resourceType: 'suppliers',\n      plan: null,\n    );\n    await _suppliersRef.doc(supplier.id).set(supplier.toJson());\n  }\n"""
+          new_method = """  Future<void> addSupplier(\n    Supplier supplier, {\n    SupplierTransaction? openingTransaction,\n  }) async {\n    final branchId = supplier.associatedBranchIds.isNotEmpty\n        ? supplier.associatedBranchIds.first\n        : 'main';\n\n    if (!supplier.totalDebt.isFinite || supplier.totalDebt < 0) {\n      throw Exception('قيمة الدين الافتتاحي غير صالحة.');\n    }\n    if (supplier.totalDebt > 0 && openingTransaction == null) {\n      throw Exception('يجب تسجيل حركة الرصيد الافتتاحي مع المورد.');\n    }\n    if (openingTransaction != null) {\n      if (openingTransaction.supplierId != supplier.id ||\n          openingTransaction.merchantId != supplier.merchantId ||\n          openingTransaction.branchId != branchId ||\n          openingTransaction.type != 'debt_addition' ||\n          !openingTransaction.amount.isFinite ||\n          openingTransaction.amount <= 0 ||\n          (openingTransaction.amount - supplier.totalDebt).abs() > 0.000001) {\n        throw Exception('بيانات الرصيد الافتتاحي للمورد غير متطابقة.');\n      }\n    }\n\n    await EntitlementIntegration.runWithQuotaLock<void>(\n      merchantId: supplier.merchantId,\n      resourceType: 'suppliers',\n      action: () async {\n        final reservation = await EntitlementIntegration.prepareQuotaReservation(\n          firestore: _firestore,\n          merchantId: supplier.merchantId,\n          branchId: branchId,\n          resourceType: 'suppliers',\n          plan: null,\n        );\n        final supplierRef = _suppliersRef.doc(supplier.id);\n\n        await _firestore.runTransaction<void>((transaction) async {\n          final existingSupplier = await transaction.get(supplierRef);\n          if (existingSupplier.exists) {\n            throw Exception('المورد موجود بالفعل.');\n          }\n          final consumption = await reservation.validate(transaction);\n\n          transaction.set(supplierRef, supplier.toJson());\n          if (openingTransaction != null) {\n            transaction.set(\n              supplierRef\n                  .collection('transactions')\n                  .doc(openingTransaction.id),\n              openingTransaction.toJson(),\n            );\n          }\n          consumption.apply(transaction);\n        });\n      },\n    );\n  }\n"""
+          if s.count(old_method) != 1:
+              raise SystemExit(f'addSupplier target count={s.count(old_method)}')
+          repo.write_text(s.replace(old_method, new_method, 1), encoding='utf-8')
+
+          screen = Path('lib/features/suppliers/presentation/suppliers_screen.dart')
+          s = screen.read_text(encoding='utf-8')
+
+          screen_import = "import '../../../core/services/guest_limit_service.dart';\n"
+          screen_import_new = "import '../../../core/services/guest_limit_service.dart';\nimport '../../../core/services/app_error_mapper.dart';\nimport '../../../core/widgets/tajer_message.dart';\n"
+          if s.count(screen_import) != 1:
+              raise SystemExit(f'screen import target count={s.count(screen_import)}')
+          s = s.replace(screen_import, screen_import_new, 1)
+
+          dialog_old = """    showDialog(\n      context: context,\n"""
+          dialog_new = """    var isSaving = false;\n\n    showDialog(\n      context: context,\n"""
+          if s.count(dialog_old) < 1:
+              raise SystemExit('showDialog target missing')
+          # Limit this replacement to the first add-supplier dialog occurrence after controller declarations.
+          marker = "    final debtController = TextEditingController();\n\n"
+          idx = s.find(marker)
+          if idx < 0:
+              raise SystemExit('debt controller marker missing')
+          tail = s[idx + len(marker):]
+          if not tail.startswith(dialog_old):
+              raise SystemExit('expected add-supplier showDialog immediately after controllers')
+          s = s[:idx + len(marker)] + dialog_new + tail[len(dialog_old):]
+
+          old_save = """            ElevatedButton(\n              onPressed: () {\n                final user = ref.read(authRepositoryProvider).currentUser;\n                final appUser = ref.read(appUserProvider).value;\n                if (user == null || appUser == null) return;\n\n                if (nameController.text.isEmpty) return;\n\n                final activeBranchId = ref.read(selectedBranchIdProvider);\n                final initialDebt = double.tryParse(debtController.text) ?? 0.0;\n                final supplier = Supplier(\n                  id: Uuid().v4(),\n                  merchantId: currentEffectiveMerchantId(appUser),\n                  name: nameController.text,\n                  phone: phoneController.text,\n                  totalDebt: initialDebt,\n                  associatedBranchIds: activeBranchId != null ? [activeBranchId] : [],\n                  branchDebts: activeBranchId != null ? {activeBranchId: initialDebt} : {},\n                  createdAt: DateTime.now(),\n                );\n\n                ref.read(supplierRepositoryProvider)?.addSupplier(supplier);\n\n                if (initialDebt > 0) {\n                  final tx = SupplierTransaction(\n                    id: const Uuid().v4(),\n                    supplierId: supplier.id,\n                    merchantId: supplier.merchantId,\n                    branchId: activeBranchId,\n                    amount: initialDebt,\n                    type: 'debt_addition',\n                    description: 'رصيد افتتاحي / دين أولي',\n                    date: DateTime.now(),\n                    createdAt: DateTime.now(),\n                  );\n                  ref\n                      .read(supplierTransactionRepositoryProvider)\n                      ?.addTransaction(tx);\n                }\n\n                Navigator.pop(context);\n              },\n              child: Text(AppLocalizations.of(context)!.text44),\n            ),\n"""
+          new_save = """            ElevatedButton(\n              onPressed: () async {\n                if (isSaving) return;\n                final user = ref.read(authRepositoryProvider).currentUser;\n                final appUser = ref.read(appUserProvider).value;\n                if (user == null || appUser == null) return;\n\n                final supplierName = nameController.text.trim();\n                if (supplierName.isEmpty) {\n                  await TajerMessage.show(\n                    context,\n                    AppErrorMapper.validation(\n                      ar: 'أدخل اسم المورد.',\n                      en: 'Enter the supplier name.',\n                    ),\n                  );\n                  return;\n                }\n\n                final rawDebt = debtController.text.trim();\n                final initialDebt = rawDebt.isEmpty ? 0.0 : double.tryParse(rawDebt);\n                if (initialDebt == null || !initialDebt.isFinite || initialDebt < 0) {\n                  await TajerMessage.show(\n                    context,\n                    AppErrorMapper.validation(\n                      ar: 'أدخل رصيدًا افتتاحيًا صحيحًا يساوي صفرًا أو أكبر.',\n                      en: 'Enter a valid opening balance greater than or equal to zero.',\n                    ),\n                  );\n                  return;\n                }\n\n                final activeBranchId = ref.read(selectedBranchIdProvider);\n                final branchId = activeBranchId ?? 'main';\n                final now = DateTime.now();\n                final supplier = Supplier(\n                  id: const Uuid().v4(),\n                  merchantId: currentEffectiveMerchantId(appUser),\n                  name: supplierName,\n                  phone: phoneController.text.trim(),\n                  totalDebt: initialDebt,\n                  associatedBranchIds: [branchId],\n                  branchDebts: {branchId: initialDebt},\n                  createdAt: now,\n                );\n                final openingTransaction = initialDebt > 0\n                    ? SupplierTransaction(\n                        id: const Uuid().v4(),\n                        supplierId: supplier.id,\n                        merchantId: supplier.merchantId,\n                        branchId: branchId,\n                        amount: initialDebt,\n                        type: 'debt_addition',\n                        description: 'رصيد افتتاحي / دين أولي',\n                        date: now,\n                        createdAt: now,\n                      )\n                    : null;\n\n                final repository = ref.read(supplierRepositoryProvider);\n                if (repository == null) return;\n                isSaving = true;\n                try {\n                  await repository.addSupplier(\n                    supplier,\n                    openingTransaction: openingTransaction,\n                  );\n                  if (context.mounted) Navigator.pop(context);\n                } catch (e) {\n                  isSaving = false;\n                  if (context.mounted) {\n                    await TajerMessage.show(\n                      context,\n                      AppErrorMapper.fromError(e, domain: 'supplier'),\n                    );\n                  }\n                }\n              },\n              child: Text(AppLocalizations.of(context)!.text44),\n            ),\n"""
+          if s.count(old_save) != 1:
+              raise SystemExit(f'add supplier save target count={s.count(old_save)}')
+          screen.write_text(s.replace(old_save, new_save, 1), encoding='utf-8')
+
+          test = Path('test/supplier_creation_atomicity_test.dart')
+          if test.exists():
+              raise SystemExit('supplier_creation_atomicity_test.dart already exists')
+          test.write_text("""import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';\nimport 'package:flutter_test/flutter_test.dart';\nimport 'package:tajer/core/models/plan_tier.dart';\nimport 'package:tajer/core/services/entitlement_integration.dart';\nimport 'package:tajer/features/suppliers/data/supplier_repository.dart';\nimport 'package:tajer/features/suppliers/domain/supplier.dart';\nimport 'package:tajer/features/suppliers/domain/supplier_transaction.dart';\n\nvoid main() {\n  setUp(() => EntitlementIntegration.injectTestTier(PlanTier.free));\n  tearDown(EntitlementIntegration.clearTestTier);\n\n  Supplier supplier(String id, {double debt = 100}) => Supplier(\n        id: id,\n        merchantId: 'm1',\n        name: 'Supplier $id',\n        totalDebt: debt,\n        associatedBranchIds: const ['main'],\n        branchDebts: {'main': debt},\n        createdAt: DateTime(2026, 8, 12),\n      );\n\n  SupplierTransaction opening(String supplierId, {double amount = 100}) =>\n      SupplierTransaction(\n        id: 'opening-$supplierId',\n        supplierId: supplierId,\n        merchantId: 'm1',\n        branchId: 'main',\n        amount: amount,\n        type: 'debt_addition',\n        description: 'Opening balance',\n        date: DateTime(2026, 8, 12),\n        createdAt: DateTime(2026, 8, 12),\n      );\n\n  test('supplier, opening debt ledger and quota are committed together', () async {\n    final db = FakeFirebaseFirestore();\n    final repository = SupplierRepository(db, 'm1');\n    final value = supplier('s1');\n\n    await repository.addSupplier(\n      value,\n      openingTransaction: opening('s1'),\n    );\n\n    final supplierSnap = await db\n        .collection('merchants')\n        .doc('m1')\n        .collection('suppliers')\n        .doc('s1')\n        .get();\n    final txSnap = await supplierSnap.reference\n        .collection('transactions')\n        .doc('opening-s1')\n        .get();\n    final quotaSnap = await db\n        .collection('merchants')\n        .doc('m1')\n        .collection('entitlement_usage')\n        .doc('main_suppliers_lifetime')\n        .get();\n\n    expect(supplierSnap.exists, isTrue);\n    expect(txSnap.exists, isTrue);\n    expect((quotaSnap.data()?['count'] as num?)?.toInt(), 1);\n  });\n\n  test('quota rejection leaves no supplier and no orphan opening transaction', () async {\n    final db = FakeFirebaseFirestore();\n    final quotaRef = db\n        .collection('merchants')\n        .doc('m1')\n        .collection('entitlement_usage')\n        .doc('main_suppliers_lifetime');\n    await quotaRef.set({\n      'count': 5,\n      'branchId': 'main',\n      'resourceType': 'suppliers',\n      'periodKey': 'lifetime',\n    });\n    final repository = SupplierRepository(db, 'm1');\n\n    await expectLater(\n      repository.addSupplier(\n        supplier('blocked'),\n        openingTransaction: opening('blocked'),\n      ),\n      throwsA(isA<Exception>()),\n    );\n\n    final supplierRef = db\n        .collection('merchants')\n        .doc('m1')\n        .collection('suppliers')\n        .doc('blocked');\n    expect((await supplierRef.get()).exists, isFalse);\n    expect(\n      (await supplierRef.collection('transactions').doc('opening-blocked').get())\n          .exists,\n      isFalse,\n    );\n    expect((await quotaRef.get()).data()?['count'], 5);\n  });\n}\n""", encoding='utf-8')
+          PY
+
+          git diff --check
+          echo "Changed files:"
+          git diff --name-only
+          test "$(git diff --name-only | sort)" = $'lib/features/suppliers/data/supplier_repository.dart\nlib/features/suppliers/presentation/suppliers_screen.dart\ntest/supplier_creation_atomicity_test.dart'
+
+      - name: Verify focused supplier repair
+        run: |
+          flutter pub get --enforce-lockfile
+          flutter test test/supplier_creation_atomicity_test.dart test/pre_release_supplier_branch_debt_test.dart test/pre_release_supplier_reversal_test.dart --reporter expanded
+          flutter analyze lib/features/suppliers/data/supplier_repository.dart lib/features/suppliers/presentation/suppliers_screen.dart test/supplier_creation_atomicity_test.dart --no-fatal-warnings --no-fatal-infos
+
+      - name: Commit verified repair
+        run: |
+          git config user.name "Tajer Audit Bot"
+          git config user.email "bot@tajer.local"
+          git add lib/features/suppliers/data/supplier_repository.dart lib/features/suppliers/presentation/suppliers_screen.dart test/supplier_creation_atomicity_test.dart
+          git commit -m "fix: make supplier creation and opening balance atomic"
+          git push origin HEAD:audit/pre-google-play-414
