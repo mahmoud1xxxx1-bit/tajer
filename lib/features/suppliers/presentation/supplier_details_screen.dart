@@ -9,6 +9,7 @@ import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../../authentication/domain/app_user.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/supplier_repository.dart';
+import 'package:tajer/core/utils/app_snackbar.dart';
 import '../data/supplier_transaction_repository.dart';
 import '../domain/supplier.dart';
 import '../domain/supplier_transaction.dart';
@@ -464,12 +465,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
                   amountPaid: paid,
                 );
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(e.toString().replaceAll('Exception: ', ''), style: const TextStyle(fontFamily: 'Tajawal')),
-                    backgroundColor: Colors.red,
-                  ),
-                );
+                if (context.mounted) AppSnackbar.showError(context, e);
                 return;
               }
               

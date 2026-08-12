@@ -47,21 +47,11 @@ class SupplierRepository {
   }) async {
     if (amountPaid <= 0) return;
 
-    await _firestore.runTransaction((transaction) async {
-      final supplierDocRef = _suppliersRef.doc(supplierId);
-      final snapshot = await transaction.get(supplierDocRef);
-      if (!snapshot.exists) {
-        throw Exception('المورد غير موجود.');
-      }
-      
-      final currentDebt = (snapshot.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
-      if (amountPaid > currentDebt) {
-        throw Exception('مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق.');
-      }
-
-      transaction.update(supplierDocRef, {
-        'totalDebt': FieldValue.increment(-amountPaid),
-      });
+    final supplierDocRef = _suppliersRef.doc(supplierId);
+    
+    // Using a direct update allows offline persistence instead of runTransaction which fails offline.
+    await supplierDocRef.update({
+      'totalDebt': FieldValue.increment(-amountPaid),
     });
   }
 

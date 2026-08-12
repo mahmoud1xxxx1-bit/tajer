@@ -10,6 +10,7 @@ import '../data/order_repository.dart';
 import '../domain/order.dart';
 import '../domain/cart_item.dart';
 import '../../customers/domain/customer.dart';
+import 'package:tajer/core/utils/app_snackbar.dart';
 import '../../customers/data/customer_repository.dart';
 import '../../../core/services/activity_logger.dart';
 import '../../../core/services/pdf_service.dart';
@@ -400,7 +401,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal'))));
+        AppSnackbar.showError(context, e);
       }
     }
   }
