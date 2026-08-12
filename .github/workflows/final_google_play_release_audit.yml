@@ -60,6 +60,22 @@ jobs:
         run: npm ci
         working-directory: functions
 
+      - name: Backend production dependency audit
+        shell: bash
+        working-directory: functions
+        run: |
+          set -o pipefail
+          npm audit --omit=dev --audit-level=high 2>&1 | tee ../functions_npm_audit.log
+
+      - name: Upload backend dependency audit evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tajer-final-functions-npm-audit
+          path: functions_npm_audit.log
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Generate localizations
         run: flutter gen-l10n
 
