@@ -85,6 +85,14 @@ exports.payCustomerDebtCallable = async (request) => {
        throw new HttpsError('failed-precondition', 'Payment amount exceeds total outstanding debt.');
     }
 
+    // Update Shift
+    let shiftSnap = null;
+    let shiftRef = null;
+    if (shiftId) {
+      shiftRef = db.collection('merchants').doc(merchantId).collection('shifts').doc(shiftId);
+      shiftSnap = await tx.get(shiftRef);
+    }
+    
     // Apply updates
     for (const update of updates) {
       tx.update(update.ref, {
@@ -101,18 +109,14 @@ exports.payCustomerDebtCallable = async (request) => {
     });
 
     // Update Shift
-    if (shiftId) {
-      const shiftRef = db.collection('merchants').doc(merchantId).collection('shifts').doc(shiftId);
-      const shiftSnap = await tx.get(shiftRef);
-      if (shiftSnap.exists && shiftSnap.data().status === 'open') {
-        const shiftUpdate = {};
-        if (paymentMethod === 'cash') shiftUpdate.debtCollectionsCash = FieldValue.increment(distributed);
-        else if (paymentMethod === 'card' || paymentMethod === 'mada' || paymentMethod === 'apple_pay') shiftUpdate.debtCollectionsCard = FieldValue.increment(distributed);
-        else if (paymentMethod === 'transfer') shiftUpdate.debtCollectionsTransfer = FieldValue.increment(distributed);
-        
-        if (Object.keys(shiftUpdate).length > 0) {
-          tx.update(shiftRef, shiftUpdate);
-        }
+    if (shiftRef && shiftSnap && shiftSnap.exists && shiftSnap.data().status === 'open') {
+      const shiftUpdate = {};
+      if (paymentMethod === 'cash') shiftUpdate.debtCollectionsCash = FieldValue.increment(distributed);
+      else if (paymentMethod === 'card' || paymentMethod === 'mada' || paymentMethod === 'apple_pay') shiftUpdate.debtCollectionsCard = FieldValue.increment(distributed);
+      else if (paymentMethod === 'transfer') shiftUpdate.debtCollectionsTransfer = FieldValue.increment(distributed);
+      
+      if (Object.keys(shiftUpdate).length > 0) {
+        tx.update(shiftRef, shiftUpdate);
       }
     }
 

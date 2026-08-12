@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:uuid/uuid.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/application/access_policy.dart';
@@ -87,7 +89,7 @@ class ShiftRepository {
 
     try {
       final callable = FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable('closeShift');
-      final operationId = const Uuid().v4();
+      final operationId = Uuid().v4();
       
       await callable.call({
         'operationId': operationId,

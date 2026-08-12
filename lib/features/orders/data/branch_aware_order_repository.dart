@@ -428,7 +428,7 @@ class BranchAwareOrderRepository extends OrderRepository {
       final returnedItemsData = orderReturn.returnedItems.map((e) => {
         'lineId': e.lineId,
         'quantity': e.quantity,
-        'reason': e.reason,
+        'reason': orderReturn.reason,
       }).toList();
       
       await callable.call({

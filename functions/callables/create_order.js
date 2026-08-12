@@ -125,8 +125,7 @@ exports.createOrderCallable = async (request) => {
     // Update Inventory
     for (const item of order.items) {
       if (item.productId && !item.isManufacturedOnDemand) {
-        const invRef = db.collection('merchants').doc(merchantId).collection('branch_inventory').doc(`${branchId}_${item.productId}`);
-        // If the doc doesn't exist, we might need to set it, but typically it should exist.
+        const invRef = db.collection('merchants').doc(merchantId).collection('branches').doc(branchId).collection('products').doc(item.productId);
         tx.set(invRef, {
           quantity: FieldValue.increment(-item.quantity)
         }, { merge: true });
