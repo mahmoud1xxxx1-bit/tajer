@@ -40,15 +40,23 @@ void main() {
         const ['branch-2']);
   });
 
-  test('dashboard sales cards exclude cancelled and debt repayment records',
+  test('dashboard sales cards use daily metrics that exclude non-sales records',
       () {
-    final source =
+    final dashboardSource =
         File('lib/features/dashboard/presentation/dashboard_screen.dart')
             .readAsStringSync();
+    final metricsSource =
+        File('lib/features/dashboard/domain/dashboard_daily_metrics.dart')
+            .readAsStringSync();
 
-    expect(source, contains("order.status != 'cancelled'"));
-    expect(source, contains("order.status != 'debt_repayment'"));
-    expect(source, contains('final totalSales'));
-    expect(source, contains('final ordersCount'));
+    expect(dashboardSource, contains('DashboardDailyMetrics.fromOrders(orders)'));
+    expect(dashboardSource, contains('dailyMetrics.totalSales'));
+    expect(dashboardSource, contains('dailyMetrics.ordersCount'));
+
+    expect(metricsSource, contains("order.status == 'cancelled'"));
+    expect(metricsSource, contains("order.status == 'debt_repayment'"));
+    expect(metricsSource, contains('return false;'));
+    expect(metricsSource, contains('final start = DateTime('));
+    expect(metricsSource, contains('createdAt.isBefore(end)'));
   });
 }
