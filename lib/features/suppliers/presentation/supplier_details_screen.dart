@@ -6,6 +6,8 @@ import 'package:uuid/uuid.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/providers/effective_merchant.dart';
 import '../../../core/services/activity_logger.dart';
+import '../../../core/services/app_error_mapper.dart';
+import '../../../core/widgets/tajer_message.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../../authentication/data/auth_repository.dart';
@@ -66,16 +68,31 @@ class SupplierDetailsScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: (activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0) : currentSupplier.totalDebt) > 0
+                        color: (activeBranchId != null
+                                    ? (currentSupplier
+                                            .branchDebts[activeBranchId] ??
+                                        0)
+                                    : currentSupplier.totalDebt) >
+                                0
                             ? Colors.red.withOpacity(0.1)
                             : Colors.green.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        (activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0) : currentSupplier.totalDebt) > 0
+                        (activeBranchId != null
+                                    ? (currentSupplier
+                                            .branchDebts[activeBranchId] ??
+                                        0)
+                                    : currentSupplier.totalDebt) >
+                                0
                             ? Icons.money_off
                             : Icons.check_circle,
-                        color: (activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0) : currentSupplier.totalDebt) > 0
+                        color: (activeBranchId != null
+                                    ? (currentSupplier
+                                            .branchDebts[activeBranchId] ??
+                                        0)
+                                    : currentSupplier.totalDebt) >
+                                0
                             ? Colors.red
                             : Colors.green,
                         size: 32,
@@ -100,7 +117,12 @@ class SupplierDetailsScreen extends ConsumerWidget {
                             style: TextStyle(
                               fontSize: 24,
                               fontWeight: FontWeight.bold,
-                              color: (activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0) : currentSupplier.totalDebt) > 0
+                              color: (activeBranchId != null
+                                          ? (currentSupplier.branchDebts[
+                                                  activeBranchId] ??
+                                              0)
+                                          : currentSupplier.totalDebt) >
+                                      0
                                   ? Colors.red
                                   : Colors.green,
                               fontFamily: 'Tajawal',
@@ -117,12 +139,25 @@ class SupplierDetailsScreen extends ConsumerWidget {
           Expanded(
             child: transactionsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) =>
-                  Center(child: Text(isAr ? 'خطأ: $e' : 'Error: $e')),
+              error: (e, _) {
+                final message = AppErrorMapper.fromError(e, domain: 'supplier');
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      message.message(isAr),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontFamily: 'Tajawal'),
+                    ),
+                  ),
+                );
+              },
               data: (transactions) {
                 final activeTransactions = activeBranchId == null
                     ? transactions
-                    : transactions.where((t) => t.branchId == activeBranchId).toList();
+                    : transactions
+                        .where((t) => t.branchId == activeBranchId)
+                        .toList();
 
                 if (activeTransactions.isEmpty) {
                   return Center(
@@ -276,8 +311,8 @@ class SupplierDetailsScreen extends ConsumerWidget {
                       children: [
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: () =>
-                                _showAddDebtDialog(context, ref, currentSupplier),
+                            onPressed: () => _showAddDebtDialog(
+                                context, ref, currentSupplier),
                             icon: const Icon(Icons.add),
                             label: Text(
                               isAr ? 'إضافة دين' : 'Add Debt',
@@ -287,7 +322,8 @@ class SupplierDetailsScreen extends ConsumerWidget {
                               ),
                             ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).colorScheme.error,
+                              backgroundColor:
+                                  Theme.of(context).colorScheme.error,
                               foregroundColor:
                                   Theme.of(context).colorScheme.onError,
                               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -339,8 +375,10 @@ class SupplierDetailsScreen extends ConsumerWidget {
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                          foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                          backgroundColor:
+                              Theme.of(context).colorScheme.primary,
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onPrimary,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                       ),
@@ -441,14 +479,9 @@ class SupplierDetailsScreen extends ConsumerWidget {
       );
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              e.toString().replaceAll('Exception: ', ''),
-              style: const TextStyle(fontFamily: 'Tajawal'),
-            ),
-            backgroundColor: Colors.red,
-          ),
+        await TajerMessage.show(
+          context,
+          AppErrorMapper.fromError(e, domain: 'supplier'),
         );
       }
     }
@@ -550,7 +583,10 @@ class SupplierDetailsScreen extends ConsumerWidget {
     final activeBranchId = ref.read(selectedBranchIdProvider);
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final amountController = TextEditingController(
-      text: (activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0.0) : currentSupplier.totalDebt).toString(),
+      text: (activeBranchId != null
+              ? (currentSupplier.branchDebts[activeBranchId] ?? 0.0)
+              : currentSupplier.totalDebt)
+          .toString(),
     );
     String paymentMethod = 'cash';
     bool isFromShiftDrawer = true;
@@ -652,16 +688,15 @@ class SupplierDetailsScreen extends ConsumerWidget {
               onPressed: () async {
                 final paid = double.tryParse(amountController.text.trim()) ?? 0;
                 if (paid <= 0) return;
-                final maxDebt = activeBranchId != null ? (currentSupplier.branchDebts[activeBranchId] ?? 0.0) : currentSupplier.totalDebt;
+                final maxDebt = activeBranchId != null
+                    ? (currentSupplier.branchDebts[activeBranchId] ?? 0.0)
+                    : currentSupplier.totalDebt;
                 if (paid > maxDebt) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        isAr
-                            ? 'مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق في هذا الفرع.'
-                            : 'Payment cannot exceed the supplier outstanding debt in this branch.',
-                      ),
-                      backgroundColor: Colors.red,
+                  await TajerMessage.show(
+                    context,
+                    AppErrorMapper.validation(
+                      ar: 'مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق في هذا الفرع.',
+                      en: 'Payment cannot exceed the supplier outstanding debt in this branch.',
                     ),
                   );
                   return;
@@ -676,14 +711,11 @@ class SupplierDetailsScreen extends ConsumerWidget {
                 final needsShift = paymentMethod == 'cash' && isFromShiftDrawer;
 
                 if (needsShift && currentShift == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        isAr
-                            ? 'لا يمكن خصم سداد المورد من الدرج بدون وردية مفتوحة في هذا الفرع.'
-                            : 'Open a shift in this branch before deducting supplier payment from the drawer.',
-                      ),
-                      backgroundColor: Colors.red,
+                  await TajerMessage.show(
+                    context,
+                    AppErrorMapper.validation(
+                      ar: 'لا يمكن خصم سداد المورد من الدرج بدون وردية مفتوحة في هذا الفرع.',
+                      en: 'Open a shift in this branch before deducting supplier payment from the drawer.',
                     ),
                   );
                   return;
@@ -716,14 +748,9 @@ class SupplierDetailsScreen extends ConsumerWidget {
                   if (context.mounted) Navigator.pop(context);
                 } catch (e) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          e.toString().replaceAll('Exception: ', ''),
-                          style: const TextStyle(fontFamily: 'Tajawal'),
-                        ),
-                        backgroundColor: Colors.red,
-                      ),
+                    await TajerMessage.show(
+                      context,
+                      AppErrorMapper.fromError(e, domain: 'supplier'),
                     );
                   }
                 }
