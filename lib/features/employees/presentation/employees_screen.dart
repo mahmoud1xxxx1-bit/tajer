@@ -284,7 +284,11 @@ Do not share this PIN with anyone!
                               final name = data['name'] ?? (isAr ? 'بدون اسم' : 'Unnamed');
                               final pin = data['pin'] ?? '****';
 
-                              final employeeOrders = allOrders.where((o) => o.creatorId == id).toList();
+                              final now = DateTime.now();
+                              final employeeOrders = allOrders.where((o) => o.creatorId == id && 
+                                  o.createdAt.year == now.year &&
+                                  o.createdAt.month == now.month &&
+                                  o.createdAt.day == now.day).toList();
                               final totalSales = employeeOrders.fold<double>(0, (sum, o) => sum + o.total);
 
                               return ListTile(
