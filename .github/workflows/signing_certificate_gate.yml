@@ -1,0 +1,61 @@
+name: Signing Certificate Gate
+
+on:
+  push:
+    branches: [ "audit/pre-google-play-414" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  signing-certificate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout audited branch with tags
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '21'
+
+      - name: Materialize v1.0.107 reference keystore
+        shell: bash
+        run: |
+          git cat-file -e v1.0.107:android/app/tajer-release.jks
+          git show v1.0.107:android/app/tajer-release.jks > "$RUNNER_TEMP/tajer-v1.0.107.jks"
+          test -s "$RUNNER_TEMP/tajer-v1.0.107.jks"
+
+      - name: Decode current official release keystore
+        shell: bash
+        run: |
+          test -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}"
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > "$RUNNER_TEMP/tajer-current.jks"
+          test -s "$RUNNER_TEMP/tajer-current.jks"
+
+      - name: Compare certificate SHA-256 fingerprints
+        shell: bash
+        env:
+          CURRENT_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          CURRENT_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          reference_fp="$(keytool -list -v -keystore "$RUNNER_TEMP/tajer-v1.0.107.jks" -storepass 'tajer123' -alias 'tajer' 2>/dev/null | sed -n 's/^[[:space:]]*SHA256: //p' | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')"
+          current_fp="$(keytool -list -v -keystore "$RUNNER_TEMP/tajer-current.jks" -storepass "$CURRENT_STORE_PASSWORD" -alias "$CURRENT_KEY_ALIAS" 2>/dev/null | sed -n 's/^[[:space:]]*SHA256: //p' | tr -d ':[:space:]' | tr '[:lower:]' '[:upper:]')"
+
+          test -n "$reference_fp"
+          test -n "$current_fp"
+
+          echo "v1.0.107 certificate SHA-256: $reference_fp"
+          echo "Current release certificate SHA-256: $current_fp"
+
+          if [ "$reference_fp" != "$current_fp" ]; then
+            echo "ERROR: Current release certificate does not match v1.0.107."
+            exit 1
+          fi
+
+          echo "PASS: Current release certificate exactly matches v1.0.107."
