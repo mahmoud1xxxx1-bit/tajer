@@ -171,8 +171,9 @@ class DashboardHome extends ConsumerWidget {
       drawer: const AppDrawer(),
       body: ordersAsync.when(
         data: (orders) {
-          final totalSales = orders.fold<double>(0, (sum, order) => sum + order.total);
-          final ordersCount = orders.length;
+          final activeOrders = orders.where((o) => o.status != 'cancelled' && o.status != 'debt_repayment').toList();
+          final totalSales = activeOrders.fold<double>(0, (sum, order) => sum + order.total);
+          final ordersCount = activeOrders.length;
 
           // Low stock calculation and widget
           Widget? lowStockWidget;

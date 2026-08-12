@@ -203,14 +203,14 @@ class SupplierDetailsScreen extends ConsumerWidget {
                                           ref.read(supplierTransactionRepositoryProvider)?.updateTransaction(updatedTransaction);
                                           
                                           // Update supplier debt
-                                          final newDebt = supplier.totalDebt + (isPayment ? t.amount : -t.amount);
-                                          ref.read(supplierRepositoryProvider)?.updateSupplier(supplier.copyWith(totalDebt: newDebt));
+                                          final newDebt = currentSupplier.totalDebt + (isPayment ? t.amount : -t.amount);
+                                          ref.read(supplierRepositoryProvider)?.updateSupplier(currentSupplier.copyWith(totalDebt: newDebt));
 
                                           
                                           ActivityLogger.log(
                                             user: appUser,
                                             actionType: 'Cancel Supplier Transaction|إلغاء عملية مورد',
-                                            description: 'Cancelled ${isPayment ? "payment" : "debt"} of ${t.amount} for supplier ${supplier.name}',
+                                            description: 'Cancelled ${isPayment ? "payment" : "debt"} of ${t.amount} for supplier ${currentSupplier.name}',
                                           );
                                         },
                                         child: Container(

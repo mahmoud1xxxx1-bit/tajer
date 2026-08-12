@@ -43,8 +43,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isAuthenticated() && (request.auth.uid == userId || hasAccess(userId) || hasAccess(resource.data.get('merchantId', '')));
       allow create: if isAuthenticated();
-      allow update: if isAuthenticated() && (request.auth.uid == userId || hasAccess(resource.data.get('merchantId', ''))) 
-                    && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['plan']));
+      allow update: if isAuthenticated() && (request.auth.uid == userId || hasAccess(resource.data.get('merchantId', '')));
       allow delete: if isAuthenticated() && hasAccess(resource.data.get('merchantId', ''));
 
       // Users Subcollections (Employees, Notifications)

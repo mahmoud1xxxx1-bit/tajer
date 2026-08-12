@@ -106,7 +106,7 @@ class GuestLimitService {
               context.push('/paywall');
             },
             icon: Icon(Icons.star),
-            label: Text(isAr ? 'الترقية الآن (10\$/شهر)' : 'Upgrade Now (\$10/mo)', style: TextStyle(fontFamily: 'Tajawal')),
+            label: Text(isAr ? 'الترقية الآن (25\$/شهر)' : 'Upgrade Now (\$25/mo)', style: TextStyle(fontFamily: 'Tajawal')),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,
@@ -141,7 +141,7 @@ class GuestLimitService {
               context.push('/paywall');
             },
             icon: Icon(Icons.star),
-            label: Text(isAr ? 'الترقية الآن (10\$/شهر)' : 'Upgrade Now (\$10/mo)', style: TextStyle(fontFamily: 'Tajawal')),
+            label: Text(isAr ? 'الترقية الآن (25\$/شهر)' : 'Upgrade Now (\$25/mo)', style: TextStyle(fontFamily: 'Tajawal')),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,

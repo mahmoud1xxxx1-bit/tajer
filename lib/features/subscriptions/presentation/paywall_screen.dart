@@ -5,8 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 
-
-
 class PaywallScreen extends ConsumerStatefulWidget {
   const PaywallScreen({super.key});
 
@@ -14,14 +12,25 @@ class PaywallScreen extends ConsumerStatefulWidget {
   ConsumerState<PaywallScreen> createState() => _PaywallScreenState();
 }
 
-class _PaywallScreenState extends ConsumerState<PaywallScreen> {
+class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTickerProviderStateMixin {
   bool _isLoading = false;
   List<Package> _packages = [];
+  late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
     _fetchOfferings();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchOfferings() async {
@@ -30,7 +39,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
       final offerings = await Purchases.getOfferings();
       if (offerings.current != null && offerings.current!.availablePackages.isNotEmpty) {
         setState(() {
-          _packages = offerings.current!.availablePackages;
+          // Only show the monthly package, exactly as the user requested.
+          _packages = offerings.current!.availablePackages.where((pkg) => pkg.packageType == PackageType.monthly).toList();
+          if (_packages.isEmpty) {
+             // Fallback if no explicit "monthly" package type is found, show the first package.
+             _packages = [offerings.current!.availablePackages.first];
+          }
         });
       }
     } catch (e) {
@@ -91,161 +105,273 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> {
     }
   }
 
-  Widget _buildFeatureRow(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: Colors.green.withOpacity(0.2),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(Icons.check_rounded, color: Colors.green, size: 16),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(text, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.subscriptionTitle, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-        elevation: 0,
-        centerTitle: true,
-      ),
+      backgroundColor: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF8FAFC),
       body: Stack(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                  Theme.of(context).colorScheme.surface,
-                ],
+          // Background Animation
+          Positioned(
+            top: -100,
+            right: -100,
+            child: AnimatedBuilder(
+              animation: _animationController,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(0, 20 * _animationController.value),
+                  child: child,
+                );
+              },
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      Colors.amber.withOpacity(isDark ? 0.2 : 0.4),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
+          
           SafeArea(
-            child: _isLoading && _packages.isEmpty
-                ? const Center(child: CircularProgressIndicator())
-                : ListView(
-                    padding: const EdgeInsets.all(24),
-                    physics: const BouncingScrollPhysics(),
+            child: Column(
+              children: [
+                // Header
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Icon(Icons.workspace_premium_rounded, size: 80, color: Colors.amber),
-                      const SizedBox(height: 24),
-                      Text(
-                        l10n.premiumAccessTitle,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(fontFamily: 'Tajawal', fontSize: 24, fontWeight: FontWeight.bold),
+                      IconButton(
+                        icon: Icon(Icons.close_rounded, color: isDark ? Colors.white : Colors.black87),
+                        onPressed: () => Navigator.pop(context),
                       ),
-                      const SizedBox(height: 12),
-                      Text(
-                        l10n.premiumAccessDesc,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), height: 1.5),
-                      ),
-                      const SizedBox(height: 32),
-                      GlassCard(
-                        borderRadius: 24,
-                        child: Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.amber.withOpacity(0.5), width: 2),
-                            borderRadius: BorderRadius.circular(24),
+                      TextButton(
+                        onPressed: _isLoading ? null : _restorePurchases,
+                        child: Text(
+                          'استعادة المشتريات',
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            color: isDark ? Colors.white70 : Colors.black54,
+                            fontWeight: FontWeight.bold,
                           ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                
+                // Content
+                Expanded(
+                  child: CustomScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Center(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.amber.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: Text(
-                                    l10n.monthlyPlanTitle,
-                                    style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.amber.shade800),
-                                  ),
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: Colors.amber.withOpacity(0.15),
+                                  shape: BoxShape.circle,
                                 ),
+                                child: const Icon(Icons.workspace_premium_rounded, size: 64, color: Colors.amber),
                               ),
                               const SizedBox(height: 24),
-                              _buildFeatureRow(l10n.featureUnlimitedOrders),
-                              _buildFeatureRow(l10n.featureInventorySync),
-                              _buildFeatureRow(l10n.featureAdvancedReports),
-                              _buildFeatureRow(l10n.featurePrioritySupport),
-                              const SizedBox(height: 24),
-                              
-                              if (_packages.isNotEmpty)
-                                ..._packages.map((pkg) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 12),
-                                  child: ElevatedButton(
-                                    onPressed: _isLoading ? null : () => _purchasePackage(pkg),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.amber.shade600,
-                                      foregroundColor: Colors.white,
-                                      padding: const EdgeInsets.symmetric(vertical: 16),
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                      elevation: 0,
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          l10n.subscribeFor(pkg.storeProduct.priceString),
-                                          style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        const Icon(Icons.arrow_forward_rounded, size: 20),
-                                      ],
-                                    ),
-                                  ),
-                                )).toList()
-                              else
-                                Center(
-                                  child: Text(
-                                    l10n.noPackagesAvailable,
-                                    style: TextStyle(fontFamily: 'Tajawal', color: Theme.of(context).colorScheme.error),
-                                  ),
+                              Text(
+                                'انضم إلى تاجر برو',
+                                style: TextStyle(
+                                  fontFamily: 'Tajawal',
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w900,
+                                  color: isDark ? Colors.white : Colors.black87,
                                 ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'أطلق العنان لكامل إمكانيات متجرك وتحكم بكل شيء بسهولة واحترافية!',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: 'Tajawal',
+                                  fontSize: 15,
+                                  height: 1.5,
+                                  color: isDark ? Colors.white70 : Colors.black54,
+                                ),
+                              ),
+                              const SizedBox(height: 40),
+                              
+                              // Features List
+                              _buildFeatureTile(
+                                context: context,
+                                icon: Icons.storefront_rounded,
+                                color: Colors.blueAccent,
+                                title: 'منتجات وطلبات بلا حدود',
+                                subtitle: 'أضف ما تشاء من المنتجات واستقبل طلبات غير محدودة.',
+                              ),
+                              _buildFeatureTile(
+                                context: context,
+                                icon: Icons.group_add_rounded,
+                                color: Colors.purpleAccent,
+                                title: 'إدارة الموظفين والصلاحيات',
+                                subtitle: 'أضف الكاشير والمحاسبين وحدد صلاحياتهم بدقة، وراقب سجل حركاتهم بالكامل.',
+                              ),
+                              _buildFeatureTile(
+                                context: context,
+                                icon: Icons.inventory_2_rounded,
+                                color: Colors.orangeAccent,
+                                title: 'إدارة مخزون ومواد خام ذكية',
+                                subtitle: 'تتبع كميات المواد الخام، وتلقَ تنبيهات النقص، واصنع وصفات دقيقة لمنتجاتك.',
+                              ),
+                              _buildFeatureTile(
+                                context: context,
+                                icon: Icons.wifi_off_rounded,
+                                color: Colors.greenAccent.shade400,
+                                title: 'يعمل بدون إنترنت (Offline)',
+                                subtitle: 'لا تدع انقطاع الإنترنت يوقف مبيعاتك. اعمل بكفاءة وستتم المزامنة لاحقاً.',
+                              ),
+                              _buildFeatureTile(
+                                context: context,
+                                icon: Icons.receipt_long_rounded,
+                                color: Colors.indigoAccent,
+                                title: 'الفواتير الضريبية المبسطة (ZATCA)',
+                                subtitle: 'اطبع فواتير رسمية للعملاء متوافقة مع هيئة الزكاة مزودة بـ QR Code متوافق.',
+                              ),
+                              _buildFeatureTile(
+                                context: context,
+                                icon: Icons.support_agent_rounded,
+                                color: Colors.tealAccent.shade400,
+                                title: 'أولوية القصوى في الدعم الفني',
+                                subtitle: 'احصل على مساعدة فورية وتحديثات مستمرة لضمان عمل متجرك دون توقف.',
+                              ),
                             ],
                           ),
                         ),
                       ),
-                      const SizedBox(height: 32),
-                      TextButton(
-                        onPressed: _isLoading ? null : _restorePurchases,
-                        child: Text(
-                          l10n.restorePurchasesBtn,
-                          style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, decoration: TextDecoration.underline),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        l10n.subscriptionTermsDesc,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontFamily: 'Tajawal', fontSize: 11, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), height: 1.5),
-                      ),
                     ],
                   ),
+                ),
+                
+                // Packages Area
+                Container(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.black.withOpacity(0.3) : Colors.white.withOpacity(0.6),
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5)),
+                    ],
+                  ),
+                  child: _packages.isEmpty
+                      ? Center(child: Text('جاري تحميل الباقات...', style: TextStyle(fontFamily: 'Tajawal', color: isDark ? Colors.white54 : Colors.black54)))
+                      : Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: _packages.map((pkg) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: ElevatedButton(
+                                onPressed: () => _purchasePackage(pkg),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: isDark ? const Color(0xFFFDE047) : const Color(0xFFFACC15),
+                                  foregroundColor: Colors.black87,
+                                  elevation: 8,
+                                  shadowColor: Colors.amber.withOpacity(0.5),
+                                  padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                    side: const BorderSide(color: Colors.amber, width: 2),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Text(
+                                      'الاشتراك في تاجر برو - ',
+                                      style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold),
+                                    ),
+                                    Text(
+                                      pkg.storeProduct.priceString,
+                                      style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.w900),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                ),
+              ],
+            ),
           ),
+          
           if (_isLoading)
             Container(
               color: Colors.black.withOpacity(0.3),
               child: const Center(child: CircularProgressIndicator(color: Colors.amber)),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFeatureTile({
+    required BuildContext context,
+    required IconData icon,
+    required Color color,
+    required String title,
+    required String subtitle,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(icon, color: isDark ? color : color.withOpacity(0.9), size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontFamily: 'Tajawal',
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    fontFamily: 'Tajawal',
+                    fontSize: 12,
+                    color: isDark ? Colors.white60 : Colors.black54,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
