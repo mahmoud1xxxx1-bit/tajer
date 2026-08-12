@@ -307,69 +307,90 @@ class SupplierDetailsScreen extends ConsumerWidget {
   void _showAddDebtDialog(BuildContext context, WidgetRef ref, Supplier currentSupplier) {
     final amountController = TextEditingController();
     final descController = TextEditingController(text: 'إضافة مديونية جديدة');
+    bool isLoading = false;
     
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('إضافة دين جديد للمورد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: amountController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(labelText: 'المبلغ', border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: descController,
-              decoration: const InputDecoration(labelText: 'البيان / التفاصيل', border: OutlineInputBorder()),
+      barrierDismissible: false,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('إضافة دين جديد للمورد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: amountController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(labelText: 'المبلغ', border: OutlineInputBorder()),
+                enabled: !isLoading,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: descController,
+                decoration: const InputDecoration(labelText: 'البيان / التفاصيل', border: OutlineInputBorder()),
+                enabled: !isLoading,
+              ),
+            ],
+          ),
+          actions: [
+            if (!isLoading)
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal'))),
+            ElevatedButton(
+              onPressed: isLoading ? null : () async {
+                final amount = double.tryParse(amountController.text) ?? 0.0;
+                if (amount <= 0) return;
+                
+                setState(() => isLoading = true);
+                
+                final user = ref.read(appUserProvider).value;
+                final merchantId = user?.merchantId ?? user?.id ?? '';
+                
+                try {
+                  // 1. Update Supplier
+                  final updatedSupplier = currentSupplier.copyWith(totalDebt: currentSupplier.totalDebt + amount);
+                  await ref.read(supplierRepositoryProvider)?.updateSupplier(updatedSupplier).timeout(const Duration(seconds: 1));
+                  
+                  // 2. Add Transaction
+                  final tx = SupplierTransaction(
+                    id: const Uuid().v4(),
+                    supplierId: currentSupplier.id,
+                    merchantId: merchantId,
+                    amount: amount,
+                    type: 'debt_addition',
+                    description: descController.text.isEmpty ? 'إضافة دين' : descController.text,
+                    date: DateTime.now(),
+                    createdAt: DateTime.now(),
+                  );
+                  await ref.read(supplierTransactionRepositoryProvider)?.addTransaction(tx).timeout(const Duration(seconds: 1));
+                } catch (e) {
+                  // If it's a TimeoutException, it means the cache updated but server is offline. This is expected.
+                  // Only show error if it's not a timeout
+                  if (e is! java.util.concurrent.TimeoutException && !e.toString().contains('TimeoutException')) {
+                    if (context.mounted) AppSnackbar.showError(context, e);
+                  }
+                }
+                
+                if (context.mounted) Navigator.pop(context);
+              },
+              child: isLoading 
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Text('إضافة', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
             ),
           ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal'))),
-          ElevatedButton(
-            onPressed: () async {
-              final amount = double.tryParse(amountController.text) ?? 0.0;
-              if (amount <= 0) return;
-              
-              final user = ref.read(appUserProvider).value;
-              final merchantId = user?.merchantId ?? user?.id ?? '';
-              
-              // 1. Update Supplier
-              final updatedSupplier = currentSupplier.copyWith(totalDebt: currentSupplier.totalDebt + amount);
-              await ref.read(supplierRepositoryProvider)?.updateSupplier(updatedSupplier);
-              
-              // 2. Add Transaction
-              final tx = SupplierTransaction(
-                id: const Uuid().v4(),
-                supplierId: currentSupplier.id,
-                merchantId: merchantId,
-                amount: amount,
-                type: 'debt_addition',
-                description: descController.text.isEmpty ? 'إضافة دين' : descController.text,
-                date: DateTime.now(),
-                createdAt: DateTime.now(),
-              );
-              await ref.read(supplierTransactionRepositoryProvider)?.addTransaction(tx);
-              
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text('إضافة', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-          ),
-        ],
       ),
     );
   }
 
   void _showPaySupplierDebtDialog(BuildContext context, WidgetRef ref, Supplier currentSupplier) {
-    final amountController = TextEditingController(text: currentSupplier.totalDebt.toString());
+    final amountController = TextEditingController(text: currentSupplier.totalDebt > 0 ? currentSupplier.totalDebt.toString() : '');
     String paymentMethod = 'cash';
     bool isFromShiftDrawer = true;
+    bool isLoading = false;
     
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
         title: const Text('تسديد ديون المورد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
@@ -387,6 +408,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
                 labelStyle: TextStyle(fontFamily: 'Tajawal'),
                 border: OutlineInputBorder(),
               ),
+              enabled: !isLoading,
             ),
             const SizedBox(height: 16),
             const Text('طريقة الدفع:', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
@@ -397,7 +419,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
                   child: ChoiceChip(
                     label: const Text('كاش', style: TextStyle(fontFamily: 'Tajawal')),
                     selected: paymentMethod == 'cash',
-                    onSelected: (val) {
+                    onSelected: isLoading ? null : (val) {
                       if (val) setState(() => paymentMethod = 'cash');
                     },
                   ),
@@ -407,7 +429,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
                   child: ChoiceChip(
                     label: const Text('شبكة/حوالة', style: TextStyle(fontFamily: 'Tajawal')),
                     selected: paymentMethod == 'network',
-                    onSelected: (val) {
+                    onSelected: isLoading ? null : (val) {
                       if (val) setState(() => paymentMethod = 'network');
                     },
                   ),
@@ -429,7 +451,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
                     style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: isFromShiftDrawer ? Colors.red : Colors.grey),
                   ),
                   value: isFromShiftDrawer,
-                  onChanged: (val) {
+                  onChanged: isLoading ? null : (val) {
                     setState(() => isFromShiftDrawer = val ?? true);
                   },
                   activeColor: Colors.red,
@@ -440,12 +462,13 @@ class SupplierDetailsScreen extends ConsumerWidget {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-          ),
+          if (!isLoading)
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('إلغاء', style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+            ),
           ElevatedButton(
-            onPressed: () async {
+            onPressed: isLoading ? null : () async {
               final paid = double.tryParse(amountController.text.trim()) ?? 0.0;
               if (paid <= 0) return;
               
@@ -459,51 +482,60 @@ class SupplierDetailsScreen extends ConsumerWidget {
                 return;
               }
 
+              setState(() => isLoading = true);
+
               try {
                 await ref.read(supplierRepositoryProvider)?.paySupplierDebt(
                   supplierId: currentSupplier.id,
                   amountPaid: paid,
+                ).timeout(const Duration(seconds: 1));
+                
+                final user = ref.read(appUserProvider).value;
+                final merchantId = user?.merchantId ?? user?.id ?? '';
+                
+                // 1. Register as Supplier Transaction
+                final tx = SupplierTransaction(
+                  id: const Uuid().v4(),
+                  supplierId: currentSupplier.id,
+                  merchantId: merchantId,
+                  amount: paid,
+                  type: 'payment',
+                  paymentMethod: paymentMethod,
+                  description: 'دفعة سداد ديون للمورد' + (paymentMethod == 'cash' ? (isFromShiftDrawer ? ' (من الدرج)' : ' (خارج الدرج)') : ''),
+                  date: DateTime.now(),
+                  createdAt: DateTime.now(),
                 );
+                await ref.read(supplierTransactionRepositoryProvider)?.addTransaction(tx).timeout(const Duration(seconds: 1));
+                
+                // 2. Register as Expense
+                final expense = Expense(
+                  id: const Uuid().v4(),
+                  merchantId: merchantId,
+                  amount: paid,
+                  isSupplierPayment: true,
+                  paymentMethod: paymentMethod,
+                  date: DateTime.now(),
+                  createdAt: DateTime.now(),
+                  title: 'دفعة سداد ديون للمورد: ${currentSupplier.name}',
+                  creatorName: user?.name ?? 'المدير',
+                  isFromShiftDrawer: isFromShiftDrawer,
+                );
+                await ref.read(expenseRepositoryProvider)?.addExpense(expense).timeout(const Duration(seconds: 1));
               } catch (e) {
-                if (context.mounted) AppSnackbar.showError(context, e);
-                return;
+                if (e is! java.util.concurrent.TimeoutException && !e.toString().contains('TimeoutException')) {
+                  if (context.mounted) {
+                    AppSnackbar.showError(context, e);
+                    setState(() => isLoading = false);
+                  }
+                  return;
+                }
               }
-              
-              final user = ref.read(appUserProvider).value;
-              final merchantId = user?.merchantId ?? user?.id ?? '';
-              
-              // 1. Register as Supplier Transaction
-              final tx = SupplierTransaction(
-                id: const Uuid().v4(),
-                supplierId: currentSupplier.id,
-                merchantId: merchantId,
-                amount: paid,
-                type: 'payment',
-                paymentMethod: paymentMethod,
-                description: 'دفعة سداد ديون للمورد' + (paymentMethod == 'cash' ? (isFromShiftDrawer ? ' (من الدرج)' : ' (خارج الدرج)') : ''),
-                date: DateTime.now(),
-                createdAt: DateTime.now(),
-              );
-              await ref.read(supplierTransactionRepositoryProvider)?.addTransaction(tx);
-              
-              // 2. Register as Expense
-              final expense = Expense(
-                id: const Uuid().v4(),
-                merchantId: merchantId,
-                amount: paid,
-                isSupplierPayment: true,
-                paymentMethod: paymentMethod,
-                date: DateTime.now(),
-                createdAt: DateTime.now(),
-                title: 'دفعة سداد ديون للمورد: ${currentSupplier.name}',
-                creatorName: user?.name ?? 'المدير',
-                isFromShiftDrawer: isFromShiftDrawer,
-              );
-              await ref.read(expenseRepositoryProvider)?.addExpense(expense);
               
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text('سداد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+            child: isLoading
+              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+              : const Text('سداد', style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
           ),
         ],
       )),

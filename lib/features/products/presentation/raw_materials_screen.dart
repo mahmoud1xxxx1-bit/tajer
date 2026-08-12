@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,9 +28,11 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
     String selectedUnit = rawMaterial?.unit ?? 'g';
     final l10n = AppLocalizations.of(context)!;
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    bool isLoading = false;
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -60,6 +63,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                       prefixIcon: const Icon(Icons.inventory_2_outlined),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
+                    enabled: !isLoading,
                   ),
                   const SizedBox(height: 16),
                   TextField(
@@ -71,6 +75,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    enabled: !isLoading,
                   ),
                   const SizedBox(height: 16),
                   Text(l10n.measuringUnit, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
@@ -86,7 +91,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                       DropdownMenuItem(value: 'ml', child: Text(l10n.mlUnitDesc, style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
                       DropdownMenuItem(value: 'piece', child: Text(l10n.pieceUnitDesc, style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
                     ],
-                    onChanged: (val) {
+                    onChanged: isLoading ? null : (val) {
                       if (val != null) {
                         setDialogState(() => selectedUnit = val);
                       }
@@ -97,20 +102,21 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(isAr ? 'إلغاء' : 'Cancel', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontWeight: FontWeight.bold)),
-            ),
+            if (!isLoading)
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: Text(isAr ? 'إلغاء' : 'Cancel', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.red, fontWeight: FontWeight.bold)),
+              ),
             ElevatedButton.icon(
-              icon: const Icon(Icons.save, size: 18),
-              label: Text(l10n.saveInWarehouse, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              icon: isLoading ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black)) : const Icon(Icons.save, size: 18),
+              label: Text(isLoading ? (isAr ? 'جاري الحفظ...' : 'Saving...') : l10n.saveInWarehouse, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.amber,
                 foregroundColor: Colors.black,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              onPressed: () async {
+              onPressed: isLoading ? null : () async {
                 final name = nameController.text.trim();
                 final qty = double.tryParse(quantityController.text) ?? 0;
 
@@ -119,60 +125,76 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                   return;
                 }
 
+                setDialogState(() => isLoading = true);
+
                 final user = ref.read(appUserProvider).value;
                 final merchantId = user?.merchantId ?? user?.id;
 
-                if (merchantId == null) return;
+                if (merchantId == null) {
+                  setDialogState(() => isLoading = false);
+                  return;
+                }
 
                 final repo = ref.read(rawMaterialRepositoryProvider);
 
-                if (rawMaterial == null) {
-                  final newItem = RawMaterial(
-                    id: const Uuid().v4(),
-                    merchantId: merchantId,
-                    name: name,
-                    quantity: qty,
-                    initialQuantity: qty,
-                    unit: selectedUnit,
-                    createdAt: DateTime.now(),
-                    updatedAt: DateTime.now(),
-                  );
-                  await repo.addRawMaterial(newItem);
-                  if (qty > 0) {
-                    final logRepo = ref.read(inventoryLogRepositoryProvider);
-                    await logRepo?.logChange(
-                      productId: newItem.id,
-                      productName: newItem.name,
-                      previousQuantity: 0,
-                      newQuantity: qty,
-                      reason: 'إضافة خام جديد / Add New Raw Material',
-                      userEmail: user?.email,
-                      userName: user?.name ?? user?.email,
-                      itemType: 'raw_material',
+                try {
+                  if (rawMaterial == null) {
+                    final newItem = RawMaterial(
+                      id: const Uuid().v4(),
+                      merchantId: merchantId,
+                      name: name,
+                      quantity: qty,
+                      initialQuantity: qty,
+                      unit: selectedUnit,
+                      createdAt: DateTime.now(),
+                      updatedAt: DateTime.now(),
                     );
+                    await repo.addRawMaterial(newItem).timeout(const Duration(seconds: 1));
+                    if (qty > 0) {
+                      final logRepo = ref.read(inventoryLogRepositoryProvider);
+                      await logRepo?.logChange(
+                        productId: newItem.id,
+                        productName: newItem.name,
+                        previousQuantity: 0,
+                        newQuantity: qty,
+                        reason: 'إضافة خام جديد / Add New Raw Material',
+                        userEmail: user?.email,
+                        userName: user?.name ?? user?.email,
+                        itemType: 'raw_material',
+                      ).timeout(const Duration(seconds: 1));
+                    }
+                  } else {
+                    final updatedItem = rawMaterial.copyWith(
+                      name: name,
+                      quantity: qty,
+                      unit: selectedUnit,
+                      updatedAt: DateTime.now(),
+                    );
+                    await repo.updateRawMaterial(updatedItem).timeout(const Duration(seconds: 1));
+                    if (qty != rawMaterial.quantity) {
+                      final logRepo = ref.read(inventoryLogRepositoryProvider);
+                      await logRepo?.logChange(
+                        productId: updatedItem.id,
+                        productName: updatedItem.name,
+                        previousQuantity: rawMaterial.quantity,
+                        newQuantity: qty,
+                        reason: 'تحديث يدوي / Manual Update',
+                        userEmail: user?.email,
+                        userName: user?.name ?? user?.email,
+                        itemType: 'raw_material',
+                      ).timeout(const Duration(seconds: 1));
+                    }
                   }
-                } else {
-                  final updatedItem = rawMaterial.copyWith(
-                    name: name,
-                    quantity: qty,
-                    unit: selectedUnit,
-                    updatedAt: DateTime.now(),
-                  );
-                  await repo.updateRawMaterial(updatedItem);
-                  if (qty != rawMaterial.quantity) {
-                    final logRepo = ref.read(inventoryLogRepositoryProvider);
-                    await logRepo?.logChange(
-                      productId: updatedItem.id,
-                      productName: updatedItem.name,
-                      previousQuantity: rawMaterial.quantity,
-                      newQuantity: qty,
-                      reason: 'تحديث يدوي / Manual Update',
-                      userEmail: user?.email,
-                      userName: user?.name ?? user?.email,
-                      itemType: 'raw_material',
-                    );
+                } catch (e) {
+                  if (e is! java.util.concurrent.TimeoutException && !e.toString().contains('TimeoutException')) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                      setDialogState(() => isLoading = false);
+                    }
+                    return;
                   }
                 }
+                
                 if (mounted) Navigator.pop(ctx);
               },
             ),

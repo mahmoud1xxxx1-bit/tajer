@@ -151,9 +151,11 @@ class ExpensesScreen extends ConsumerWidget {
     final categoryController = TextEditingController();
     String paymentMethod = 'cash';
     bool isFromShiftDrawer = true;
+    bool isLoading = false;
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
@@ -166,17 +168,20 @@ class ExpensesScreen extends ConsumerWidget {
                 TextField(
                   controller: titleController,
                   decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text68),
+                  enabled: !isLoading,
                 ),
                 SizedBox(height: 12),
                 TextField(
                   controller: amountController,
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text69),
+                  enabled: !isLoading,
                 ),
                 SizedBox(height: 12),
                 TextField(
                   controller: categoryController,
                   decoration: InputDecoration(labelText: AppLocalizations.of(context)!.text70),
+                  enabled: !isLoading,
                 ),
                 SizedBox(height: 16),
                 Align(
@@ -190,7 +195,7 @@ class ExpensesScreen extends ConsumerWidget {
                       child: ChoiceChip(
                         label: Text('كاش'),
                         selected: paymentMethod == 'cash',
-                        onSelected: (selected) {
+                        onSelected: isLoading ? null : (selected) {
                           if (selected) setState(() => paymentMethod = 'cash');
                         },
                       ),
@@ -200,7 +205,7 @@ class ExpensesScreen extends ConsumerWidget {
                       child: ChoiceChip(
                         label: Text('شبكة/حوالة'),
                         selected: paymentMethod == 'network',
-                        onSelected: (selected) {
+                        onSelected: isLoading ? null : (selected) {
                           if (selected) setState(() => paymentMethod = 'network');
                         },
                       ),
@@ -222,7 +227,7 @@ class ExpensesScreen extends ConsumerWidget {
                         style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: isFromShiftDrawer ? Colors.red : Colors.grey),
                       ),
                       value: isFromShiftDrawer,
-                      onChanged: (val) {
+                      onChanged: isLoading ? null : (val) {
                         setState(() => isFromShiftDrawer = val ?? true);
                       },
                       activeColor: Colors.red,
@@ -234,12 +239,13 @@ class ExpensesScreen extends ConsumerWidget {
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text(AppLocalizations.of(context)!.text43),
-            ),
+            if (!isLoading)
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(AppLocalizations.of(context)!.text43),
+              ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: isLoading ? null : () async {
                 final user = ref.read(authRepositoryProvider).currentUser;
                 if (user == null) return;
                 
@@ -257,6 +263,8 @@ class ExpensesScreen extends ConsumerWidget {
                   return;
                 }
 
+                setState(() => isLoading = true);
+
                 final appUser = ref.read(appUserProvider).value;
                 final expense = Expense(
                   id: Uuid().v4(),
@@ -272,10 +280,23 @@ class ExpensesScreen extends ConsumerWidget {
                   isFromShiftDrawer: isFromShiftDrawer,
                 );
 
-                ref.read(expenseRepositoryProvider)?.addExpense(expense);
-                Navigator.pop(context);
+                try {
+                  await ref.read(expenseRepositoryProvider)?.addExpense(expense).timeout(const Duration(seconds: 1));
+                } catch (e) {
+                  if (e is! java.util.concurrent.TimeoutException && !e.toString().contains('TimeoutException')) {
+                    if (context.mounted) {
+                      AppSnackbar.showError(context, e);
+                      setState(() => isLoading = false);
+                    }
+                    return;
+                  }
+                }
+                
+                if (context.mounted) Navigator.pop(context);
               },
-              child: Text(AppLocalizations.of(context)!.text44),
+              child: isLoading
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : Text(AppLocalizations.of(context)!.text44),
             ),
           ],
         );
