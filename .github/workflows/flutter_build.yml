@@ -2,7 +2,7 @@ name: Build Tajer App
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master", "audit/pre-google-play-414" ]
   workflow_dispatch:
 
 jobs:
