@@ -11,7 +11,7 @@ permissions:
 jobs:
   accounting-integrity:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -39,6 +39,11 @@ jobs:
             git commit -m "fix(accounting): honor selected purchase invoice date"
             git push origin HEAD:audit/accounting-integrity-109
           fi
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '21'
 
       - uses: subosito/flutter-action@v2
         with:
@@ -97,13 +102,72 @@ jobs:
           --no-fatal-warnings
           --no-fatal-infos
 
-      - name: Build Android test APK
-        run: flutter build apk --debug
+      - name: Decode official Android release keystore
+        shell: bash
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+          test -s android/app/upload-keystore.jks
 
-      - name: Upload Tajer accounting audit APK
+      - name: Verify release certificate for Google Sign-In
+        shell: bash
+        env:
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          keytool -list -v \
+            -keystore android/app/upload-keystore.jks \
+            -storepass "$STORE_PASSWORD" \
+            -alias "$KEY_ALIAS" > /tmp/tajer-release-cert.txt
+          python3 - <<'PY'
+          import json, re
+
+          with open('android/app/google-services.json', encoding='utf-8') as f:
+              cfg = json.load(f)
+
+          registered = {
+              client['android_info']['certificate_hash'].lower()
+              for app in cfg.get('client', [])
+              for client in app.get('oauth_client', [])
+              if client.get('client_type') == 1
+              and client.get('android_info', {}).get('package_name') == 'com.allldown.tajer'
+              and client.get('android_info', {}).get('certificate_hash')
+          }
+
+          text = open('/tmp/tajer-release-cert.txt', encoding='utf-8').read()
+          match = re.search(r'SHA1:\s*([0-9A-F:]+)', text)
+          if not match:
+              raise SystemExit('FAIL: unable to read APK signing SHA-1')
+
+          sha1 = match.group(1).replace(':', '').lower()
+          print('TAJER_RELEASE_SHA1=' + sha1)
+          if sha1 not in registered:
+              raise SystemExit('FAIL: release signing certificate is not registered for Google Sign-In')
+          print('GOOGLE_SIGN_IN_CERTIFICATE_MATCH=PASS')
+          PY
+
+      - name: Generate localizations for release
+        run: flutter gen-l10n
+
+      - name: Build signed Release APK only
+        run: flutter build apk --release
+        env:
+          TAJER_STOREFILE: upload-keystore.jks
+          TAJER_STOREPASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          TAJER_KEYALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          TAJER_KEYPASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Verify release artifact
+        shell: bash
+        run: |
+          test -s build/app/outputs/flutter-apk/app-release.apk
+          test ! -e build/app/outputs/flutter-apk/app-debug.apk || rm -f build/app/outputs/flutter-apk/app-debug.apk
+          sha256sum build/app/outputs/flutter-apk/app-release.apk
+          ls -lh build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload Tajer signed Release APK
         uses: actions/upload-artifact@v4
         with:
-          name: tajer-1.1.109-accounting-audit-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: tajer-1.1.109-accounting-audit-signed-release
+          path: build/app/outputs/flutter-apk/app-release.apk
           if-no-files-found: error
           retention-days: 14
