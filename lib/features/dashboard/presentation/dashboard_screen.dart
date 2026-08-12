@@ -6,7 +6,7 @@ import '../../customers/presentation/customers_screen.dart';
 import '../../orders/presentation/orders_screen.dart';
 import '../../orders/presentation/pos_screen.dart';
 import '../../reports/presentation/reports_screen.dart';
-import '../../orders/data/order_repository.dart';
+import '../../orders/data/branch_orders_stream.dart';
 import '../../products/data/product_repository.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
@@ -23,6 +23,7 @@ import '../../branches/presentation/active_branch_selector.dart';
 import '../../branches/presentation/branch_context.dart';
 import 'branch_catalog_migration_gate.dart';
 import 'setup_checklist_card.dart';
+import 'dashboard_daily_summary.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -209,7 +210,7 @@ class DashboardHome extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final ordersAsync = ref.watch(ordersStreamProvider);
+    final ordersAsync = ref.watch(branchOrdersStreamProvider);
     final productsAsync = ref.watch(productsStreamProvider);
     final currentCurrency = ref.watch(currencyProvider);
     final appUser = ref.watch(appUserProvider).value;
@@ -240,14 +241,9 @@ class DashboardHome extends ConsumerWidget {
       drawer: const AppDrawer(),
       body: ordersAsync.when(
         data: (orders) {
-          final liveOrders = orders
-              .where((order) =>
-                  order.status != 'cancelled' &&
-                  order.status != 'debt_repayment')
-              .toList();
-          final totalSales =
-              liveOrders.fold<double>(0, (sum, order) => sum + order.total);
-          final ordersCount = liveOrders.length;
+          final dailySummary = DashboardDailySummary.fromOrders(orders);
+          final totalSales = dailySummary.totalSales;
+          final ordersCount = dailySummary.ordersCount;
 
           // Low stock calculation and widget
           Widget? lowStockWidget;
