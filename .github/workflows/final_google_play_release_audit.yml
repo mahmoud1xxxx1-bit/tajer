@@ -1,4 +1,5 @@
 name: Final Google Play Release Audit
+# Final rerun after verified web bootstrap/auth platform compatibility fixes.
 
 on:
   push:
@@ -83,7 +84,19 @@ jobs:
         run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Full Flutter static analysis
-        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+        shell: bash
+        run: |
+          set -o pipefail
+          flutter analyze --no-fatal-warnings --no-fatal-infos 2>&1 | tee analyze.log
+
+      - name: Upload analyzer evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tajer-final-analyzer-log
+          path: analyze.log
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Full Flutter unit and widget suite
         run: flutter test --reporter expanded
