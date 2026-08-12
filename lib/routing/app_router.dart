@@ -22,7 +22,6 @@ import '../features/employees/presentation/employee_branch_assignments_screen.da
 import '../features/employees/presentation/employee_management_hub_screen.dart';
 import '../features/employees/presentation/employee_permissions_screen.dart';
 import '../features/employees/presentation/my_permissions_screen.dart';
-import '../features/subscription/presentation/subscription_screen.dart';
 import '../features/settings/presentation/profile_screen.dart';
 import '../features/settings/presentation/audit_log_screen.dart';
 import '../features/settings/presentation/user_guide_screen.dart';
@@ -87,8 +86,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
           path: '/inventory_history',
           builder: (context, state) => const _RouteAccess(
-              permission: 'can_manage_inventory',
-              child: InventoryLogsScreen())),
+              permission: 'can_manage_inventory', child: InventoryLogsScreen())),
       GoRoute(
           path: '/inventory_transfer',
           builder: (context, state) => const _RouteAccess(
@@ -124,7 +122,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
           path: '/subscription',
           builder: (context, state) =>
-              const _RouteAccess(ownerOnly: true, child: SubscriptionScreen())),
+              const _RouteAccess(ownerOnly: true, child: PaywallScreen())),
       GoRoute(
           path: '/backup_security',
           builder: (context, state) => const _RouteAccess(
