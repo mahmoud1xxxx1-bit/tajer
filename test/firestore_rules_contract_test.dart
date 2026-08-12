@@ -132,22 +132,26 @@ void main() {
       expect(
           rules,
           contains(
-              "costId == request.resource.data.get('branchId','') + '_' + request.resource.data.get('productId','')"));
+              "costId == request.resource.data.get('branchId', '') + '_' + request.resource.data.get('productId', '')"));
       expect(
           rules,
           contains(
-              "hasBranchAccess(merchantId, request.resource.data.get('branchId','main'))"));
+              "hasBranchAccess(merchantId, request.resource.data.get('branchId', 'main'))"));
       expect(
           rules,
           contains(
-              "costId == request.resource.data.get('productId','')"));
+              "costId == request.resource.data.get('productId', '')"));
       expect(rules, contains('isOwner(merchantId)'));
       expect(
           rules, contains("request.resource.data.get('costPrice', -1) >= 0"));
       expect(
           rules,
           contains(
-              "allow delete: if hasPermission(merchantId, 'can_manage_products') &&"));
+              "allow delete: if resource != null &&"));
+      expect(
+          rules,
+          contains(
+              "hasPermission(merchantId, 'can_manage_products') &&"));
     });
 
     test(
