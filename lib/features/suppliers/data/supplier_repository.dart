@@ -71,7 +71,8 @@ class SupplierRepository {
       merchantId: supplier.merchantId,
       resourceType: 'suppliers',
       action: () async {
-        final reservation = await EntitlementIntegration.prepareQuotaReservation(
+        final reservation =
+            await EntitlementIntegration.prepareQuotaReservation(
           firestore: _firestore,
           merchantId: supplier.merchantId,
           branchId: branchId,
@@ -90,9 +91,7 @@ class SupplierRepository {
           transaction.set(supplierRef, supplier.toJson());
           if (openingTransaction != null) {
             transaction.set(
-              supplierRef
-                  .collection('transactions')
-                  .doc(openingTransaction.id),
+              supplierRef.collection('transactions').doc(openingTransaction.id),
               openingTransaction.toJson(),
             );
           }
@@ -149,6 +148,70 @@ class SupplierRepository {
         'date': Timestamp.fromDate(occurredAt),
         'createdAt': Timestamp.fromDate(occurredAt),
         'isCancelled': false,
+      });
+    });
+  }
+
+  Future<void> reverseSupplierDebtAddition({
+    required String supplierId,
+    required String transactionId,
+  }) async {
+    final supplierRef = _suppliersRef.doc(supplierId);
+    final supplierTxRef =
+        supplierRef.collection('transactions').doc(transactionId);
+
+    await _firestore.runTransaction((transaction) async {
+      final supplierSnapshot = await transaction.get(supplierRef);
+      final txSnapshot = await transaction.get(supplierTxRef);
+      if (!supplierSnapshot.exists || supplierSnapshot.data() == null) {
+        throw Exception('المورد غير موجود.');
+      }
+      if (!txSnapshot.exists || txSnapshot.data() == null) {
+        throw Exception('عملية الدين غير موجودة.');
+      }
+
+      final txData = txSnapshot.data()!;
+      if (txData['type']?.toString() != 'debt_addition') {
+        throw Exception('هذه العملية ليست إضافة دين مورد.');
+      }
+      if (txData['isCancelled'] == true) {
+        throw Exception('عملية الدين ملغاة بالفعل.');
+      }
+
+      final amount = (txData['amount'] as num?)?.toDouble() ?? 0.0;
+      if (!amount.isFinite || amount <= 0) {
+        throw Exception('قيمة عملية الدين غير صالحة للإلغاء.');
+      }
+      final branchId = txData['branchId']?.toString().trim();
+      if (branchId == null || branchId.isEmpty) {
+        throw Exception('تعذر تحديد فرع عملية الدين.');
+      }
+
+      final supplierData = supplierSnapshot.data()!;
+      final currentTotalDebt =
+          (supplierData['totalDebt'] as num?)?.toDouble() ?? 0.0;
+      final rawBranchDebts = supplierData['branchDebts'];
+      final branchDebts = rawBranchDebts is Map
+          ? Map<String, dynamic>.from(rawBranchDebts)
+          : const <String, dynamic>{};
+      final currentBranchDebt =
+          (branchDebts[branchId] as num?)?.toDouble() ?? 0.0;
+
+      const epsilon = 0.000001;
+      if (currentTotalDebt + epsilon < amount ||
+          currentBranchDebt + epsilon < amount) {
+        throw Exception(
+          'لا يمكن إلغاء إضافة الدين بعد استخدام أو سداد جزء من رصيدها.',
+        );
+      }
+
+      transaction.update(supplierRef, {
+        'totalDebt': FieldValue.increment(-amount),
+        'branchDebts.$branchId': FieldValue.increment(-amount),
+      });
+      transaction.update(supplierTxRef, {
+        'isCancelled': true,
+        'cancelledAt': FieldValue.serverTimestamp(),
       });
     });
   }
@@ -231,7 +294,8 @@ class SupplierRepository {
       final currentBranchDebt =
           (branchDebts[branchId] as num?)?.toDouble() ?? 0.0;
       if (amountPaid > currentBranchDebt) {
-        throw Exception('مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق في هذا الفرع.');
+        throw Exception(
+            'مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق في هذا الفرع.');
       }
 
       if (needsOpenShift) {
@@ -365,12 +429,12 @@ class SupplierRepository {
       final updateData = <String, dynamic>{
         'totalDebt': FieldValue.increment(amount),
       };
-      
+
       final txBranchIdStr = txData['branchId']?.toString();
       if (txBranchIdStr != null && txBranchIdStr.isNotEmpty) {
         updateData['branchDebts.$txBranchIdStr'] = FieldValue.increment(amount);
       }
-      
+
       transaction.update(supplierRef, updateData);
       transaction.update(supplierTxRef, {
         'isCancelled': true,
@@ -390,12 +454,13 @@ class SupplierRepository {
   Future<void> deleteSupplier(String supplierId) async {
     await _suppliersRef.doc(supplierId).delete();
   }
+
   Future<void> migrateLegacySuppliers() async {
     final suppliersSnapshot = await _suppliersRef.get();
     for (final doc in suppliersSnapshot.docs) {
       final data = doc.data();
-      final hasBranchData =
-          data.containsKey('associatedBranchIds') && (data['associatedBranchIds'] as List).isNotEmpty;
+      final hasBranchData = data.containsKey('associatedBranchIds') &&
+          (data['associatedBranchIds'] as List).isNotEmpty;
       if (hasBranchData) continue;
 
       final txSnapshot = await doc.reference.collection('transactions').get();
@@ -405,7 +470,7 @@ class SupplierRepository {
       for (final txDoc in txSnapshot.docs) {
         final tx = txDoc.data();
         if (tx['isCancelled'] == true) continue;
-        
+
         String branchId = tx['branchId']?.toString() ?? '';
         if (branchId.isEmpty) {
           branchId = 'legacy_unscoped';

@@ -449,26 +449,18 @@ class SupplierDetailsScreen extends ConsumerWidget {
                 ?.cancelExpense(matching.first);
           }
         }
-        await ref
-            .read(supplierTransactionRepositoryProvider)
-            ?.updateTransaction(
-              transaction.copyWith(isCancelled: true),
-            );
-        await repository.updateSupplier(
-          currentSupplier.copyWith(
-            totalDebt: currentSupplier.totalDebt + transaction.amount,
-          ),
+        await repository.reverseSupplierPayment(
+          supplierId: currentSupplier.id,
+          transactionId: transaction.id,
+        );
+      } else if (transaction.type == 'debt_addition') {
+        await repository.reverseSupplierDebtAddition(
+          supplierId: currentSupplier.id,
+          transactionId: transaction.id,
         );
       } else {
-        await ref
-            .read(supplierTransactionRepositoryProvider)
-            ?.updateTransaction(
-              transaction.copyWith(isCancelled: true),
-            );
-        final newDebt = currentSupplier.totalDebt - transaction.amount;
-        await repository.updateSupplier(
-          currentSupplier.copyWith(totalDebt: newDebt < 0 ? 0 : newDebt),
-        );
+        throw Exception(
+            'هذا النوع من عمليات المورد لا يدعم الإلغاء من هذه الشاشة.');
       }
 
       ActivityLogger.log(
@@ -537,36 +529,31 @@ class SupplierDetailsScreen extends ConsumerWidget {
             onPressed: () async {
               final amount = double.tryParse(amountController.text.trim()) ?? 0;
               if (amount <= 0) return;
-              final user = ref.read(appUserProvider).value;
-              final merchantId =
-                  user == null ? '' : currentEffectiveMerchantId(user);
               final branchId = ref.read(selectedBranchIdProvider);
+              final repository = ref.read(supplierRepositoryProvider);
+              if (repository == null) return;
+              final now = DateTime.now();
 
-              final updatedSupplier = currentSupplier.copyWith(
-                totalDebt: currentSupplier.totalDebt + amount,
-              );
-              await ref
-                  .read(supplierRepositoryProvider)
-                  ?.updateSupplier(updatedSupplier);
-
-              await ref
-                  .read(supplierTransactionRepositoryProvider)
-                  ?.addTransaction(
-                    SupplierTransaction(
-                      id: const Uuid().v4(),
-                      supplierId: currentSupplier.id,
-                      merchantId: merchantId,
-                      branchId: branchId,
-                      amount: amount,
-                      type: 'debt_addition',
-                      description: descriptionController.text.trim().isEmpty
-                          ? (isAr ? 'إضافة دين' : 'Debt added')
-                          : descriptionController.text.trim(),
-                      date: DateTime.now(),
-                      createdAt: DateTime.now(),
-                    ),
+              try {
+                await repository.addSupplierDebt(
+                  supplierId: currentSupplier.id,
+                  amount: amount,
+                  branchId: branchId,
+                  transactionId: const Uuid().v4(),
+                  description: descriptionController.text.trim().isEmpty
+                      ? (isAr ? 'إضافة دين' : 'Debt added')
+                      : descriptionController.text.trim(),
+                  occurredAt: now,
+                );
+                if (context.mounted) Navigator.pop(context);
+              } catch (e) {
+                if (context.mounted) {
+                  await TajerMessage.show(
+                    context,
+                    AppErrorMapper.fromError(e, domain: 'supplier'),
                   );
-              if (context.mounted) Navigator.pop(context);
+                }
+              }
             },
             child: Text(isAr ? 'إضافة' : 'Add'),
           ),
