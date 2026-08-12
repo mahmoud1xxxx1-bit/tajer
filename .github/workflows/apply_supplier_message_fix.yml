@@ -103,7 +103,8 @@ jobs:
         run: |
           flutter test test/pre_release_supplier_branch_debt_test.dart --reporter expanded
           flutter test test/pre_release_supplier_reversal_test.dart --reporter expanded
-          flutter test test/supplier_atomicity_test.dart --reporter expanded
+          flutter test test/supplier_creation_atomicity_test.dart --reporter expanded
+          flutter test test/tajer_message_system_test.dart --reporter expanded
 
       - name: Commit verified repair
         shell: bash
