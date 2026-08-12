@@ -2,7 +2,7 @@ name: Build Tajer App
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main", "master", "fix/recovered-414-branch-bootstrap" ]
   workflow_dispatch:
 
 jobs:
