@@ -108,7 +108,7 @@ jobs:
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
           test -s android/app/upload-keystore.jks
 
-      - name: Verify release certificate for Google Sign-In
+      - name: Verify exact v1.0.107 certificate and Google Sign-In registration
         shell: bash
         env:
           STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -117,9 +117,33 @@ jobs:
           keytool -list -v \
             -keystore android/app/upload-keystore.jks \
             -storepass "$STORE_PASSWORD" \
-            -alias "$KEY_ALIAS" > /tmp/tajer-release-cert.txt
+            -alias "$KEY_ALIAS" > /tmp/current-release-cert.txt
+
+          git show v1.0.107:android/app/tajer-release.jks > /tmp/v107-release.jks
+          test -s /tmp/v107-release.jks
+          keytool -list -v \
+            -keystore /tmp/v107-release.jks \
+            -storepass "tajer123" \
+            -alias "tajer" > /tmp/v107-release-cert.txt
+
           python3 - <<'PY'
           import json, re
+
+          def sha1_from(path):
+              text = open(path, encoding='utf-8').read()
+              match = re.search(r'SHA1:\s*([0-9A-F:]+)', text)
+              if not match:
+                  raise SystemExit(f'FAIL: unable to read SHA-1 from {path}')
+              return match.group(1).replace(':', '').lower()
+
+          current_sha1 = sha1_from('/tmp/current-release-cert.txt')
+          v107_sha1 = sha1_from('/tmp/v107-release-cert.txt')
+
+          print('CURRENT_RELEASE_SHA1=' + current_sha1)
+          print('V107_RELEASE_SHA1=' + v107_sha1)
+          if current_sha1 != v107_sha1:
+              raise SystemExit('FAIL: current release certificate does not match known-good v1.0.107 certificate')
+          print('V107_SIGNING_CERTIFICATE_MATCH=PASS')
 
           with open('android/app/google-services.json', encoding='utf-8') as f:
               cfg = json.load(f)
@@ -133,15 +157,8 @@ jobs:
               and client.get('android_info', {}).get('certificate_hash')
           }
 
-          text = open('/tmp/tajer-release-cert.txt', encoding='utf-8').read()
-          match = re.search(r'SHA1:\s*([0-9A-F:]+)', text)
-          if not match:
-              raise SystemExit('FAIL: unable to read APK signing SHA-1')
-
-          sha1 = match.group(1).replace(':', '').lower()
-          print('TAJER_RELEASE_SHA1=' + sha1)
-          if sha1 not in registered:
-              raise SystemExit('FAIL: release signing certificate is not registered for Google Sign-In')
+          if current_sha1 not in registered:
+              raise SystemExit('FAIL: v1.0.107 release certificate is not registered for Google Sign-In')
           print('GOOGLE_SIGN_IN_CERTIFICATE_MATCH=PASS')
           PY
 
@@ -160,7 +177,7 @@ jobs:
         shell: bash
         run: |
           test -s build/app/outputs/flutter-apk/app-release.apk
-          test ! -e build/app/outputs/flutter-apk/app-debug.apk || rm -f build/app/outputs/flutter-apk/app-debug.apk
+          rm -f build/app/outputs/flutter-apk/app-debug.apk
           sha256sum build/app/outputs/flutter-apk/app-release.apk
           ls -lh build/app/outputs/flutter-apk/app-release.apk
 
