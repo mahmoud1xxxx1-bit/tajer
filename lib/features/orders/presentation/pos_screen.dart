@@ -413,13 +413,34 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         );
       }).toList();
 
+      final storeProfile = ref.read(storeProfileProvider).value;
+      final defaultTaxPercentage = storeProfile?.defaultTaxPercentage ?? 0.0;
+      final defaultIsTaxInclusive = storeProfile?.defaultIsTaxInclusive ?? false;
+
+      double finalTotal = 0.0;
+      for (var item in _cart) {
+        final itemTax = item.getEffectiveTax(defaultTaxPercentage);
+        final isInclusive = item.taxMode == TaxMode.custom
+            ? (item.isTaxInclusive ?? defaultIsTaxInclusive)
+            : defaultIsTaxInclusive;
+        
+        final itemDiscount = cartSubtotal > 0 ? (item.total / cartSubtotal) * details.discountAmount : 0.0;
+        final discountedTotal = item.total - itemDiscount;
+
+        if (isInclusive) {
+          finalTotal += discountedTotal;
+        } else {
+          finalTotal += discountedTotal + (discountedTotal * (itemTax / 100));
+        }
+      }
+
       final newOrder = AppOrder(
         id: Uuid().v4(),
         merchantId: currentEffectiveMerchantId(appUser),
         customerId: details.customerId,
         customerName: details.customerName,
         items: finalCartItems,
-        total: details.paidAmount + (details.tenderedAmount != null && details.changeAmount != null ? details.changeAmount! : 0) + (details.isCredit && details.paidAmount < _grandTotal ? (_grandTotal - details.paidAmount) : 0),
+        total: finalTotal,
         discountType: details.discountType,
         discountValue: details.discountValue,
         discountAmount: details.discountAmount,

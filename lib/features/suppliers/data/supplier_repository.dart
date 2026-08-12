@@ -327,7 +327,23 @@ class SupplierRepository {
   }
 
   Future<void> deleteSupplier(String supplierId) async {
-    await _suppliersRef.doc(supplierId).delete();
+    final docRef = _suppliersRef.doc(supplierId);
+    final snapshot = await docRef.get();
+    if (snapshot.exists) {
+      final data = snapshot.data()!;
+      final associatedBranchIds = data['associatedBranchIds'] as List<dynamic>? ?? [];
+      final branchId = associatedBranchIds.isNotEmpty ? associatedBranchIds.first.toString() : 'main';
+
+      await EntitlementIntegration.decrementQuota(
+        firestore: _firestore,
+        merchantId: _merchantId,
+        branchId: branchId,
+        resourceType: 'suppliers',
+        plan: null,
+      );
+
+      await docRef.delete();
+    }
   }
   Future<void> migrateLegacySuppliers() async {
     final suppliersSnapshot = await _suppliersRef.get();

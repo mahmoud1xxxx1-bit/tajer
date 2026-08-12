@@ -567,22 +567,51 @@ class ProductRepository {
     required String productId,
   }) async {
     if (!context.isValid) throw StateError('Invalid branch operation context');
-    await _branchProductRef(context.merchantId, context.branchId, productId)
-        .update({
-      'isArchived': true,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    
+    final batch = _firestore.batch();
+    batch.update(
+      _branchProductRef(context.merchantId, context.branchId, productId),
+      {
+        'isArchived': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      },
+    );
+
+    await EntitlementIntegration.decrementQuota(
+      firestore: _firestore,
+      merchantId: context.merchantId,
+      branchId: context.branchId,
+      resourceType: 'products',
+      plan: null,
+      batch: batch,
+    );
+
+    await batch.commit();
   }
 
   Future<void> archiveProductFromStore({
     required BranchOperationContext context,
     required String productId,
   }) async {
-    await _branchProductRef(context.merchantId, context.branchId, productId)
-        .update({
-      'isArchived': true,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
+    final batch = _firestore.batch();
+    batch.update(
+      _branchProductRef(context.merchantId, context.branchId, productId),
+      {
+        'isArchived': true,
+        'updatedAt': FieldValue.serverTimestamp(),
+      },
+    );
+
+    await EntitlementIntegration.decrementQuota(
+      firestore: _firestore,
+      merchantId: context.merchantId,
+      branchId: context.branchId,
+      resourceType: 'products',
+      plan: null,
+      batch: batch,
+    );
+
+    await batch.commit();
   }
 
   Future<int> getProductCount(String merchantId) async {

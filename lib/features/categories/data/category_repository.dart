@@ -198,6 +198,16 @@ class CategoryRepository {
       batch.update(doc.reference, {'categoryId': ''});
     }
     batch.delete(_categoriesRef.doc(categoryId));
+
+    await EntitlementIntegration.decrementQuota(
+      firestore: _firestore,
+      merchantId: context.merchantId,
+      branchId: context.branchId,
+      resourceType: 'categories',
+      plan: null,
+      batch: batch,
+    );
+
     await batch.commit();
   }
 

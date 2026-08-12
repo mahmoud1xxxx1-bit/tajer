@@ -175,6 +175,40 @@ class EntitlementIntegration {
     }
   }
 
+  static Future<void> decrementQuota({
+    required FirebaseFirestore firestore,
+    required String merchantId,
+    required String branchId,
+    required String resourceType,
+    required String? plan,
+    WriteBatch? batch,
+  }) async {
+    // We don't decrement global lifetime resources
+    if (resourceType == 'orders') return;
+
+    final limitData = await _getLimitAndPeriod(firestore, merchantId, branchId, resourceType, plan);
+    if (limitData == null) return; // unlimited
+
+    final usageRef = firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection('entitlement_usage')
+        .doc('${branchId}_${resourceType}_${limitData['periodKey']}');
+
+    final data = {
+      'count': FieldValue.increment(-1),
+      'branchId': branchId,
+      'resourceType': resourceType,
+      'periodKey': limitData['periodKey'],
+    };
+
+    if (batch != null) {
+      batch.set(usageRef, data, SetOptions(merge: true));
+    } else {
+      await usageRef.set(data, SetOptions(merge: true));
+    }
+  }
+
   static Future<Map<String, dynamic>?> _getLimitAndPeriod(
     FirebaseFirestore firestore, String merchantId, String branchId, String resourceType, String? plan) async {
     

@@ -161,6 +161,14 @@ class CustomerRepository {
         throw Exception('لا يمكن حذف العميل لوجود فواتير آجلة غير مسددة.');
       }
 
+      await EntitlementIntegration.decrementQuota(
+        firestore: _firestore,
+        merchantId: merchantId ?? '',
+        branchId: branchId,
+        resourceType: 'customers',
+        plan: null,
+      );
+
       await docRef.delete();
     }
   }

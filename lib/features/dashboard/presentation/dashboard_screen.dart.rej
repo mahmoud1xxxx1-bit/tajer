@@ -1,0 +1,20 @@
+diff a/lib/features/dashboard/presentation/dashboard_screen.dart b/lib/features/dashboard/presentation/dashboard_screen.dart	(rejected hunks)
+@@ -17,6 +17,7 @@ import '../../authentication/data/auth_repository.dart';
+ import '../../authentication/application/access_policy.dart';
+ import '../../authentication/application/session_identity.dart';
+ import '../../../core/services/app_review_service.dart';
++import '../../../core/services/branch_catalog_migration_bootstrap_service.dart';
+ import '../../../core/widgets/app_drawer.dart';
+ import '../../branches/presentation/active_branch_selector.dart';
+ import '../../branches/presentation/branch_context.dart';
+@@ -81,6 +82,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+     final bool canManageCustomers = policy.canManageCustomers;
+     final bool canViewReports = policy.canViewReports;
+     final bool canCreateOrders = policy.canCreateOrders;
++    final migrationBootstrap =
++        (appUser.role == 'merchant' || appUser.role == 'admin')
++            ? ref.watch(branchCatalogMigrationBootstrapProvider)
++            : const AsyncData<void>(null);
+ 
+     final List<Widget> screens = [
+       DashboardHome(

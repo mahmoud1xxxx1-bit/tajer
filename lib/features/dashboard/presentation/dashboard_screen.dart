@@ -240,10 +240,14 @@ class DashboardHome extends ConsumerWidget {
       drawer: const AppDrawer(),
       body: ordersAsync.when(
         data: (orders) {
+          final now = DateTime.now();
           final liveOrders = orders
               .where((order) =>
                   order.status != 'cancelled' &&
-                  order.status != 'debt_repayment')
+                  order.status != 'debt_repayment' &&
+                  order.createdAt.year == now.year &&
+                  order.createdAt.month == now.month &&
+                  order.createdAt.day == now.day)
               .toList();
           final totalSales =
               liveOrders.fold<double>(0, (sum, order) => sum + order.total);
