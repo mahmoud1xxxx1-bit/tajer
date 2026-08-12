@@ -6,6 +6,7 @@ import '../data/customer_repository.dart';
 import '../domain/customer.dart';
 import '../../authentication/data/auth_repository.dart';
 import 'add_customer_dialog.dart';
+import 'package:firebase_ui_firestore/firebase_ui_firestore.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
@@ -36,6 +37,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
   bool _isSelectionMode = false;
   Set<String> _selectedCustomerIds = {};
   Set<String> _expandedFolders = {};
+  String? _selectedFolder;
   bool _isInitialized = false;
 
   @override
@@ -84,47 +86,16 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
             ),
         ],
       ),
-      body: customersAsyncValue.when(
-        data: (customers) {
-          var filtered = customers.where((c) {
-            final matchesSearch = c.name.toLowerCase().contains(_searchQuery.toLowerCase()) || 
-                                  c.phone.contains(_searchQuery);
-            final matchesDebt = !_filterHasDebt || c.totalDebt > 0;
-            return matchesSearch && matchesDebt;
-          }).toList();
-
-          if (_sortOption == 'debt') {
-            filtered.sort((a, b) => b.totalDebt.compareTo(a.totalDebt));
-          } else if (_sortOption == 'alpha') {
-            filtered.sort((a, b) => a.name.compareTo(b.name));
-          } else {
-            filtered.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-          }
-
-          final Map<String, List<Customer>> groupedCustomers = {};
-          final List<Customer> uncategorized = [];
-          
-          for (var c in filtered) {
-            if (c.folderName != null && c.folderName!.isNotEmpty) {
-              groupedCustomers.putIfAbsent(c.folderName!, () => []).add(c);
-            } else {
-              uncategorized.add(c);
-            }
-          }
-
-          final List<dynamic> flattenedList = [];
-          for (var entry in groupedCustomers.entries) {
-            flattenedList.add(entry.key);
-            if (_expandedFolders.contains(entry.key)) {
-              flattenedList.addAll(entry.value);
-            }
-          }
-          if (uncategorized.isNotEmpty) {
-            flattenedList.add(l10n.generalCustomers);
-            if (_expandedFolders.contains(l10n.generalCustomers)) {
-              flattenedList.addAll(uncategorized);
-            }
-          }
+      body: Builder(
+        builder: (context) {
+          final repository = ref.watch(customerRepositoryProvider);
+          final query = repository.queryCustomers(
+            merchantId: appUser?.merchantId ?? appUser?.id ?? '',
+            searchQuery: _searchQuery,
+            hasDebt: _filterHasDebt,
+            sortBy: _sortOption,
+            folderName: _selectedFolder,
+          );
 
           return Column(
             children: [
@@ -141,7 +112,9 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                           contentPadding: const EdgeInsets.symmetric(horizontal: 16),
                         ),
-                        onChanged: (val) => setState(() => _searchQuery = val),
+                        onChanged: (val) {
+                          setState(() => _searchQuery = val.trim());
+                        },
                       ),
                       const SizedBox(height: 12),
                       Row(
@@ -158,7 +131,8 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                           DropdownButton<String>(
                             value: _sortOption,
                             underline: const SizedBox(),
-                            items: [DropdownMenuItem(value: 'newest', child: Text('الأحدث', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
+                            items: [
+                              DropdownMenuItem(value: 'newest', child: Text('الأحدث', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
                               DropdownMenuItem(value: 'debt', child: Text(l10n.highestDebt, style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
                               DropdownMenuItem(value: 'alpha', child: Text(l10n.sortAlphabetical, style: TextStyle(fontFamily: 'Tajawal', fontSize: 13))),
                             ],
@@ -168,70 +142,54 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        decoration: InputDecoration(
+                          labelText: 'تصفية بالمجلد (Folder Filter)',
+                          labelStyle: const TextStyle(fontFamily: 'Tajawal', fontSize: 12),
+                          prefixIcon: const Icon(Icons.folder_open, size: 18),
+                          suffixIcon: _selectedFolder != null && _selectedFolder!.isNotEmpty ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () {
+                              setState(() {
+                                _selectedFolder = null;
+                              });
+                            },
+                          ) : null,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        ),
+                        onChanged: (val) => setState(() => _selectedFolder = val.trim()),
+                      ),
                     ],
                   ),
                 ),
               Expanded(
-                child: flattenedList.isEmpty
-                    ? Center(
-                        child: Text(
-                          _searchQuery.isNotEmpty || _filterHasDebt ? 'لا يوجد عملاء يطابقون البحث' : AppLocalizations.of(context)!.text56,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16),
-                        ),
-                      )
-                    : ListView.builder(
-                        itemCount: flattenedList.length,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemBuilder: (context, index) {
-                          final item = flattenedList[index];
-                          
-                          if (item is String) {
-                            final isExpanded = _expandedFolders.contains(item);
-                            final isGeneral = item == l10n.generalCustomers;
-                            return InkWell(
-                              onTap: () {
-                                setState(() {
-                                  if (isExpanded) _expandedFolders.remove(item);
-                                  else _expandedFolders.add(item);
-                                });
-                              },
-                              child: Container(
-                                margin: const EdgeInsets.symmetric(vertical: 8),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: isGeneral ? Colors.grey.withValues(alpha: 0.2) : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(isGeneral ? Icons.people : Icons.folder, color: isGeneral ? Colors.grey[700] : Theme.of(context).colorScheme.primary),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        item,
-                                        style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16),
-                                      ),
-                                    ),
-                                    Icon(isExpanded ? Icons.expand_less : Icons.expand_more, color: Colors.grey),
-                                  ],
-                                ),
-                              ),
-                            );
-                          } else if (item is Customer) {
-                            return _buildCustomerCard(item, context, ref, currency, canManageCustomers, canReceivePayments);
-                          }
-                          return const SizedBox();
-                        },
-                      ),
+                child: FirestoreListView<Customer>(
+                  query: query,
+                  pageSize: 50,
+                  emptyBuilder: (context) => Center(
+                    child: Text(
+                      _searchQuery.isNotEmpty || _filterHasDebt || (_selectedFolder != null && _selectedFolder!.isNotEmpty)
+                          ? 'لا يوجد عملاء يطابقون البحث'
+                          : AppLocalizations.of(context)!.text56,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16),
+                    ),
+                  ),
+                  errorBuilder: (context, error, stackTrace) => Center(
+                    child: Text('حدث خطأ: $error', style: const TextStyle(fontFamily: 'Tajawal')),
+                  ),
+                  loadingBuilder: (context) => const Center(child: CircularProgressIndicator()),
+                  itemBuilder: (context, doc) {
+                    final customer = doc.data();
+                    return _buildCustomerCard(customer, context, ref, currency, canManageCustomers, canReceivePayments);
+                  },
+                ),
               ),
             ],
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(
-          child: Text('حدث خطأ: $e', style: const TextStyle(fontFamily: 'Tajawal')),
-        ),
       ),
       floatingActionButton: canManageCustomers && !_isSelectionMode ? FloatingActionButton.extended(
         heroTag: null,

@@ -10,11 +10,42 @@ class CustomerRepository {
 
   CustomerRepository(this._firestore);
 
-  Query<Customer> queryCustomers(String merchantId) {
-    return _firestore
+  Query<Customer> queryCustomers({
+    required String merchantId,
+    String? searchQuery,
+    String? folderName,
+    bool? hasDebt,
+    String sortBy = 'newest', // newest, alpha, debt
+  }) {
+    Query<Map<String, dynamic>> query = _firestore
         .collection('customers')
-        .where('merchantId', isEqualTo: merchantId)
-        .withConverter(
+        .where('merchantId', isEqualTo: merchantId);
+
+    if (folderName != null && folderName.isNotEmpty && folderName != 'عملاء عامون' && folderName != 'General Customers') {
+      query = query.where('folderName', isEqualTo: folderName);
+    }
+    
+    if (searchQuery != null && searchQuery.isNotEmpty) {
+      query = query
+          .where('name', isGreaterThanOrEqualTo: searchQuery)
+          .where('name', isLessThan: searchQuery + '\uf8ff')
+          .orderBy('name');
+    } else {
+      if (hasDebt == true) {
+        query = query.where('totalDebt', isGreaterThan: 0);
+        query = query.orderBy('totalDebt', descending: true);
+      } else {
+        if (sortBy == 'debt') {
+          query = query.orderBy('totalDebt', descending: true);
+        } else if (sortBy == 'alpha') {
+          query = query.orderBy('name', descending: false);
+        } else {
+          query = query.orderBy('createdAt', descending: true);
+        }
+      }
+    }
+
+    return query.withConverter(
           fromFirestore: (snapshot, _) {
             final data = snapshot.data()!;
             data['id'] = snapshot.id;
@@ -109,7 +140,7 @@ Stream<List<Customer>> customersStream(CustomersStreamRef ref) {
   if (appUser == null) return const Stream.empty();
 
   final repository = ref.watch(customerRepositoryProvider);
-  return repository.queryCustomers(appUser.merchantId ?? appUser.id).snapshots().map(
+  return repository.queryCustomers(merchantId: appUser.merchantId ?? appUser.id).limit(1000).snapshots().map(
         (snapshot) {
           final customers = snapshot.docs.map((doc) => doc.data()).toList();
           customers.sort((a, b) => b.createdAt.compareTo(a.createdAt));

@@ -441,6 +441,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.10.17"
+  firebase_ui_firestore:
+    dependency: "direct main"
+    description:
+      name: firebase_ui_firestore
+      sha256: e59af86052fa1d5d5db79cfbfc5a69de204d6fe30df4d1fefd0d5cfbeeb03c26
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.7.3"
+  firebase_ui_localizations:
+    dependency: transitive
+    description:
+      name: firebase_ui_localizations
+      sha256: ce1d473d47d54886a3faf9d3dbb72dd5e9b11fe21c52a2f449fcca3c5d8f1c46
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.14.1"
+  firebase_ui_shared:
+    dependency: transitive
+    description:
+      name: firebase_ui_shared
+      sha256: "6967fff0b9c86f875fe1da5822c0c77b35e741001d5afec38bfa1d638baf5040"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.5.0"
   fixnum:
     dependency: transitive
     description:
