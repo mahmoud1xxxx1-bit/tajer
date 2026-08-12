@@ -165,6 +165,13 @@ jobs:
           print('GOOGLE_SIGN_IN_CERTIFICATE_MATCH=PASS')
           PY
 
+      - name: Remove stale integration-test Android registrant
+        shell: bash
+        run: |
+          rm -f android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+          test ! -f android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+          echo 'ANDROID_RELEASE_REGISTRANT_CLEAN=PASS'
+
       - name: Build signed release APK
         run: flutter build apk --release --no-pub
         env:
