@@ -13,7 +13,7 @@ exports.partialReturnCallable = async (request) => {
   const db = getFirestore();
 
   return db.runTransaction(async (tx) => {
-    const isProcessed = await checkIdempotency(tx, merchantId, operationId);
+    const isProcessed = await checkIdempotency(tx, merchantId, operationId, request.data);
     if (isProcessed) {
       return { success: true, message: 'Already processed' };
     }
@@ -72,7 +72,7 @@ exports.partialReturnCallable = async (request) => {
 
       if (originalLine.productId && !originalLine.isManufacturedOnDemand) {
         inventoryUpdates.push({
-          docId: `${branchId}_${originalLine.productId}`,
+          productId: originalLine.productId,
           qty: retItem.quantity
         });
       }
@@ -112,22 +112,30 @@ exports.partialReturnCallable = async (request) => {
       returnedCheckoutPaidAmount += refund;
     }
 
-    // 5. Customer Debt Update
+    // We must do all reads before any writes.
+    let custDoc = null;
+    let customerRef = null;
     if (amountToDeductCredit > 0 && order.customerId && order.customerId !== 'walk_in') {
-      const customerRef = db.collection('merchants').doc(merchantId).collection('customers').doc(order.customerId);
-      const custDoc = await tx.get(customerRef);
-      if (custDoc.exists) {
-        tx.update(customerRef, {
-          totalDebt: FieldValue.increment(-amountToDeductCredit)
-        });
-      }
+      customerRef = db.collection('merchants').doc(merchantId).collection('customers').doc(order.customerId);
+      custDoc = await tx.get(customerRef);
     }
 
-    // 6. Shift Refund Update
+    let shiftSnap = null;
+    let shiftRef = null;
     if (shiftId && amountToRefundCash > 0) {
-      const shiftRef = db.collection('merchants').doc(merchantId).collection('shifts').doc(shiftId);
-      const shiftSnap = await tx.get(shiftRef);
-      if (shiftSnap.exists && shiftSnap.data().status === 'open') {
+      shiftRef = db.collection('merchants').doc(merchantId).collection('shifts').doc(shiftId);
+      shiftSnap = await tx.get(shiftRef);
+    }
+
+    // Update Customer Debt
+    if (custDoc && custDoc.exists) {
+      tx.update(customerRef, {
+        totalDebt: FieldValue.increment(-amountToDeductCredit)
+      });
+    }
+
+    // Update Shift Refunds (recorded in the shift where the return happens)
+    if (shiftSnap && shiftSnap.exists && shiftSnap.data().status === 'open') {
         const shiftUpdate = {};
         const pMethod = order.paymentMethod;
         
@@ -144,11 +152,10 @@ exports.partialReturnCallable = async (request) => {
           tx.update(shiftRef, shiftUpdate);
         }
       }
-    }
 
     // 7. Inventory Restore
     for (const update of inventoryUpdates) {
-      const invRef = db.collection('merchants').doc(merchantId).collection('branch_inventory').doc(update.docId);
+      const invRef = db.collection('merchants').doc(merchantId).collection('branches').doc(branchId).collection('products').doc(update.productId);
       tx.set(invRef, {
         quantity: FieldValue.increment(update.qty)
       }, { merge: true });
@@ -171,7 +178,7 @@ exports.partialReturnCallable = async (request) => {
       createdAt: new Date().toISOString()
     });
 
-    markOperationComplete(tx, merchantId, operationId, 'PARTIAL_RETURN', { returnId });
+    markOperationComplete(tx, merchantId, operationId, 'PARTIAL_RETURN', request.data, { returnId });
     return { success: true, returnId };
   });
 };

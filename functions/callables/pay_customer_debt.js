@@ -13,7 +13,7 @@ exports.payCustomerDebtCallable = async (request) => {
   const db = getFirestore();
 
   return db.runTransaction(async (tx) => {
-    const isProcessed = await checkIdempotency(tx, merchantId, operationId);
+    const isProcessed = await checkIdempotency(tx, merchantId, operationId, request.data);
     if (isProcessed) {
       return { success: true, message: 'Already processed' };
     }
@@ -38,8 +38,6 @@ exports.payCustomerDebtCallable = async (request) => {
       .where('customerId', '==', customerId)
       .where('isCredit', '==', true)
       .where('status', '==', 'completed')
-      // cannot easily query outstandingAmount > 0 directly if it's derived.
-      .orderBy('createdAt', 'asc')
       .limit(200);
       
     const ordersSnap = await tx.get(ordersQuery);
@@ -129,7 +127,7 @@ exports.payCustomerDebtCallable = async (request) => {
       createdAt: new Date().toISOString()
     });
 
-    markOperationComplete(tx, merchantId, operationId, 'DEBT_PAYMENT', { paymentId });
+    markOperationComplete(tx, merchantId, operationId, 'DEBT_PAYMENT', request.data, { paymentId });
     return { success: true, distributed };
   });
 };

@@ -1,5 +1,10 @@
 const { getFirestore } = require('firebase-admin/firestore');
 const { HttpsError } = require('firebase-functions/v2/https');
+const crypto = require('crypto');
+
+function hashPayload(payload) {
+  return crypto.createHash('sha256').update(JSON.stringify(payload || {})).digest('hex');
+}
 
 /**
  * Validates that the user is authenticated and authorized to perform the action.
@@ -45,7 +50,7 @@ async function requireAuth(request, requiredPermissions = []) {
  * Checks if an operation has already been executed. 
  * Must be called INSIDE a transaction.
  */
-async function checkIdempotency(tx, merchantId, operationId) {
+async function checkIdempotency(tx, merchantId, operationId, payload) {
   if (!operationId) {
     throw new HttpsError('invalid-argument', 'operationId is required for idempotency.');
   }
@@ -58,6 +63,13 @@ async function checkIdempotency(tx, merchantId, operationId) {
 
   const opDoc = await tx.get(opRef);
   if (opDoc.exists) {
+    const data = opDoc.data();
+    if (payload && data.payloadHash) {
+      const currentHash = hashPayload(payload);
+      if (currentHash !== data.payloadHash) {
+        throw new HttpsError('already-exists', 'Operation already processed with a different payload.');
+      }
+    }
     return true; // Already processed
   }
   return false;
@@ -67,7 +79,7 @@ async function checkIdempotency(tx, merchantId, operationId) {
  * Marks an operation as executed. 
  * Must be called INSIDE a transaction.
  */
-function markOperationComplete(tx, merchantId, operationId, operationType, resultData = {}) {
+function markOperationComplete(tx, merchantId, operationId, operationType, payload, resultData = {}) {
   const db = getFirestore();
   const opRef = db
     .collection('merchants')
@@ -77,6 +89,7 @@ function markOperationComplete(tx, merchantId, operationId, operationType, resul
 
   tx.set(opRef, {
     operationType,
+    payloadHash: hashPayload(payload),
     executedAt: new Date().toISOString(),
     result: resultData,
   });

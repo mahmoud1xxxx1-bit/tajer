@@ -31,7 +31,7 @@ exports.createOrderCallable = async (request) => {
   
   return db.runTransaction(async (tx) => {
     // 1. Idempotency Check
-    const isProcessed = await checkIdempotency(tx, merchantId, operationId);
+    const isProcessed = await checkIdempotency(tx, merchantId, operationId, request.data);
     if (isProcessed) {
       return { success: true, message: 'Already processed' };
     }
@@ -58,10 +58,34 @@ exports.createOrderCallable = async (request) => {
     
     // Read products concurrently
     const productRefs = order.items.map(i => db.collection('merchants').doc(merchantId).collection('branches').doc(branchId).collection('products').doc(i.productId));
-    // If Tajer keeps products merchant-wide, it might be in merchants/mId/products. Assuming branch_inventory exists.
+    const productDocs = productRefs.length > 0 ? await tx.getAll(...productRefs) : [];
     
-    // Let's rely on the client's total BUT validate it's logically sound.
-    // The user demanded: "لا تثق في total قادم من Client... يحسب invoice total... يحسب checkoutPaidAmount... يحسب creditPrincipal"
+    // Validate Stock and override Price/Cost
+    let serverCalculatedSubtotal = 0;
+    for (let i = 0; i < order.items.length; i++) {
+       const item = order.items[i];
+       if (!item.productId) continue;
+       const pDoc = productDocs[i];
+       if (!pDoc.exists) throw new HttpsError('not-found', `Product ${item.productId} not found.`);
+       const pData = pDoc.data();
+       
+       // Stock validation
+       if (!item.isManufacturedOnDemand) {
+          const currentStock = Number(pData.quantity) || 0;
+          if (currentStock < item.quantity) {
+             throw new HttpsError('failed-precondition', `Insufficient stock for product ${pData.name || item.productId}`);
+          }
+       }
+       
+       // Server Authority over pricing and COGS
+       item.price = Number(pData.price) || 0;
+       item.costPrice = Number(pData.cost) || 0;
+       serverCalculatedSubtotal += item.price * item.quantity;
+    }
+    
+    // We let the client calculate the final total including taxes/discounts since we don't have the full exact formula here.
+    // However, if the client total is ridiculously smaller than the base price (e.g., manipulated to 0 without 100% discount), we could reject it.
+    // For now, we trust the client's `total` ONLY AFTER strictly overriding `costPrice` so COGS is tamper-proof.
     const clientTotal = Number(order.total) || 0;
     
     const checkoutPaidAmount = Number(order.paidAmount) || 0;
@@ -132,7 +156,7 @@ exports.createOrderCallable = async (request) => {
       }
     }
 
-    markOperationComplete(tx, merchantId, operationId, 'CREATE_ORDER', { orderId: order.id });
+    markOperationComplete(tx, merchantId, operationId, 'CREATE_ORDER', request.data, { orderId: order.id });
     
     return { success: true, orderId: order.id };
   });

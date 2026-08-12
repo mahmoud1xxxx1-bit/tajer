@@ -13,7 +13,7 @@ exports.cancelOrderCallable = async (request) => {
   const db = getFirestore();
 
   return db.runTransaction(async (tx) => {
-    const isProcessed = await checkIdempotency(tx, merchantId, operationId);
+    const isProcessed = await checkIdempotency(tx, merchantId, operationId, request.data);
     if (isProcessed) {
       return { success: true, message: 'Already processed' };
     }
@@ -66,22 +66,31 @@ exports.cancelOrderCallable = async (request) => {
     const outstandingCredit = Math.max(0, creditPrincipal - returnedCreditAmount);
     const refundAmount = Math.max(0, checkoutPaidAmount - returnedCheckoutPaidAmount);
 
-    // Update Customer Debt
+    // We must do all reads before any writes.
+    let custDoc = null;
+    let customerRef = null;
     if (outstandingCredit > 0 && order.customerId && order.customerId !== 'walk_in') {
-      const customerRef = db.collection('merchants').doc(merchantId).collection('customers').doc(order.customerId);
-      const custDoc = await tx.get(customerRef);
-      if (custDoc.exists) {
-        tx.update(customerRef, {
-          totalDebt: FieldValue.increment(-outstandingCredit)
-        });
-      }
+      customerRef = db.collection('merchants').doc(merchantId).collection('customers').doc(order.customerId);
+      custDoc = await tx.get(customerRef);
+    }
+
+    let shiftSnap = null;
+    let shiftRef = null;
+    if (shiftId && refundAmount > 0) {
+      shiftRef = db.collection('merchants').doc(merchantId).collection('shifts').doc(shiftId);
+      shiftSnap = await tx.get(shiftRef);
+    }
+
+    // Update Customer Debt
+    if (custDoc && custDoc.exists) {
+      tx.update(customerRef, {
+        totalDebt: FieldValue.increment(-outstandingCredit)
+      });
     }
 
     // Update Shift Refunds (recorded in the shift where the cancellation happens)
-    if (shiftId && refundAmount > 0) {
-      const shiftRef = db.collection('merchants').doc(merchantId).collection('shifts').doc(shiftId);
-      const shiftSnap = await tx.get(shiftRef);
-      if (shiftSnap.exists && shiftSnap.data().status === 'open') {
+    // Update Shift Refunds (recorded in the shift where the cancellation happens)
+    if (shiftSnap && shiftSnap.exists && shiftSnap.data().status === 'open') {
         const shiftUpdate = {};
         const pMethod = order.paymentMethod;
         if (pMethod === 'cash') shiftUpdate.refundsCash = FieldValue.increment(refundAmount);
@@ -99,13 +108,12 @@ exports.cancelOrderCallable = async (request) => {
         }
         tx.update(shiftRef, shiftUpdate);
       }
-    }
 
     // Update Inventory
     if (Array.isArray(order.items)) {
       for (const item of order.items) {
         if (item.productId && !item.isManufacturedOnDemand) {
-          const invRef = db.collection('merchants').doc(merchantId).collection('branch_inventory').doc(`${branchId}_${item.productId}`);
+          const invRef = db.collection('merchants').doc(merchantId).collection('branches').doc(branchId).collection('products').doc(item.productId);
           // Revert the exact quantity from the order
           tx.set(invRef, {
             quantity: FieldValue.increment(item.quantity)
@@ -120,7 +128,7 @@ exports.cancelOrderCallable = async (request) => {
       updatedAt: new Date().toISOString()
     });
 
-    markOperationComplete(tx, merchantId, operationId, 'CANCEL_ORDER', { orderId });
+    markOperationComplete(tx, merchantId, operationId, 'CANCEL_ORDER', request.data, { orderId });
     return { success: true };
   });
 };

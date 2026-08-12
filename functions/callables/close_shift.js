@@ -13,7 +13,7 @@ exports.closeShiftCallable = async (request) => {
   const db = getFirestore();
 
   return db.runTransaction(async (tx) => {
-    const isProcessed = await checkIdempotency(tx, merchantId, operationId);
+    const isProcessed = await checkIdempotency(tx, merchantId, operationId, request.data);
     if (isProcessed) {
       return { success: true, message: 'Already processed' };
     }
@@ -99,7 +99,7 @@ exports.closeShiftCallable = async (request) => {
       });
     }
 
-    markOperationComplete(tx, merchantId, operationId, 'CLOSE_SHIFT', { shiftId });
+    markOperationComplete(tx, merchantId, operationId, 'CLOSE_SHIFT', request.data, { shiftId });
     return { success: true };
   });
 };
