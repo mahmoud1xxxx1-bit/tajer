@@ -112,7 +112,7 @@ jobs:
           if-no-files-found: error
 
       - name: Clean Target Directory on VPS
-        if: github.event_name == 'workflow_dispatch' && success()
+        if: success()
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 163.245.218.57
@@ -122,7 +122,7 @@ jobs:
             rm -rf /home/alldown.uk/public_html/taj/*
 
       - name: Deploy to VPS
-        if: github.event_name == 'workflow_dispatch' && success()
+        if: success()
         uses: appleboy/scp-action@v0.1.7
         with:
           host: 163.245.218.57
@@ -133,7 +133,7 @@ jobs:
           strip_components: 2
 
       - name: Set Permissions on VPS
-        if: github.event_name == 'workflow_dispatch' && success()
+        if: success()
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 163.245.218.57
