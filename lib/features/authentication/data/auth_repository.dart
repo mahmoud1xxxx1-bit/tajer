@@ -6,7 +6,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../core/services/app_failure.dart';
-import 'dart:io' show Platform;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
@@ -41,10 +40,10 @@ class AuthRepository {
     }
 
     final deviceInfo = DeviceInfoPlugin();
-    if (Platform.isAndroid) {
+    if (defaultTargetPlatform == TargetPlatform.android) {
       final androidInfo = await deviceInfo.androidInfo;
       return androidInfo.id; // Unique ID for Android device
-    } else if (Platform.isIOS) {
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       final iosInfo = await deviceInfo.iosInfo;
       return iosInfo.identifierForVendor ??
           Uuid().v4(); // Unique ID for iOS device
