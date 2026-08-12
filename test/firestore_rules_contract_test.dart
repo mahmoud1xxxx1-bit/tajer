@@ -118,12 +118,9 @@ void main() {
               "!request.resource.data.diff(resource.data).affectedKeys().hasAny(['quantity', 'initialQuantity'])"));
     });
 
-    test('protected product cost collection requires explicit permissions', () {
-      expect(rules, contains('match /product_costs/{productId}'));
-      expect(
-          rules,
-          contains(
-              "allow read: if hasPermission(merchantId, 'can_view_cost');"));
+    test('protected product cost collection requires explicit branch-aware permissions', () {
+      expect(rules, contains('match /product_costs/{costId}'));
+      expect(rules, contains("hasPermission(merchantId, 'can_view_cost')"));
       expect(
           rules,
           contains(
@@ -132,8 +129,19 @@ void main() {
           rules,
           contains(
               "request.resource.data.get('merchantId', '') == merchantId"));
-      expect(rules,
-          contains("request.resource.data.get('productId', '') == productId"));
+      expect(
+          rules,
+          contains(
+              "costId == request.resource.data.get('branchId','') + '_' + request.resource.data.get('productId','')"));
+      expect(
+          rules,
+          contains(
+              "hasBranchAccess(merchantId, request.resource.data.get('branchId','main'))"));
+      expect(
+          rules,
+          contains(
+              "costId == request.resource.data.get('productId','')"));
+      expect(rules, contains('isOwner(merchantId)'));
       expect(
           rules, contains("request.resource.data.get('costPrice', -1) >= 0"));
       expect(
