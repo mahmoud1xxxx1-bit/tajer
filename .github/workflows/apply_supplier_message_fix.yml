@@ -47,6 +47,11 @@ jobs:
           assert "tajer_message.dart" not in s, 'TajerMessage already imported'
           s = s.replace(anchor, addition, 1)
 
+          stream_error = """              error: (e, _) =>\n                  Center(child: Text(isAr ? 'خطأ: $e' : 'Error: $e')),\n"""
+          stream_safe = """              error: (e, _) {\n                final message = AppErrorMapper.fromError(e, domain: 'supplier');\n                return Center(\n                  child: Padding(\n                    padding: const EdgeInsets.all(24),\n                    child: Text(\n                      message.message(isAr),\n                      textAlign: TextAlign.center,\n                      style: const TextStyle(fontFamily: 'Tajawal'),\n                    ),\n                  ),\n                );\n              },\n"""
+          assert s.count(stream_error) == 1, 'supplier stream error UI mismatch'
+          s = s.replace(stream_error, stream_safe, 1)
+
           raw_error = re.compile(
               r"if \(context\.mounted\) \{\s*"
               r"ScaffoldMessenger\.of\(context\)\.showSnackBar\(\s*"
@@ -72,56 +77,19 @@ jobs:
               s,
           )
 
-          overpay = re.compile(
-              r"ScaffoldMessenger\.of\(context\)\.showSnackBar\(\s*"
-              r"SnackBar\(\s*"
-              r"content: Text\(\s*"
-              r"isAr\s*\? 'مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق في هذا الفرع\.'\s*"
-              r": 'Payment cannot exceed the supplier outstanding debt in this branch\.',\s*"
-              r"style: const TextStyle\(fontFamily: 'Tajawal'\),?\s*"
-              r"\),\s*"
-              r"backgroundColor: Colors\.orange,?\s*"
-              r"\),\s*"
-              r"\);"
-          )
-          assert len(list(overpay.finditer(s))) == 1, 'supplier overpayment snackbar mismatch'
-          s = overpay.sub(
-              "await TajerMessage.show(\n"
-              "                    context,\n"
-              "                    AppErrorMapper.validation(\n"
-              "                      ar: 'مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق في هذا الفرع.',\n"
-              "                      en: 'Payment cannot exceed the supplier outstanding debt in this branch.',\n"
-              "                    ),\n"
-              "                  );",
-              s,
-          )
+          overpay = """                  ScaffoldMessenger.of(context).showSnackBar(\n                    SnackBar(\n                      content: Text(\n                        isAr\n                            ? 'مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق في هذا الفرع.'\n                            : 'Payment cannot exceed the supplier outstanding debt in this branch.',\n                      ),\n                      backgroundColor: Colors.red,\n                    ),\n                  );\n"""
+          overpay_safe = """                  await TajerMessage.show(\n                    context,\n                    AppErrorMapper.validation(\n                      ar: 'مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق في هذا الفرع.',\n                      en: 'Payment cannot exceed the supplier outstanding debt in this branch.',\n                    ),\n                  );\n"""
+          assert s.count(overpay) == 1, 'supplier overpayment snackbar mismatch'
+          s = s.replace(overpay, overpay_safe, 1)
 
-          no_shift = re.compile(
-              r"ScaffoldMessenger\.of\(context\)\.showSnackBar\(\s*"
-              r"SnackBar\(\s*"
-              r"content: Text\(\s*"
-              r"isAr\s*\? 'لا يمكن خصم سداد المورد من الدرج بدون وردية مفتوحة في هذا الفرع\.'\s*"
-              r": 'Open a shift in this branch before deducting supplier payment from the drawer\.',\s*"
-              r"style: const TextStyle\(fontFamily: 'Tajawal'\),?\s*"
-              r"\),\s*"
-              r"backgroundColor: Colors\.orange,?\s*"
-              r"\),\s*"
-              r"\);"
-          )
-          assert len(list(no_shift.finditer(s))) == 1, 'supplier open-shift snackbar mismatch'
-          s = no_shift.sub(
-              "await TajerMessage.show(\n"
-              "                    context,\n"
-              "                    AppErrorMapper.validation(\n"
-              "                      ar: 'لا يمكن خصم سداد المورد من الدرج بدون وردية مفتوحة في هذا الفرع.',\n"
-              "                      en: 'Open a shift in this branch before deducting supplier payment from the drawer.',\n"
-              "                    ),\n"
-              "                  );",
-              s,
-          )
+          no_shift = """                  ScaffoldMessenger.of(context).showSnackBar(\n                    SnackBar(\n                      content: Text(\n                        isAr\n                            ? 'لا يمكن خصم سداد المورد من الدرج بدون وردية مفتوحة في هذا الفرع.'\n                            : 'Open a shift in this branch before deducting supplier payment from the drawer.',\n                      ),\n                      backgroundColor: Colors.red,\n                    ),\n                  );\n"""
+          no_shift_safe = """                  await TajerMessage.show(\n                    context,\n                    AppErrorMapper.validation(\n                      ar: 'لا يمكن خصم سداد المورد من الدرج بدون وردية مفتوحة في هذا الفرع.',\n                      en: 'Open a shift in this branch before deducting supplier payment from the drawer.',\n                    ),\n                  );\n"""
+          assert s.count(no_shift) == 1, 'supplier open-shift snackbar mismatch'
+          s = s.replace(no_shift, no_shift_safe, 1)
 
           assert 'ScaffoldMessenger.of(context)' not in s, 'raw ScaffoldMessenger remains in supplier details'
           assert "e.toString().replaceAll('Exception: ', '')" not in s, 'raw exception remains'
+          assert "'خطأ: $e'" not in s and "'Error: $e'" not in s, 'raw stream exception remains'
           p.write_text(s, encoding='utf-8')
           PY
 
