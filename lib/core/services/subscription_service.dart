@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -18,9 +17,9 @@ class SubscriptionService {
     await Purchases.setLogLevel(LogLevel.debug);
 
     PurchasesConfiguration? configuration;
-    if (Platform.isAndroid) {
+    if (defaultTargetPlatform == TargetPlatform.android) {
       configuration = PurchasesConfiguration(_googleApiKey);
-    } else if (Platform.isIOS) {
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
       configuration = PurchasesConfiguration(_appleApiKey);
     }
 
@@ -31,7 +30,7 @@ class SubscriptionService {
         configuration.appUserID = uid;
       }
       await Purchases.configure(configuration);
-      
+
       // Update our database based on the latest customer info
       await _syncSubscriptionStatus();
     }
@@ -42,7 +41,7 @@ class SubscriptionService {
       final customerInfo = await Purchases.getCustomerInfo();
       await updatePlanFromCustomerInfo(customerInfo);
     } on PlatformException catch (e) {
-      print("Failed to sync subscription status: $e");
+      debugPrint('Failed to sync subscription status: $e');
     }
   }
 
@@ -55,7 +54,7 @@ class SubscriptionService {
 
     // Don't override 'employee' plan, employees inherit from their merchant
     if (userDoc.exists && userDoc.data()?['role'] == 'employee') {
-      return; 
+      return;
     }
 
     // Default plan logic
@@ -82,22 +81,22 @@ class SubscriptionService {
       }
       return [];
     } on PlatformException catch (e) {
-      print("Failed to get offerings: $e");
+      debugPrint('Failed to get offerings: $e');
       return [];
     }
   }
 
   Future<bool> purchasePackage(Package package) async {
     try {
-      final result = await Purchases.purchasePackage(package);
+      await Purchases.purchasePackage(package);
       final customerInfo = await Purchases.getCustomerInfo();
       await updatePlanFromCustomerInfo(customerInfo);
       return customerInfo.entitlements.all[BillingConstants.entitlementMultiBranch]?.isActive == true ||
-             customerInfo.entitlements.all[BillingConstants.entitlementMain]?.isActive == true;
+          customerInfo.entitlements.all[BillingConstants.entitlementMain]?.isActive == true;
     } on PlatformException catch (e) {
-      var errorCode = PurchasesErrorHelper.getErrorCode(e);
+      final errorCode = PurchasesErrorHelper.getErrorCode(e);
       if (errorCode != PurchasesErrorCode.purchaseCancelledError) {
-        print("Failed to purchase: $e");
+        debugPrint('Failed to purchase: $e');
       }
       return false;
     }
@@ -108,9 +107,9 @@ class SubscriptionService {
       final customerInfo = await Purchases.restorePurchases();
       await updatePlanFromCustomerInfo(customerInfo);
       return customerInfo.entitlements.all[BillingConstants.entitlementMultiBranch]?.isActive == true ||
-             customerInfo.entitlements.all[BillingConstants.entitlementMain]?.isActive == true;
+          customerInfo.entitlements.all[BillingConstants.entitlementMain]?.isActive == true;
     } on PlatformException catch (e) {
-      print("Failed to restore purchases: $e");
+      debugPrint('Failed to restore purchases: $e');
       return false;
     }
   }
