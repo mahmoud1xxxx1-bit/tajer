@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const { onDocumentUpdated } = require('firebase-functions/v2/firestore');
 const { onRequest } = require('firebase-functions/v2/https');
 const { defineJsonSecret } = require('firebase-functions/params');
-const { getFirestore, FieldValue, Timestamp } = require('firebase-admin/firestore');
+const { getFirestore, Timestamp } = require('firebase-admin/firestore');
 
 const revenueCatServerConfig = defineJsonSecret('REVENUECAT_SERVER_CONFIG');
 
@@ -94,7 +94,7 @@ async function fetchRevenueCatSubscriber(appUserId) {
   return payload?.subscriber || {};
 }
 
-async function syncRevenueCatEntitlementForUid(uid, source) {
+async function syncRevenueCatEntitlementForUid(uid) {
   const db = getFirestore();
   const userRef = db.collection('users').doc(uid);
   const userSnapshot = await userRef.get();
@@ -113,6 +113,9 @@ async function syncRevenueCatEntitlementForUid(uid, source) {
     trustedPlan = 'guest';
   }
 
+  // Only write entitlement fields that are already protected from client
+  // mutation by firestore.rules. Client-only sync request metadata stays
+  // non-authoritative and never influences the resulting plan.
   const update = {
     plan: trustedPlan,
     verifiedPlan: trustedPlan,
@@ -121,9 +124,6 @@ async function syncRevenueCatEntitlementForUid(uid, source) {
     expiresAt: derived.expiresAtMs == null
       ? null
       : Timestamp.fromMillis(derived.expiresAtMs),
-    subscriptionSyncedAt: FieldValue.serverTimestamp(),
-    subscriptionSyncAuthority: 'revenuecat_server',
-    subscriptionLastSyncSource: String(source || 'unknown'),
   };
 
   await userRef.update(update);
@@ -153,10 +153,7 @@ const syncSubscriptionRequestHandler = async (event) => {
   const uid = String(event.params.userId || '').trim();
   if (!uid) return;
 
-  await syncRevenueCatEntitlementForUid(
-    uid,
-    after.subscriptionSyncSource || 'client_refresh',
-  );
+  await syncRevenueCatEntitlementForUid(uid);
 };
 
 exports.syncRevenueCatSubscription = onDocumentUpdated(
@@ -204,10 +201,7 @@ exports.revenueCatWebhook = onRequest(
     }
 
     try {
-      await syncRevenueCatEntitlementForUid(
-        appUserId,
-        `webhook:${String(event.type || 'unknown')}`,
-      );
+      await syncRevenueCatEntitlementForUid(appUserId);
       res.status(200).send('OK');
     } catch (error) {
       console.error('RevenueCat webhook sync failed', error);
