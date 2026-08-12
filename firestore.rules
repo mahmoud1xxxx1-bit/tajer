@@ -98,22 +98,16 @@ service cloud.firestore {
         !request.resource.data.diff(resource.data).affectedKeys().hasAny(['quantity', 'initialQuantity']);
     }
     function isOrderAccountingUpdate(merchantId) {
-      return resource != null &&
-        hasDataBranchAccess(merchantId, resource.data) &&
-        request.resource.data.get('merchantId', '') == resource.data.get('merchantId', '') &&
-        request.resource.data.get('branchId', 'main') == resource.data.get('branchId', 'main') &&
-        request.resource.data.get('creatorId', '') == resource.data.get('creatorId', '') &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['paidAmount', 'updatedAt']) &&
-        hasPermission(merchantId, 'can_receive_payments');
+      return false; // Server-Authoritative Fix
     }
     function isOrderStatusTransition(merchantId) {
+      // Drafts can be updated by client, completed/cancelled handled by functions
       return resource != null &&
         hasDataBranchAccess(merchantId, resource.data) &&
         request.resource.data.get('merchantId', '') == resource.data.get('merchantId', '') &&
         request.resource.data.get('branchId', 'main') == resource.data.get('branchId', 'main') &&
         request.resource.data.get('creatorId', '') == resource.data.get('creatorId', '') &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'statusTransition', 'updatedAt']) &&
-        (isOrderCancellation(merchantId) || hasPermission(merchantId, 'can_create_orders'));
+        resource.data.status == 'draft' && request.resource.data.status == 'draft';
     }
     function canCreateInventory(merchantId) {
       let data = getUserData();
@@ -125,15 +119,8 @@ service cloud.firestore {
       let bAcc = isAdmin() || isM || (isE && data.get('assignedBranchIds', ['main']).hasAny([request.resource.data.get('branchId', 'main')]));
       
       let cMan = isAdmin() || isM || (isE && p.get('can_manage_inventory', false) == true);
-      let cCre = isAdmin() || isM || (isE && p.get('can_create_orders', false) == true);
 
-      return bAcc && (cMan || (cCre &&
-        request.resource.data.keys().hasOnly(['id', 'merchantId', 'branchId', 'itemId', 'itemType', 'quantity', 'initialQuantity', 'updatedAt']) &&
-        request.resource.data.get('merchantId', '') == merchantId &&
-        request.resource.data.get('quantity', -1) is number &&
-        request.resource.data.get('initialQuantity', -1) is number &&
-        request.resource.data.get('quantity', -1) >= 0 &&
-        request.resource.data.get('initialQuantity', -1) >= request.resource.data.get('quantity', -1)));
+      return bAcc && cMan; // Server-Authoritative Fix: order sales no longer create/update inventory directly
     }
     
     function canUpdateInventory(merchantId, inventoryId) {
@@ -147,18 +134,8 @@ service cloud.firestore {
       let bAcc = isAdmin() || isM || (isE && data.get('assignedBranchIds', ['main']).hasAny([d.get('branchId', 'main')]));
       
       let cMan = isAdmin() || isM || (isE && p.get('can_manage_inventory', false) == true);
-      let cCre = isAdmin() || isM || (isE && p.get('can_create_orders', false) == true);
-      let cCan = isAdmin() || isM || (isE && p.get('can_cancel_orders', false) == true);
-
-      let isVal = resource != null && request.resource.data.diff(d).affectedKeys().hasOnly(['id', 'quantity', 'initialQuantity', 'updatedAt']) &&
-        request.resource.data.get('id', inventoryId) == d.get('id', inventoryId) &&
-        request.resource.data.get('initialQuantity', d.get('quantity', 0)) == d.get('initialQuantity', d.get('quantity', 0)) &&
-        request.resource.data.get('quantity', -1) is number &&
-        d.get('quantity', -1) is number;
         
-      return bAcc && (cMan || 
-        (cCre && isVal && request.resource.data.get('quantity', -1) >= 0 && request.resource.data.get('quantity', -1) <= d.get('quantity', -1)) || 
-        (cCan && isVal && request.resource.data.get('quantity', -1) >= d.get('quantity', -1)));
+      return bAcc && cMan; // Server-Authoritative Fix: order sales no longer create/update inventory directly
     }
     
     function isCheckoutInventoryLogCreate(merchantId) {
@@ -220,21 +197,20 @@ service cloud.firestore {
     match /customers/{customerId} {
       allow read: if resource == null || hasAccess(resource.data.get('merchantId', ''));
       allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_manage_customers');
-      allow update: if resource != null && (hasPermission(resource.data.get('merchantId', ''), 'can_manage_customers') || isCustomerOrderAccountingUpdate(resource.data.get('merchantId', '')) || isCustomerDebtAccountingUpdate(resource.data.get('merchantId', '')));
+      allow update: if resource != null && hasPermission(resource.data.get('merchantId', ''), 'can_manage_customers') && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['totalDebt', 'branchDebts', 'totalPurchases', 'orderCount', 'lastPurchaseDate']);
       allow delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_customers');
     }
     match /orders/{orderId} {
       allow get: if (resource == null && isAuthenticated()) || canReadOrder(resource.data.get('merchantId', ''), resource.data);
       allow list: if resource != null && canReadOrder(resource.data.get('merchantId', ''), resource.data);
-      allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_create_orders') && hasDataBranchAccess(request.resource.data.get('merchantId', ''), request.resource.data);
-      allow update: if isOrderStatusTransition(resource.data.get('merchantId', '')) ||
-        isOrderAccountingUpdate(resource.data.get('merchantId', ''));
+      allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_create_orders') && hasDataBranchAccess(request.resource.data.get('merchantId', ''), request.resource.data) && request.resource.data.status == 'draft';
+      allow update: if isOrderStatusTransition(resource.data.get('merchantId', ''));
       allow delete: if resource == null || isOwner(resource.data.get('merchantId', ''));
     }
     match /shifts/{shiftId} {
       allow read: if resource != null && hasAccess(resource.data.get('merchantId', '')) && hasDataBranchAccess(resource.data.get('merchantId', ''), resource.data);
       allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_create_orders') && hasDataBranchAccess(request.resource.data.get('merchantId', ''), request.resource.data);
-      allow update: if resource != null && hasAccess(resource.data.get('merchantId', '')) && hasDataBranchAccess(resource.data.get('merchantId', ''), resource.data);
+      allow update: if resource != null && hasAccess(resource.data.get('merchantId', '')) && hasDataBranchAccess(resource.data.get('merchantId', ''), resource.data) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['cashSales', 'cardTotal', 'transferTotal', 'refundsCash', 'refundsCard', 'refundsTransfer', 'debtCollectionsCash', 'debtCollectionsCard', 'debtCollectionsTransfer', 'expectedCash', 'expectedCard', 'expectedTransfer', 'actualCash', 'actualCard', 'actualTransfer', 'cashDifference', 'cardDifference', 'transferDifference', 'status']);
       allow delete: if resource == null || isOwner(resource.data.get('merchantId', ''));
     }
     match /raw_materials/{materialId} {

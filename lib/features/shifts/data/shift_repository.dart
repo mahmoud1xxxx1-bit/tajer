@@ -84,59 +84,25 @@ class ShiftRepository {
   }
 
   Future<void> closeShift(Shift shift) async {
-    final shiftRef = _firestore.collection('shifts').doc(shift.id);
-    final runtimeRef = _runtimeRef(shift.merchantId, shift.branchId);
 
-    await _firestore.runTransaction((transaction) async {
-      final current = await transaction.get(shiftRef);
-      if (!current.exists || current.data() == null) {
-        throw Exception('الوردية غير موجودة.');
-      }
-      final data = current.data()!;
-      final currentBranchId = data['branchId']?.toString() ?? 'main';
-      if (currentBranchId != shift.branchId) {
-        throw Exception('لا يمكن إغلاق وردية تابعة لفرع مختلف.');
-      }
-      if (data['status']?.toString() != 'open' || data['endTime'] != null) {
-        throw Exception('هذه الوردية مغلقة بالفعل.');
-      }
-
-      final runtime = await transaction.get(runtimeRef);
-      final runtimeOpenId = runtime.data()?['openShiftId']?.toString();
-      if (runtimeOpenId != null &&
-          runtimeOpenId.isNotEmpty &&
-          runtimeOpenId != shift.id) {
-        throw Exception('حالة الوردية في هذا الفرع غير متطابقة.');
-      }
-
-      transaction.update(shiftRef, {
-        'branchId': shift.branchId,
-        'endTime': shift.endTime,
-        'expectedCash': shift.expectedCash,
+    try {
+      final callable = FirebaseFunctions.instanceFor(region: 'europe-west1').httpsCallable('closeShift');
+      final operationId = const Uuid().v4();
+      
+      await callable.call({
+        'operationId': operationId,
+        'shiftId': shift.id,
         'actualCash': shift.actualCash,
         'actualCard': shift.actualCard,
         'actualTransfer': shift.actualTransfer,
-        'cardTotal': shift.cardTotal,
-        'transferTotal': shift.transferTotal,
-        'cashSales': shift.cashSales,
-        'refundsCash': shift.refundsCash,
-        'refundsCard': shift.refundsCard,
-        'refundsTransfer': shift.refundsTransfer,
-        'totalTax': shift.totalTax,
-        'status': 'closed',
       });
-      transaction.set(
-          runtimeRef,
-          {
-            'merchantId': shift.merchantId,
-            'branchId': shift.branchId,
-            'openShiftId': null,
-            'lastClosedShiftId': shift.id,
-            'updatedAt': FieldValue.serverTimestamp(),
-          },
-          SetOptions(merge: true));
-    });
-  }
+    } on FirebaseFunctionsException catch (e) {
+      throw Exception('Server Error: ${e.message}');
+    } catch (e) {
+      throw Exception('Failed to close shift: $e');
+    }
+
+}
 
   Future<List<Shift>> getClosedShifts(
     String merchantId, {

@@ -192,3 +192,20 @@ exports.captureOrderCostSnapshot = onDocumentCreated(
 );
 
 exports._testCaptureOrderCostSnapshotHandler = captureOrderCostSnapshotHandler;
+
+const { onCall } = require('firebase-functions/v2/https');
+const { createOrderCallable } = require('./callables/create_order');
+const { cancelOrderCallable } = require('./callables/cancel_order');
+const { partialReturnCallable } = require('./callables/partial_return');
+const { payCustomerDebtCallable } = require('./callables/pay_customer_debt');
+const { closeShiftCallable } = require('./callables/close_shift');
+
+// Options to ensure long enough timeout for transactions
+const callOpts = { region: 'europe-west1', timeoutSeconds: 60 };
+
+exports.createOrder = onCall(callOpts, createOrderCallable);
+exports.cancelOrder = onCall(callOpts, cancelOrderCallable);
+exports.partialReturn = onCall(callOpts, partialReturnCallable);
+exports.payCustomerDebt = onCall(callOpts, payCustomerDebtCallable);
+exports.closeShift = onCall(callOpts, closeShiftCallable);
+
