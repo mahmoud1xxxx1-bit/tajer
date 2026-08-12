@@ -14,6 +14,7 @@ import '../domain/expense.dart';
 import 'package:intl/intl.dart';
 import '../../authentication/domain/app_user.dart';
 import '../../shifts/data/shift_repository.dart';
+import 'package:tajer/core/utils/app_snackbar.dart';
 
 class ExpensesScreen extends ConsumerWidget {
   const ExpensesScreen({super.key});

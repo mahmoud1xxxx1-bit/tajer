@@ -22,7 +22,7 @@ final productRepositoryProvider =
 );
 
 typedef ProductRepositoryRef = AutoDisposeProviderRef<ProductRepository>;
-String _$productsStreamHash() => r'1e8fe45ef54f8d869215f49e7cc6c79fdb611eb7';
+String _$productsStreamHash() => r'684936bb5b3fa68c1ffd96e7dbd773a5d15be0bd';
 
 /// See also [productsStream].
 @ProviderFor(productsStream)
