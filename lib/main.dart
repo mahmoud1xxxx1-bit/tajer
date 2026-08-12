@@ -7,7 +7,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:io';
 import 'firebase_options.dart';
 import 'routing/app_router.dart';
 import 'core/providers/settings_provider.dart';
@@ -37,7 +36,9 @@ void main() async {
 
   const bool useEmulator = bool.fromEnvironment('USE_EMULATOR', defaultValue: false);
   if (useEmulator) {
-    String emulatorHost = !kIsWeb && Platform.isAndroid ? '10.0.2.2' : '127.0.0.1';
+    final emulatorHost = !kIsWeb && defaultTargetPlatform == TargetPlatform.android
+        ? '10.0.2.2'
+        : '127.0.0.1';
     FirebaseFirestore.instance.useFirestoreEmulator(emulatorHost, 8080);
     await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
   }
