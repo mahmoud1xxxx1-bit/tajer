@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/plan_tier.dart';
 import '../models/subscription_policy.dart';
 import '../models/branch_mode.dart';
-import 'entitlement_evaluator.dart';
+
 
 class EntitlementIntegration {
   static PlanTier? _testInjectedTier;

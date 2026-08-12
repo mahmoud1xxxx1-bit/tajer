@@ -212,7 +212,7 @@ class DashboardHome extends ConsumerWidget {
     final ordersAsync = ref.watch(ordersStreamProvider);
     final productsAsync = ref.watch(productsStreamProvider);
     final currentCurrency = ref.watch(currencyProvider);
-    final appUser = ref.watch(appUserProvider).value;
+
     final policy = ref.watch(accessPolicyProvider);
     final storeProfile = ref.watch(storeProfileProvider).value;
 

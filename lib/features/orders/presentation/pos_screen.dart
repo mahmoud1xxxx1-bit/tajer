@@ -12,7 +12,7 @@ import '../domain/discount_validator.dart';
 import '../../customers/domain/customer.dart';
 import '../../customers/data/customer_repository.dart';
 import '../../../core/services/activity_logger.dart';
-import '../../../core/services/pdf_service.dart';
+
 import '../../../core/services/printer_service.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
@@ -243,7 +243,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     });
   }
 
-  double get _cartTotal => _cart.fold(0.0, (sum, item) => sum + item.total);
+
 
   double get _grandTotal {
     final storeProfile = ref.read(storeProfileProvider).value;
@@ -488,7 +488,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           backgroundColor: Colors.green,
         ));
       }
-      final storeProfile = ref.read(storeProfileProvider).value;
+
       double? tax = storeProfile?.defaultTaxPercentage;
 
       // Do not pop the POS screen! Just stay on it for the next customer.
