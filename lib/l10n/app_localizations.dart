@@ -101,2773 +101,2773 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ§Ø¬Ø±'**
+  /// **'تاجر'**
   String get appTitle;
 
   /// No description provided for @loginTitle.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„'**
+  /// **'تسجيل الدخول'**
   String get loginTitle;
 
   /// No description provided for @products.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª'**
+  /// **'المنتجات'**
   String get products;
 
   /// No description provided for @customers.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡'**
+  /// **'العملاء'**
   String get customers;
 
   /// No description provided for @orders.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø·Ù„Ø¨Ø§Øª'**
+  /// **'الطلبات'**
   String get orders;
 
   /// No description provided for @settings.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª'**
+  /// **'الإعدادات'**
   String get settings;
 
   /// No description provided for @dashboard.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…'**
+  /// **'لوحة التحكم'**
   String get dashboard;
 
   /// No description provided for @adminPanel.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„ÙˆØ­Ø© Ø§Ù„Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø¹Ù„ÙŠØ§'**
+  /// **'لوحة الإدارة العليا'**
   String get adminPanel;
 
   /// No description provided for @expenses.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª'**
+  /// **'المصروفات'**
   String get expenses;
 
   /// No description provided for @suppliers.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…ÙˆØ±Ø¯ÙŠÙ†'**
+  /// **'الموردين'**
   String get suppliers;
 
   /// No description provided for @categories.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„ØªØµÙ†ÙŠÙØ§Øª'**
+  /// **'التصنيفات'**
   String get categories;
 
   /// No description provided for @inventoryLog.
   ///
   /// In ar, this message translates to:
-  /// **'Ø³Ø¬Ù„ Ø§Ù„Ù…Ø®Ø²ÙˆÙ†'**
+  /// **'سجل المخزون'**
   String get inventoryLog;
 
   /// No description provided for @reports.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ±'**
+  /// **'التقارير'**
   String get reports;
 
   /// No description provided for @totalSales.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª'**
+  /// **'إجمالي المبيعات'**
   String get totalSales;
 
   /// No description provided for @ordersCount.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¹Ø¯Ø¯ Ø§Ù„Ø·Ù„Ø¨Ø§Øª'**
+  /// **'عدد الطلبات'**
   String get ordersCount;
 
   /// No description provided for @quickActions.
   ///
   /// In ar, this message translates to:
-  /// **'Ø£ÙˆØ§Ù…Ø± Ø³Ø±ÙŠØ¹Ø©'**
+  /// **'أوامر سريعة'**
   String get quickActions;
 
   /// No description provided for @managementAndInventory.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¥Ø¯Ø§Ø±Ø© ÙˆØ§Ù„Ù…Ø®Ø²ÙˆÙ†'**
+  /// **'الإدارة والمخزون'**
   String get managementAndInventory;
 
   /// No description provided for @add.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¶Ø§ÙØ©'**
+  /// **'إضافة'**
   String get add;
 
   /// No description provided for @edit.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ¹Ø¯ÙŠÙ„'**
+  /// **'تعديل'**
   String get edit;
 
   /// No description provided for @delete.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø°Ù'**
+  /// **'حذف'**
   String get delete;
 
   /// No description provided for @save.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­ÙØ¸'**
+  /// **'حفظ'**
   String get save;
 
   /// No description provided for @cancel.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ù„ØºØ§Ø¡'**
+  /// **'إلغاء'**
   String get cancel;
 
   /// No description provided for @confirm.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ£ÙƒÙŠØ¯'**
+  /// **'تأكيد'**
   String get confirm;
 
   /// No description provided for @update.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ­Ø¯ÙŠØ«'**
+  /// **'تحديث'**
   String get update;
 
   /// No description provided for @name.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø§Ø³Ù…'**
+  /// **'الاسم'**
   String get name;
 
   /// No description provided for @price.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø³Ø¹Ø±'**
+  /// **'السعر'**
   String get price;
 
   /// No description provided for @quantity.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„ÙƒÙ…ÙŠØ©'**
+  /// **'الكمية'**
   String get quantity;
 
   /// No description provided for @barcode.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¨Ø§Ø±ÙƒÙˆØ¯'**
+  /// **'الباركود'**
   String get barcode;
 
   /// No description provided for @category.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„ØªØµÙ†ÙŠÙ'**
+  /// **'التصنيف'**
   String get category;
 
   /// No description provided for @phone.
   ///
   /// In ar, this message translates to:
-  /// **'Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ'**
+  /// **'رقم الهاتف'**
   String get phone;
 
   /// No description provided for @email.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ'**
+  /// **'البريد الإلكتروني'**
   String get email;
 
   /// No description provided for @password.
   ///
   /// In ar, this message translates to:
-  /// **'ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±'**
+  /// **'كلمة المرور'**
   String get password;
 
   /// No description provided for @notes.
   ///
   /// In ar, this message translates to:
-  /// **'Ù…Ù„Ø§Ø­Ø¸Ø§Øª'**
+  /// **'ملاحظات'**
   String get notes;
 
   /// No description provided for @date.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„ØªØ§Ø±ÙŠØ®'**
+  /// **'التاريخ'**
   String get date;
 
   /// No description provided for @scanBarcode.
   ///
   /// In ar, this message translates to:
-  /// **'Ù…Ø³Ø­ Ø§Ù„Ø¨Ø§Ø±ÙƒÙˆØ¯'**
+  /// **'مسح الباركود'**
   String get scanBarcode;
 
   /// No description provided for @searchByBarcode.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¨Ø­Ø« Ø¨Ø§Ù„Ø¨Ø§Ø±ÙƒÙˆØ¯'**
+  /// **'بحث بالباركود'**
   String get searchByBarcode;
 
   /// No description provided for @productName.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ø³Ù… Ø§Ù„Ù…Ù†ØªØ¬'**
+  /// **'اسم المنتج'**
   String get productName;
 
   /// No description provided for @availableQuantity.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„ÙƒÙ…ÙŠØ© Ø§Ù„Ù…ØªØ§Ø­Ø©'**
+  /// **'الكمية المتاحة'**
   String get availableQuantity;
 
   /// No description provided for @noCategory.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¨Ø¯ÙˆÙ† ØªØµÙ†ÙŠÙ'**
+  /// **'بدون تصنيف'**
   String get noCategory;
 
   /// No description provided for @logout.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬'**
+  /// **'تسجيل الخروج'**
   String get logout;
 
   /// No description provided for @upgradeAccount.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ±Ù‚ÙŠØ© Ø§Ù„Ø­Ø³Ø§Ø¨ (Ø±Ø¨Ø· Ø¨Ù€ Google)'**
+  /// **'ترقية الحساب (ربط بـ Google)'**
   String get upgradeAccount;
 
   /// No description provided for @subscriptions.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø§Ø´ØªØ±Ø§ÙƒØ§Øª ÙˆØ§Ù„Ø¨Ø§Ù‚Ø§Øª'**
+  /// **'الاشتراكات والباقات'**
   String get subscriptions;
 
   /// No description provided for @language.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„ØºØ© Ø§Ù„ØªØ·Ø¨ÙŠÙ‚'**
+  /// **'لغة التطبيق'**
   String get language;
 
   /// No description provided for @currency.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¹Ù…Ù„Ø© Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ©'**
+  /// **'العملة الأساسية'**
   String get currency;
 
   /// No description provided for @theme.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…Ø¸Ù‡Ø±'**
+  /// **'المظهر'**
   String get theme;
 
   /// No description provided for @themeSystem.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ„Ù‚Ø§Ø¦ÙŠ'**
+  /// **'تلقائي'**
   String get themeSystem;
 
   /// No description provided for @themeLight.
   ///
   /// In ar, this message translates to:
-  /// **'ÙØ§ØªØ­'**
+  /// **'فاتح'**
   String get themeLight;
 
   /// No description provided for @themeDark.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¯Ø§ÙƒÙ†'**
+  /// **'داكن'**
   String get themeDark;
 
   /// No description provided for @error.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø¯Ø« Ø®Ø·Ø£'**
+  /// **'حدث خطأ'**
   String get error;
 
   /// No description provided for @success.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ… Ø¨Ù†Ø¬Ø§Ø­'**
+  /// **'تم بنجاح'**
   String get success;
 
   /// No description provided for @loading.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ­Ù…ÙŠÙ„...'**
+  /// **'جاري التحميل...'**
   String get loading;
 
   /// No description provided for @requiredField.
   ///
   /// In ar, this message translates to:
-  /// **'Ù…Ø·Ù„ÙˆØ¨'**
+  /// **'مطلوب'**
   String get requiredField;
 
   /// No description provided for @currency_SAR.
   ///
   /// In ar, this message translates to:
-  /// **'Ø±ÙŠØ§Ù„ Ø³Ø¹ÙˆØ¯ÙŠ'**
+  /// **'ريال سعودي'**
   String get currency_SAR;
 
   /// No description provided for @currency_USD.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¯ÙˆÙ„Ø§Ø± Ø£Ù…Ø±ÙŠÙƒÙŠ'**
+  /// **'دولار أمريكي'**
   String get currency_USD;
 
   /// No description provided for @currency_YER.
   ///
   /// In ar, this message translates to:
-  /// **'Ø±ÙŠØ§Ù„ ÙŠÙ…Ù†ÙŠ'**
+  /// **'ريال يمني'**
   String get currency_YER;
 
   /// No description provided for @currency_AED.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¯Ø±Ù‡Ù… Ø¥Ù…Ø§Ø±Ø§ØªÙŠ'**
+  /// **'درهم إماراتي'**
   String get currency_AED;
 
   /// No description provided for @currency_JOD.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¯ÙŠÙ†Ø§Ø± Ø£Ø±Ø¯Ù†ÙŠ'**
+  /// **'دينار أردني'**
   String get currency_JOD;
 
   /// No description provided for @currency_IQD.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¯ÙŠÙ†Ø§Ø± Ø¹Ø±Ø§Ù‚ÙŠ'**
+  /// **'دينار عراقي'**
   String get currency_IQD;
 
   /// No description provided for @currency_SYP.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„ÙŠØ±Ø© Ø³ÙˆØ±ÙŠØ©'**
+  /// **'ليرة سورية'**
   String get currency_SYP;
 
   /// No description provided for @currency_LBP.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„ÙŠØ±Ø© Ù„Ø¨Ù†Ø§Ù†ÙŠØ©'**
+  /// **'ليرة لبنانية'**
   String get currency_LBP;
 
   /// No description provided for @currency_KWD.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¯ÙŠÙ†Ø§Ø± ÙƒÙˆÙŠØªÙŠ'**
+  /// **'دينار كويتي'**
   String get currency_KWD;
 
   /// No description provided for @currency_EGP.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¬Ù†ÙŠÙ‡ Ù…ØµØ±ÙŠ'**
+  /// **'جنيه مصري'**
   String get currency_EGP;
 
   /// No description provided for @currency_DZD.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¯ÙŠÙ†Ø§Ø± Ø¬Ø²Ø§Ø¦Ø±ÙŠ'**
+  /// **'دينار جزائري'**
   String get currency_DZD;
 
   /// No description provided for @currency_LYD.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¯ÙŠÙ†Ø§Ø± Ù„ÙŠØ¨ÙŠ'**
+  /// **'دينار ليبي'**
   String get currency_LYD;
 
   /// No description provided for @currency_MAD.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¯Ø±Ù‡Ù… Ù…ØºØ±Ø¨ÙŠ'**
+  /// **'درهم مغربي'**
   String get currency_MAD;
 
   /// No description provided for @currency_BHD.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¯ÙŠÙ†Ø§Ø± Ø¨Ø­Ø±ÙŠÙ†ÙŠ'**
+  /// **'دينار بحريني'**
   String get currency_BHD;
 
   /// No description provided for @currency_QAR.
   ///
   /// In ar, this message translates to:
-  /// **'Ø±ÙŠØ§Ù„ Ù‚Ø·Ø±ÙŠ'**
+  /// **'ريال قطري'**
   String get currency_QAR;
 
   /// No description provided for @currency_OMR.
   ///
   /// In ar, this message translates to:
-  /// **'Ø±ÙŠØ§Ù„ Ø¹Ù…Ø§Ù†ÙŠ'**
+  /// **'ريال عماني'**
   String get currency_OMR;
 
   /// No description provided for @text1.
   ///
   /// In ar, this message translates to:
-  /// **'ÙˆØµÙ„Øª Ù„Ù„Ø­Ø¯ Ø§Ù„Ø£Ù‚ØµÙ‰!'**
+  /// **'وصلت للحد الأقصى!'**
   String get text1;
 
   /// No description provided for @text2.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø³Ø§Ø¨Ùƒ Ø§Ù„Ø­Ø§Ù„ÙŠ Ù‡Ùˆ Ø­Ø³Ø§Ø¨ Ø¶ÙŠÙ ØªØ¬Ø±ÙŠØ¨ÙŠ. Ù„Ù‚Ø¯ ÙˆØµÙ„Øª Ù„Ù„Ø­Ø¯ Ø§Ù„Ø£Ù‚ØµÙ‰ Ø§Ù„Ù…Ø³Ù…ÙˆØ­ Ø¨Ù‡ Ù„Ù„Ø¥Ø¶Ø§ÙØ§Øª.\n\nÙŠØ±Ø¬Ù‰ Ø±Ø¨Ø· Ø­Ø³Ø§Ø¨Ùƒ Ø¨Ù€ Google Ù„Ù„Ø§Ø³ØªÙ…Ø±Ø§Ø± ÙÙŠ Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ Ù…Ø¬Ø§Ù†Ø§Ù‹ ÙˆØ¨Ø¯ÙˆÙ† Ù‚ÙŠÙˆØ¯ØŒ ÙˆØ­ÙØ¸ Ø¨ÙŠØ§Ù†Ø§ØªÙƒ Ù…Ù† Ø§Ù„Ø¶ÙŠØ§Ø¹.'**
+  /// **'حسابك الحالي هو حساب ضيف تجريبي. لقد وصلت للحد الأقصى المسموح به للإضافات.\n\nيرجى ربط حسابك بـ Google للاستمرار في استخدام التطبيق مجاناً وبدون قيود، وحفظ بياناتك من الضياع.'**
   String get text2;
 
   /// No description provided for @text3.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø§Ø­Ù‚Ø§Ù‹'**
+  /// **'لاحقاً'**
   String get text3;
 
   /// No description provided for @text4.
   ///
   /// In ar, this message translates to:
-  /// **'Ø±Ø¨Ø· Ø¨Ø­Ø³Ø§Ø¨ Google'**
+  /// **'ربط بحساب Google'**
   String get text4;
 
   /// No description provided for @text5.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ… ØªØ±Ù‚ÙŠØ© Ø§Ù„Ø­Ø³Ø§Ø¨ Ø¨Ù†Ø¬Ø§Ø­! ÙŠÙ…ÙƒÙ†Ùƒ Ø§Ù„Ø¢Ù† Ø§Ù„Ø§Ø³ØªÙ…Ø±Ø§Ø± Ø¨Ù„Ø§ Ù‚ÙŠÙˆØ¯.'**
+  /// **'تم ترقية الحساب بنجاح! يمكنك الآن الاستمرار بلا قيود.'**
   String get text5;
 
   /// No description provided for @text6.
   ///
   /// In ar, this message translates to:
-  /// **'ÙØ§ØªÙˆØ±Ø© Ù…Ø¨ÙŠØ¹Ø§Øª'**
+  /// **'فاتورة مبيعات'**
   String get text6;
 
   /// No description provided for @text7.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¹Ù…ÙŠÙ„:'**
+  /// **'بيانات العميل:'**
   String get text7;
 
   /// No description provided for @text8.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ§Ø±ÙŠØ® Ø§Ù„Ø·Ù„Ø¨:'**
+  /// **'تاريخ الطلب:'**
   String get text8;
 
   /// No description provided for @text9.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…Ù†ØªØ¬'**
+  /// **'المنتج'**
   String get text9;
 
   /// No description provided for @text10.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„ÙƒÙ…ÙŠØ©'**
+  /// **'الكمية'**
   String get text10;
 
   /// No description provided for @text11.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø³Ø¹Ø±'**
+  /// **'السعر'**
   String get text11;
 
   /// No description provided for @text12.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ'**
+  /// **'الإجمالي'**
   String get text12;
 
   /// No description provided for @text13.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø³ØªØ­Ù‚:'**
+  /// **'الإجمالي المستحق:'**
   String get text13;
 
   /// No description provided for @text14.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø¯ÙÙˆØ¹:'**
+  /// **'المبلغ المدفوع:'**
   String get text14;
 
   /// No description provided for @text15.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…ØªØ¨Ù‚ÙŠ (Ø¢Ø¬Ù„):'**
+  /// **'المتبقي (آجل):'**
   String get text15;
 
   /// No description provided for @text16.
   ///
   /// In ar, this message translates to:
-  /// **'Ø´ÙƒØ±Ø§Ù‹ Ù„ØªØ¹Ø§Ù…Ù„ÙƒÙ… Ù…Ø¹Ù†Ø§!'**
+  /// **'شكراً لتعاملكم معنا!'**
   String get text16;
 
   /// No description provided for @text17.
   ///
   /// In ar, this message translates to:
-  /// **'ÙƒØ´Ù Ø­Ø³Ø§Ø¨ Ø¹Ù…ÙŠÙ„'**
+  /// **'كشف حساب عميل'**
   String get text17;
 
   /// No description provided for @text18.
   ///
   /// In ar, this message translates to:
-  /// **'Ø³Ø¬Ù„ Ø§Ù„Ø·Ù„Ø¨Ø§Øª:'**
+  /// **'سجل الطلبات:'**
   String get text18;
 
   /// No description provided for @text19.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ§Ø±ÙŠØ® Ø§Ù„Ø·Ù„Ø¨'**
+  /// **'تاريخ الطلب'**
   String get text19;
 
   /// No description provided for @text20.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…Ø¯ÙÙˆØ¹'**
+  /// **'المدفوع'**
   String get text20;
 
   /// No description provided for @text21.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…ØªØ¨Ù‚ÙŠ'**
+  /// **'المتبقي'**
   String get text21;
 
   /// No description provided for @text22.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø­Ø§Ù„Ø©'**
+  /// **'الحالة'**
   String get text22;
 
   /// No description provided for @text23.
   ///
   /// In ar, this message translates to:
-  /// **'cancelled\' ? \'Ù…Ù„ØºÙŠ'**
+  /// **'cancelled\' ? \'ملغي'**
   String get text23;
 
   /// No description provided for @text24.
   ///
   /// In ar, this message translates to:
-  /// **'Ù…Ø¹ØªÙ…Ø¯'**
+  /// **'معتمد'**
   String get text24;
 
   /// No description provided for @text25.
   ///
   /// In ar, this message translates to:
-  /// **'Ù…Ø³Ø­ Ø§Ù„Ø¨Ø§Ø±ÙƒÙˆØ¯'**
+  /// **'مسح الباركود'**
   String get text25;
 
   /// No description provided for @text26.
   ///
   /// In ar, this message translates to:
-  /// **'ÙØ´Ù„ ÙÙŠ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ø§Ù„Ù…Ø¬Ù‡ÙˆÙ„'**
+  /// **'فشل في تسجيل الدخول المجهول'**
   String get text26;
 
   /// No description provided for @text27.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ‡ÙŠØ¦Ø© Ù…Ø³Ø§Ø­Ø© Ø§Ù„Ø¹Ù…Ù„ Ø§Ù„Ø®Ø§ØµØ© Ø¨Ùƒ...'**
+  /// **'تهيئة مساحة العمل الخاصة بك...'**
   String get text27;
 
   /// No description provided for @text28.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©'**
+  /// **'إعادة المحاولة'**
   String get text28;
 
   /// No description provided for @text29.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… ØºÙŠØ± Ù…Ø³Ø¬Ù„ Ø§Ù„Ø¯Ø®ÙˆÙ„'**
+  /// **'المستخدم غير مسجل الدخول'**
   String get text29;
 
   /// No description provided for @text30.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ… Ø¥Ù„ØºØ§Ø¡ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„'**
+  /// **'تم إلغاء تسجيل الدخول'**
   String get text30;
 
   /// No description provided for @text31.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ… Ø±Ø¨Ø· Ø§Ù„Ø­Ø³Ø§Ø¨ Ø¨Ù†Ø¬Ø§Ø­!'**
+  /// **'تم ربط الحساب بنجاح!'**
   String get text31;
 
   /// No description provided for @text32.
   ///
   /// In ar, this message translates to:
-  /// **'ÙŠØ±Ø¬Ù‰ Ø¥Ø¯Ø®Ø§Ù„ Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ'**
+  /// **'يرجى إدخال رقم الهاتف'**
   String get text32;
 
   /// No description provided for @text33.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥ÙƒÙ…Ø§Ù„ Ø§Ù„ØªØ³Ø¬ÙŠÙ„'**
+  /// **'إكمال التسجيل'**
   String get text33;
 
   /// No description provided for @text34.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø­Ù…Ø§ÙŠØ© Ø¨ÙŠØ§Ù†Ø§ØªÙƒ Ù…Ù† Ø§Ù„Ø¶ÙŠØ§Ø¹ØŒ ÙŠØ±Ø¬Ù‰ Ø±Ø¨Ø· Ø­Ø³Ø§Ø¨Ùƒ Ø¨Ù€ Google ÙˆØ¥Ø¯Ø®Ø§Ù„ Ø±Ù‚Ù… Ù„Ù„ØªÙˆØ§ØµÙ„.'**
+  /// **'لحماية بياناتك من الضياع، يرجى ربط حسابك بـ Google وإدخال رقم للتواصل.'**
   String get text34;
 
   /// No description provided for @text35.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø±Ø¨Ø· Ø¨Ø­Ø³Ø§Ø¨ Google'**
+  /// **'الربط بحساب Google'**
   String get text35;
 
   /// No description provided for @text36.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ… Ø±Ø¨Ø· Ø§Ù„Ø­Ø³Ø§Ø¨ Ø¨Ù†Ø¬Ø§Ø­'**
+  /// **'تم ربط الحساب بنجاح'**
   String get text36;
 
   /// No description provided for @text37.
   ///
   /// In ar, this message translates to:
-  /// **'Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ (Ø§Ù„ÙˆØ§ØªØ³Ø§Ø¨)'**
+  /// **'رقم الهاتف (الواتساب)'**
   String get text37;
 
   /// No description provided for @text38.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­ÙØ¸ ÙˆØ§Ù„Ù…ØªØ§Ø¨Ø¹Ø©'**
+  /// **'حفظ والمتابعة'**
   String get text38;
 
   /// No description provided for @text39.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„ØªØµÙ†ÙŠÙØ§Øª'**
+  /// **'إدارة التصنيفات'**
   String get text39;
 
   /// No description provided for @text40.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø§ ÙŠÙˆØ¬Ø¯ ØªØµÙ†ÙŠÙØ§Øª Ø­Ø§Ù„ÙŠØ§Ù‹'**
+  /// **'لا يوجد تصنيفات حالياً'**
   String get text40;
 
   /// No description provided for @text41.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¶Ø§ÙØ© ØªØµÙ†ÙŠÙ Ø¬Ø¯ÙŠØ¯'**
+  /// **'إضافة تصنيف جديد'**
   String get text41;
 
   /// No description provided for @text42.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ø³Ù… Ø§Ù„ØªØµÙ†ÙŠÙ'**
+  /// **'اسم التصنيف'**
   String get text42;
 
   /// No description provided for @text43.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ù„ØºØ§Ø¡'**
+  /// **'إلغاء'**
   String get text43;
 
   /// No description provided for @text44.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­ÙØ¸'**
+  /// **'حفظ'**
   String get text44;
 
   /// No description provided for @text45.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„ØªØµÙ†ÙŠÙ'**
+  /// **'تعديل التصنيف'**
   String get text45;
 
   /// No description provided for @text46.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ­Ø¯ÙŠØ«'**
+  /// **'تحديث'**
   String get text46;
 
   /// No description provided for @text47.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… ØºÙŠØ± Ù…Ø³Ø¬Ù„'**
+  /// **'المستخدم غير مسجل'**
   String get text47;
 
   /// No description provided for @text48.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ¹Ø¯ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¹Ù…ÙŠÙ„'**
+  /// **'تعديل بيانات العميل'**
   String get text48;
 
   /// No description provided for @text49.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¶Ø§ÙØ© Ø¹Ù…ÙŠÙ„ Ø¬Ø¯ÙŠØ¯'**
+  /// **'إضافة عميل جديد'**
   String get text49;
 
   /// No description provided for @text50.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ø³Ù… Ø§Ù„Ø¹Ù…ÙŠÙ„'**
+  /// **'اسم العميل'**
   String get text50;
 
   /// No description provided for @text51.
   ///
   /// In ar, this message translates to:
-  /// **'Ù…Ø·Ù„ÙˆØ¨'**
+  /// **'مطلوب'**
   String get text51;
 
   /// No description provided for @text52.
   ///
   /// In ar, this message translates to:
-  /// **'Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ'**
+  /// **'رقم الهاتف'**
   String get text52;
 
   /// No description provided for @text53.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­ÙØ¸ Ø§Ù„ØªØ¹Ø¯ÙŠÙ„Ø§Øª'**
+  /// **'حفظ التعديلات'**
   String get text53;
 
   /// No description provided for @text54.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¶Ø§ÙØ© Ø§Ù„Ø¹Ù…ÙŠÙ„'**
+  /// **'إضافة العميل'**
   String get text54;
 
   /// No description provided for @text55.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡'**
+  /// **'إدارة العملاء'**
   String get text55;
 
   /// No description provided for @text56.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø¹Ù…Ù„Ø§Ø¡ Ø¨Ø¹Ø¯.\nØ§Ø¶ØºØ· Ø¹Ù„Ù‰ + Ù„Ø¥Ø¶Ø§ÙØ© Ø¹Ù…ÙŠÙ„ Ø¬Ø¯ÙŠØ¯.'**
+  /// **'لا يوجد عملاء بعد.\nاضغط على + لإضافة عميل جديد.'**
   String get text56;
 
   /// No description provided for @text57.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø°Ù Ø§Ù„Ø¹Ù…ÙŠÙ„'**
+  /// **'حذف العميل'**
   String get text57;
 
   /// No description provided for @text58.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ø¹Ù…ÙŠÙ„ØŸ'**
+  /// **'هل أنت متأكد من حذف هذا العميل؟'**
   String get text58;
 
   /// No description provided for @text59.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø°Ù'**
+  /// **'حذف'**
   String get text59;
 
   /// No description provided for @text60.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ¹Ø¯ÙŠÙ„'**
+  /// **'تعديل'**
   String get text60;
 
   /// No description provided for @text61.
   ///
   /// In ar, this message translates to:
-  /// **'Ø·Ø¨Ø§Ø¹Ø© ÙƒØ´Ù Ø­Ø³Ø§Ø¨'**
+  /// **'طباعة كشف حساب'**
   String get text61;
 
   /// No description provided for @text62.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¶Ø§ÙØ© Ø¹Ù…ÙŠÙ„'**
+  /// **'إضافة عميل'**
   String get text62;
 
   /// No description provided for @text63.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¹Ø±Ø¶'**
+  /// **'عرض'**
   String get text63;
 
   /// No description provided for @text64.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª'**
+  /// **'المصروفات'**
   String get text64;
 
   /// No description provided for @text65.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ù…ØµØ±ÙˆÙØ§Øª Ø­Ø§Ù„ÙŠØ§Ù‹'**
+  /// **'لا يوجد مصروفات حالياً'**
   String get text65;
 
   /// No description provided for @text66.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª'**
+  /// **'إجمالي المصروفات'**
   String get text66;
 
   /// No description provided for @text67.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¶Ø§ÙØ© Ù…ØµØ±ÙˆÙ Ø¬Ø¯ÙŠØ¯'**
+  /// **'إضافة مصروف جديد'**
   String get text67;
 
   /// No description provided for @text68.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¨ÙŠØ§Ù† (Ù…Ø«Ø§Ù„: Ø¥ÙŠØ¬Ø§Ø± Ø§Ù„Ù…Ø­Ù„)'**
+  /// **'البيان (مثال: إيجار المحل)'**
   String get text68;
 
   /// No description provided for @text69.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…Ø¨Ù„Øº'**
+  /// **'المبلغ'**
   String get text69;
 
   /// No description provided for @text70.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„ØªØµÙ†ÙŠÙ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)'**
+  /// **'التصنيف (اختياري)'**
   String get text70;
 
   /// No description provided for @text71.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø±Ø¬Ø§Ø¡ Ø¥Ø¯Ø®Ø§Ù„ Ø§Ù„Ø¨ÙŠØ§Ù† (Ø§Ø³Ù… Ø§Ù„Ù…ØµØ±ÙˆÙ)'**
+  /// **'الرجاء إدخال البيان (اسم المصروف)'**
   String get text71;
 
   /// No description provided for @text72.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø±Ø¬Ø§Ø¡ Ø¥Ø¯Ø®Ø§Ù„ Ù…Ø¨Ù„Øº ØµØ­ÙŠØ­ Ø£ÙƒØ¨Ø± Ù…Ù† Ø§Ù„ØµÙØ±'**
+  /// **'الرجاء إدخال مبلغ صحيح أكبر من الصفر'**
   String get text72;
 
   /// No description provided for @text73.
   ///
   /// In ar, this message translates to:
-  /// **'Ø³Ø¬Ù„ Ø­Ø±ÙƒØ© Ø§Ù„Ù…Ø®Ø²ÙˆÙ†'**
+  /// **'سجل حركة المخزون'**
   String get text73;
 
   /// No description provided for @text74.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø­Ø±ÙƒØ§Øª Ù…Ø³Ø¬Ù„Ø© Ø­Ø§Ù„ÙŠØ§Ù‹'**
+  /// **'لا يوجد حركات مسجلة حالياً'**
   String get text74;
 
   /// No description provided for @text75.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…Ù†ØªØ¬ ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯'**
+  /// **'المنتج غير موجود'**
   String get text75;
 
   /// No description provided for @text76.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„ÙƒÙ…ÙŠØ© ØºÙŠØ± ÙƒØ§ÙÙŠØ© ÙÙŠ Ø§Ù„Ù…Ø®Ø²ÙˆÙ†'**
+  /// **'الكمية غير كافية في المخزون'**
   String get text76;
 
   /// No description provided for @text77.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¹Ù…ÙŠÙ„ ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯'**
+  /// **'العميل غير موجود'**
   String get text77;
 
   /// No description provided for @text78.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„ÙƒÙ…ÙŠØ© ØºÙŠØ± ÙƒØ§ÙÙŠØ© Ù„Ø¥Ø¹Ø§Ø¯Ø© ØªÙØ¹ÙŠÙ„ Ø§Ù„Ø·Ù„Ø¨'**
+  /// **'الكمية غير كافية لإعادة تفعيل الطلب'**
   String get text78;
 
   /// No description provided for @text79.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ù…Ù†ØªØ¬ Ø¨Ù‡Ø°Ø§ Ø§Ù„Ø¨Ø§Ø±ÙƒÙˆØ¯'**
+  /// **'لم يتم العثور على منتج بهذا الباركود'**
   String get text79;
 
   /// No description provided for @text80.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„ÙƒÙ…ÙŠØ© Ø§Ù„Ù…Ø·Ù„ÙˆØ¨Ø© ØºÙŠØ± Ù…ØªÙˆÙØ±Ø© ÙÙŠ Ø§Ù„Ù…Ø®Ø²ÙˆÙ†'**
+  /// **'الكمية المطلوبة غير متوفرة في المخزون'**
   String get text80;
 
   /// No description provided for @text81.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø¯ÙÙˆØ¹ Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø£Ù† ÙŠÙƒÙˆÙ† Ø£ÙƒØ¨Ø± Ù…Ù† Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ'**
+  /// **'المبلغ المدفوع لا يمكن أن يكون أكبر من الإجمالي'**
   String get text81;
 
   /// No description provided for @text82.
   ///
   /// In ar, this message translates to:
-  /// **'Ø·Ù„Ø¨ Ù…Ø¨ÙŠØ¹Ø§Øª Ø¬Ø¯ÙŠØ¯'**
+  /// **'طلب مبيعات جديد'**
   String get text82;
 
   /// No description provided for @text83.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¨ÙŠØ¹ Ø¢Ø¬Ù„ (Ø¯ÙŠÙ†)'**
+  /// **'بيع آجل (دين)'**
   String get text83;
 
   /// No description provided for @text84.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø·Ù„Ø¨ ÙƒØ¯ÙŠÙ† Ø¹Ù„Ù‰ Ø§Ù„Ø¹Ù…ÙŠÙ„'**
+  /// **'تسجيل الطلب كدين على العميل'**
   String get text84;
 
   /// No description provided for @text85.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø¯ÙÙˆØ¹ Ù…Ù‚Ø¯Ù…Ø§Ù‹ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)'**
+  /// **'المبلغ المدفوع مقدماً (اختياري)'**
   String get text85;
 
   /// No description provided for @text86.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø·Ù„Ø¨Ø§Øª Ø¨Ø¹Ø¯.\nØ§Ø¶ØºØ· Ø¹Ù„Ù‰ + Ù„Ø¥Ù†Ø´Ø§Ø¡ Ø·Ù„Ø¨ Ø¬Ø¯ÙŠØ¯.'**
+  /// **'لا توجد طلبات بعد.\nاضغط على + لإنشاء طلب جديد.'**
   String get text86;
 
   /// No description provided for @text87.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ø·Ù„Ø¨ØŸ Ø³ÙŠØªÙ… Ø§Ø³ØªØ±Ø¬Ø§Ø¹ ÙƒÙ…ÙŠØ© Ø§Ù„Ù…Ù†ØªØ¬ Ù„Ù„Ù…Ø®Ø²ÙˆÙ†.'**
+  /// **'هل أنت متأكد من حذف هذا الطلب؟ سيتم استرجاع كمية المنتج للمخزون.'**
   String get text87;
 
   /// No description provided for @text88.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‚ÙŠØ¯ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø± ðŸŸ¡'**
+  /// **'قيد الانتظار 🟡'**
   String get text88;
 
   /// No description provided for @text89.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‚ÙŠØ¯ Ø§Ù„ØªØ¬Ù‡ÙŠØ² ðŸ”µ'**
+  /// **'قيد التجهيز 🔵'**
   String get text89;
 
   /// No description provided for @text90.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ… Ø§Ù„Ø´Ø­Ù† ðŸŸ '**
+  /// **'تم الشحن 🟠'**
   String get text90;
 
   /// No description provided for @text91.
   ///
   /// In ar, this message translates to:
-  /// **'Ù…ÙƒØªÙ…Ù„ ðŸŸ¢'**
+  /// **'مكتمل 🟢'**
   String get text91;
 
   /// No description provided for @text92.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø·Ù„Ø¨ ðŸ”´'**
+  /// **'إلغاء الطلب 🔴'**
   String get text92;
 
   /// No description provided for @text93.
   ///
   /// In ar, this message translates to:
-  /// **'Ø·Ø¨Ø§Ø¹Ø© Ø§Ù„ÙØ§ØªÙˆØ±Ø© PDF'**
+  /// **'طباعة الفاتورة PDF'**
   String get text93;
 
   /// No description provided for @text94.
   ///
   /// In ar, this message translates to:
-  /// **'Ø·Ù„Ø¨ Ø¬Ø¯ÙŠØ¯'**
+  /// **'طلب جديد'**
   String get text94;
 
   /// No description provided for @text95.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‚ÙŠØ¯ Ø§Ù„ØªØ¬Ù‡ÙŠØ²'**
+  /// **'قيد التجهيز'**
   String get text95;
 
   /// No description provided for @text96.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ… Ø§Ù„Ø´Ø­Ù†'**
+  /// **'تم الشحن'**
   String get text96;
 
   /// No description provided for @text97.
   ///
   /// In ar, this message translates to:
-  /// **'Ù…ÙƒØªÙ…Ù„'**
+  /// **'مكتمل'**
   String get text97;
 
   /// No description provided for @text98.
   ///
   /// In ar, this message translates to:
-  /// **'Ù…Ù„ØºÙŠ'**
+  /// **'ملغي'**
   String get text98;
 
   /// No description provided for @text99.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‚ÙŠØ¯ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±'**
+  /// **'قيد الانتظار'**
   String get text99;
 
   /// No description provided for @text100.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ¹Ø¯ÙŠÙ„ ÙŠØ¯ÙˆÙŠ'**
+  /// **'تعديل يدوي'**
   String get text100;
 
   /// No description provided for @text101.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¶Ø§ÙØ© Ù…Ù†ØªØ¬'**
+  /// **'إضافة منتج'**
   String get text101;
 
   /// No description provided for @text102.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ù†ØªØ¬Ø§Øª Ø¨Ø¹Ø¯.\nØ§Ø¶ØºØ· Ø¹Ù„Ù‰ + Ù„Ø¥Ø¶Ø§ÙØ© Ù…Ù†ØªØ¬ Ø¬Ø¯ÙŠØ¯.'**
+  /// **'لا توجد منتجات بعد.\nاضغط على + لإضافة منتج جديد.'**
   String get text102;
 
   /// No description provided for @text103.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ù…Ù†ØªØ¬ØŸ'**
+  /// **'هل أنت متأكد من حذف هذا المنتج؟'**
   String get text103;
 
   /// No description provided for @text104.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ± ÙˆØ§Ù„Ø£Ø±Ø¨Ø§Ø­'**
+  /// **'التقارير والأرباح'**
   String get text104;
 
   /// No description provided for @text105.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª'**
+  /// **'إجمالي المبيعات'**
   String get text105;
 
   /// No description provided for @text106.
   ///
   /// In ar, this message translates to:
-  /// **'ØµØ§ÙÙŠ Ø§Ù„Ø±Ø¨Ø­'**
+  /// **'صافي الربح'**
   String get text106;
 
   /// No description provided for @text107.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø¯ÙŠÙˆÙ† (Ø§Ù„Ø¢Ø¬Ù„)'**
+  /// **'إجمالي الديون (الآجل)'**
   String get text107;
 
   /// No description provided for @text108.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª Ø§Ù„ÙŠÙˆÙ…ÙŠØ©'**
+  /// **'المبيعات اليومية'**
   String get text108;
 
   /// No description provided for @text109.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ø¨ÙŠØ¹Ø§Øª Ø¨Ø¹Ø¯'**
+  /// **'لا توجد مبيعات بعد'**
   String get text109;
 
   /// No description provided for @text110.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø£ÙƒØ«Ø± Ù…Ø¨ÙŠØ¹Ø§Ù‹'**
+  /// **'الأكثر مبيعاً'**
   String get text110;
 
   /// No description provided for @text111.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©'**
+  /// **'العربية'**
   String get text111;
 
   /// No description provided for @text112.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ±Ù‚ÙŠØ© Ø§Ù„Ø­Ø³Ø§Ø¨'**
+  /// **'ترقية الحساب'**
   String get text112;
 
   /// No description provided for @text113.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¨Ø§Ù‚Ø© ØªØ§Ø¬Ù€Ù€Ù€Ø± Ø¨Ø±Ùˆ ðŸš€'**
+  /// **'باقة تاجـــر برو 🚀'**
   String get text113;
 
   /// No description provided for @text114.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ø³ØªÙ…ØªØ¹ Ø¨Ø¥Ø¶Ø§ÙØ© Ù…Ù†ØªØ¬Ø§Øª ÙˆØ¹Ù…Ù„Ø§Ø¡ Ù„Ø§ Ù…Ø­Ø¯ÙˆØ¯ÙŠÙ†ØŒ Ù…Ø¹ Ø¯Ø¹Ù… ÙÙ†ÙŠ Ù…ØªÙ‚Ø¯Ù… ÙˆØ¥Ø­ØµØ§Ø¦ÙŠØ§Øª Ù…ÙØµÙ„Ø©.'**
+  /// **'استمتع بإضافة منتجات وعملاء لا محدودين، مع دعم فني متقدم وإحصائيات مفصلة.'**
   String get text114;
 
   /// No description provided for @text115.
   ///
   /// In ar, this message translates to:
-  /// **'ÙŠØ¬Ø¨ Ø¹Ù„ÙŠÙƒ Ø±Ø¨Ø· Ø­Ø³Ø§Ø¨Ùƒ Ø¨Ù€ Google Ø£ÙˆÙ„Ø§Ù‹ Ù„ØªØªÙ…ÙƒÙ† Ù…Ù† Ø§Ù„Ø§Ø´ØªØ±Ø§Ùƒ ÙÙŠ Ø§Ù„Ø¨Ø§Ù‚Ø©.'**
+  /// **'يجب عليك ربط حسابك بـ Google أولاً لتتمكن من الاشتراك في الباقة.'**
   String get text115;
 
   /// No description provided for @text116.
   ///
   /// In ar, this message translates to:
-  /// **'Ø±Ø¨Ø· Ø§Ù„Ø­Ø³Ø§Ø¨ Ø§Ù„Ø¢Ù†'**
+  /// **'ربط الحساب الآن'**
   String get text116;
 
   /// No description provided for @text117.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¹Ù…Ù„ÙŠØ© Ø´Ø±Ø§Ø¡ Ø§Ù„Ø¨Ø§Ù‚Ø§Øª ÙˆØ¯ÙØ¹ Ø§Ù„Ø§Ø´ØªØ±Ø§ÙƒØ§Øª (10 Ø¯ÙˆÙ„Ø§Ø±/Ø´Ù‡Ø±ÙŠØ§Ù‹) Ù…ØªØ§Ø­Ø© ÙÙ‚Ø· Ø¹Ø¨Ø± ØªØ·Ø¨ÙŠÙ‚ Ø§Ù„Ø£Ù†Ø¯Ø±ÙˆÙŠØ¯ Ù…Ù† Ù…ØªØ¬Ø± Google PlayØŒ ÙˆÙ„Ø§ ÙŠÙ…ÙƒÙ† Ø§Ù„Ø¯ÙØ¹ Ø¹Ø¨Ø± Ù…ØªØµÙØ­ Ø§Ù„ÙˆÙŠØ¨.'**
+  /// **'عملية شراء الباقات ودفع الاشتراكات (10 دولار/شهرياً) متاحة فقط عبر تطبيق الأندرويد من متجر Google Play، ولا يمكن الدفع عبر متصفح الويب.'**
   String get text117;
 
   /// No description provided for @text118.
   ///
   /// In ar, this message translates to:
-  /// **'ÙŠØ±Ø¬Ù‰ ØªØ­Ù…ÙŠÙ„ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ Ø¹Ù„Ù‰ Ù‡Ø§ØªÙÙƒ Ù„Ø¥ØªÙ…Ø§Ù… Ø¹Ù…Ù„ÙŠØ© Ø§Ù„ØªØ±Ù‚ÙŠØ© ÙˆØ§Ù„Ø¯ÙØ¹.'**
+  /// **'يرجى تحميل التطبيق على هاتفك لإتمام عملية الترقية والدفع.'**
   String get text118;
 
   /// No description provided for @text119.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø§Ø´ØªØ±Ø§ÙƒØ§Øª Ù…ØªØ§Ø­Ø© Ø­Ø§Ù„ÙŠØ§Ù‹. Ø§Ù„Ø±Ø¬Ø§Ø¡ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù„Ø§Ø­Ù‚Ø§Ù‹.'**
+  /// **'لا يوجد اشتراكات متاحة حالياً. الرجاء المحاولة لاحقاً.'**
   String get text119;
 
   /// No description provided for @text120.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ø´ØªØ±Ùƒ Ø§Ù„Ø¢Ù†'**
+  /// **'اشترك الآن'**
   String get text120;
 
   /// No description provided for @text121.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø´ØªØ±ÙŠØ§Øª Ø§Ù„Ø³Ø§Ø¨Ù‚Ø©'**
+  /// **'استعادة المشتريات السابقة'**
   String get text121;
 
   /// No description provided for @text122.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…ÙˆØ±Ø¯ÙŠÙ†'**
+  /// **'إدارة الموردين'**
   String get text122;
 
   /// No description provided for @text123.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ù…ÙˆØ±Ø¯ÙŠÙ† Ø­Ø§Ù„ÙŠØ§Ù‹'**
+  /// **'لا يوجد موردين حالياً'**
   String get text123;
 
   /// No description provided for @text124.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø±Ù‚Ù… Ù‡Ø§ØªÙ'**
+  /// **'لا يوجد رقم هاتف'**
   String get text124;
 
   /// No description provided for @text125.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¯ÙŠÙˆÙ† Ø§Ù„Ù…Ø³ØªØ­Ù‚Ø©'**
+  /// **'الديون المستحقة'**
   String get text125;
 
   /// No description provided for @text126.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¶Ø§ÙØ© Ù…ÙˆØ±Ø¯ Ø¬Ø¯ÙŠØ¯'**
+  /// **'إضافة مورد جديد'**
   String get text126;
 
   /// No description provided for @text127.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ø³Ù… Ø§Ù„Ù…ÙˆØ±Ø¯'**
+  /// **'اسم المورد'**
   String get text127;
 
   /// No description provided for @text128.
   ///
   /// In ar, this message translates to:
-  /// **'Ø±Ù‚Ù… Ø§Ù„Ø¬ÙˆØ§Ù„'**
+  /// **'رقم الجوال'**
   String get text128;
 
   /// No description provided for @text129.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø±ØµÙŠØ¯ Ø§Ù„Ø§ÙØªØªØ§Ø­ÙŠ (Ø§Ù„Ø¯ÙŠÙˆÙ†)'**
+  /// **'الرصيد الافتتاحي (الديون)'**
   String get text129;
 
   /// No description provided for @text130.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ù…ÙˆØ±Ø¯'**
+  /// **'تعديل المورد'**
   String get text130;
 
   /// No description provided for @text131.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ­Ø¯ÙŠØ« Ø§Ù„Ø¯ÙŠÙˆÙ†'**
+  /// **'تحديث الديون'**
   String get text131;
 
   /// No description provided for @permCanManageProducts.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¶Ø§ÙØ© ÙˆØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª'**
+  /// **'إضافة وتعديل المنتجات'**
   String get permCanManageProducts;
 
   /// No description provided for @permCanViewCost.
   ///
   /// In ar, this message translates to:
-  /// **'Ø±Ø¤ÙŠØ© Ø³Ø¹Ø± Ø§Ù„ØªÙƒÙ„ÙØ© ÙˆØ§Ù„Ø£Ø±Ø¨Ø§Ø­'**
+  /// **'رؤية سعر التكلفة والأرباح'**
   String get permCanViewCost;
 
   /// No description provided for @permCanManageInventory.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¯Ø§Ø±Ø© ÙˆØ¬Ø±Ø¯ Ø§Ù„Ù…Ø®Ø²ÙˆÙ†'**
+  /// **'إدارة وجرد المخزون'**
   String get permCanManageInventory;
 
   /// No description provided for @permCanCreateOrders.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ù†Ø´Ø§Ø¡ ÙÙˆØ§ØªÙŠØ± ÙˆØ·Ù„Ø¨Ø§Øª Ø¬Ø¯ÙŠØ¯Ø©'**
+  /// **'إنشاء فواتير وطلبات جديدة'**
   String get permCanCreateOrders;
 
   /// No description provided for @permCanCancelOrders.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ¹Ø¯ÙŠÙ„ Ø£Ùˆ Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø·Ù„Ø¨Ø§Øª'**
+  /// **'تعديل أو إلغاء الطلبات'**
   String get permCanCancelOrders;
 
   /// No description provided for @permCanSellOnCredit.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¨ÙŠØ¹ Ø¨Ø§Ù„Ø¢Ø¬Ù„ / Ø§Ù„Ø¯ÙŠÙ†'**
+  /// **'البيع بالآجل / الدين'**
   String get permCanSellOnCredit;
 
   /// No description provided for @permCanManageCustomers.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¶Ø§ÙØ© ÙˆØªØ¹Ø¯ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡'**
+  /// **'إضافة وتعديل بيانات العملاء'**
   String get permCanManageCustomers;
 
   /// No description provided for @permCanReceivePayments.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ³Ø¯ÙŠØ¯ Ø§Ù„Ø¯ÙŠÙˆÙ† ÙˆØ§Ø³ØªÙ„Ø§Ù… Ø§Ù„Ù…Ø¨Ø§Ù„Øº'**
+  /// **'تسديد الديون واستلام المبالغ'**
   String get permCanReceivePayments;
 
   /// No description provided for @permCanManageExpenses.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ³Ø¬ÙŠÙ„ ÙˆÙ…ØªØ§Ø¨Ø¹Ø© Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª'**
+  /// **'تسجيل ومتابعة المصروفات'**
   String get permCanManageExpenses;
 
   /// No description provided for @employeePermissions.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ† ÙˆØ§Ù„ØµÙ„Ø§Ø­ÙŠØ§Øª (Pro)'**
+  /// **'الموظفين والصلاحيات (Pro)'**
   String get employeePermissions;
 
   /// No description provided for @permissionSettings.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„ØµÙ„Ø§Ø­ÙŠØ§Øª'**
+  /// **'إعدادات الصلاحيات'**
   String get permissionSettings;
 
   /// No description provided for @credit.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¢Ø¬Ù„'**
+  /// **'آجل'**
   String get credit;
 
   /// No description provided for @customer.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¹Ù…ÙŠÙ„'**
+  /// **'العميل'**
   String get customer;
 
   /// No description provided for @walkInCustomer.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¹Ù…ÙŠÙ„ Ù†Ù‚Ø¯ÙŠ (Ø¨Ø¯ÙˆÙ† Ø­Ø³Ø§Ø¨)'**
+  /// **'عميل نقدي (بدون حساب)'**
   String get walkInCustomer;
 
   /// No description provided for @cancelled.
   ///
   /// In ar, this message translates to:
-  /// **'Ù…Ù„ØºÙŠ'**
+  /// **'ملغي'**
   String get cancelled;
 
   /// No description provided for @settingsAccountEmployees.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø­Ø³Ø§Ø¨ ÙˆØ§Ù„Ù…ÙˆØ¸ÙÙŠÙ†'**
+  /// **'الحساب والموظفين'**
   String get settingsAccountEmployees;
 
   /// No description provided for @settingsPersonalMerchantAccount.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø³Ø§Ø¨ Ø§Ù„ØªØ§Ø¬Ø± (Ø§Ù„Ø¥Ø¯Ø§Ø±Ø©)'**
+  /// **'حساب التاجر (الإدارة)'**
   String get settingsPersonalMerchantAccount;
 
   /// No description provided for @settingsUnknown.
   ///
   /// In ar, this message translates to:
-  /// **'ØºÙŠØ± Ù…Ø¹Ø±ÙˆÙ'**
+  /// **'غير معروف'**
   String get settingsUnknown;
 
   /// No description provided for @settingsEmployeesPermissions.
   ///
   /// In ar, this message translates to:
-  /// **'(Pro) Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ† ÙˆØ§Ù„ØµÙ„Ø§Ø­ÙŠØ§Øª'**
+  /// **'(Pro) الموظفين والصلاحيات'**
   String get settingsEmployeesPermissions;
 
   /// No description provided for @settingsCentralizedAuditLog.
   ///
   /// In ar, this message translates to:
-  /// **'Ø³Ø¬Ù„ Ø­Ø±ÙƒØ§Øª Ø§Ù„Ù†Ø¸Ø§Ù… (Ø§Ù„Ù…Ø±Ø§Ù‚Ø¨Ø©)'**
+  /// **'سجل حركات النظام (المراقبة)'**
   String get settingsCentralizedAuditLog;
 
   /// No description provided for @settingsMonitorActions.
   ///
   /// In ar, this message translates to:
-  /// **'Ù…Ø±Ø§Ù‚Ø¨Ø© Ø¬Ù…ÙŠØ¹ Ø­Ø±ÙƒØ§Øª Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ† ÙˆØ§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª'**
+  /// **'مراقبة جميع حركات الموظفين والمبيعات'**
   String get settingsMonitorActions;
 
   /// No description provided for @settingsStoreSettings.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ù…ØªØ¬Ø±'**
+  /// **'إعدادات المتجر'**
   String get settingsStoreSettings;
 
   /// No description provided for @settingsBackupSecurity.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù†Ø³Ø® Ø§Ù„Ø§Ø­ØªÙŠØ§Ø·ÙŠ ÙˆØ§Ù„Ø£Ù…Ø§Ù†'**
+  /// **'النسخ الاحتياطي والأمان'**
   String get settingsBackupSecurity;
 
   /// No description provided for @settingsThermalPrinter.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ø·Ø§Ø¨Ø¹Ø© Ø§Ù„Ø­Ø±Ø§Ø±ÙŠØ©'**
+  /// **'إعدادات الطابعة الحرارية'**
   String get settingsThermalPrinter;
 
   /// No description provided for @settingsStoreBranding.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‡ÙˆÙŠØ© Ø§Ù„Ù…ØªØ¬Ø± (Ø§Ù„Ø´Ø¹Ø§Ø± ÙˆØ§Ù„ÙÙˆØ§ØªÙŠØ±)'**
+  /// **'هوية المتجر (الشعار والفواتير)'**
   String get settingsStoreBranding;
 
   /// No description provided for @settingsSystemPreferences.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙØ¶ÙŠÙ„Ø§Øª Ø§Ù„Ù†Ø¸Ø§Ù…'**
+  /// **'تفضيلات النظام'**
   String get settingsSystemPreferences;
 
   /// No description provided for @settingsSupportRating.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¯Ø¹Ù… ÙˆØ§Ù„ØªÙ‚ÙŠÙŠÙ…'**
+  /// **'الدعم والتقييم'**
   String get settingsSupportRating;
 
   /// No description provided for @settingsAppUserGuide.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¯Ù„ÙŠÙ„ Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ (Ø´Ø±Ø­ ÙÙŠØ¯ÙŠÙˆ)'**
+  /// **'دليل استخدام التطبيق (شرح فيديو)'**
   String get settingsAppUserGuide;
 
   /// No description provided for @settingsHowToSetup.
   ///
   /// In ar, this message translates to:
-  /// **'ÙƒÙŠÙÙŠØ© ØªØ¬Ù‡ÙŠØ² Ù…ØªØ¬Ø±Ùƒ ÙˆØ¥Ø¶Ø§ÙØ© Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª'**
+  /// **'كيفية تجهيز متجرك وإضافة المنتجات'**
   String get settingsHowToSetup;
 
   /// No description provided for @settingsFollowTikTok.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ§Ø¨Ø¹Ù†Ø§ Ø¹Ù„Ù‰ ØªÙŠÙƒ ØªÙˆÙƒ'**
+  /// **'تابعنا على تيك توك'**
   String get settingsFollowTikTok;
 
   /// No description provided for @settingsSuggestionsUpdates.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ù„Ø§Ù‚ØªØ±Ø§Ø­Ø§Øª ÙˆØ§Ù„ØªØ­Ø¯ÙŠØ«Ø§Øª Ø§Ù„Ø¬Ø¯ÙŠØ¯Ø©'**
+  /// **'للاقتراحات والتحديثات الجديدة'**
   String get settingsSuggestionsUpdates;
 
   /// No description provided for @settingsCouldNotOpenLink.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ¹Ø°Ø± ÙØªØ­ Ø§Ù„Ø±Ø§Ø¨Ø·'**
+  /// **'تعذر فتح الرابط'**
   String get settingsCouldNotOpenLink;
 
   /// No description provided for @settingsEmailSupport.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¯Ø¹Ù… Ø§Ù„ÙÙ†ÙŠ Ø¹Ø¨Ø± Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ'**
+  /// **'الدعم الفني عبر البريد الإلكتروني'**
   String get settingsEmailSupport;
 
   /// No description provided for @settingsTechnicalIssues.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø­Ù„ Ø§Ù„Ù…Ø´ÙƒÙ„Ø§Øª Ø§Ù„ØªÙ‚Ù†ÙŠØ© ÙˆØ§Ù„Ø§Ø³ØªÙØ³Ø§Ø±Ø§Øª'**
+  /// **'لحل المشكلات التقنية والاستفسارات'**
   String get settingsTechnicalIssues;
 
   /// No description provided for @settingsCouldNotOpenEmail.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ¹Ø°Ø± ÙØªØ­ ØªØ·Ø¨ÙŠÙ‚ Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ'**
+  /// **'تعذر فتح تطبيق البريد الإلكتروني'**
   String get settingsCouldNotOpenEmail;
 
   /// No description provided for @settingsRatePlayStore.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ‚ÙŠÙŠÙ… Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ Ø¹Ù„Ù‰ Ù…ØªØ¬Ø± Ø¨Ù„Ø§ÙŠ'**
+  /// **'تقييم التطبيق على متجر بلاي'**
   String get settingsRatePlayStore;
 
   /// No description provided for @settingsPrivacyPolicy.
   ///
   /// In ar, this message translates to:
-  /// **'Ø³ÙŠØ§Ø³Ø© Ø§Ù„Ø®ØµÙˆØµÙŠØ©'**
+  /// **'سياسة الخصوصية'**
   String get settingsPrivacyPolicy;
 
   /// No description provided for @settingsCouldNotOpenBrowser.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ¹Ø°Ø± ÙØªØ­ Ø§Ù„Ù…ØªØµÙØ­. ØªØ£ÙƒØ¯ Ù…Ù† ÙˆØ¬ÙˆØ¯ Ù…ØªØµÙØ­ ÙÙŠ Ø¬Ù‡Ø§Ø²Ùƒ.'**
+  /// **'تعذر فتح المتصفح. تأكد من وجود متصفح في جهازك.'**
   String get settingsCouldNotOpenBrowser;
 
   /// No description provided for @settingsAppVersion.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¨Ø³Ø·Ù‡ - Ù†Ù‚Ø·Ø© Ø¨ÙŠØ¹ v1.0.42\nØµÙÙ†Ø¹ Ø¨Ø­Ø¨ ðŸ’›'**
+  /// **'بسطه - نقطة بيع v1.0.42\nصُنع بحب 💛'**
   String get settingsAppVersion;
 
   /// No description provided for @empPermViewCostProfits.
   ///
   /// In ar, this message translates to:
-  /// **'Ø±Ø¤ÙŠØ© Ø§Ù„ØªÙƒÙ„ÙØ© ÙˆØ§Ù„Ø£Ø±Ø¨Ø§Ø­'**
+  /// **'رؤية التكلفة والأرباح'**
   String get empPermViewCostProfits;
 
   /// No description provided for @empPermManageInventory.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¯Ø§Ø±Ø© ÙˆØªØªØ¨Ø¹ Ø§Ù„Ù…Ø®Ø²ÙˆÙ†'**
+  /// **'إدارة وتتبع المخزون'**
   String get empPermManageInventory;
 
   /// No description provided for @empPermCreateInvoices.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ù†Ø´Ø§Ø¡ ÙÙˆØ§ØªÙŠØ± ÙˆØ·Ù„Ø¨Ø§Øª Ø¬Ø¯ÙŠØ¯Ø©'**
+  /// **'إنشاء فواتير وطلبات جديدة'**
   String get empPermCreateInvoices;
 
   /// No description provided for @empPermEditCancelOrders.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ¹Ø¯ÙŠÙ„ Ø£Ùˆ Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø·Ù„Ø¨Ø§Øª'**
+  /// **'تعديل أو إلغاء الطلبات'**
   String get empPermEditCancelOrders;
 
   /// No description provided for @empPermSellCredit.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¨ÙŠØ¹ Ø¨Ø§Ù„Ø¢Ø¬Ù„ (Ø§Ù„Ø¯ÙŠÙˆÙ†)'**
+  /// **'البيع بالآجل (الديون)'**
   String get empPermSellCredit;
 
   /// No description provided for @empPermAddEditCustomer.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¶Ø§ÙØ© ÙˆØªØ¹Ø¯ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡'**
+  /// **'إضافة وتعديل بيانات العملاء'**
   String get empPermAddEditCustomer;
 
   /// No description provided for @empPermSettleDebts.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ³ÙˆÙŠØ© Ø§Ù„Ø¯ÙŠÙˆÙ† ÙˆØ§Ø³ØªÙ„Ø§Ù… Ø§Ù„Ø¯ÙØ¹Ø§Øª'**
+  /// **'تسوية الديون واستلام الدفعات'**
   String get empPermSettleDebts;
 
   /// No description provided for @empPermRecordExpenses.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ³Ø¬ÙŠÙ„ ÙˆØªØªØ¨Ø¹ Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª'**
+  /// **'تسجيل وتتبع المصروفات'**
   String get empPermRecordExpenses;
 
   /// No description provided for @empPermViewReports.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø³Ù…Ø§Ø­ Ø¨Ø±Ø¤ÙŠØ© Ù‚Ø³Ù… Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ±'**
+  /// **'السماح برؤية قسم التقارير'**
   String get empPermViewReports;
 
   /// No description provided for @empPermViewAllOrders.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø³Ù…Ø§Ø­ Ø¨Ø±Ø¤ÙŠØ© Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø·Ù„Ø¨Ø§Øª'**
+  /// **'السماح برؤية جميع الطلبات'**
   String get empPermViewAllOrders;
 
   /// No description provided for @empPermAdd.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¶Ø§ÙØ©'**
+  /// **'إضافة'**
   String get empPermAdd;
 
   /// No description provided for @empPermCancel.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ù„ØºØ§Ø¡'**
+  /// **'إلغاء'**
   String get empPermCancel;
 
   /// No description provided for @empImportantInstructions.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ¹Ù„ÙŠÙ…Ø§Øª Ù‡Ø§Ù…Ø© Ù„Ù„ØªØ§Ø¬Ø±'**
+  /// **'تعليمات هامة للتاجر'**
   String get empImportantInstructions;
 
   /// No description provided for @empInstruction1.
   ///
   /// In ar, this message translates to:
-  /// **'1. ÙŠÙ…ÙƒÙ†Ùƒ Ø¥Ø¶Ø§ÙØ© Ø­Ø¯ Ø£Ù‚ØµÙ‰ 3 Ù…ÙˆØ¸ÙÙŠÙ†.'**
+  /// **'1. يمكنك إضافة حد أقصى 3 موظفين.'**
   String get empInstruction1;
 
   /// No description provided for @empInstruction2.
   ///
   /// In ar, this message translates to:
-  /// **'2. Ø¹Ù†Ø¯Ù…Ø§ ÙŠØ­Ù…Ù„ Ø§Ù„Ù…ÙˆØ¸Ù Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ØŒ ÙŠØ¬Ø¨ Ø£Ù† ÙŠØ®ØªØ§Ø± (Ø¯Ø®ÙˆÙ„ Ù…ÙˆØ¸Ù Ø¨Ø§Ù„Ø±Ù…Ø²).'**
+  /// **'2. عندما يحمل الموظف التطبيق، يجب أن يختار (دخول موظف بالرمز).'**
   String get empInstruction2;
 
   /// No description provided for @empInstruction3.
   ///
   /// In ar, this message translates to:
-  /// **'3. Ø³ÙŠÙØ·Ù„Ø¨ Ù…Ù†Ù‡ Ø¥Ø¯Ø®Ø§Ù„ Ø¥ÙŠÙ…ÙŠÙ„Ùƒ Ø§Ù„Ø£Ø³Ø§Ø³ÙŠ ÙˆØ±Ù…Ø² Ø§Ù„Ø¯Ø®ÙˆÙ„ Ø§Ù„Ø°ÙŠ Ø£Ù†Ø´Ø£ØªÙ‡ Ù„Ù‡.'**
+  /// **'3. سيُطلب منه إدخال إيميلك الأساسي ورمز الدخول الذي أنشأته له.'**
   String get empInstruction3;
 
   /// No description provided for @empMainEmail.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥ÙŠÙ…ÙŠÙ„Ùƒ Ø§Ù„Ø£Ø³Ø§Ø³ÙŠ (Ø§Ù„Ø°ÙŠ ÙŠØ¬Ø¨ Ø£Ù† ÙŠÙƒØªØ¨Ù‡ Ø§Ù„Ù…ÙˆØ¸Ù):'**
+  /// **'إيميلك الأساسي (الذي يجب أن يكتبه الموظف):'**
   String get empMainEmail;
 
   /// No description provided for @empEmployeeList.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ†'**
+  /// **'قائمة الموظفين'**
   String get empEmployeeList;
 
   /// No description provided for @empNoEmployees.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ù…ÙˆØ¸ÙÙŠÙ† Ø­Ø§Ù„ÙŠØ§Ù‹'**
+  /// **'لا يوجد موظفين حالياً'**
   String get empNoEmployees;
 
   /// No description provided for @taxSettingsOptional.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)'**
+  /// **'إعدادات الضريبة (اختياري)'**
   String get taxSettingsOptional;
 
   /// No description provided for @taxSettingsWarning.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ­Ø¯ÙŠØ¯ Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ù‡Ù†Ø§ Ø³ÙŠÙ„ØºÙŠ Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ù…ØªØ¬Ø± Ø§Ù„Ø¹Ø§Ù…Ø© Ù„Ù‡Ø°Ø§ Ø§Ù„Ù…Ù†ØªØ¬ØŒ ÙˆØ³ÙŠØ¤Ø«Ø± Ù…Ø¨Ø§Ø´Ø±Ø© Ø¹Ù„Ù‰ Ø§Ù„Ø­Ø³Ø§Ø¨ Ø§Ù„Ù†Ù‡Ø§Ø¦ÙŠ.'**
+  /// **'تحديد الإعدادات هنا سيلغي إعدادات المتجر العامة لهذا المنتج، وسيؤثر مباشرة على الحساب النهائي.'**
   String get taxSettingsWarning;
 
   /// No description provided for @taxPercentage.
   ///
   /// In ar, this message translates to:
-  /// **'Ù†Ø³Ø¨Ø© Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© Ø§Ù„Ø®Ø§ØµØ© Ø¨Ø§Ù„Ù…Ù†ØªØ¬ (%)'**
+  /// **'نسبة الضريبة الخاصة بالمنتج (%)'**
   String get taxPercentage;
 
   /// No description provided for @taxIncludedInPrice.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø³Ø¹Ø± Ø§Ù„Ù…Ø­Ø¯Ø¯ ÙŠØ´Ù…Ù„ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©'**
+  /// **'السعر المحدد يشمل الضريبة'**
   String get taxIncludedInPrice;
 
   /// No description provided for @recipeOptional.
   ///
   /// In ar, this message translates to:
-  /// **'ÙˆØµÙØ© Ø§Ù„Ù…Ù†ØªØ¬ (Ù…ÙˆØ§Ø¯ Ø®Ø§Ù…) - Ø§Ø®ØªÙŠØ§Ø±ÙŠ'**
+  /// **'وصفة المنتج (مواد خام) - اختياري'**
   String get recipeOptional;
 
   /// No description provided for @searchByNamePhone.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¨Ø­Ø« Ø¨Ø§Ù„Ø§Ø³Ù… Ø£Ùˆ Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ'**
+  /// **'بحث بالاسم أو رقم الهاتف'**
   String get searchByNamePhone;
 
   /// No description provided for @deleteCustomerWarning.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ­Ø°ÙŠØ±: Ø­Ø°Ù Ù…Ù„Ù Ø¹Ù…ÙŠÙ„'**
+  /// **'تحذير: حذف ملف عميل'**
   String get deleteCustomerWarning;
 
   /// No description provided for @deleteCustomerText.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø°Ù Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø³ÙŠØ¤Ø¯ÙŠ Ø¥Ù„Ù‰ Ù…Ø³Ø­ Ø³Ø¬Ù„Ù‡ Ø§Ù„Ù…Ø§Ù„ÙŠ ÙˆØ¯ÙŠÙˆÙ†Ù‡ Ù…Ù† Ø§Ù„Ù†Ø¸Ø§Ù… Ù†Ù‡Ø§Ø¦ÙŠØ§Ù‹. Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø§Ù„ØªØ±Ø§Ø¬Ø¹ Ø¹Ù† Ù‡Ø°Ø§ Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡.'**
+  /// **'حذف العميل سيؤدي إلى مسح سجله المالي وديونه من النظام نهائياً. لا يمكن التراجع عن هذا الإجراء.'**
   String get deleteCustomerText;
 
   /// No description provided for @enterPinToConfirm.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ù„ØªØ£ÙƒÙŠØ¯ (PIN) Ø£Ø¯Ø®Ù„ Ø±Ù…Ø² Ø§Ù„Ø£Ù…Ø§Ù†:'**
+  /// **'للتأكيد (PIN) أدخل رمز الأمان:'**
   String get enterPinToConfirm;
 
   /// No description provided for @confirmDelete.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ£ÙƒÙŠØ¯ ÙˆØ­Ø°Ù'**
+  /// **'تأكيد وحذف'**
   String get confirmDelete;
 
   /// No description provided for @cancelBtn.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ±Ø§Ø¬Ø¹'**
+  /// **'تراجع'**
   String get cancelBtn;
 
   /// No description provided for @backupExportSuccess.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ… ØªØµØ¯ÙŠØ± Ø§Ù„Ù†Ø³Ø®Ø© Ø§Ù„Ø§Ø­ØªÙŠØ§Ø·ÙŠØ© Ø¨Ù†Ø¬Ø§Ø­!'**
+  /// **'تم تصدير النسخة الاحتياطية بنجاح!'**
   String get backupExportSuccess;
 
   /// No description provided for @backupExportError.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ù„ØªØµØ¯ÙŠØ±'**
+  /// **'حدث خطأ أثناء التصدير'**
   String get backupExportError;
 
   /// No description provided for @backupImportSuccess.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ… Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ù†Ø³Ø®Ø© Ø¨Ù†Ø¬Ø§Ø­!'**
+  /// **'تم استعادة النسخة بنجاح!'**
   String get backupImportSuccess;
 
   /// No description provided for @backupImportError.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ù„Ø§Ø³ØªØ¹Ø§Ø¯Ø©'**
+  /// **'حدث خطأ أثناء الاستعادة'**
   String get backupImportError;
 
   /// No description provided for @backupSecurityTitle.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù†Ø³Ø®Ø© Ø§Ù„Ø§Ø­ØªÙŠØ§Ø·ÙŠØ© Ø§Ù„Ù…Ø­Ù„ÙŠØ©'**
+  /// **'النسخة الاحتياطية المحلية'**
   String get backupSecurityTitle;
 
   /// No description provided for @localBackupRestore.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ù†Ø´Ø§Ø¡ ÙˆØ§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ù†Ø³Ø®Ø©'**
+  /// **'إنشاء واستعادة النسخة'**
   String get localBackupRestore;
 
   /// No description provided for @localBackupDesc.
   ///
   /// In ar, this message translates to:
-  /// **'ÙŠØªÙ… Ø­ÙØ¸ Ù†Ø³Ø®Ø© Ù…Ù† Ù…Ù†ØªØ¬Ø§ØªÙƒ (Ø¨Ø§Ø³ØªØ«Ù†Ø§Ø¡ Ø§Ù„ÙÙˆØ§ØªÙŠØ± ÙˆØ§Ù„ØµÙˆØ±) ÙÙŠ Ù…Ù„Ù Ø¯Ø§Ø®Ù„ Ø¬Ù‡Ø§Ø²Ùƒ. ÙŠÙ…ÙƒÙ†Ùƒ Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ù‡Ø°Ù‡ Ø§Ù„Ù†Ø³Ø®Ø© ÙÙŠ Ø£ÙŠ ÙˆÙ‚Øª.'**
+  /// **'يتم حفظ نسخة من منتجاتك (باستثناء الفواتير والصور) في ملف داخل جهازك. يمكنك استعادة هذه النسخة في أي وقت.'**
   String get localBackupDesc;
 
   /// No description provided for @exportBackupToDevice.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­ÙØ¸ Ø§Ù„Ù†Ø³Ø®Ø© ÙÙŠ Ø§Ù„Ø¬Ù‡Ø§Ø²'**
+  /// **'حفظ النسخة في الجهاز'**
   String get exportBackupToDevice;
 
   /// No description provided for @importBackupFromDevice.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ù†Ø³Ø®Ø© Ù…Ù† Ø§Ù„Ø¬Ù‡Ø§Ø²'**
+  /// **'استعادة النسخة من الجهاز'**
   String get importBackupFromDevice;
 
   /// No description provided for @printerErrorConnecting.
   ///
   /// In ar, this message translates to:
-  /// **'Ø®Ø·Ø£ ÙÙŠ Ø¬Ù„Ø¨ Ø§Ù„Ø£Ø¬Ù‡Ø²Ø© Ø§Ù„Ù…Ù‚ØªØ±Ù†Ø©'**
+  /// **'خطأ في جلب الأجهزة المقترنة'**
   String get printerErrorConnecting;
 
   /// No description provided for @printerConnecting.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¬Ø§Ø±ÙŠ Ø§Ù„Ø§ØªØµØ§Ù„...'**
+  /// **'جاري الاتصال...'**
   String get printerConnecting;
 
   /// No description provided for @printerConnectedSuccess.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ… Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø§Ù„Ø·Ø§Ø¨Ø¹Ø© Ø¨Ù†Ø¬Ø§Ø­'**
+  /// **'تم الاتصال بالطابعة بنجاح'**
   String get printerConnectedSuccess;
 
   /// No description provided for @printerConnectionFailed.
   ///
   /// In ar, this message translates to:
-  /// **'ÙØ´Ù„ Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø§Ù„Ø·Ø§Ø¨Ø¹Ø©'**
+  /// **'فشل الاتصال بالطابعة'**
   String get printerConnectionFailed;
 
   /// No description provided for @printerSelectFirst.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø±Ø¬Ø§Ø¡ ØªØ­Ø¯ÙŠØ¯ Ø·Ø§Ø¨Ø¹Ø© Ø£ÙˆÙ„Ø§Ù‹'**
+  /// **'الرجاء تحديد طابعة أولاً'**
   String get printerSelectFirst;
 
   /// No description provided for @printerDisconnected.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ… Ù‚Ø·Ø¹ Ø§Ù„Ø§ØªØµØ§Ù„'**
+  /// **'تم قطع الاتصال'**
   String get printerDisconnected;
 
   /// No description provided for @printerNotConnected.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø·Ø§Ø¨Ø¹Ø© Ù…ØªØµÙ„Ø©'**
+  /// **'لا توجد طابعة متصلة'**
   String get printerNotConnected;
 
   /// No description provided for @printerConnectionSettings.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§ØªØµØ§Ù„ Ø§Ù„Ø·Ø§Ø¨Ø¹Ø©'**
+  /// **'إعدادات اتصال الطابعة'**
   String get printerConnectionSettings;
 
   /// No description provided for @printerSelectDevice.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ø®ØªÙŠØ§Ø± Ø§Ù„Ø·Ø§Ø¨Ø¹Ø© (Ø¨Ù„ÙˆØªÙˆØ«)'**
+  /// **'اختيار الطابعة (بلوتوث)'**
   String get printerSelectDevice;
 
   /// No description provided for @printerSelectHint.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø¯Ø¯ Ø·Ø§Ø¨Ø¹Ø©...'**
+  /// **'حدد طابعة...'**
   String get printerSelectHint;
 
   /// No description provided for @printerPaperSize.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø¬Ù… Ø§Ù„ÙˆØ±Ù‚'**
+  /// **'حجم الورق'**
   String get printerPaperSize;
 
   /// No description provided for @printerSize58.
   ///
   /// In ar, this message translates to:
-  /// **'58 Ù…Ù„ÙŠÙ…ØªØ± (ØµØºÙŠØ±)'**
+  /// **'58 مليمتر (صغير)'**
   String get printerSize58;
 
   /// No description provided for @printerSize80.
   ///
   /// In ar, this message translates to:
-  /// **'80 Ù…Ù„ÙŠÙ…ØªØ± (ÙƒØ¨ÙŠØ±)'**
+  /// **'80 مليمتر (كبير)'**
   String get printerSize80;
 
   /// No description provided for @printerRefresh.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ­Ø¯ÙŠØ« Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©'**
+  /// **'تحديث القائمة'**
   String get printerRefresh;
 
   /// No description provided for @printerConnect.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙˆØµÙŠÙ„'**
+  /// **'توصيل'**
   String get printerConnect;
 
   /// No description provided for @printerDisconnect.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‚Ø·Ø¹ Ø§Ù„Ø§ØªØµØ§Ù„'**
+  /// **'قطع الاتصال'**
   String get printerDisconnect;
 
   /// No description provided for @brandingErrorPickingImage.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø¯Ø« Ø®Ø·Ø£ ÙÙŠ Ø§Ø®ØªÙŠØ§Ø± Ø§Ù„ØµÙˆØ±Ø©'**
+  /// **'حدث خطأ في اختيار الصورة'**
   String get brandingErrorPickingImage;
 
   /// No description provided for @brandingSavedSuccess.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ… Ø§Ù„Ø­ÙØ¸ Ø¨Ù†Ø¬Ø§Ø­'**
+  /// **'تم الحفظ بنجاح'**
   String get brandingSavedSuccess;
 
   /// No description provided for @brandingSave.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­ÙØ¸'**
+  /// **'حفظ'**
   String get brandingSave;
 
   /// No description provided for @brandingSelectLogo.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¶Ø§ÙØ© Ø§Ù„Ø´Ø¹Ø§Ø±'**
+  /// **'إضافة الشعار'**
   String get brandingSelectLogo;
 
   /// No description provided for @brandingRemoveLogo.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø²Ø§Ù„Ø© Ø§Ù„Ø´Ø¹Ø§Ø±'**
+  /// **'إزالة الشعار'**
   String get brandingRemoveLogo;
 
   /// No description provided for @brandingStoreName.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ø³Ù… Ø§Ù„Ù…ØªØ¬Ø±'**
+  /// **'اسم المتجر'**
   String get brandingStoreName;
 
   /// No description provided for @brandingStorePhone.
   ///
   /// In ar, this message translates to:
-  /// **'Ø±Ù‚Ù… Ù‡Ø§ØªÙ Ø§Ù„Ù…ØªØ¬Ø±'**
+  /// **'رقم هاتف المتجر'**
   String get brandingStorePhone;
 
   /// No description provided for @brandingStoreAddress.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¹Ù†ÙˆØ§Ù†'**
+  /// **'العنوان'**
   String get brandingStoreAddress;
 
   /// No description provided for @brandingTaxSettings.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© Ø§Ù„Ø§ÙØªØ±Ø§Ø¶ÙŠØ©'**
+  /// **'إعدادات الضريبة الافتراضية'**
   String get brandingTaxSettings;
 
   /// No description provided for @brandingDefaultTax.
   ///
   /// In ar, this message translates to:
-  /// **'Ù†Ø³Ø¨Ø© Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© Ø§Ù„Ø§ÙØªØ±Ø§Ø¶ÙŠØ© (%)'**
+  /// **'نسبة الضريبة الافتراضية (%)'**
   String get brandingDefaultTax;
 
   /// No description provided for @brandingDefaultTaxHelper.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‡Ø°Ù‡ Ù‡ÙŠ Ø§Ù„Ù†Ø³Ø¨Ø© Ø§Ù„ØªÙŠ Ø³ÙŠØªÙ… ØªØ·Ø¨ÙŠÙ‚Ù‡Ø§ ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹ Ø¹Ù„Ù‰ Ø£ÙŠ Ù…Ù†ØªØ¬ Ø¬Ø¯ÙŠØ¯ ØªØ¶ÙŠÙÙ‡. ÙŠÙ…ÙƒÙ†Ùƒ ØªØºÙŠÙŠØ± Ø§Ù„Ù†Ø³Ø¨Ø© Ù„ÙƒÙ„ Ù…Ù†ØªØ¬ Ù„Ø§Ø­Ù‚Ø§Ù‹ Ù…Ù† Ù‚Ø³Ù… Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª.'**
+  /// **'هذه هي النسبة التي سيتم تطبيقها تلقائياً على أي منتج جديد تضيفه. يمكنك تغيير النسبة لكل منتج لاحقاً من قسم المنتجات.'**
   String get brandingDefaultTaxHelper;
 
   /// No description provided for @brandingTaxInclusive.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø£Ø³Ø¹Ø§Ø± ØªØ´Ù…Ù„ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© (Ø§Ù„Ø§ÙØªØ±Ø§Ø¶ÙŠ)'**
+  /// **'الأسعار تشمل الضريبة (الافتراضي)'**
   String get brandingTaxInclusive;
 
   /// No description provided for @brandingTaxInclusiveHelper.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙØ¹ÙŠÙ„ Ù‡Ø°Ø§ Ø§Ù„Ø®ÙŠØ§Ø± ÙŠØ¹Ù†ÙŠ Ø£Ù† Ø§Ù„Ø³Ø¹Ø± Ø§Ù„Ø°ÙŠ ØªØ¯Ø®Ù„Ù‡ Ù„Ù„Ù…Ù†ØªØ¬ Ù‡Ùˆ Ø§Ù„Ø³Ø¹Ø± Ø§Ù„Ù†Ù‡Ø§Ø¦ÙŠ Ø§Ù„Ø´Ø§Ù…Ù„ Ù„Ù„Ø¶Ø±ÙŠØ¨Ø©.'**
+  /// **'تفعيل هذا الخيار يعني أن السعر الذي تدخله للمنتج هو السعر النهائي الشامل للضريبة.'**
   String get brandingTaxInclusiveHelper;
 
   /// No description provided for @brandingZatcaTitle.
   ///
   /// In ar, this message translates to:
-  /// **'Ù…ØªØ·Ù„Ø¨Ø§Øª Ø§Ù„ÙÙˆØªØ±Ø© Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠØ© (ZATCA)'**
+  /// **'متطلبات الفوترة الإلكترونية (ZATCA)'**
   String get brandingZatcaTitle;
 
   /// No description provided for @brandingZatcaDesc.
   ///
   /// In ar, this message translates to:
-  /// **'Ù…Ø·Ù„ÙˆØ¨Ø© Ù„Ù€ \"Ø§Ù„ÙÙˆØªØ±Ø© Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠØ©\". ÙŠÙØ±Ø¬Ù‰ ØªØ¹Ø¨Ø¦Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¶Ø±ÙŠØ¨ÙŠØ© Ù„ÙŠØªÙ… Ø·Ø¨Ø§Ø¹ØªÙ‡Ø§ ÙÙŠ Ø§Ù„ÙÙˆØ§ØªÙŠØ± Ø§Ù„Ø­Ø±Ø§Ø±ÙŠØ© Ù…Ø¹ Ø±Ù…Ø² QR Ù…ØªÙˆØ§ÙÙ‚ Ù…Ø¹ Ù‡ÙŠØ¦Ø© Ø§Ù„Ø²ÙƒØ§Ø© ÙˆØ§Ù„Ø¶Ø±ÙŠØ¨Ø© ÙˆØ§Ù„Ø¬Ù…Ø§Ø±Ùƒ (ZATCA) Ø¨Ø§Ù„Ù…Ù…Ù„ÙƒØ© Ø§Ù„Ø¹Ø±Ø¨ÙŠØ© Ø§Ù„Ø³Ø¹ÙˆØ¯ÙŠØ©.'**
+  /// **'مطلوبة لـ \"الفوترة الإلكترونية\". يُرجى تعبئة البيانات الضريبية ليتم طباعتها في الفواتير الحرارية مع رمز QR متوافق مع هيئة الزكاة والضريبة والجمارك (ZATCA) بالمملكة العربية السعودية.'**
   String get brandingZatcaDesc;
 
   /// No description provided for @brandingVatNumber.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ø¶Ø±ÙŠØ¨ÙŠ (VAT Number)'**
+  /// **'الرقم الضريبي (VAT Number)'**
   String get brandingVatNumber;
 
   /// No description provided for @brandingVatHelper.
   ///
   /// In ar, this message translates to:
-  /// **'ÙŠØªÙƒÙˆÙ† Ù…Ù† 15 Ø±Ù‚Ù…Ø§Ù‹ ÙˆÙŠØ¨Ø¯Ø£ ÙˆÙŠÙ†ØªÙ‡ÙŠ Ø¨Ø±Ù‚Ù… 3.'**
+  /// **'يتكون من 15 رقماً ويبدأ وينتهي برقم 3.'**
   String get brandingVatHelper;
 
   /// No description provided for @brandingCrNumber.
   ///
   /// In ar, this message translates to:
-  /// **'Ø±Ù‚Ù… Ø§Ù„Ø³Ø¬Ù„ Ø§Ù„ØªØ¬Ø§Ø±ÙŠ (CR Number)'**
+  /// **'رقم السجل التجاري (CR Number)'**
   String get brandingCrNumber;
 
   /// No description provided for @brandingCrHelper.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ø®ØªÙŠØ§Ø±ÙŠØŒ ÙŠØ·Ø¨Ø¹ ÙÙŠ Ø§Ù„ÙØ§ØªÙˆØ±Ø© Ø¥Ù† ÙˆØ¬Ø¯.'**
+  /// **'اختياري، يطبع في الفاتورة إن وجد.'**
   String get brandingCrHelper;
 
   /// No description provided for @purchaseSuccess.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ… Ø§Ù„Ø´Ø±Ø§Ø¡ Ø¨Ù†Ø¬Ø§Ø­!'**
+  /// **'تم الشراء بنجاح!'**
   String get purchaseSuccess;
 
   /// No description provided for @purchaseError.
   ///
   /// In ar, this message translates to:
-  /// **'Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ù„Ø´Ø±Ø§Ø¡'**
+  /// **'خطأ أثناء الشراء'**
   String get purchaseError;
 
   /// No description provided for @restoreSuccess.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ… Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø´ØªØ±ÙŠØ§Øª Ø¨Ù†Ø¬Ø§Ø­!'**
+  /// **'تم استعادة المشتريات بنجاح!'**
   String get restoreSuccess;
 
   /// No description provided for @restoreNoActive.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø§Ø´ØªØ±Ø§ÙƒØ§Øª ÙØ¹Ø§Ù„Ø©.'**
+  /// **'لم يتم العثور على اشتراكات فعالة.'**
   String get restoreNoActive;
 
   /// No description provided for @restoreError.
   ///
   /// In ar, this message translates to:
-  /// **'Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø´ØªØ±ÙŠØ§Øª'**
+  /// **'خطأ أثناء استعادة المشتريات'**
   String get restoreError;
 
   /// No description provided for @subscriptionTitle.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø§Ø´ØªØ±Ø§Ùƒ ÙˆØ§Ù„Ø¨Ø§Ù‚Ø§Øª'**
+  /// **'الاشتراك والباقات'**
   String get subscriptionTitle;
 
   /// No description provided for @premiumAccessTitle.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§ÙØªØ­ Ø¬Ù…ÙŠØ¹ Ø§Ù„Ù…Ù…ÙŠØ²Ø§Øª Ø§Ù„Ø§Ø­ØªØ±Ø§ÙÙŠØ©'**
+  /// **'افتح جميع المميزات الاحترافية'**
   String get premiumAccessTitle;
 
   /// No description provided for @premiumAccessDesc.
   ///
   /// In ar, this message translates to:
-  /// **'Ø£Ø¯Ø± Ù…ØªØ¬Ø±Ùƒ Ø¨ÙƒÙØ§Ø¡Ø© Ø¹Ø§Ù„ÙŠØ© Ù…Ø¹ ØªÙ‚Ø§Ø±ÙŠØ± Ù…ØªÙ‚Ø¯Ù…Ø© ÙˆØ·Ù„Ø¨Ø§Øª ØºÙŠØ± Ù…Ø­Ø¯ÙˆØ¯Ø© Ù„ØªÙ†Ù…ÙŠØ© Ù…Ø¨ÙŠØ¹Ø§ØªÙƒ.'**
+  /// **'أدر متجرك بكفاءة عالية مع تقارير متقدمة وطلبات غير محدودة لتنمية مبيعاتك.'**
   String get premiumAccessDesc;
 
   /// No description provided for @monthlyPlanTitle.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø§Ø´ØªØ±Ø§Ùƒ Ø§Ù„Ø´Ù‡Ø±ÙŠ'**
+  /// **'الاشتراك الشهري'**
   String get monthlyPlanTitle;
 
   /// No description provided for @featureUnlimitedOrders.
   ///
   /// In ar, this message translates to:
-  /// **'Ø·Ù„Ø¨Ø§Øª ÙˆÙÙˆØ§ØªÙŠØ± ØºÙŠØ± Ù…Ø­Ø¯ÙˆØ¯Ø©'**
+  /// **'طلبات وفواتير غير محدودة'**
   String get featureUnlimitedOrders;
 
   /// No description provided for @featureInventorySync.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¯Ø§Ø±Ø© Ù…ØªÙ‚Ø¯Ù…Ø© Ù„Ù„Ù…Ø®Ø²ÙˆÙ† ÙˆØ§Ù„Ù…Ø³ØªÙˆØ¯Ø¹'**
+  /// **'إدارة متقدمة للمخزون والمستودع'**
   String get featureInventorySync;
 
   /// No description provided for @featureAdvancedReports.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ‚Ø§Ø±ÙŠØ± Ù…Ø§Ù„ÙŠØ© ÙˆÙ…Ø¨ÙŠØ¹Ø§Øª Ù…ÙØµÙ„Ø©'**
+  /// **'تقارير مالية ومبيعات مفصلة'**
   String get featureAdvancedReports;
 
   /// No description provided for @featurePrioritySupport.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¯Ø¹Ù… ÙÙ†ÙŠ Ø¹Ù„Ù‰ Ù…Ø¯Ø§Ø± Ø§Ù„Ø³Ø§Ø¹Ø©'**
+  /// **'دعم فني على مدار الساعة'**
   String get featurePrioritySupport;
 
   /// No description provided for @subscribeFor.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ø´ØªØ±Ùƒ Ø§Ù„Ø¢Ù† Ø¨Ù€ {price}'**
+  /// **'اشترك الآن بـ {price}'**
   String subscribeFor(String price);
 
   /// No description provided for @noPackagesAvailable.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¨Ø§Ù‚Ø§Øª Ù…ØªØ§Ø­Ø© Ø­Ø§Ù„ÙŠØ§Ù‹ØŒ ÙŠØ±Ø¬Ù‰ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù„Ø§Ø­Ù‚Ø§Ù‹.'**
+  /// **'لا توجد باقات متاحة حالياً، يرجى المحاولة لاحقاً.'**
   String get noPackagesAvailable;
 
   /// No description provided for @restorePurchasesBtn.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø´ØªØ±ÙŠØ§Øª'**
+  /// **'استعادة المشتريات'**
   String get restorePurchasesBtn;
 
   /// No description provided for @subscriptionTermsDesc.
   ///
   /// In ar, this message translates to:
-  /// **'ÙŠØªÙ… ØªØ¬Ø¯ÙŠØ¯ Ø§Ù„Ø§Ø´ØªØ±Ø§Ùƒ ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹. ÙŠÙ…ÙƒÙ†Ùƒ Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø§Ø´ØªØ±Ø§Ùƒ ÙÙŠ Ø£ÙŠ ÙˆÙ‚Øª Ù…Ù† Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø­Ø³Ø§Ø¨Ùƒ.'**
+  /// **'يتم تجديد الاشتراك تلقائياً. يمكنك إلغاء الاشتراك في أي وقت من إعدادات حسابك.'**
   String get subscriptionTermsDesc;
 
   /// No description provided for @confirmExit.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø®Ø±ÙˆØ¬'**
+  /// **'تأكيد الخروج'**
   String get confirmExit;
 
   /// No description provided for @confirmExitMessage.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ø£Ù†Ùƒ ØªØ±ÙŠØ¯ Ø§Ù„Ø®Ø±ÙˆØ¬ Ù…Ù† Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ØŸ'**
+  /// **'هل أنت متأكد أنك تريد الخروج من التطبيق؟'**
   String get confirmExitMessage;
 
   /// No description provided for @exit.
   ///
   /// In ar, this message translates to:
-  /// **'Ø®Ø±ÙˆØ¬'**
+  /// **'خروج'**
   String get exit;
 
   /// No description provided for @employeePrefix.
   ///
   /// In ar, this message translates to:
-  /// **'Ù…ÙˆØ¸Ù: {name}'**
+  /// **'موظف: {name}'**
   String employeePrefix(String name);
 
   /// No description provided for @merchantAccount.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø³Ø§Ø¨ Ø§Ù„ØªØ§Ø¬Ø± (Ø§Ù„Ø¥Ø¯Ø§Ø±Ø©)'**
+  /// **'حساب التاجر (الإدارة)'**
   String get merchantAccount;
 
   /// No description provided for @rawMaterials.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…ÙˆØ§Ø¯ Ø§Ù„Ø®Ø§Ù…'**
+  /// **'المواد الخام'**
   String get rawMaterials;
 
   /// No description provided for @employeesPermissionsPro.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ† ÙˆØ§Ù„ØµÙ„Ø§Ø­ÙŠØ§Øª (Pro)'**
+  /// **'الموظفين والصلاحيات (Pro)'**
   String get employeesPermissionsPro;
 
   /// No description provided for @closeShiftZReport.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„ÙˆØ±Ø¯ÙŠØ© (Z-Report)'**
+  /// **'إغلاق الوردية (Z-Report)'**
   String get closeShiftZReport;
 
   /// No description provided for @errorFetchingInventory.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ¹Ø°Ø± Ø¬Ù„Ø¨ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù…Ø®Ø²ÙˆÙ†. ÙŠØ±Ø¬Ù‰ Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø§ØªØµØ§Ù„Ùƒ Ø¨Ø§Ù„Ø¥Ù†ØªØ±Ù†Øª.'**
+  /// **'تعذر جلب بيانات المخزون. يرجى التحقق من اتصالك بالإنترنت.'**
   String get errorFetchingInventory;
 
   /// No description provided for @lowStockAlert.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ†Ø¨ÙŠÙ‡: ÙŠÙˆØ¬Ø¯ {count} Ù…Ù†ØªØ¬ ÙŠÙˆØ´Ùƒ Ø¹Ù„Ù‰ Ø§Ù„Ù†ÙØ§Ø° Ù…Ù† Ø§Ù„Ù…Ø®Ø²ÙˆÙ†!'**
+  /// **'تنبيه: يوجد {count} منتج يوشك على النفاذ من المخزون!'**
   String lowStockAlert(String count);
 
   /// No description provided for @completeStoreBrandingAlert.
   ///
   /// In ar, this message translates to:
-  /// **'âš ï¸ ÙŠØ±Ø¬Ù‰ Ø¥ÙƒÙ…Ø§Ù„ Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ù‡ÙˆÙŠØ© Ø§Ù„Ù…ØªØ¬Ø± (Ø§Ù„Ø§Ø³Ù…ØŒ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©) Ù„Ø¶Ù…Ø§Ù† Ø·Ø¨Ø§Ø¹Ø© Ø§Ù„ÙÙˆØ§ØªÙŠØ± Ø¨Ø´ÙƒÙ„ ØµØ­ÙŠØ­ ÙˆÙ…Ø·Ø§Ø¨Ù‚ Ù„Ù„Ù…ÙˆØ§ØµÙØ§Øª.'**
+  /// **'⚠️ يرجى إكمال إعدادات هوية المتجر (الاسم، الضريبة) لضمان طباعة الفواتير بشكل صحيح ومطابق للمواصفات.'**
   String get completeStoreBrandingAlert;
 
   /// No description provided for @completeNow.
   ///
   /// In ar, this message translates to:
-  /// **'Ø£ÙƒÙ…Ù„ Ø§Ù„Ø¢Ù†'**
+  /// **'أكمل الآن'**
   String get completeNow;
 
   /// No description provided for @posCashier.
   ///
   /// In ar, this message translates to:
-  /// **'ÙƒØ§Ø´ÙŠØ± (POS)'**
+  /// **'كاشير (POS)'**
   String get posCashier;
 
   /// No description provided for @errorPrefix.
   ///
   /// In ar, this message translates to:
-  /// **'Ø®Ø·Ø£: {error}'**
+  /// **'خطأ: {error}'**
   String errorPrefix(String error);
 
   /// No description provided for @folder.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…Ø¬Ù„Ø¯'**
+  /// **'المجلد'**
   String get folder;
 
   /// No description provided for @totalDebts.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø¯ÙŠÙˆÙ†'**
+  /// **'إجمالي الديون'**
   String get totalDebts;
 
   /// No description provided for @warningDeleteCustomer.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ­Ø°ÙŠØ±: Ø­Ø°Ù Ù…Ù„Ù Ø¹Ù…ÙŠÙ„'**
+  /// **'تحذير: حذف ملف عميل'**
   String get warningDeleteCustomer;
 
   /// No description provided for @sortAlphabetical.
   ///
   /// In ar, this message translates to:
-  /// **'Ø£Ø¨Ø¬Ø¯ÙŠ'**
+  /// **'أبجدي'**
   String get sortAlphabetical;
 
   /// No description provided for @totalCustomerDebtText.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø¯ÙŠÙ† Ø§Ù„Ø¹Ù…ÙŠÙ„: {debt}'**
+  /// **'إجمالي دين العميل: {debt}'**
   String totalCustomerDebtText(String debt);
 
   /// No description provided for @deleteCustomerWarningText.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø°Ù Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø³ÙŠØ¤Ø¯ÙŠ Ø¥Ù„Ù‰ Ù…Ø³Ø­ Ø³Ø¬Ù„Ù‡ Ø§Ù„Ù…Ø§Ù„ÙŠ ÙˆØ¯ÙŠÙˆÙ†Ù‡ Ù…Ù† Ø§Ù„Ù†Ø¸Ø§Ù… Ù†Ù‡Ø§Ø¦ÙŠØ§Ù‹. Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø§Ù„ØªØ±Ø§Ø¬Ø¹ Ø¹Ù† Ù‡Ø°Ø§ Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡.'**
+  /// **'حذف العميل سيؤدي إلى مسح سجله المالي وديونه من النظام نهائياً. لا يمكن التراجع عن هذا الإجراء.'**
   String get deleteCustomerWarningText;
 
   /// No description provided for @leaveEmptyToRemoveFromFolder.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§ØªØ±Ùƒ Ø§Ù„Ø­Ù‚Ù„ ÙØ§Ø±ØºØ§Ù‹ Ù„Ø¥Ø²Ø§Ù„Ø© Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡ Ù…Ù† Ø£ÙŠ Ù…Ø¬Ù„Ø¯.'**
+  /// **'اترك الحقل فارغاً لإزالة العملاء من أي مجلد.'**
   String get leaveEmptyToRemoveFromFolder;
 
   /// No description provided for @multiSelect.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ­Ø¯ÙŠØ¯ Ù…ØªØ¹Ø¯Ø¯'**
+  /// **'تحديد متعدد'**
   String get multiSelect;
 
   /// No description provided for @noCustomersToExport.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø¹Ù…Ù„Ø§Ø¡ Ù„Ù„ØªØµØ¯ÙŠØ±'**
+  /// **'لا يوجد عملاء للتصدير'**
   String get noCustomersToExport;
 
   /// No description provided for @hasDebts.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¹Ù„ÙŠÙ‡Ù… Ø¯ÙŠÙˆÙ†'**
+  /// **'عليهم ديون'**
   String get hasDebts;
 
   /// No description provided for @totalPurchases.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø´ØªØ±ÙŠØ§Øª'**
+  /// **'إجمالي المشتريات'**
   String get totalPurchases;
 
   /// No description provided for @selectedCount.
   ///
   /// In ar, this message translates to:
-  /// **'{count} Ù…Ø­Ø¯Ø¯'**
+  /// **'{count} محدد'**
   String selectedCount(String count);
 
   /// No description provided for @general.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¹Ø§Ù…'**
+  /// **'عام'**
   String get general;
 
   /// No description provided for @whatsapp.
   ///
   /// In ar, this message translates to:
-  /// **'ÙˆØ§ØªØ³Ø§Ø¨'**
+  /// **'واتساب'**
   String get whatsapp;
 
   /// No description provided for @moveToFolder.
   ///
   /// In ar, this message translates to:
-  /// **'Ù†Ù‚Ù„ Ø¥Ù„Ù‰ Ù…Ø¬Ù„Ø¯'**
+  /// **'نقل إلى مجلد'**
   String get moveToFolder;
 
   /// No description provided for @dateAdded.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ§Ø±ÙŠØ® Ø§Ù„Ø¥Ø¶Ø§ÙØ©'**
+  /// **'تاريخ الإضافة'**
   String get dateAdded;
 
   /// No description provided for @payDebt.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ³Ø¯ÙŠØ¯ Ø¯ÙØ¹Ø© / ØªØµÙÙŠØ© Ø¯ÙŠÙ†'**
+  /// **'تسديد دفعة / تصفية دين'**
   String get payDebt;
 
   /// No description provided for @customersList.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡'**
+  /// **'قائمة العملاء'**
   String get customersList;
 
   /// No description provided for @searchNamePhone.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¨Ø­Ø« Ø¨Ø§Ù„Ø§Ø³Ù… Ø£Ùˆ Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ'**
+  /// **'بحث بالاسم أو رقم الهاتف'**
   String get searchNamePhone;
 
   /// No description provided for @customerName.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ø³Ù… Ø§Ù„Ø¹Ù…ÙŠÙ„'**
+  /// **'اسم العميل'**
   String get customerName;
 
   /// No description provided for @generalCustomers.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¹Ù…Ù„Ø§Ø¡ Ø¹Ø§Ù…ÙˆÙ†'**
+  /// **'عملاء عامون'**
   String get generalCustomers;
 
   /// No description provided for @sortBy.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ±ØªÙŠØ¨: '**
+  /// **'ترتيب: '**
   String get sortBy;
 
   /// No description provided for @noCustomersMatch.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø¹Ù…Ù„Ø§Ø¡ ÙŠØ·Ø§Ø¨Ù‚ÙˆÙ† Ø§Ù„Ø¨Ø­Ø«'**
+  /// **'لا يوجد عملاء يطابقون البحث'**
   String get noCustomersMatch;
 
   /// No description provided for @move.
   ///
   /// In ar, this message translates to:
-  /// **'Ù†Ù‚Ù„'**
+  /// **'نقل'**
   String get move;
 
   /// No description provided for @debtAmount.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¯ÙŠÙ†: {debt} {currency}'**
+  /// **'دين: {debt} {currency}'**
   String debtAmount(String debt, String currency);
 
   /// No description provided for @printError.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø¯Ø« Ø®Ø·Ø£ ÙÙŠ Ø§Ù„Ø·Ø¨Ø§Ø¹Ø©: {error}'**
+  /// **'حدث خطأ في الطباعة: {error}'**
   String printError(String error);
 
   /// No description provided for @phoneNumber.
   ///
   /// In ar, this message translates to:
-  /// **'Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ'**
+  /// **'رقم الهاتف'**
   String get phoneNumber;
 
   /// No description provided for @exportExcel.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØµØ¯ÙŠØ± Ù„Ø¥ÙƒØ³Ù„'**
+  /// **'تصدير لإكسل'**
   String get exportExcel;
 
   /// No description provided for @byCreator.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¨ÙˆØ§Ø³Ø·Ø©: {creator}'**
+  /// **'بواسطة: {creator}'**
   String byCreator(String creator);
 
   /// No description provided for @exportError.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ù„ØªØµØ¯ÙŠØ±: {error}'**
+  /// **'حدث خطأ أثناء التصدير: {error}'**
   String exportError(String error);
 
   /// No description provided for @highestDebt.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø£Ø¹Ù„Ù‰ Ø¯ÙŠÙ†Ø§Ù‹'**
+  /// **'الأعلى ديناً'**
   String get highestDebt;
 
   /// No description provided for @paidAmount.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø³Ø¯Ø¯ Ù…Ù† Ø§Ù„Ø¯ÙŠÙ†'**
+  /// **'المبلغ المسدد من الدين'**
   String get paidAmount;
 
   /// No description provided for @rawMaterialsGuide.
   ///
   /// In ar, this message translates to:
-  /// **'ðŸ’¡ Ø¯Ù„ÙŠÙ„ Ø§Ù„Ù…ÙˆØ§Ø¯ Ø§Ù„Ø®Ø§Ù…: Ù‡Ù†Ø§ ÙŠÙ…ÙƒÙ†Ùƒ Ø¥Ø¶Ø§ÙØ© Ù…ÙƒÙˆÙ†Ø§Øª Ù…Ø³ØªÙˆØ¯Ø¹Ùƒ (Ù…Ø«Ù„: Ù„Ø­Ù… Ø¨Ø±Ø¬Ø±ØŒ Ø¬Ø¨Ù†ØŒ Ø£ÙƒÙˆØ§Ø¨ØŒ Ø¨Ù† Ù‚Ù‡ÙˆØ©). Ø¹Ù†Ø¯ Ø±Ø¨Ø· Ù‡Ø°Ù‡ Ø§Ù„Ù…ÙƒÙˆÙ†Ø§Øª Ø¨ÙˆØµÙØ§Øª Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª ÙÙŠ Ø´Ø§Ø´Ø© Ø§Ù„Ù…Ù†ØªØ¬Ø§ØªØŒ Ø³ÙŠÙ‚ÙˆÙ… Ø§Ù„Ù†Ø¸Ø§Ù… Ø¨Ø®ØµÙ… ÙƒÙ…ÙŠØ§ØªÙ‡Ø§ ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹ Ø¹Ù†Ø¯ ÙƒÙ„ Ø¹Ù…Ù„ÙŠØ© Ø¨ÙŠØ¹ Ù„Ø­Ù…Ø§ÙŠØ© Ù…Ø´Ø±ÙˆØ¹Ùƒ Ù…Ù† Ø§Ù„Ù‡Ø¯Ø± ÙˆÙ…Ø¹Ø±ÙØ© Ø§Ù„ØªÙƒÙ„ÙØ© Ø§Ù„Ø­Ù‚ÙŠÙ‚ÙŠØ© Ù„Ø£Ø±Ø¨Ø§Ø­Ùƒ.'**
+  /// **'💡 دليل المواد الخام: هنا يمكنك إضافة مكونات مستودعك (مثل: لحم برجر، جبن، أكواب، بن قهوة). عند ربط هذه المكونات بوصفات المنتجات في شاشة المنتجات، سيقوم النظام بخصم كمياتها تلقائياً عند كل عملية بيع لحماية مشروعك من الهدر ومعرفة التكلفة الحقيقية لأرباحك.'**
   String get rawMaterialsGuide;
 
   /// No description provided for @mlLabel.
   ///
   /// In ar, this message translates to:
-  /// **'Ù…Ù„Ù„ÙŠ (ml)'**
+  /// **'مللي (ml)'**
   String get mlLabel;
 
   /// No description provided for @rawMaterialsUsageHint.
   ///
   /// In ar, this message translates to:
-  /// **'ðŸ’¡ Ø³ØªØ³ØªØ®Ø¯Ù… Ù‡Ø°Ù‡ Ø§Ù„Ù…Ø§Ø¯Ø© Ù„Ø±Ø¨Ø·Ù‡Ø§ Ø¨ÙˆØ¬Ø¨Ø§Øª ÙˆÙ…Ù†ØªØ¬Ø§Øª Ø§Ù„Ø¨ÙŠØ¹ Ù„ÙŠØªÙ… Ø§Ù„Ø®ØµÙ… Ø§Ù„ØªÙ„Ù‚Ø§Ø¦ÙŠ Ø¹Ù†Ø¯ Ø¥ØµØ¯Ø§Ø± Ø§Ù„ÙÙˆØ§ØªÙŠØ±.'**
+  /// **'💡 ستستخدم هذه المادة لربطها بوجبات ومنتجات البيع ليتم الخصم التلقائي عند إصدار الفواتير.'**
   String get rawMaterialsUsageHint;
 
   /// No description provided for @gLabel.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¬Ø±Ø§Ù… (g)'**
+  /// **'جرام (g)'**
   String get gLabel;
 
   /// No description provided for @editRawMaterial.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ¹Ø¯ÙŠÙ„ Ù…Ø§Ø¯Ø© Ø®Ø§Ù…'**
+  /// **'تعديل مادة خام'**
   String get editRawMaterial;
 
   /// No description provided for @measuringUnit.
   ///
   /// In ar, this message translates to:
-  /// **'ÙˆØ­Ø¯Ø© Ø§Ù„Ù‚ÙŠØ§Ø³:'**
+  /// **'وحدة القياس:'**
   String get measuringUnit;
 
   /// No description provided for @noRawMaterialsFound.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…ÙˆØ§Ø¯ Ø®Ø§Ù… ÙÙŠ Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹ Ø¨Ø¹Ø¯.\nØ§Ø¶ØºØ· Ø¹Ù„Ù‰ Ø²Ø± \"Ø¥Ø¶Ø§ÙØ© Ù…Ø§Ø¯Ø© Ø®Ø§Ù…\" Ø¨Ø§Ù„Ø£Ø³ÙÙ„ Ù„Ù„Ø¨Ø¯Ø¡!'**
+  /// **'لا توجد مواد خام في المستودع بعد.\nاضغط على زر \"إضافة مادة خام\" بالأسفل للبدء!'**
   String get noRawMaterialsFound;
 
   /// No description provided for @availableBalance.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø±ØµÙŠØ¯ Ø§Ù„Ù…ØªÙˆÙØ±: {quantity}  ({unit})'**
+  /// **'الرصيد المتوفر: {quantity}  ({unit})'**
   String availableBalance(String quantity, String unit);
 
   /// No description provided for @saveInWarehouse.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­ÙØ¸ ÙÙŠ Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹'**
+  /// **'حفظ في المستودع'**
   String get saveInWarehouse;
 
   /// No description provided for @addRawMaterial.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¶Ø§ÙØ© Ù…Ø§Ø¯Ø© Ø®Ø§Ù…'**
+  /// **'إضافة مادة خام'**
   String get addRawMaterial;
 
   /// No description provided for @addNewRawMaterial.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¶Ø§ÙØ© Ù…Ø§Ø¯Ø© Ø®Ø§Ù… Ø¬Ø¯ÙŠØ¯Ø©'**
+  /// **'إضافة مادة خام جديدة'**
   String get addNewRawMaterial;
 
   /// No description provided for @pieceUnit.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‚Ø·Ø¹Ø© / Ø­Ø¨Ø©'**
+  /// **'قطعة / حبة'**
   String get pieceUnit;
 
   /// No description provided for @pieceUnitDesc.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‚Ø·Ø¹Ø© / Ø­Ø¨Ø© (piece) - Ù„Ù„Ø£ÙƒÙˆØ§Ø¨ ÙˆØ§Ù„Ø®Ø¨Ø² ÙˆØ§Ù„Ø¹Ø¨ÙˆØ§Øª'**
+  /// **'قطعة / حبة (piece) - للأكواب والخبز والعبوات'**
   String get pieceUnitDesc;
 
   /// No description provided for @pleaseEnterRawMaterialName.
   ///
   /// In ar, this message translates to:
-  /// **'ÙŠØ±Ø¬Ù‰ Ø¥Ø¯Ø®Ø§Ù„ Ø§Ø³Ù… Ø§Ù„Ù…Ø§Ø¯Ø© Ø§Ù„Ø®Ø§Ù… Ø£ÙˆÙ„Ø§Ù‹'**
+  /// **'يرجى إدخال اسم المادة الخام أولاً'**
   String get pleaseEnterRawMaterialName;
 
   /// No description provided for @currentAvailableQuantity.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„ÙƒÙ…ÙŠØ© Ø§Ù„Ù…ØªÙˆÙØ±Ø© Ø­Ø§Ù„ÙŠØ§Ù‹ ÙÙŠ Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹'**
+  /// **'الكمية المتوفرة حالياً في المستودع'**
   String get currentAvailableQuantity;
 
   /// No description provided for @gUnitDesc.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¬Ø±Ø§Ù… (g) - Ù„Ù„ÙˆØ²Ù† Ù…Ø«Ù„ Ø§Ù„Ù„Ø­ÙˆÙ… ÙˆØ§Ù„Ù‚Ù‡ÙˆØ©'**
+  /// **'جرام (g) - للوزن مثل اللحوم والقهوة'**
   String get gUnitDesc;
 
   /// No description provided for @mlUnitDesc.
   ///
   /// In ar, this message translates to:
-  /// **'Ù…Ù„Ù„ÙŠ (ml) - Ù„Ù„Ø³ÙˆØ§Ø¦Ù„ ÙˆØ§Ù„ØµÙ„ØµØ§Øª'**
+  /// **'مللي (ml) - للسوائل والصلصات'**
   String get mlUnitDesc;
 
   /// No description provided for @resourceRunningOut.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ†Ø¨ÙŠÙ‡: Ø§Ù„Ù…ÙˆØ±Ø¯ Ù‚Ø§Ø±Ø¨ Ø¹Ù„Ù‰ Ø§Ù„Ø§Ù†ØªÙ‡Ø§Ø¡'**
+  /// **'تنبيه: المورد قارب على الانتهاء'**
   String get resourceRunningOut;
 
   /// No description provided for @rawMaterialNameExample.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ø³Ù… Ø§Ù„Ù…Ø§Ø¯Ø© Ø§Ù„Ø®Ø§Ù… (Ù…Ø«Ø§Ù„: Ù„Ø­Ù… Ø¨Ø±Ø¬Ø±ØŒ Ø¬Ø¨Ù†ØŒ Ù‚Ù‡ÙˆØ© Ø¨Ù†)'**
+  /// **'اسم المادة الخام (مثال: لحم برجر، جبن، قهوة بن)'**
   String get rawMaterialNameExample;
 
   /// No description provided for @rawMaterialsWarehouse.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…ÙˆØ§Ø¯ Ø§Ù„Ø®Ø§Ù… (Ù…Ø³ØªÙˆØ¯Ø¹ Ø§Ù„Ù…ÙƒÙˆÙ†Ø§Øª)'**
+  /// **'المواد الخام (مستودع المكونات)'**
   String get rawMaterialsWarehouse;
 
   /// No description provided for @orderNumberLabel.
   ///
   /// In ar, this message translates to:
-  /// **'Ø·Ù„Ø¨ #{number}'**
+  /// **'طلب #{number}'**
   String orderNumberLabel(String number);
 
   /// No description provided for @thisWeekFromTo.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‡Ø°Ø§ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ (Ù…Ù† {start} Ø¥Ù„Ù‰ {end})'**
+  /// **'هذا الأسبوع (من {start} إلى {end})'**
   String thisWeekFromTo(String start, String end);
 
   /// No description provided for @thermalPrint.
   ///
   /// In ar, this message translates to:
-  /// **'Ø·Ø¨Ø§Ø¹Ø© Ø­Ø±Ø§Ø±ÙŠØ©'**
+  /// **'طباعة حرارية'**
   String get thermalPrint;
 
   /// No description provided for @invoicePermanentlyDeleted.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ… Ø­Ø°Ù Ø§Ù„ÙØ§ØªÙˆØ±Ø© Ø±Ù‚Ù… #{number} Ù†Ù‡Ø§Ø¦ÙŠØ§Ù‹ Ù…Ù† Ù‚Ø¨Ù„ {user}'**
+  /// **'تم حذف الفاتورة رقم #{number} نهائياً من قبل {user}'**
   String invoicePermanentlyDeleted(String number, String user);
 
   /// No description provided for @scheduledOrders.
   ///
   /// In ar, this message translates to:
-  /// **'Ø·Ù„Ø¨Ø§Øª Ù…Ø¬Ø¯ÙˆÙ„Ø© ðŸ—“'**
+  /// **'طلبات مجدولة 🗓'**
   String get scheduledOrders;
 
   /// No description provided for @totalIncome.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø¯Ø®Ù„: '**
+  /// **'إجمالي الدخل: '**
   String get totalIncome;
 
   /// No description provided for @monthPrefix.
   ///
   /// In ar, this message translates to:
-  /// **'Ø´Ù‡Ø± '**
+  /// **'شهر '**
   String get monthPrefix;
 
   /// No description provided for @deleteInvoice.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø°Ù Ø§Ù„ÙØ§ØªÙˆØ±Ø©'**
+  /// **'حذف الفاتورة'**
   String get deleteInvoice;
 
   /// No description provided for @confirmDeleteInvoiceMsg.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ù…Ø³Ø­ Ù‡Ø°Ù‡ Ø§Ù„ÙØ§ØªÙˆØ±Ø©ØŸ (Ø³ÙŠØ¹ÙˆØ¯ Ø§Ù„Ù…Ø®Ø²ÙˆÙ† Ù„Ù„Ù…Ù†ØªØ¬Ø§Øª)'**
+  /// **'هل أنت متأكد من مسح هذه الفاتورة؟ (سيعود المخزون للمنتجات)'**
   String get confirmDeleteInvoiceMsg;
 
   /// No description provided for @bankTransferMethod.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ­ÙˆÙŠÙ„ Ø¨Ù†ÙƒÙŠ ðŸ¦'**
+  /// **'تحويل بنكي 🏦'**
   String get bankTransferMethod;
 
   /// No description provided for @cashMethod.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¯ÙØ¹ ÙƒØ§Ø´ ðŸ’µ'**
+  /// **'دفع كاش 💵'**
   String get cashMethod;
 
   /// No description provided for @agoPrefix.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‚Ø¨Ù„ '**
+  /// **'قبل '**
   String get agoPrefix;
 
   /// No description provided for @deleteBtn.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø°Ù'**
+  /// **'حذف'**
   String get deleteBtn;
 
   /// No description provided for @madaMethod.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¯ÙØ¹ Ù…Ø¯Ù‰ ðŸ’³'**
+  /// **'دفع مدى 💳'**
   String get madaMethod;
 
   /// No description provided for @warningFinalDelete.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ­Ø°ÙŠØ±: Ø­Ø°Ù Ù†Ù‡Ø§Ø¦ÙŠ Ù„Ù„Ø·Ù„Ø¨'**
+  /// **'تحذير: حذف نهائي للطلب'**
   String get warningFinalDelete;
 
   /// No description provided for @hideBtn.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø®ÙØ§Ø¡'**
+  /// **'إخفاء'**
   String get hideBtn;
 
   /// No description provided for @weekFromTo.
   ///
   /// In ar, this message translates to:
-  /// **' Ø£Ø³Ø¨ÙˆØ¹ (Ù…Ù† {start} Ø¥Ù„Ù‰ {end})'**
+  /// **' أسبوع (من {start} إلى {end})'**
   String weekFromTo(String start, String end);
 
   /// No description provided for @pdfInvoice.
   ///
   /// In ar, this message translates to:
-  /// **'ÙØ§ØªÙˆØ±Ø© PDF'**
+  /// **'فاتورة PDF'**
   String get pdfInvoice;
 
   /// No description provided for @finalDeleteWarningMsg.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø­Ø°Ù Ø§Ù„Ù†Ù‡Ø§Ø¦ÙŠ Ø³ÙŠÙ…Ø­Ùˆ Ù‡Ø°Ø§ Ø§Ù„Ø·Ù„Ø¨ Ù…Ù† Ø§Ù„Ø³Ø¬Ù„Ø§Øª ØªÙ…Ø§Ù…Ø§Ù‹ Ø¨Ø§Ù„Ø¥Ø¶Ø§ÙØ© Ø¥Ù„Ù‰ Ø¥Ø±Ø¬Ø§Ø¹ Ø§Ù„Ø£Ù…ÙˆØ§Ù„ ÙˆØ¹ÙƒØ³ Ø§Ù„Ø¯ÙŠÙˆÙ†. Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„ÙØ§ØªÙˆØ±Ø©. Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ØŸ'**
+  /// **'الحذف النهائي سيمحو هذا الطلب من السجلات تماماً بالإضافة إلى إرجاع الأموال وعكس الديون. لا يمكن استعادة الفاتورة. هل أنت متأكد؟'**
   String get finalDeleteWarningMsg;
 
   /// No description provided for @failDeleteInvoiceNoPermission.
   ///
   /// In ar, this message translates to:
-  /// **'ÙØ´Ù„ Ù…Ø³Ø­ Ø§Ù„ÙØ§ØªÙˆØ±Ø© Ù†Ù‡Ø§Ø¦ÙŠØ§Ù‹ Ù„Ø¹Ø¯Ù… ÙˆØ¬ÙˆØ¯ ØµÙ„Ø§Ø­ÙŠØ© Ø£Ùˆ Ù„Ø§ ØªÙˆØ¬Ø¯ ÙØ§ØªÙˆØ±Ø©.'**
+  /// **'فشل مسح الفاتورة نهائياً لعدم وجود صلاحية أو لا توجد فاتورة.'**
   String get failDeleteInvoiceNoPermission;
 
   /// No description provided for @todayPrefix.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„ÙŠÙˆÙ… - '**
+  /// **'اليوم - '**
   String get todayPrefix;
 
   /// No description provided for @posTitle.
   ///
   /// In ar, this message translates to:
-  /// **'Ù†Ù‚Ø·Ø© Ø§Ù„Ø¨ÙŠØ¹ (POS)'**
+  /// **'نقطة البيع (POS)'**
   String get posTitle;
 
   /// No description provided for @byCreatorIcon.
   ///
   /// In ar, this message translates to:
-  /// **'ðŸ‘¤ Ø¨ÙˆØ§Ø³Ø·Ø©: {creator}'**
+  /// **'👤 بواسطة: {creator}'**
   String byCreatorIcon(String creator);
 
   /// No description provided for @deleteInvoiceAction.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø°Ù ÙØ§ØªÙˆØ±Ø©'**
+  /// **'حذف فاتورة'**
   String get deleteInvoiceAction;
 
   /// No description provided for @invoiceDeletedSuccessfully.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ… Ø­Ø°Ù Ø§Ù„ÙØ§ØªÙˆØ±Ø© Ø¨Ù†Ø¬Ø§Ø­'**
+  /// **'تم حذف الفاتورة بنجاح'**
   String get invoiceDeletedSuccessfully;
 
   /// No description provided for @yearPrefix.
   ///
   /// In ar, this message translates to:
-  /// **'Ø³Ù†Ø© '**
+  /// **'سنة '**
   String get yearPrefix;
 
   /// No description provided for @deliveryDate.
   ///
   /// In ar, this message translates to:
-  /// **'Ù…ÙˆØ¹Ø¯ Ø§Ù„ØªØ³Ù„ÙŠÙ…: '**
+  /// **'موعد التسليم: '**
   String get deliveryDate;
 
   /// No description provided for @yesterdayPrefix.
   ///
   /// In ar, this message translates to:
-  /// **'Ø£Ù…Ø³ - '**
+  /// **'أمس - '**
   String get yesterdayPrefix;
 
   /// No description provided for @paymentMethod.
   ///
   /// In ar, this message translates to:
-  /// **' (Ø§Ù„Ø¯ÙØ¹: '**
+  /// **' (الدفع: '**
   String get paymentMethod;
 
   /// No description provided for @invoiceCancelledMsg.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ… Ø¥Ù„ØºØ§Ø¡ Ø§Ù„ÙØ§ØªÙˆØ±Ø© Ø±Ù‚Ù… #{number} Ø¨Ù‚ÙŠÙ…Ø© {value}'**
+  /// **'تم إلغاء الفاتورة رقم #{number} بقيمة {value}'**
   String invoiceCancelledMsg(String number, String value);
 
   /// No description provided for @confirmFinalDeleteMsg.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø±ØºØ¨ØªÙƒ ÙÙŠ Ù…Ø³Ø­ Ø§Ù„ÙØ§ØªÙˆØ±Ø© Ù†Ù‡Ø§Ø¦ÙŠØ§Ù‹ØŸ Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø§Ù„ØªØ±Ø§Ø¬Ø¹ Ø¹Ù† Ù‡Ø°Ù‡ Ø§Ù„Ø®Ø·ÙˆØ©.'**
+  /// **'هل أنت متأكد من رغبتك في مسح الفاتورة نهائياً؟ لا يمكن التراجع عن هذه الخطوة.'**
   String get confirmFinalDeleteMsg;
 
   /// No description provided for @errorOccurred.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø¯Ø« Ø®Ø·Ø£: {error}'**
+  /// **'حدث خطأ: {error}'**
   String errorOccurred(String error);
 
   /// No description provided for @invoiceDeletedPermanently.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ… Ø­Ø°Ù Ø§Ù„ÙØ§ØªÙˆØ±Ø© Ù†Ù‡Ø§Ø¦ÙŠØ§Ù‹'**
+  /// **'تم حذف الفاتورة نهائياً'**
   String get invoiceDeletedPermanently;
 
   /// No description provided for @cancelOrder.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø·Ù„Ø¨'**
+  /// **'إلغاء الطلب'**
   String get cancelOrder;
 
   /// No description provided for @orderDetailsTitle.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ø·Ù„Ø¨ #{number}'**
+  /// **'تفاصيل الطلب #{number}'**
   String orderDetailsTitle(String number);
 
   /// No description provided for @orderConfirmed.
   ///
   /// In ar, this message translates to:
-  /// **'âœ… Ø·Ù„Ø¨ Ù…Ø¤ÙƒØ¯ / Ù…ÙƒØªÙ…Ù„'**
+  /// **'✅ طلب مؤكد / مكتمل'**
   String get orderConfirmed;
 
   /// No description provided for @invoiceOptions.
   ///
   /// In ar, this message translates to:
-  /// **'âš™ï¸ Ø®ÙŠØ§Ø±Ø§Øª Ø§Ù„ÙØ§ØªÙˆØ±Ø©'**
+  /// **'⚙️ خيارات الفاتورة'**
   String get invoiceOptions;
 
   /// No description provided for @creditMethod.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¢Ø¬Ù„ / Ø°Ù…Ù… (Credit)'**
+  /// **'آجل / ذمم (Credit)'**
   String get creditMethod;
 
   /// No description provided for @warningCancelOrder.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ­Ø°ÙŠØ±: Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø·Ù„Ø¨'**
+  /// **'تحذير: إلغاء الطلب'**
   String get warningCancelOrder;
 
   /// No description provided for @confirmFinalDelete.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø­Ø°Ù Ø§Ù„Ù†Ù‡Ø§Ø¦ÙŠ'**
+  /// **'تأكيد الحذف النهائي'**
   String get confirmFinalDelete;
 
   /// No description provided for @subtotalBeforeTax.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ (Ù‚Ø¨Ù„ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©)'**
+  /// **'الإجمالي (قبل الضريبة)'**
   String get subtotalBeforeTax;
 
   /// No description provided for @cancelOrderWarningMsg.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø·Ù„Ø¨ Ø³ÙŠØ¤Ø¯ÙŠ Ø¥Ù„Ù‰ Ø¥Ø±Ø¬Ø§Ø¹ Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª Ù„Ù„Ù…Ø®Ø²ÙˆÙ†ØŒ ÙˆØ®ØµÙ… Ø§Ù„Ø£Ù…ÙˆØ§Ù„ Ø§Ù„Ù…Ø¯ÙÙˆØ¹Ø© Ù…Ù† Ø§Ù„ÙˆØ±Ø¯ÙŠØ© Ø§Ù„Ø­Ø§Ù„ÙŠØ©ØŒ ÙˆØ¹ÙƒØ³ Ø¯ÙŠÙˆÙ† Ø§Ù„Ø¹Ù…ÙŠÙ„. Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ØŸ'**
+  /// **'إلغاء الطلب سيؤدي إلى إرجاع المنتجات للمخزون، وخصم الأموال المدفوعة من الوردية الحالية، وعكس ديون العميل. هل أنت متأكد؟'**
   String get cancelOrderWarningMsg;
 
   /// No description provided for @unitPricePrefix.
   ///
   /// In ar, this message translates to:
-  /// **'Ø³Ø¹Ø± Ø§Ù„ÙˆØ­Ø¯Ø©: '**
+  /// **'سعر الوحدة: '**
   String get unitPricePrefix;
 
   /// No description provided for @finalDeleteBtn.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø°Ù Ù†Ù‡Ø§Ø¦ÙŠ'**
+  /// **'حذف نهائي'**
   String get finalDeleteBtn;
 
   /// No description provided for @itemsList.
   ///
   /// In ar, this message translates to:
-  /// **'ðŸ›ï¸ Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø£ØµÙ†Ø§Ù ÙˆØ§Ù„Ù…Ù†ØªØ¬Ø§Øª'**
+  /// **'🛍️ قائمة الأصناف والمنتجات'**
   String get itemsList;
 
   /// No description provided for @confirmCancelInvoiceMsg.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø±ØºØ¨ØªÙƒ ÙÙŠ Ø¥Ù„ØºØ§Ø¡ Ù‡Ø°Ù‡ Ø§Ù„ÙØ§ØªÙˆØ±Ø©ØŸ Ø³ÙŠØªÙ… Ø¥Ø±Ø¬Ø§Ø¹ ÙƒÙ…ÙŠØ§Øª Ø§Ù„Ø£ØµÙ†Ø§Ù Ù„Ù„Ù…Ø®Ø²ÙˆÙ† ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹.'**
+  /// **'هل أنت متأكد من رغبتك في إلغاء هذه الفاتورة؟ سيتم إرجاع كميات الأصناف للمخزون تلقائياً.'**
   String get confirmCancelInvoiceMsg;
 
   /// No description provided for @orderCancelledStatus.
   ///
   /// In ar, this message translates to:
-  /// **'âŒ Ø·Ù„Ø¨ Ù…Ù„ØºÙŠ'**
+  /// **'❌ طلب ملغي'**
   String get orderCancelledStatus;
 
   /// No description provided for @cancelInvoiceBtn.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ù„ØºØ§Ø¡ ÙØ§ØªÙˆØ±Ø©'**
+  /// **'إلغاء فاتورة'**
   String get cancelInvoiceBtn;
 
   /// No description provided for @invoiceGrandTotal.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„Ù†Ù‡Ø§Ø¦ÙŠ Ù„Ù„ÙØ§ØªÙˆØ±Ø©'**
+  /// **'المجموع النهائي للفاتورة'**
   String get invoiceGrandTotal;
 
   /// No description provided for @invoiceCancelledSuccessfully.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙ… Ø¥Ù„ØºØ§Ø¡ Ø§Ù„ÙØ§ØªÙˆØ±Ø© Ø¨Ù†Ø¬Ø§Ø­ ÙˆØ¥Ø±Ø¬Ø§Ø¹ Ø§Ù„Ù…ÙˆØ§Ø¯ Ù„Ù„Ù…Ø®Ø²ÙˆÙ†'**
+  /// **'تم إلغاء الفاتورة بنجاح وإرجاع المواد للمخزون'**
   String get invoiceCancelledSuccessfully;
 
   /// No description provided for @totalTax.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©'**
+  /// **'إجمالي الضريبة'**
   String get totalTax;
 
   /// No description provided for @confirmCancelBtn.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø¥Ù„ØºØ§Ø¡'**
+  /// **'تأكيد الإلغاء'**
   String get confirmCancelBtn;
 
   /// No description provided for @goBackBtn.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ±Ø§Ø¬Ø¹'**
+  /// **'تراجع'**
   String get goBackBtn;
 
   /// No description provided for @yesterday.
   ///
   /// In ar, this message translates to:
-  /// **'Ø£Ù…Ø³'**
+  /// **'أمس'**
   String get yesterday;
 
   /// No description provided for @expensesDistribution.
   ///
   /// In ar, this message translates to:
-  /// **'ØªÙˆØ²ÙŠØ¹ Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª'**
+  /// **'توزيع المصروفات'**
   String get expensesDistribution;
 
   /// No description provided for @preparingExcelReport.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¬Ø§Ø±ÙŠ ØªØ¬Ù‡ÙŠØ² Ø§Ù„ØªÙ‚Ø±ÙŠØ± (Ø¥ÙƒØ³Ù„)...'**
+  /// **'جاري تجهيز التقرير (إكسل)...'**
   String get preparingExcelReport;
 
   /// No description provided for @unitsSold.
   ///
   /// In ar, this message translates to:
-  /// **'{quantity} ÙˆØ­Ø¯Ø© Ù…Ø¨Ø§Ø¹Ø©'**
+  /// **'{quantity} وحدة مباعة'**
   String unitsSold(String quantity);
 
   /// No description provided for @oneWeek.
   ///
   /// In ar, this message translates to:
-  /// **'Ø£Ø³Ø¨ÙˆØ¹'**
+  /// **'أسبوع'**
   String get oneWeek;
 
   /// No description provided for @excelExportError.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ ØªØµØ¯ÙŠØ± Ø¥ÙƒØ³Ù„: {error}'**
+  /// **'حدث خطأ أثناء تصدير إكسل: {error}'**
   String excelExportError(String error);
 
   /// No description provided for @reportExtractionError.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ø³ØªØ®Ø±Ø§Ø¬ Ø§Ù„ØªÙ‚Ø±ÙŠØ±'**
+  /// **'حدث خطأ أثناء استخراج التقرير'**
   String get reportExtractionError;
 
   /// No description provided for @oneMonth.
   ///
   /// In ar, this message translates to:
-  /// **'Ø´Ù‡Ø±'**
+  /// **'شهر'**
   String get oneMonth;
 
   /// No description provided for @semiAnnual.
   ///
   /// In ar, this message translates to:
-  /// **'Ù†ØµÙ Ø³Ù†ÙˆÙŠ'**
+  /// **'نصف سنوي'**
   String get semiAnnual;
 
   /// No description provided for @oneYear.
   ///
   /// In ar, this message translates to:
-  /// **'Ø³Ù†Ø©'**
+  /// **'سنة'**
   String get oneYear;
 
   /// No description provided for @today.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„ÙŠÙˆÙ…'**
+  /// **'اليوم'**
   String get today;
 
   /// No description provided for @preparingPdfReport.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¬Ø§Ø±ÙŠ ØªØ¬Ù‡ÙŠØ² Ø§Ù„ØªÙ‚Ø±ÙŠØ± (PDF)...'**
+  /// **'جاري تجهيز التقرير (PDF)...'**
   String get preparingPdfReport;
 
   /// No description provided for @twoDaysAgo.
   ///
   /// In ar, this message translates to:
-  /// **'Ù‚Ø¨Ù„ ÙŠÙˆÙ…ÙŠÙ†'**
+  /// **'قبل يومين'**
   String get twoDaysAgo;
 
   /// No description provided for @noExpensesInPeriod.
   ///
   /// In ar, this message translates to:
-  /// **'Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…ØµØ±ÙˆÙØ§Øª ÙÙŠ Ù‡Ø°Ù‡ Ø§Ù„ÙØªØ±Ø©'**
+  /// **'لا توجد مصروفات في هذه الفترة'**
   String get noExpensesInPeriod;
 
   /// No description provided for @cash.
@@ -2897,163 +2897,163 @@ abstract class AppLocalizations {
   /// No description provided for @aboutApp.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­ÙˆÙ„ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚'**
+  /// **'حول التطبيق'**
   String get aboutApp;
 
   /// No description provided for @databaseBackupText.
   ///
   /// In ar, this message translates to:
-  /// **'Ù†Ø³Ø® Ø§Ø­ØªÙŠØ§Ø·ÙŠ Ù„Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª'**
+  /// **'نسخ احتياطي لقاعدة البيانات'**
   String get databaseBackupText;
 
   /// No description provided for @thermalPrinterText.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø·Ø§Ø¨Ø¹Ø© Ø§Ù„Ø­Ø±Ø§Ø±ÙŠØ©'**
+  /// **'الطابعة الحرارية'**
   String get thermalPrinterText;
 
   /// No description provided for @setupChecklistTitle.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¬Ù‡Ø² Ù…ØªØ¬Ø±Ùƒ Ù„Ù„Ø¨ÙŠØ¹'**
+  /// **'جهز متجرك للبيع'**
   String get setupChecklistTitle;
 
   /// No description provided for @setupStep1.
   ///
   /// In ar, this message translates to:
-  /// **'Ø£Ø³Ø³ Ù…ØªØ¬Ø±Ùƒ (Ø£Ø¶Ù ØªØµÙ†ÙŠÙ)'**
+  /// **'أسس متجرك (أضف تصنيف)'**
   String get setupStep1;
 
   /// No description provided for @setupStep2.
   ///
   /// In ar, this message translates to:
-  /// **'ØªØ¬Ù‡ÙŠØ² Ø§Ù„Ø±ÙÙˆÙ (Ø£Ø¶Ù Ù…Ù†ØªØ¬)'**
+  /// **'تجهيز الرفوف (أضف منتج)'**
   String get setupStep2;
 
   /// No description provided for @setupStep3.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ø³ØªÙ„Ø§Ù… Ø§Ù„Ø¹Ù‡Ø¯Ø© (Ø§ÙØªØ­ ÙˆØ±Ø¯ÙŠØ©)'**
+  /// **'استلام العهدة (افتح وردية)'**
   String get setupStep3;
 
   /// No description provided for @setupStep4.
   ///
   /// In ar, this message translates to:
-  /// **'Ø£ÙˆÙ„ ØºÙŠØ« (Ø£Ù†Ø´Ø¦ Ù…Ø¨ÙŠØ¹Ø©)'**
+  /// **'أول غيث (أنشئ مبيعة)'**
   String get setupStep4;
 
   /// No description provided for @setupCompleted.
   ///
   /// In ar, this message translates to:
-  /// **'Ø£Ù†Øª Ø¬Ø§Ù‡Ø² ØªÙ…Ø§Ù…Ø§Ù‹ Ù„Ù„Ø¨ÙŠØ¹! ðŸŽ‰'**
+  /// **'أنت جاهز تماماً للبيع! 🎉'**
   String get setupCompleted;
 
   /// No description provided for @taxModeTitle.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©'**
+  /// **'الضريبة'**
   String get taxModeTitle;
 
   /// No description provided for @taxModeStore.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø¶Ø±ÙŠØ¨Ø© Ø§Ù„Ù…ØªØ¬Ø±'**
+  /// **'استخدام ضريبة المتجر'**
   String get taxModeStore;
 
   /// No description provided for @taxModeCustom.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¶Ø±ÙŠØ¨Ø© Ù…Ø®ØµØµØ©'**
+  /// **'ضريبة مخصصة'**
   String get taxModeCustom;
 
   /// No description provided for @taxModeExempt.
   ///
   /// In ar, this message translates to:
-  /// **'Ù…Ø¹ÙÙ‰ Ù…Ù† Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©'**
+  /// **'معفى من الضريبة'**
   String get taxModeExempt;
 
   /// No description provided for @paywallMainPlan.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø¨Ø§Ù‚Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©'**
+  /// **'الباقة الرئيسية'**
   String get paywallMainPlan;
 
   /// No description provided for @paywallMainDesc1.
   ///
   /// In ar, this message translates to:
-  /// **'ÙØ±Ø¹ Ø±Ø¦ÙŠØ³ÙŠ ÙƒØ§Ù…Ù„'**
+  /// **'فرع رئيسي كامل'**
   String get paywallMainDesc1;
 
   /// No description provided for @paywallMainDesc2.
   ///
   /// In ar, this message translates to:
-  /// **'ØµÙ„Ø§Ø­ÙŠØ§Øª ØªØ§Ø¬Ø± ÙƒØ§Ù…Ù„Ø© Ù„Ù„ÙØ±Ø¹ Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠ'**
+  /// **'صلاحيات تاجر كاملة للفرع الرئيسي'**
   String get paywallMainDesc2;
 
   /// No description provided for @paywallMainDesc3.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­ØªÙ‰ 3 Ù…ÙˆØ¸ÙÙŠÙ† ÙÙŠ Ø§Ù„ÙØ±Ø¹ Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠ'**
+  /// **'حتى 3 موظفين في الفرع الرئيسي'**
   String get paywallMainDesc3;
 
   /// No description provided for @paywallMainDesc4.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¥Ù…ÙƒØ§Ù†ÙŠØ© Ø¥Ø¶Ø§ÙØ© ÙØ±ÙˆØ¹ ØªØ¬Ø±ÙŠØ¨ÙŠØ©'**
+  /// **'إمكانية إضافة فروع تجريبية'**
   String get paywallMainDesc4;
 
   /// No description provided for @paywallMainDesc5.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„ÙØ±ÙˆØ¹ Ø§Ù„ØªØ¬Ø±ÙŠØ¨ÙŠØ© ØªØ¨Ù‚Ù‰ Ù…Ø­Ø¯ÙˆØ¯Ø©'**
+  /// **'الفروع التجريبية تبقى محدودة'**
   String get paywallMainDesc5;
 
   /// No description provided for @paywallMultiPlan.
   ///
   /// In ar, this message translates to:
-  /// **'Ø¨Ø§Ù‚Ø© Ù…ØªØ¹Ø¯Ø¯ Ø§Ù„ÙØ±ÙˆØ¹'**
+  /// **'باقة متعدد الفروع'**
   String get paywallMultiPlan;
 
   /// No description provided for @paywallMultiDesc1.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠ + 3 ÙØ±ÙˆØ¹ Ø¥Ù†ØªØ§Ø¬ÙŠØ© Ø¥Ø¶Ø§ÙÙŠØ©'**
+  /// **'الرئيسي + 3 فروع إنتاجية إضافية'**
   String get paywallMultiDesc1;
 
   /// No description provided for @paywallMultiDesc2.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø¯ Ø£Ù‚ØµÙ‰ 4 ÙØ±ÙˆØ¹ ÙƒØ§Ù…Ù„Ø©'**
+  /// **'حد أقصى 4 فروع كاملة'**
   String get paywallMultiDesc2;
 
   /// No description provided for @paywallMultiDesc3.
   ///
   /// In ar, this message translates to:
-  /// **'Ù…ÙˆØ¸ÙÙŠ Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠ = 3ØŒ Ø§Ù„Ø¥Ø¶Ø§ÙÙŠ = 2 Ù„ÙƒÙ„ ÙØ±Ø¹'**
+  /// **'موظفي الرئيسي = 3، الإضافي = 2 لكل فرع'**
   String get paywallMultiDesc3;
 
   /// No description provided for @paywallMultiDesc4.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­Ø¯ Ø£Ù‚ØµÙ‰ 9 Ù…ÙˆØ¸ÙÙŠÙ† Ø¥Ø¬Ù…Ø§Ù„Ø§Ù‹'**
+  /// **'حد أقصى 9 موظفين إجمالاً'**
   String get paywallMultiDesc4;
 
   /// No description provided for @paywallMultiDesc5.
   ///
   /// In ar, this message translates to:
-  /// **'ØµÙ„Ø§Ø­ÙŠØ§Øª Ø§Ù„ÙØ±ÙˆØ¹ Ø§Ù„Ù…ØªØ¹Ø¯Ø¯Ø© ÙƒØ§Ù…Ù„Ø©'**
+  /// **'صلاحيات الفروع المتعددة كاملة'**
   String get paywallMultiDesc5;
 
   /// No description provided for @paywallMultiDesc6.
   ///
   /// In ar, this message translates to:
-  /// **'Ø­ÙØ¸ Ø¥Ù…ÙƒØ§Ù†ÙŠØ§Øª Ù†Ù‚Ù„ Ø§Ù„Ù…Ø®Ø²ÙˆÙ† Ø§Ù„Ø­Ø§Ù„ÙŠØ©'**
+  /// **'حفظ إمكانيات نقل المخزون الحالية'**
   String get paywallMultiDesc6;
 
   /// No description provided for @pricePendingStore.
   ///
   /// In ar, this message translates to:
-  /// **'Ø§Ù„Ø³Ø¹Ø± Ù…ØªØ§Ø­ Ø¨Ø¹Ø¯ Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø§Ù„Ù…ØªØ¬Ø±'**
+  /// **'السعر متاح بعد الاتصال بالمتجر'**
   String get pricePendingStore;
 
   /// No description provided for @freeLimitReachedTitle.

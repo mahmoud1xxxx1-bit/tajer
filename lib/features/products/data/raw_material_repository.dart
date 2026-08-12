@@ -503,10 +503,15 @@ final rawMaterialsStreamProvider =
       branchId: branchId,
     );
     if (!migrationCompleted) {
-      baseMaterials = await repository.readLegacyRawMaterialsForBranch(
-        merchantId: merchantId,
-        branchId: branchId,
-      );
+      try {
+        baseMaterials = await repository.readLegacyRawMaterialsForBranch(
+          merchantId: merchantId,
+          branchId: branchId,
+        );
+      } on StateError {
+        // Prevent 'Bad state' crash in UI while manifest is building
+        baseMaterials = [];
+      }
     }
     
     // Explicitly await the future of the inventory provider to guarantee readiness.

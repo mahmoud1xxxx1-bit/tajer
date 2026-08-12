@@ -81,7 +81,7 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
             padding: const EdgeInsets.all(24),
             child: Text(
               isAr
-                  ? 'Ù„ÙŠØ³ Ù„Ø¯ÙŠÙƒ ØµÙ„Ø§Ø­ÙŠØ© Ø¹Ø±Ø¶ Ø³Ø¬Ù„ Ø§Ù„Ù…Ø®Ø²ÙˆÙ†.'
+                  ? 'ليس لديك صلاحية عرض سجل المخزون.'
                   : 'You do not have permission to view inventory logs.',
               textAlign: TextAlign.center,
               style: const TextStyle(fontFamily: 'Tajawal'),

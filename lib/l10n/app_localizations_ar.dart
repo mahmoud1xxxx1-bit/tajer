@@ -9,1560 +9,1467 @@ class AppLocalizationsAr extends AppLocalizations {
   AppLocalizationsAr([String locale = 'ar']) : super(locale);
 
   @override
-  String get appTitle => 'ØªØ§Ø¬Ø±';
+  String get appTitle => 'تاجر';
 
   @override
-  String get loginTitle => 'ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„';
+  String get loginTitle => 'تسجيل الدخول';
 
   @override
-  String get products => 'Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª';
+  String get products => 'المنتجات';
 
   @override
-  String get customers => 'Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡';
+  String get customers => 'العملاء';
 
   @override
-  String get orders => 'Ø§Ù„Ø·Ù„Ø¨Ø§Øª';
+  String get orders => 'الطلبات';
 
   @override
-  String get settings => 'Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª';
+  String get settings => 'الإعدادات';
 
   @override
-  String get dashboard => 'Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…';
+  String get dashboard => 'لوحة التحكم';
 
   @override
-  String get adminPanel => 'Ù„ÙˆØ­Ø© Ø§Ù„Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø¹Ù„ÙŠØ§';
+  String get adminPanel => 'لوحة الإدارة العليا';
 
   @override
-  String get expenses => 'Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª';
+  String get expenses => 'المصروفات';
 
   @override
-  String get suppliers => 'Ø§Ù„Ù…ÙˆØ±Ø¯ÙŠÙ†';
+  String get suppliers => 'الموردين';
 
   @override
-  String get categories => 'Ø§Ù„ØªØµÙ†ÙŠÙØ§Øª';
+  String get categories => 'التصنيفات';
 
   @override
-  String get inventoryLog => 'Ø³Ø¬Ù„ Ø§Ù„Ù…Ø®Ø²ÙˆÙ†';
+  String get inventoryLog => 'سجل المخزون';
 
   @override
-  String get reports => 'Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ±';
+  String get reports => 'التقارير';
 
   @override
-  String get totalSales => 'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª';
+  String get totalSales => 'إجمالي المبيعات';
 
   @override
-  String get ordersCount => 'Ø¹Ø¯Ø¯ Ø§Ù„Ø·Ù„Ø¨Ø§Øª';
+  String get ordersCount => 'عدد الطلبات';
 
   @override
-  String get quickActions => 'Ø£ÙˆØ§Ù…Ø± Ø³Ø±ÙŠØ¹Ø©';
+  String get quickActions => 'أوامر سريعة';
 
   @override
-  String get managementAndInventory => 'Ø§Ù„Ø¥Ø¯Ø§Ø±Ø© ÙˆØ§Ù„Ù…Ø®Ø²ÙˆÙ†';
+  String get managementAndInventory => 'الإدارة والمخزون';
 
   @override
-  String get add => 'Ø¥Ø¶Ø§ÙØ©';
+  String get add => 'إضافة';
 
   @override
-  String get edit => 'ØªØ¹Ø¯ÙŠÙ„';
+  String get edit => 'تعديل';
 
   @override
-  String get delete => 'Ø­Ø°Ù';
+  String get delete => 'حذف';
 
   @override
-  String get save => 'Ø­ÙØ¸';
+  String get save => 'حفظ';
 
   @override
-  String get cancel => 'Ø¥Ù„ØºØ§Ø¡';
+  String get cancel => 'إلغاء';
 
   @override
-  String get confirm => 'ØªØ£ÙƒÙŠØ¯';
+  String get confirm => 'تأكيد';
 
   @override
-  String get update => 'ØªØ­Ø¯ÙŠØ«';
+  String get update => 'تحديث';
 
   @override
-  String get name => 'Ø§Ù„Ø§Ø³Ù…';
+  String get name => 'الاسم';
 
   @override
-  String get price => 'Ø§Ù„Ø³Ø¹Ø±';
+  String get price => 'السعر';
 
   @override
-  String get quantity => 'Ø§Ù„ÙƒÙ…ÙŠØ©';
+  String get quantity => 'الكمية';
 
   @override
-  String get barcode => 'Ø§Ù„Ø¨Ø§Ø±ÙƒÙˆØ¯';
+  String get barcode => 'الباركود';
 
   @override
-  String get category => 'Ø§Ù„ØªØµÙ†ÙŠÙ';
+  String get category => 'التصنيف';
 
   @override
-  String get phone => 'Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ';
+  String get phone => 'رقم الهاتف';
 
   @override
-  String get email => 'Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ';
+  String get email => 'البريد الإلكتروني';
 
   @override
-  String get password => 'ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ±';
+  String get password => 'كلمة المرور';
 
   @override
-  String get notes => 'Ù…Ù„Ø§Ø­Ø¸Ø§Øª';
+  String get notes => 'ملاحظات';
 
   @override
-  String get date => 'Ø§Ù„ØªØ§Ø±ÙŠØ®';
+  String get date => 'التاريخ';
 
   @override
-  String get scanBarcode => 'Ù…Ø³Ø­ Ø§Ù„Ø¨Ø§Ø±ÙƒÙˆØ¯';
+  String get scanBarcode => 'مسح الباركود';
 
   @override
-  String get searchByBarcode => 'Ø¨Ø­Ø« Ø¨Ø§Ù„Ø¨Ø§Ø±ÙƒÙˆØ¯';
+  String get searchByBarcode => 'بحث بالباركود';
 
   @override
-  String get productName => 'Ø§Ø³Ù… Ø§Ù„Ù…Ù†ØªØ¬';
+  String get productName => 'اسم المنتج';
 
   @override
-  String get availableQuantity => 'Ø§Ù„ÙƒÙ…ÙŠØ© Ø§Ù„Ù…ØªØ§Ø­Ø©';
+  String get availableQuantity => 'الكمية المتاحة';
 
   @override
-  String get noCategory => 'Ø¨Ø¯ÙˆÙ† ØªØµÙ†ÙŠÙ';
+  String get noCategory => 'بدون تصنيف';
 
   @override
-  String get logout => 'ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø®Ø±ÙˆØ¬';
+  String get logout => 'تسجيل الخروج';
 
   @override
-  String get upgradeAccount => 'ØªØ±Ù‚ÙŠØ© Ø§Ù„Ø­Ø³Ø§Ø¨ (Ø±Ø¨Ø· Ø¨Ù€ Google)';
+  String get upgradeAccount => 'ترقية الحساب (ربط بـ Google)';
 
   @override
-  String get subscriptions => 'Ø§Ù„Ø§Ø´ØªØ±Ø§ÙƒØ§Øª ÙˆØ§Ù„Ø¨Ø§Ù‚Ø§Øª';
+  String get subscriptions => 'الاشتراكات والباقات';
 
   @override
-  String get language => 'Ù„ØºØ© Ø§Ù„ØªØ·Ø¨ÙŠÙ‚';
+  String get language => 'لغة التطبيق';
 
   @override
-  String get currency => 'Ø§Ù„Ø¹Ù…Ù„Ø© Ø§Ù„Ø£Ø³Ø§Ø³ÙŠØ©';
+  String get currency => 'العملة الأساسية';
 
   @override
-  String get theme => 'Ø§Ù„Ù…Ø¸Ù‡Ø±';
+  String get theme => 'المظهر';
 
   @override
-  String get themeSystem => 'ØªÙ„Ù‚Ø§Ø¦ÙŠ';
+  String get themeSystem => 'تلقائي';
 
   @override
-  String get themeLight => 'ÙØ§ØªØ­';
+  String get themeLight => 'فاتح';
 
   @override
-  String get themeDark => 'Ø¯Ø§ÙƒÙ†';
+  String get themeDark => 'داكن';
 
   @override
-  String get error => 'Ø­Ø¯Ø« Ø®Ø·Ø£';
+  String get error => 'حدث خطأ';
 
   @override
-  String get success => 'ØªÙ… Ø¨Ù†Ø¬Ø§Ø­';
+  String get success => 'تم بنجاح';
 
   @override
-  String get loading => 'Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªØ­Ù…ÙŠÙ„...';
+  String get loading => 'جاري التحميل...';
 
   @override
-  String get requiredField => 'Ù…Ø·Ù„ÙˆØ¨';
+  String get requiredField => 'مطلوب';
 
   @override
-  String get currency_SAR => 'Ø±ÙŠØ§Ù„ Ø³Ø¹ÙˆØ¯ÙŠ';
+  String get currency_SAR => 'ريال سعودي';
 
   @override
-  String get currency_USD => 'Ø¯ÙˆÙ„Ø§Ø± Ø£Ù…Ø±ÙŠÙƒÙŠ';
+  String get currency_USD => 'دولار أمريكي';
 
   @override
-  String get currency_YER => 'Ø±ÙŠØ§Ù„ ÙŠÙ…Ù†ÙŠ';
+  String get currency_YER => 'ريال يمني';
 
   @override
-  String get currency_AED => 'Ø¯Ø±Ù‡Ù… Ø¥Ù…Ø§Ø±Ø§ØªÙŠ';
+  String get currency_AED => 'درهم إماراتي';
 
   @override
-  String get currency_JOD => 'Ø¯ÙŠÙ†Ø§Ø± Ø£Ø±Ø¯Ù†ÙŠ';
+  String get currency_JOD => 'دينار أردني';
 
   @override
-  String get currency_IQD => 'Ø¯ÙŠÙ†Ø§Ø± Ø¹Ø±Ø§Ù‚ÙŠ';
+  String get currency_IQD => 'دينار عراقي';
 
   @override
-  String get currency_SYP => 'Ù„ÙŠØ±Ø© Ø³ÙˆØ±ÙŠØ©';
+  String get currency_SYP => 'ليرة سورية';
 
   @override
-  String get currency_LBP => 'Ù„ÙŠØ±Ø© Ù„Ø¨Ù†Ø§Ù†ÙŠØ©';
+  String get currency_LBP => 'ليرة لبنانية';
 
   @override
-  String get currency_KWD => 'Ø¯ÙŠÙ†Ø§Ø± ÙƒÙˆÙŠØªÙŠ';
+  String get currency_KWD => 'دينار كويتي';
 
   @override
-  String get currency_EGP => 'Ø¬Ù†ÙŠÙ‡ Ù…ØµØ±ÙŠ';
+  String get currency_EGP => 'جنيه مصري';
 
   @override
-  String get currency_DZD => 'Ø¯ÙŠÙ†Ø§Ø± Ø¬Ø²Ø§Ø¦Ø±ÙŠ';
+  String get currency_DZD => 'دينار جزائري';
 
   @override
-  String get currency_LYD => 'Ø¯ÙŠÙ†Ø§Ø± Ù„ÙŠØ¨ÙŠ';
+  String get currency_LYD => 'دينار ليبي';
 
   @override
-  String get currency_MAD => 'Ø¯Ø±Ù‡Ù… Ù…ØºØ±Ø¨ÙŠ';
+  String get currency_MAD => 'درهم مغربي';
 
   @override
-  String get currency_BHD => 'Ø¯ÙŠÙ†Ø§Ø± Ø¨Ø­Ø±ÙŠÙ†ÙŠ';
+  String get currency_BHD => 'دينار بحريني';
 
   @override
-  String get currency_QAR => 'Ø±ÙŠØ§Ù„ Ù‚Ø·Ø±ÙŠ';
+  String get currency_QAR => 'ريال قطري';
 
   @override
-  String get currency_OMR => 'Ø±ÙŠØ§Ù„ Ø¹Ù…Ø§Ù†ÙŠ';
+  String get currency_OMR => 'ريال عماني';
 
   @override
-  String get text1 => 'ÙˆØµÙ„Øª Ù„Ù„Ø­Ø¯ Ø§Ù„Ø£Ù‚ØµÙ‰!';
+  String get text1 => 'وصلت للحد الأقصى!';
 
   @override
   String get text2 =>
-      'Ø­Ø³Ø§Ø¨Ùƒ Ø§Ù„Ø­Ø§Ù„ÙŠ Ù‡Ùˆ Ø­Ø³Ø§Ø¨ Ø¶ÙŠÙ ØªØ¬Ø±ÙŠØ¨ÙŠ. Ù„Ù‚Ø¯ ÙˆØµÙ„Øª Ù„Ù„Ø­Ø¯ Ø§Ù„Ø£Ù‚ØµÙ‰ Ø§Ù„Ù…Ø³Ù…ÙˆØ­ Ø¨Ù‡ Ù„Ù„Ø¥Ø¶Ø§ÙØ§Øª.\n\nÙŠØ±Ø¬Ù‰ Ø±Ø¨Ø· Ø­Ø³Ø§Ø¨Ùƒ Ø¨Ù€ Google Ù„Ù„Ø§Ø³ØªÙ…Ø±Ø§Ø± ÙÙŠ Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ Ù…Ø¬Ø§Ù†Ø§Ù‹ ÙˆØ¨Ø¯ÙˆÙ† Ù‚ÙŠÙˆØ¯ØŒ ÙˆØ­ÙØ¸ Ø¨ÙŠØ§Ù†Ø§ØªÙƒ Ù…Ù† Ø§Ù„Ø¶ÙŠØ§Ø¹.';
+      'حسابك الحالي هو حساب ضيف تجريبي. لقد وصلت للحد الأقصى المسموح به للإضافات.\n\nيرجى ربط حسابك بـ Google للاستمرار في استخدام التطبيق مجاناً وبدون قيود، وحفظ بياناتك من الضياع.';
 
   @override
-  String get text3 => 'Ù„Ø§Ø­Ù‚Ø§Ù‹';
+  String get text3 => 'لاحقاً';
 
   @override
-  String get text4 => 'Ø±Ø¨Ø· Ø¨Ø­Ø³Ø§Ø¨ Google';
+  String get text4 => 'ربط بحساب Google';
 
   @override
-  String get text5 =>
-      'ØªÙ… ØªØ±Ù‚ÙŠØ© Ø§Ù„Ø­Ø³Ø§Ø¨ Ø¨Ù†Ø¬Ø§Ø­! ÙŠÙ…ÙƒÙ†Ùƒ Ø§Ù„Ø¢Ù† Ø§Ù„Ø§Ø³ØªÙ…Ø±Ø§Ø± Ø¨Ù„Ø§ Ù‚ÙŠÙˆØ¯.';
+  String get text5 => 'تم ترقية الحساب بنجاح! يمكنك الآن الاستمرار بلا قيود.';
 
   @override
-  String get text6 => 'ÙØ§ØªÙˆØ±Ø© Ù…Ø¨ÙŠØ¹Ø§Øª';
+  String get text6 => 'فاتورة مبيعات';
 
   @override
-  String get text7 => 'Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¹Ù…ÙŠÙ„:';
+  String get text7 => 'بيانات العميل:';
 
   @override
-  String get text8 => 'ØªØ§Ø±ÙŠØ® Ø§Ù„Ø·Ù„Ø¨:';
+  String get text8 => 'تاريخ الطلب:';
 
   @override
-  String get text9 => 'Ø§Ù„Ù…Ù†ØªØ¬';
+  String get text9 => 'المنتج';
 
   @override
-  String get text10 => 'Ø§Ù„ÙƒÙ…ÙŠØ©';
+  String get text10 => 'الكمية';
 
   @override
-  String get text11 => 'Ø§Ù„Ø³Ø¹Ø±';
+  String get text11 => 'السعر';
 
   @override
-  String get text12 => 'Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ';
+  String get text12 => 'الإجمالي';
 
   @override
-  String get text13 => 'Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø³ØªØ­Ù‚:';
+  String get text13 => 'الإجمالي المستحق:';
 
   @override
-  String get text14 => 'Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø¯ÙÙˆØ¹:';
+  String get text14 => 'المبلغ المدفوع:';
 
   @override
-  String get text15 => 'Ø§Ù„Ù…ØªØ¨Ù‚ÙŠ (Ø¢Ø¬Ù„):';
+  String get text15 => 'المتبقي (آجل):';
 
   @override
-  String get text16 => 'Ø´ÙƒØ±Ø§Ù‹ Ù„ØªØ¹Ø§Ù…Ù„ÙƒÙ… Ù…Ø¹Ù†Ø§!';
+  String get text16 => 'شكراً لتعاملكم معنا!';
 
   @override
-  String get text17 => 'ÙƒØ´Ù Ø­Ø³Ø§Ø¨ Ø¹Ù…ÙŠÙ„';
+  String get text17 => 'كشف حساب عميل';
 
   @override
-  String get text18 => 'Ø³Ø¬Ù„ Ø§Ù„Ø·Ù„Ø¨Ø§Øª:';
+  String get text18 => 'سجل الطلبات:';
 
   @override
-  String get text19 => 'ØªØ§Ø±ÙŠØ® Ø§Ù„Ø·Ù„Ø¨';
+  String get text19 => 'تاريخ الطلب';
 
   @override
-  String get text20 => 'Ø§Ù„Ù…Ø¯ÙÙˆØ¹';
+  String get text20 => 'المدفوع';
 
   @override
-  String get text21 => 'Ø§Ù„Ù…ØªØ¨Ù‚ÙŠ';
+  String get text21 => 'المتبقي';
 
   @override
-  String get text22 => 'Ø§Ù„Ø­Ø§Ù„Ø©';
+  String get text22 => 'الحالة';
 
   @override
-  String get text23 => 'cancelled\' ? \'Ù…Ù„ØºÙŠ';
+  String get text23 => 'cancelled\' ? \'ملغي';
 
   @override
-  String get text24 => 'Ù…Ø¹ØªÙ…Ø¯';
+  String get text24 => 'معتمد';
 
   @override
-  String get text25 => 'Ù…Ø³Ø­ Ø§Ù„Ø¨Ø§Ø±ÙƒÙˆØ¯';
+  String get text25 => 'مسح الباركود';
 
   @override
-  String get text26 => 'ÙØ´Ù„ ÙÙŠ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„ Ø§Ù„Ù…Ø¬Ù‡ÙˆÙ„';
+  String get text26 => 'فشل في تسجيل الدخول المجهول';
 
   @override
-  String get text27 => 'ØªÙ‡ÙŠØ¦Ø© Ù…Ø³Ø§Ø­Ø© Ø§Ù„Ø¹Ù…Ù„ Ø§Ù„Ø®Ø§ØµØ© Ø¨Ùƒ...';
+  String get text27 => 'تهيئة مساحة العمل الخاصة بك...';
 
   @override
-  String get text28 => 'Ø¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©';
+  String get text28 => 'إعادة المحاولة';
 
   @override
-  String get text29 => 'Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… ØºÙŠØ± Ù…Ø³Ø¬Ù„ Ø§Ù„Ø¯Ø®ÙˆÙ„';
+  String get text29 => 'المستخدم غير مسجل الدخول';
 
   @override
-  String get text30 => 'ØªÙ… Ø¥Ù„ØºØ§Ø¡ ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø¯Ø®ÙˆÙ„';
+  String get text30 => 'تم إلغاء تسجيل الدخول';
 
   @override
-  String get text31 => 'ØªÙ… Ø±Ø¨Ø· Ø§Ù„Ø­Ø³Ø§Ø¨ Ø¨Ù†Ø¬Ø§Ø­!';
+  String get text31 => 'تم ربط الحساب بنجاح!';
 
   @override
-  String get text32 => 'ÙŠØ±Ø¬Ù‰ Ø¥Ø¯Ø®Ø§Ù„ Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ';
+  String get text32 => 'يرجى إدخال رقم الهاتف';
 
   @override
-  String get text33 => 'Ø¥ÙƒÙ…Ø§Ù„ Ø§Ù„ØªØ³Ø¬ÙŠÙ„';
+  String get text33 => 'إكمال التسجيل';
 
   @override
   String get text34 =>
-      'Ù„Ø­Ù…Ø§ÙŠØ© Ø¨ÙŠØ§Ù†Ø§ØªÙƒ Ù…Ù† Ø§Ù„Ø¶ÙŠØ§Ø¹ØŒ ÙŠØ±Ø¬Ù‰ Ø±Ø¨Ø· Ø­Ø³Ø§Ø¨Ùƒ Ø¨Ù€ Google ÙˆØ¥Ø¯Ø®Ø§Ù„ Ø±Ù‚Ù… Ù„Ù„ØªÙˆØ§ØµÙ„.';
+      'لحماية بياناتك من الضياع، يرجى ربط حسابك بـ Google وإدخال رقم للتواصل.';
 
   @override
-  String get text35 => 'Ø§Ù„Ø±Ø¨Ø· Ø¨Ø­Ø³Ø§Ø¨ Google';
+  String get text35 => 'الربط بحساب Google';
 
   @override
-  String get text36 => 'ØªÙ… Ø±Ø¨Ø· Ø§Ù„Ø­Ø³Ø§Ø¨ Ø¨Ù†Ø¬Ø§Ø­';
+  String get text36 => 'تم ربط الحساب بنجاح';
 
   @override
-  String get text37 => 'Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ (Ø§Ù„ÙˆØ§ØªØ³Ø§Ø¨)';
+  String get text37 => 'رقم الهاتف (الواتساب)';
 
   @override
-  String get text38 => 'Ø­ÙØ¸ ÙˆØ§Ù„Ù…ØªØ§Ø¨Ø¹Ø©';
+  String get text38 => 'حفظ والمتابعة';
 
   @override
-  String get text39 => 'Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„ØªØµÙ†ÙŠÙØ§Øª';
+  String get text39 => 'إدارة التصنيفات';
 
   @override
-  String get text40 => 'Ù„Ø§ ÙŠÙˆØ¬Ø¯ ØªØµÙ†ÙŠÙØ§Øª Ø­Ø§Ù„ÙŠØ§Ù‹';
+  String get text40 => 'لا يوجد تصنيفات حالياً';
 
   @override
-  String get text41 => 'Ø¥Ø¶Ø§ÙØ© ØªØµÙ†ÙŠÙ Ø¬Ø¯ÙŠØ¯';
+  String get text41 => 'إضافة تصنيف جديد';
 
   @override
-  String get text42 => 'Ø§Ø³Ù… Ø§Ù„ØªØµÙ†ÙŠÙ';
+  String get text42 => 'اسم التصنيف';
 
   @override
-  String get text43 => 'Ø¥Ù„ØºØ§Ø¡';
+  String get text43 => 'إلغاء';
 
   @override
-  String get text44 => 'Ø­ÙØ¸';
+  String get text44 => 'حفظ';
 
   @override
-  String get text45 => 'ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„ØªØµÙ†ÙŠÙ';
+  String get text45 => 'تعديل التصنيف';
 
   @override
-  String get text46 => 'ØªØ­Ø¯ÙŠØ«';
+  String get text46 => 'تحديث';
 
   @override
-  String get text47 => 'Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… ØºÙŠØ± Ù…Ø³Ø¬Ù„';
+  String get text47 => 'المستخدم غير مسجل';
 
   @override
-  String get text48 => 'ØªØ¹Ø¯ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¹Ù…ÙŠÙ„';
+  String get text48 => 'تعديل بيانات العميل';
 
   @override
-  String get text49 => 'Ø¥Ø¶Ø§ÙØ© Ø¹Ù…ÙŠÙ„ Ø¬Ø¯ÙŠØ¯';
+  String get text49 => 'إضافة عميل جديد';
 
   @override
-  String get text50 => 'Ø§Ø³Ù… Ø§Ù„Ø¹Ù…ÙŠÙ„';
+  String get text50 => 'اسم العميل';
 
   @override
-  String get text51 => 'Ù…Ø·Ù„ÙˆØ¨';
+  String get text51 => 'مطلوب';
 
   @override
-  String get text52 => 'Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ';
+  String get text52 => 'رقم الهاتف';
 
   @override
-  String get text53 => 'Ø­ÙØ¸ Ø§Ù„ØªØ¹Ø¯ÙŠÙ„Ø§Øª';
+  String get text53 => 'حفظ التعديلات';
 
   @override
-  String get text54 => 'Ø¥Ø¶Ø§ÙØ© Ø§Ù„Ø¹Ù…ÙŠÙ„';
+  String get text54 => 'إضافة العميل';
 
   @override
-  String get text55 => 'Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡';
+  String get text55 => 'إدارة العملاء';
 
   @override
-  String get text56 =>
-      'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø¹Ù…Ù„Ø§Ø¡ Ø¨Ø¹Ø¯.\nØ§Ø¶ØºØ· Ø¹Ù„Ù‰ + Ù„Ø¥Ø¶Ø§ÙØ© Ø¹Ù…ÙŠÙ„ Ø¬Ø¯ÙŠØ¯.';
+  String get text56 => 'لا يوجد عملاء بعد.\nاضغط على + لإضافة عميل جديد.';
 
   @override
-  String get text57 => 'Ø­Ø°Ù Ø§Ù„Ø¹Ù…ÙŠÙ„';
+  String get text57 => 'حذف العميل';
 
   @override
-  String get text58 =>
-      'Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ø¹Ù…ÙŠÙ„ØŸ';
+  String get text58 => 'هل أنت متأكد من حذف هذا العميل؟';
 
   @override
-  String get text59 => 'Ø­Ø°Ù';
+  String get text59 => 'حذف';
 
   @override
-  String get text60 => 'ØªØ¹Ø¯ÙŠÙ„';
+  String get text60 => 'تعديل';
 
   @override
-  String get text61 => 'Ø·Ø¨Ø§Ø¹Ø© ÙƒØ´Ù Ø­Ø³Ø§Ø¨';
+  String get text61 => 'طباعة كشف حساب';
 
   @override
-  String get text62 => 'Ø¥Ø¶Ø§ÙØ© Ø¹Ù…ÙŠÙ„';
+  String get text62 => 'إضافة عميل';
 
   @override
-  String get text63 => 'Ø¹Ø±Ø¶';
+  String get text63 => 'عرض';
 
   @override
-  String get text64 => 'Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª';
+  String get text64 => 'المصروفات';
 
   @override
-  String get text65 => 'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ù…ØµØ±ÙˆÙØ§Øª Ø­Ø§Ù„ÙŠØ§Ù‹';
+  String get text65 => 'لا يوجد مصروفات حالياً';
 
   @override
-  String get text66 => 'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª';
+  String get text66 => 'إجمالي المصروفات';
 
   @override
-  String get text67 => 'Ø¥Ø¶Ø§ÙØ© Ù…ØµØ±ÙˆÙ Ø¬Ø¯ÙŠØ¯';
+  String get text67 => 'إضافة مصروف جديد';
 
   @override
-  String get text68 => 'Ø§Ù„Ø¨ÙŠØ§Ù† (Ù…Ø«Ø§Ù„: Ø¥ÙŠØ¬Ø§Ø± Ø§Ù„Ù…Ø­Ù„)';
+  String get text68 => 'البيان (مثال: إيجار المحل)';
 
   @override
-  String get text69 => 'Ø§Ù„Ù…Ø¨Ù„Øº';
+  String get text69 => 'المبلغ';
 
   @override
-  String get text70 => 'Ø§Ù„ØªØµÙ†ÙŠÙ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)';
+  String get text70 => 'التصنيف (اختياري)';
 
   @override
-  String get text71 =>
-      'Ø§Ù„Ø±Ø¬Ø§Ø¡ Ø¥Ø¯Ø®Ø§Ù„ Ø§Ù„Ø¨ÙŠØ§Ù† (Ø§Ø³Ù… Ø§Ù„Ù…ØµØ±ÙˆÙ)';
+  String get text71 => 'الرجاء إدخال البيان (اسم المصروف)';
 
   @override
-  String get text72 =>
-      'Ø§Ù„Ø±Ø¬Ø§Ø¡ Ø¥Ø¯Ø®Ø§Ù„ Ù…Ø¨Ù„Øº ØµØ­ÙŠØ­ Ø£ÙƒØ¨Ø± Ù…Ù† Ø§Ù„ØµÙØ±';
+  String get text72 => 'الرجاء إدخال مبلغ صحيح أكبر من الصفر';
 
   @override
-  String get text73 => 'Ø³Ø¬Ù„ Ø­Ø±ÙƒØ© Ø§Ù„Ù…Ø®Ø²ÙˆÙ†';
+  String get text73 => 'سجل حركة المخزون';
 
   @override
-  String get text74 => 'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø­Ø±ÙƒØ§Øª Ù…Ø³Ø¬Ù„Ø© Ø­Ø§Ù„ÙŠØ§Ù‹';
+  String get text74 => 'لا يوجد حركات مسجلة حالياً';
 
   @override
-  String get text75 => 'Ø§Ù„Ù…Ù†ØªØ¬ ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯';
+  String get text75 => 'المنتج غير موجود';
 
   @override
-  String get text76 => 'Ø§Ù„ÙƒÙ…ÙŠØ© ØºÙŠØ± ÙƒØ§ÙÙŠØ© ÙÙŠ Ø§Ù„Ù…Ø®Ø²ÙˆÙ†';
+  String get text76 => 'الكمية غير كافية في المخزون';
 
   @override
-  String get text77 => 'Ø§Ù„Ø¹Ù…ÙŠÙ„ ØºÙŠØ± Ù…ÙˆØ¬ÙˆØ¯';
+  String get text77 => 'العميل غير موجود';
 
   @override
-  String get text78 =>
-      'Ø§Ù„ÙƒÙ…ÙŠØ© ØºÙŠØ± ÙƒØ§ÙÙŠØ© Ù„Ø¥Ø¹Ø§Ø¯Ø© ØªÙØ¹ÙŠÙ„ Ø§Ù„Ø·Ù„Ø¨';
+  String get text78 => 'الكمية غير كافية لإعادة تفعيل الطلب';
 
   @override
-  String get text79 =>
-      'Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ù…Ù†ØªØ¬ Ø¨Ù‡Ø°Ø§ Ø§Ù„Ø¨Ø§Ø±ÙƒÙˆØ¯';
+  String get text79 => 'لم يتم العثور على منتج بهذا الباركود';
 
   @override
-  String get text80 =>
-      'Ø§Ù„ÙƒÙ…ÙŠØ© Ø§Ù„Ù…Ø·Ù„ÙˆØ¨Ø© ØºÙŠØ± Ù…ØªÙˆÙØ±Ø© ÙÙŠ Ø§Ù„Ù…Ø®Ø²ÙˆÙ†';
+  String get text80 => 'الكمية المطلوبة غير متوفرة في المخزون';
 
   @override
-  String get text81 =>
-      'Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø¯ÙÙˆØ¹ Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø£Ù† ÙŠÙƒÙˆÙ† Ø£ÙƒØ¨Ø± Ù…Ù† Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ';
+  String get text81 => 'المبلغ المدفوع لا يمكن أن يكون أكبر من الإجمالي';
 
   @override
-  String get text82 => 'Ø·Ù„Ø¨ Ù…Ø¨ÙŠØ¹Ø§Øª Ø¬Ø¯ÙŠØ¯';
+  String get text82 => 'طلب مبيعات جديد';
 
   @override
-  String get text83 => 'Ø¨ÙŠØ¹ Ø¢Ø¬Ù„ (Ø¯ÙŠÙ†)';
+  String get text83 => 'بيع آجل (دين)';
 
   @override
-  String get text84 => 'ØªØ³Ø¬ÙŠÙ„ Ø§Ù„Ø·Ù„Ø¨ ÙƒØ¯ÙŠÙ† Ø¹Ù„Ù‰ Ø§Ù„Ø¹Ù…ÙŠÙ„';
+  String get text84 => 'تسجيل الطلب كدين على العميل';
 
   @override
-  String get text85 =>
-      'Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø¯ÙÙˆØ¹ Ù…Ù‚Ø¯Ù…Ø§Ù‹ (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)';
+  String get text85 => 'المبلغ المدفوع مقدماً (اختياري)';
 
   @override
-  String get text86 =>
-      'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø·Ù„Ø¨Ø§Øª Ø¨Ø¹Ø¯.\nØ§Ø¶ØºØ· Ø¹Ù„Ù‰ + Ù„Ø¥Ù†Ø´Ø§Ø¡ Ø·Ù„Ø¨ Ø¬Ø¯ÙŠØ¯.';
+  String get text86 => 'لا توجد طلبات بعد.\nاضغط على + لإنشاء طلب جديد.';
 
   @override
   String get text87 =>
-      'Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ø·Ù„Ø¨ØŸ Ø³ÙŠØªÙ… Ø§Ø³ØªØ±Ø¬Ø§Ø¹ ÙƒÙ…ÙŠØ© Ø§Ù„Ù…Ù†ØªØ¬ Ù„Ù„Ù…Ø®Ø²ÙˆÙ†.';
+      'هل أنت متأكد من حذف هذا الطلب؟ سيتم استرجاع كمية المنتج للمخزون.';
 
   @override
-  String get text88 => 'Ù‚ÙŠØ¯ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø± ðŸŸ¡';
+  String get text88 => 'قيد الانتظار 🟡';
 
   @override
-  String get text89 => 'Ù‚ÙŠØ¯ Ø§Ù„ØªØ¬Ù‡ÙŠØ² ðŸ”µ';
+  String get text89 => 'قيد التجهيز 🔵';
 
   @override
-  String get text90 => 'ØªÙ… Ø§Ù„Ø´Ø­Ù† ðŸŸ ';
+  String get text90 => 'تم الشحن 🟠';
 
   @override
-  String get text91 => 'Ù…ÙƒØªÙ…Ù„ ðŸŸ¢';
+  String get text91 => 'مكتمل 🟢';
 
   @override
-  String get text92 => 'Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø·Ù„Ø¨ ðŸ”´';
+  String get text92 => 'إلغاء الطلب 🔴';
 
   @override
-  String get text93 => 'Ø·Ø¨Ø§Ø¹Ø© Ø§Ù„ÙØ§ØªÙˆØ±Ø© PDF';
+  String get text93 => 'طباعة الفاتورة PDF';
 
   @override
-  String get text94 => 'Ø·Ù„Ø¨ Ø¬Ø¯ÙŠØ¯';
+  String get text94 => 'طلب جديد';
 
   @override
-  String get text95 => 'Ù‚ÙŠØ¯ Ø§Ù„ØªØ¬Ù‡ÙŠØ²';
+  String get text95 => 'قيد التجهيز';
 
   @override
-  String get text96 => 'ØªÙ… Ø§Ù„Ø´Ø­Ù†';
+  String get text96 => 'تم الشحن';
 
   @override
-  String get text97 => 'Ù…ÙƒØªÙ…Ù„';
+  String get text97 => 'مكتمل';
 
   @override
-  String get text98 => 'Ù…Ù„ØºÙŠ';
+  String get text98 => 'ملغي';
 
   @override
-  String get text99 => 'Ù‚ÙŠØ¯ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±';
+  String get text99 => 'قيد الانتظار';
 
   @override
-  String get text100 => 'ØªØ¹Ø¯ÙŠÙ„ ÙŠØ¯ÙˆÙŠ';
+  String get text100 => 'تعديل يدوي';
 
   @override
-  String get text101 => 'Ø¥Ø¶Ø§ÙØ© Ù…Ù†ØªØ¬';
+  String get text101 => 'إضافة منتج';
 
   @override
-  String get text102 =>
-      'Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ù†ØªØ¬Ø§Øª Ø¨Ø¹Ø¯.\nØ§Ø¶ØºØ· Ø¹Ù„Ù‰ + Ù„Ø¥Ø¶Ø§ÙØ© Ù…Ù†ØªØ¬ Ø¬Ø¯ÙŠØ¯.';
+  String get text102 => 'لا توجد منتجات بعد.\nاضغط على + لإضافة منتج جديد.';
 
   @override
-  String get text103 =>
-      'Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ù…Ù†ØªØ¬ØŸ';
+  String get text103 => 'هل أنت متأكد من حذف هذا المنتج؟';
 
   @override
-  String get text104 => 'Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ± ÙˆØ§Ù„Ø£Ø±Ø¨Ø§Ø­';
+  String get text104 => 'التقارير والأرباح';
 
   @override
-  String get text105 => 'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª';
+  String get text105 => 'إجمالي المبيعات';
 
   @override
-  String get text106 => 'ØµØ§ÙÙŠ Ø§Ù„Ø±Ø¨Ø­';
+  String get text106 => 'صافي الربح';
 
   @override
-  String get text107 => 'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø¯ÙŠÙˆÙ† (Ø§Ù„Ø¢Ø¬Ù„)';
+  String get text107 => 'إجمالي الديون (الآجل)';
 
   @override
-  String get text108 => 'Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª Ø§Ù„ÙŠÙˆÙ…ÙŠØ©';
+  String get text108 => 'المبيعات اليومية';
 
   @override
-  String get text109 => 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ø¨ÙŠØ¹Ø§Øª Ø¨Ø¹Ø¯';
+  String get text109 => 'لا توجد مبيعات بعد';
 
   @override
-  String get text110 => 'Ø§Ù„Ø£ÙƒØ«Ø± Ù…Ø¨ÙŠØ¹Ø§Ù‹';
+  String get text110 => 'الأكثر مبيعاً';
 
   @override
-  String get text111 => 'Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©';
+  String get text111 => 'العربية';
 
   @override
-  String get text112 => 'ØªØ±Ù‚ÙŠØ© Ø§Ù„Ø­Ø³Ø§Ø¨';
+  String get text112 => 'ترقية الحساب';
 
   @override
-  String get text113 => 'Ø¨Ø§Ù‚Ø© ØªØ§Ø¬Ù€Ù€Ù€Ø± Ø¨Ø±Ùˆ ðŸš€';
+  String get text113 => 'باقة تاجـــر برو 🚀';
 
   @override
   String get text114 =>
-      'Ø§Ø³ØªÙ…ØªØ¹ Ø¨Ø¥Ø¶Ø§ÙØ© Ù…Ù†ØªØ¬Ø§Øª ÙˆØ¹Ù…Ù„Ø§Ø¡ Ù„Ø§ Ù…Ø­Ø¯ÙˆØ¯ÙŠÙ†ØŒ Ù…Ø¹ Ø¯Ø¹Ù… ÙÙ†ÙŠ Ù…ØªÙ‚Ø¯Ù… ÙˆØ¥Ø­ØµØ§Ø¦ÙŠØ§Øª Ù…ÙØµÙ„Ø©.';
+      'استمتع بإضافة منتجات وعملاء لا محدودين، مع دعم فني متقدم وإحصائيات مفصلة.';
 
   @override
   String get text115 =>
-      'ÙŠØ¬Ø¨ Ø¹Ù„ÙŠÙƒ Ø±Ø¨Ø· Ø­Ø³Ø§Ø¨Ùƒ Ø¨Ù€ Google Ø£ÙˆÙ„Ø§Ù‹ Ù„ØªØªÙ…ÙƒÙ† Ù…Ù† Ø§Ù„Ø§Ø´ØªØ±Ø§Ùƒ ÙÙŠ Ø§Ù„Ø¨Ø§Ù‚Ø©.';
+      'يجب عليك ربط حسابك بـ Google أولاً لتتمكن من الاشتراك في الباقة.';
 
   @override
-  String get text116 => 'Ø±Ø¨Ø· Ø§Ù„Ø­Ø³Ø§Ø¨ Ø§Ù„Ø¢Ù†';
+  String get text116 => 'ربط الحساب الآن';
 
   @override
   String get text117 =>
-      'Ø¹Ù…Ù„ÙŠØ© Ø´Ø±Ø§Ø¡ Ø§Ù„Ø¨Ø§Ù‚Ø§Øª ÙˆØ¯ÙØ¹ Ø§Ù„Ø§Ø´ØªØ±Ø§ÙƒØ§Øª (10 Ø¯ÙˆÙ„Ø§Ø±/Ø´Ù‡Ø±ÙŠØ§Ù‹) Ù…ØªØ§Ø­Ø© ÙÙ‚Ø· Ø¹Ø¨Ø± ØªØ·Ø¨ÙŠÙ‚ Ø§Ù„Ø£Ù†Ø¯Ø±ÙˆÙŠØ¯ Ù…Ù† Ù…ØªØ¬Ø± Google PlayØŒ ÙˆÙ„Ø§ ÙŠÙ…ÙƒÙ† Ø§Ù„Ø¯ÙØ¹ Ø¹Ø¨Ø± Ù…ØªØµÙØ­ Ø§Ù„ÙˆÙŠØ¨.';
+      'عملية شراء الباقات ودفع الاشتراكات (10 دولار/شهرياً) متاحة فقط عبر تطبيق الأندرويد من متجر Google Play، ولا يمكن الدفع عبر متصفح الويب.';
 
   @override
   String get text118 =>
-      'ÙŠØ±Ø¬Ù‰ ØªØ­Ù…ÙŠÙ„ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ Ø¹Ù„Ù‰ Ù‡Ø§ØªÙÙƒ Ù„Ø¥ØªÙ…Ø§Ù… Ø¹Ù…Ù„ÙŠØ© Ø§Ù„ØªØ±Ù‚ÙŠØ© ÙˆØ§Ù„Ø¯ÙØ¹.';
+      'يرجى تحميل التطبيق على هاتفك لإتمام عملية الترقية والدفع.';
 
   @override
   String get text119 =>
-      'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø§Ø´ØªØ±Ø§ÙƒØ§Øª Ù…ØªØ§Ø­Ø© Ø­Ø§Ù„ÙŠØ§Ù‹. Ø§Ù„Ø±Ø¬Ø§Ø¡ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù„Ø§Ø­Ù‚Ø§Ù‹.';
+      'لا يوجد اشتراكات متاحة حالياً. الرجاء المحاولة لاحقاً.';
 
   @override
-  String get text120 => 'Ø§Ø´ØªØ±Ùƒ Ø§Ù„Ø¢Ù†';
+  String get text120 => 'اشترك الآن';
 
   @override
-  String get text121 => 'Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø´ØªØ±ÙŠØ§Øª Ø§Ù„Ø³Ø§Ø¨Ù‚Ø©';
+  String get text121 => 'استعادة المشتريات السابقة';
 
   @override
-  String get text122 => 'Ø¥Ø¯Ø§Ø±Ø© Ø§Ù„Ù…ÙˆØ±Ø¯ÙŠÙ†';
+  String get text122 => 'إدارة الموردين';
 
   @override
-  String get text123 => 'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ù…ÙˆØ±Ø¯ÙŠÙ† Ø­Ø§Ù„ÙŠØ§Ù‹';
+  String get text123 => 'لا يوجد موردين حالياً';
 
   @override
-  String get text124 => 'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø±Ù‚Ù… Ù‡Ø§ØªÙ';
+  String get text124 => 'لا يوجد رقم هاتف';
 
   @override
-  String get text125 => 'Ø§Ù„Ø¯ÙŠÙˆÙ† Ø§Ù„Ù…Ø³ØªØ­Ù‚Ø©';
+  String get text125 => 'الديون المستحقة';
 
   @override
-  String get text126 => 'Ø¥Ø¶Ø§ÙØ© Ù…ÙˆØ±Ø¯ Ø¬Ø¯ÙŠØ¯';
+  String get text126 => 'إضافة مورد جديد';
 
   @override
-  String get text127 => 'Ø§Ø³Ù… Ø§Ù„Ù…ÙˆØ±Ø¯';
+  String get text127 => 'اسم المورد';
 
   @override
-  String get text128 => 'Ø±Ù‚Ù… Ø§Ù„Ø¬ÙˆØ§Ù„';
+  String get text128 => 'رقم الجوال';
 
   @override
-  String get text129 => 'Ø§Ù„Ø±ØµÙŠØ¯ Ø§Ù„Ø§ÙØªØªØ§Ø­ÙŠ (Ø§Ù„Ø¯ÙŠÙˆÙ†)';
+  String get text129 => 'الرصيد الافتتاحي (الديون)';
 
   @override
-  String get text130 => 'ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ù…ÙˆØ±Ø¯';
+  String get text130 => 'تعديل المورد';
 
   @override
-  String get text131 => 'ØªØ­Ø¯ÙŠØ« Ø§Ù„Ø¯ÙŠÙˆÙ†';
+  String get text131 => 'تحديث الديون';
 
   @override
-  String get permCanManageProducts =>
-      'Ø¥Ø¶Ø§ÙØ© ÙˆØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª';
+  String get permCanManageProducts => 'إضافة وتعديل المنتجات';
 
   @override
-  String get permCanViewCost =>
-      'Ø±Ø¤ÙŠØ© Ø³Ø¹Ø± Ø§Ù„ØªÙƒÙ„ÙØ© ÙˆØ§Ù„Ø£Ø±Ø¨Ø§Ø­';
+  String get permCanViewCost => 'رؤية سعر التكلفة والأرباح';
 
   @override
-  String get permCanManageInventory => 'Ø¥Ø¯Ø§Ø±Ø© ÙˆØ¬Ø±Ø¯ Ø§Ù„Ù…Ø®Ø²ÙˆÙ†';
+  String get permCanManageInventory => 'إدارة وجرد المخزون';
 
   @override
-  String get permCanCreateOrders =>
-      'Ø¥Ù†Ø´Ø§Ø¡ ÙÙˆØ§ØªÙŠØ± ÙˆØ·Ù„Ø¨Ø§Øª Ø¬Ø¯ÙŠØ¯Ø©';
+  String get permCanCreateOrders => 'إنشاء فواتير وطلبات جديدة';
 
   @override
-  String get permCanCancelOrders => 'ØªØ¹Ø¯ÙŠÙ„ Ø£Ùˆ Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø·Ù„Ø¨Ø§Øª';
+  String get permCanCancelOrders => 'تعديل أو إلغاء الطلبات';
 
   @override
-  String get permCanSellOnCredit => 'Ø§Ù„Ø¨ÙŠØ¹ Ø¨Ø§Ù„Ø¢Ø¬Ù„ / Ø§Ù„Ø¯ÙŠÙ†';
+  String get permCanSellOnCredit => 'البيع بالآجل / الدين';
 
   @override
-  String get permCanManageCustomers =>
-      'Ø¥Ø¶Ø§ÙØ© ÙˆØªØ¹Ø¯ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡';
+  String get permCanManageCustomers => 'إضافة وتعديل بيانات العملاء';
 
   @override
-  String get permCanReceivePayments =>
-      'ØªØ³Ø¯ÙŠØ¯ Ø§Ù„Ø¯ÙŠÙˆÙ† ÙˆØ§Ø³ØªÙ„Ø§Ù… Ø§Ù„Ù…Ø¨Ø§Ù„Øº';
+  String get permCanReceivePayments => 'تسديد الديون واستلام المبالغ';
 
   @override
-  String get permCanManageExpenses =>
-      'ØªØ³Ø¬ÙŠÙ„ ÙˆÙ…ØªØ§Ø¨Ø¹Ø© Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª';
+  String get permCanManageExpenses => 'تسجيل ومتابعة المصروفات';
 
   @override
-  String get employeePermissions =>
-      'Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ† ÙˆØ§Ù„ØµÙ„Ø§Ø­ÙŠØ§Øª (Pro)';
+  String get employeePermissions => 'الموظفين والصلاحيات (Pro)';
 
   @override
-  String get permissionSettings => 'Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„ØµÙ„Ø§Ø­ÙŠØ§Øª';
+  String get permissionSettings => 'إعدادات الصلاحيات';
 
   @override
-  String get credit => 'Ø¢Ø¬Ù„';
+  String get credit => 'آجل';
 
   @override
-  String get customer => 'Ø§Ù„Ø¹Ù…ÙŠÙ„';
+  String get customer => 'العميل';
 
   @override
-  String get walkInCustomer => 'Ø¹Ù…ÙŠÙ„ Ù†Ù‚Ø¯ÙŠ (Ø¨Ø¯ÙˆÙ† Ø­Ø³Ø§Ø¨)';
+  String get walkInCustomer => 'عميل نقدي (بدون حساب)';
 
   @override
-  String get cancelled => 'Ù…Ù„ØºÙŠ';
+  String get cancelled => 'ملغي';
 
   @override
-  String get settingsAccountEmployees => 'Ø§Ù„Ø­Ø³Ø§Ø¨ ÙˆØ§Ù„Ù…ÙˆØ¸ÙÙŠÙ†';
+  String get settingsAccountEmployees => 'الحساب والموظفين';
 
   @override
-  String get settingsPersonalMerchantAccount =>
-      'Ø­Ø³Ø§Ø¨ Ø§Ù„ØªØ§Ø¬Ø± (Ø§Ù„Ø¥Ø¯Ø§Ø±Ø©)';
+  String get settingsPersonalMerchantAccount => 'حساب التاجر (الإدارة)';
 
   @override
-  String get settingsUnknown => 'ØºÙŠØ± Ù…Ø¹Ø±ÙˆÙ';
+  String get settingsUnknown => 'غير معروف';
 
   @override
-  String get settingsEmployeesPermissions =>
-      '(Pro) Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ† ÙˆØ§Ù„ØµÙ„Ø§Ø­ÙŠØ§Øª';
+  String get settingsEmployeesPermissions => '(Pro) الموظفين والصلاحيات';
 
   @override
-  String get settingsCentralizedAuditLog =>
-      'Ø³Ø¬Ù„ Ø­Ø±ÙƒØ§Øª Ø§Ù„Ù†Ø¸Ø§Ù… (Ø§Ù„Ù…Ø±Ø§Ù‚Ø¨Ø©)';
+  String get settingsCentralizedAuditLog => 'سجل حركات النظام (المراقبة)';
 
   @override
-  String get settingsMonitorActions =>
-      'Ù…Ø±Ø§Ù‚Ø¨Ø© Ø¬Ù…ÙŠØ¹ Ø­Ø±ÙƒØ§Øª Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ† ÙˆØ§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª';
+  String get settingsMonitorActions => 'مراقبة جميع حركات الموظفين والمبيعات';
 
   @override
-  String get settingsStoreSettings => 'Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ù…ØªØ¬Ø±';
+  String get settingsStoreSettings => 'إعدادات المتجر';
 
   @override
-  String get settingsBackupSecurity =>
-      'Ø§Ù„Ù†Ø³Ø® Ø§Ù„Ø§Ø­ØªÙŠØ§Ø·ÙŠ ÙˆØ§Ù„Ø£Ù…Ø§Ù†';
+  String get settingsBackupSecurity => 'النسخ الاحتياطي والأمان';
 
   @override
-  String get settingsThermalPrinter =>
-      'Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ø·Ø§Ø¨Ø¹Ø© Ø§Ù„Ø­Ø±Ø§Ø±ÙŠØ©';
+  String get settingsThermalPrinter => 'إعدادات الطابعة الحرارية';
 
   @override
-  String get settingsStoreBranding =>
-      'Ù‡ÙˆÙŠØ© Ø§Ù„Ù…ØªØ¬Ø± (Ø§Ù„Ø´Ø¹Ø§Ø± ÙˆØ§Ù„ÙÙˆØ§ØªÙŠØ±)';
+  String get settingsStoreBranding => 'هوية المتجر (الشعار والفواتير)';
 
   @override
-  String get settingsSystemPreferences => 'ØªÙØ¶ÙŠÙ„Ø§Øª Ø§Ù„Ù†Ø¸Ø§Ù…';
+  String get settingsSystemPreferences => 'تفضيلات النظام';
 
   @override
-  String get settingsSupportRating => 'Ø§Ù„Ø¯Ø¹Ù… ÙˆØ§Ù„ØªÙ‚ÙŠÙŠÙ…';
+  String get settingsSupportRating => 'الدعم والتقييم';
 
   @override
-  String get settingsAppUserGuide =>
-      'Ø¯Ù„ÙŠÙ„ Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ (Ø´Ø±Ø­ ÙÙŠØ¯ÙŠÙˆ)';
+  String get settingsAppUserGuide => 'دليل استخدام التطبيق (شرح فيديو)';
 
   @override
-  String get settingsHowToSetup =>
-      'ÙƒÙŠÙÙŠØ© ØªØ¬Ù‡ÙŠØ² Ù…ØªØ¬Ø±Ùƒ ÙˆØ¥Ø¶Ø§ÙØ© Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª';
+  String get settingsHowToSetup => 'كيفية تجهيز متجرك وإضافة المنتجات';
 
   @override
-  String get settingsFollowTikTok => 'ØªØ§Ø¨Ø¹Ù†Ø§ Ø¹Ù„Ù‰ ØªÙŠÙƒ ØªÙˆÙƒ';
+  String get settingsFollowTikTok => 'تابعنا على تيك توك';
 
   @override
-  String get settingsSuggestionsUpdates =>
-      'Ù„Ù„Ø§Ù‚ØªØ±Ø§Ø­Ø§Øª ÙˆØ§Ù„ØªØ­Ø¯ÙŠØ«Ø§Øª Ø§Ù„Ø¬Ø¯ÙŠØ¯Ø©';
+  String get settingsSuggestionsUpdates => 'للاقتراحات والتحديثات الجديدة';
 
   @override
-  String get settingsCouldNotOpenLink => 'ØªØ¹Ø°Ø± ÙØªØ­ Ø§Ù„Ø±Ø§Ø¨Ø·';
+  String get settingsCouldNotOpenLink => 'تعذر فتح الرابط';
 
   @override
-  String get settingsEmailSupport =>
-      'Ø§Ù„Ø¯Ø¹Ù… Ø§Ù„ÙÙ†ÙŠ Ø¹Ø¨Ø± Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ';
+  String get settingsEmailSupport => 'الدعم الفني عبر البريد الإلكتروني';
 
   @override
-  String get settingsTechnicalIssues =>
-      'Ù„Ø­Ù„ Ø§Ù„Ù…Ø´ÙƒÙ„Ø§Øª Ø§Ù„ØªÙ‚Ù†ÙŠØ© ÙˆØ§Ù„Ø§Ø³ØªÙØ³Ø§Ø±Ø§Øª';
+  String get settingsTechnicalIssues => 'لحل المشكلات التقنية والاستفسارات';
 
   @override
-  String get settingsCouldNotOpenEmail =>
-      'ØªØ¹Ø°Ø± ÙØªØ­ ØªØ·Ø¨ÙŠÙ‚ Ø§Ù„Ø¨Ø±ÙŠØ¯ Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠ';
+  String get settingsCouldNotOpenEmail => 'تعذر فتح تطبيق البريد الإلكتروني';
 
   @override
-  String get settingsRatePlayStore =>
-      'ØªÙ‚ÙŠÙŠÙ… Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ Ø¹Ù„Ù‰ Ù…ØªØ¬Ø± Ø¨Ù„Ø§ÙŠ';
+  String get settingsRatePlayStore => 'تقييم التطبيق على متجر بلاي';
 
   @override
-  String get settingsPrivacyPolicy => 'Ø³ÙŠØ§Ø³Ø© Ø§Ù„Ø®ØµÙˆØµÙŠØ©';
+  String get settingsPrivacyPolicy => 'سياسة الخصوصية';
 
   @override
   String get settingsCouldNotOpenBrowser =>
-      'ØªØ¹Ø°Ø± ÙØªØ­ Ø§Ù„Ù…ØªØµÙØ­. ØªØ£ÙƒØ¯ Ù…Ù† ÙˆØ¬ÙˆØ¯ Ù…ØªØµÙØ­ ÙÙŠ Ø¬Ù‡Ø§Ø²Ùƒ.';
+      'تعذر فتح المتصفح. تأكد من وجود متصفح في جهازك.';
 
   @override
-  String get settingsAppVersion =>
-      'Ø¨Ø³Ø·Ù‡ - Ù†Ù‚Ø·Ø© Ø¨ÙŠØ¹ v1.0.42\nØµÙÙ†Ø¹ Ø¨Ø­Ø¨ ðŸ’›';
+  String get settingsAppVersion => 'بسطه - نقطة بيع v1.0.42\nصُنع بحب 💛';
 
   @override
-  String get empPermViewCostProfits =>
-      'Ø±Ø¤ÙŠØ© Ø§Ù„ØªÙƒÙ„ÙØ© ÙˆØ§Ù„Ø£Ø±Ø¨Ø§Ø­';
+  String get empPermViewCostProfits => 'رؤية التكلفة والأرباح';
 
   @override
-  String get empPermManageInventory => 'Ø¥Ø¯Ø§Ø±Ø© ÙˆØªØªØ¨Ø¹ Ø§Ù„Ù…Ø®Ø²ÙˆÙ†';
+  String get empPermManageInventory => 'إدارة وتتبع المخزون';
 
   @override
-  String get empPermCreateInvoices =>
-      'Ø¥Ù†Ø´Ø§Ø¡ ÙÙˆØ§ØªÙŠØ± ÙˆØ·Ù„Ø¨Ø§Øª Ø¬Ø¯ÙŠØ¯Ø©';
+  String get empPermCreateInvoices => 'إنشاء فواتير وطلبات جديدة';
 
   @override
-  String get empPermEditCancelOrders =>
-      'ØªØ¹Ø¯ÙŠÙ„ Ø£Ùˆ Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø·Ù„Ø¨Ø§Øª';
+  String get empPermEditCancelOrders => 'تعديل أو إلغاء الطلبات';
 
   @override
-  String get empPermSellCredit => 'Ø§Ù„Ø¨ÙŠØ¹ Ø¨Ø§Ù„Ø¢Ø¬Ù„ (Ø§Ù„Ø¯ÙŠÙˆÙ†)';
+  String get empPermSellCredit => 'البيع بالآجل (الديون)';
 
   @override
-  String get empPermAddEditCustomer =>
-      'Ø¥Ø¶Ø§ÙØ© ÙˆØªØ¹Ø¯ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡';
+  String get empPermAddEditCustomer => 'إضافة وتعديل بيانات العملاء';
 
   @override
-  String get empPermSettleDebts =>
-      'ØªØ³ÙˆÙŠØ© Ø§Ù„Ø¯ÙŠÙˆÙ† ÙˆØ§Ø³ØªÙ„Ø§Ù… Ø§Ù„Ø¯ÙØ¹Ø§Øª';
+  String get empPermSettleDebts => 'تسوية الديون واستلام الدفعات';
 
   @override
-  String get empPermRecordExpenses =>
-      'ØªØ³Ø¬ÙŠÙ„ ÙˆØªØªØ¨Ø¹ Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª';
+  String get empPermRecordExpenses => 'تسجيل وتتبع المصروفات';
 
   @override
-  String get empPermViewReports =>
-      'Ø§Ù„Ø³Ù…Ø§Ø­ Ø¨Ø±Ø¤ÙŠØ© Ù‚Ø³Ù… Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ±';
+  String get empPermViewReports => 'السماح برؤية قسم التقارير';
 
   @override
-  String get empPermViewAllOrders =>
-      'Ø§Ù„Ø³Ù…Ø§Ø­ Ø¨Ø±Ø¤ÙŠØ© Ø¬Ù…ÙŠØ¹ Ø§Ù„Ø·Ù„Ø¨Ø§Øª';
+  String get empPermViewAllOrders => 'السماح برؤية جميع الطلبات';
 
   @override
-  String get empPermAdd => 'Ø¥Ø¶Ø§ÙØ©';
+  String get empPermAdd => 'إضافة';
 
   @override
-  String get empPermCancel => 'Ø¥Ù„ØºØ§Ø¡';
+  String get empPermCancel => 'إلغاء';
 
   @override
-  String get empImportantInstructions => 'ØªØ¹Ù„ÙŠÙ…Ø§Øª Ù‡Ø§Ù…Ø© Ù„Ù„ØªØ§Ø¬Ø±';
+  String get empImportantInstructions => 'تعليمات هامة للتاجر';
 
   @override
-  String get empInstruction1 =>
-      '1. ÙŠÙ…ÙƒÙ†Ùƒ Ø¥Ø¶Ø§ÙØ© Ø­Ø¯ Ø£Ù‚ØµÙ‰ 3 Ù…ÙˆØ¸ÙÙŠÙ†.';
+  String get empInstruction1 => '1. يمكنك إضافة حد أقصى 3 موظفين.';
 
   @override
   String get empInstruction2 =>
-      '2. Ø¹Ù†Ø¯Ù…Ø§ ÙŠØ­Ù…Ù„ Ø§Ù„Ù…ÙˆØ¸Ù Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ØŒ ÙŠØ¬Ø¨ Ø£Ù† ÙŠØ®ØªØ§Ø± (Ø¯Ø®ÙˆÙ„ Ù…ÙˆØ¸Ù Ø¨Ø§Ù„Ø±Ù…Ø²).';
+      '2. عندما يحمل الموظف التطبيق، يجب أن يختار (دخول موظف بالرمز).';
 
   @override
   String get empInstruction3 =>
-      '3. Ø³ÙŠÙØ·Ù„Ø¨ Ù…Ù†Ù‡ Ø¥Ø¯Ø®Ø§Ù„ Ø¥ÙŠÙ…ÙŠÙ„Ùƒ Ø§Ù„Ø£Ø³Ø§Ø³ÙŠ ÙˆØ±Ù…Ø² Ø§Ù„Ø¯Ø®ÙˆÙ„ Ø§Ù„Ø°ÙŠ Ø£Ù†Ø´Ø£ØªÙ‡ Ù„Ù‡.';
+      '3. سيُطلب منه إدخال إيميلك الأساسي ورمز الدخول الذي أنشأته له.';
 
   @override
-  String get empMainEmail =>
-      'Ø¥ÙŠÙ…ÙŠÙ„Ùƒ Ø§Ù„Ø£Ø³Ø§Ø³ÙŠ (Ø§Ù„Ø°ÙŠ ÙŠØ¬Ø¨ Ø£Ù† ÙŠÙƒØªØ¨Ù‡ Ø§Ù„Ù…ÙˆØ¸Ù):';
+  String get empMainEmail => 'إيميلك الأساسي (الذي يجب أن يكتبه الموظف):';
 
   @override
-  String get empEmployeeList => 'Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ†';
+  String get empEmployeeList => 'قائمة الموظفين';
 
   @override
-  String get empNoEmployees => 'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ù…ÙˆØ¸ÙÙŠÙ† Ø­Ø§Ù„ÙŠØ§Ù‹';
+  String get empNoEmployees => 'لا يوجد موظفين حالياً';
 
   @override
-  String get taxSettingsOptional =>
-      'Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© (Ø§Ø®ØªÙŠØ§Ø±ÙŠ)';
+  String get taxSettingsOptional => 'إعدادات الضريبة (اختياري)';
 
   @override
   String get taxSettingsWarning =>
-      'ØªØ­Ø¯ÙŠØ¯ Ø§Ù„Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ù‡Ù†Ø§ Ø³ÙŠÙ„ØºÙŠ Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ù…ØªØ¬Ø± Ø§Ù„Ø¹Ø§Ù…Ø© Ù„Ù‡Ø°Ø§ Ø§Ù„Ù…Ù†ØªØ¬ØŒ ÙˆØ³ÙŠØ¤Ø«Ø± Ù…Ø¨Ø§Ø´Ø±Ø© Ø¹Ù„Ù‰ Ø§Ù„Ø­Ø³Ø§Ø¨ Ø§Ù„Ù†Ù‡Ø§Ø¦ÙŠ.';
+      'تحديد الإعدادات هنا سيلغي إعدادات المتجر العامة لهذا المنتج، وسيؤثر مباشرة على الحساب النهائي.';
 
   @override
-  String get taxPercentage =>
-      'Ù†Ø³Ø¨Ø© Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© Ø§Ù„Ø®Ø§ØµØ© Ø¨Ø§Ù„Ù…Ù†ØªØ¬ (%)';
+  String get taxPercentage => 'نسبة الضريبة الخاصة بالمنتج (%)';
 
   @override
-  String get taxIncludedInPrice =>
-      'Ø§Ù„Ø³Ø¹Ø± Ø§Ù„Ù…Ø­Ø¯Ø¯ ÙŠØ´Ù…Ù„ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©';
+  String get taxIncludedInPrice => 'السعر المحدد يشمل الضريبة';
 
   @override
-  String get recipeOptional =>
-      'ÙˆØµÙØ© Ø§Ù„Ù…Ù†ØªØ¬ (Ù…ÙˆØ§Ø¯ Ø®Ø§Ù…) - Ø§Ø®ØªÙŠØ§Ø±ÙŠ';
+  String get recipeOptional => 'وصفة المنتج (مواد خام) - اختياري';
 
   @override
-  String get searchByNamePhone =>
-      'Ø¨Ø­Ø« Ø¨Ø§Ù„Ø§Ø³Ù… Ø£Ùˆ Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ';
+  String get searchByNamePhone => 'بحث بالاسم أو رقم الهاتف';
 
   @override
-  String get deleteCustomerWarning => 'ØªØ­Ø°ÙŠØ±: Ø­Ø°Ù Ù…Ù„Ù Ø¹Ù…ÙŠÙ„';
+  String get deleteCustomerWarning => 'تحذير: حذف ملف عميل';
 
   @override
   String get deleteCustomerText =>
-      'Ø­Ø°Ù Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø³ÙŠØ¤Ø¯ÙŠ Ø¥Ù„Ù‰ Ù…Ø³Ø­ Ø³Ø¬Ù„Ù‡ Ø§Ù„Ù…Ø§Ù„ÙŠ ÙˆØ¯ÙŠÙˆÙ†Ù‡ Ù…Ù† Ø§Ù„Ù†Ø¸Ø§Ù… Ù†Ù‡Ø§Ø¦ÙŠØ§Ù‹. Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø§Ù„ØªØ±Ø§Ø¬Ø¹ Ø¹Ù† Ù‡Ø°Ø§ Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡.';
+      'حذف العميل سيؤدي إلى مسح سجله المالي وديونه من النظام نهائياً. لا يمكن التراجع عن هذا الإجراء.';
 
   @override
-  String get enterPinToConfirm =>
-      'Ù„Ù„ØªØ£ÙƒÙŠØ¯ (PIN) Ø£Ø¯Ø®Ù„ Ø±Ù…Ø² Ø§Ù„Ø£Ù…Ø§Ù†:';
+  String get enterPinToConfirm => 'للتأكيد (PIN) أدخل رمز الأمان:';
 
   @override
-  String get confirmDelete => 'ØªØ£ÙƒÙŠØ¯ ÙˆØ­Ø°Ù';
+  String get confirmDelete => 'تأكيد وحذف';
 
   @override
-  String get cancelBtn => 'ØªØ±Ø§Ø¬Ø¹';
+  String get cancelBtn => 'تراجع';
 
   @override
-  String get backupExportSuccess =>
-      'ØªÙ… ØªØµØ¯ÙŠØ± Ø§Ù„Ù†Ø³Ø®Ø© Ø§Ù„Ø§Ø­ØªÙŠØ§Ø·ÙŠØ© Ø¨Ù†Ø¬Ø§Ø­!';
+  String get backupExportSuccess => 'تم تصدير النسخة الاحتياطية بنجاح!';
 
   @override
-  String get backupExportError => 'Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ù„ØªØµØ¯ÙŠØ±';
+  String get backupExportError => 'حدث خطأ أثناء التصدير';
 
   @override
-  String get backupImportSuccess =>
-      'ØªÙ… Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ù†Ø³Ø®Ø© Ø¨Ù†Ø¬Ø§Ø­!';
+  String get backupImportSuccess => 'تم استعادة النسخة بنجاح!';
 
   @override
-  String get backupImportError => 'Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ù„Ø§Ø³ØªØ¹Ø§Ø¯Ø©';
+  String get backupImportError => 'حدث خطأ أثناء الاستعادة';
 
   @override
-  String get backupSecurityTitle =>
-      'Ø§Ù„Ù†Ø³Ø®Ø© Ø§Ù„Ø§Ø­ØªÙŠØ§Ø·ÙŠØ© Ø§Ù„Ù…Ø­Ù„ÙŠØ©';
+  String get backupSecurityTitle => 'النسخة الاحتياطية المحلية';
 
   @override
-  String get localBackupRestore => 'Ø¥Ù†Ø´Ø§Ø¡ ÙˆØ§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ù†Ø³Ø®Ø©';
+  String get localBackupRestore => 'إنشاء واستعادة النسخة';
 
   @override
   String get localBackupDesc =>
-      'ÙŠØªÙ… Ø­ÙØ¸ Ù†Ø³Ø®Ø© Ù…Ù† Ù…Ù†ØªØ¬Ø§ØªÙƒ (Ø¨Ø§Ø³ØªØ«Ù†Ø§Ø¡ Ø§Ù„ÙÙˆØ§ØªÙŠØ± ÙˆØ§Ù„ØµÙˆØ±) ÙÙŠ Ù…Ù„Ù Ø¯Ø§Ø®Ù„ Ø¬Ù‡Ø§Ø²Ùƒ. ÙŠÙ…ÙƒÙ†Ùƒ Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ù‡Ø°Ù‡ Ø§Ù„Ù†Ø³Ø®Ø© ÙÙŠ Ø£ÙŠ ÙˆÙ‚Øª.';
+      'يتم حفظ نسخة من منتجاتك (باستثناء الفواتير والصور) في ملف داخل جهازك. يمكنك استعادة هذه النسخة في أي وقت.';
 
   @override
-  String get exportBackupToDevice => 'Ø­ÙØ¸ Ø§Ù„Ù†Ø³Ø®Ø© ÙÙŠ Ø§Ù„Ø¬Ù‡Ø§Ø²';
+  String get exportBackupToDevice => 'حفظ النسخة في الجهاز';
 
   @override
-  String get importBackupFromDevice =>
-      'Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ù†Ø³Ø®Ø© Ù…Ù† Ø§Ù„Ø¬Ù‡Ø§Ø²';
+  String get importBackupFromDevice => 'استعادة النسخة من الجهاز';
 
   @override
-  String get printerErrorConnecting =>
-      'Ø®Ø·Ø£ ÙÙŠ Ø¬Ù„Ø¨ Ø§Ù„Ø£Ø¬Ù‡Ø²Ø© Ø§Ù„Ù…Ù‚ØªØ±Ù†Ø©';
+  String get printerErrorConnecting => 'خطأ في جلب الأجهزة المقترنة';
 
   @override
-  String get printerConnecting => 'Ø¬Ø§Ø±ÙŠ Ø§Ù„Ø§ØªØµØ§Ù„...';
+  String get printerConnecting => 'جاري الاتصال...';
 
   @override
-  String get printerConnectedSuccess =>
-      'ØªÙ… Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø§Ù„Ø·Ø§Ø¨Ø¹Ø© Ø¨Ù†Ø¬Ø§Ø­';
+  String get printerConnectedSuccess => 'تم الاتصال بالطابعة بنجاح';
 
   @override
-  String get printerConnectionFailed =>
-      'ÙØ´Ù„ Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø§Ù„Ø·Ø§Ø¨Ø¹Ø©';
+  String get printerConnectionFailed => 'فشل الاتصال بالطابعة';
 
   @override
-  String get printerSelectFirst =>
-      'Ø§Ù„Ø±Ø¬Ø§Ø¡ ØªØ­Ø¯ÙŠØ¯ Ø·Ø§Ø¨Ø¹Ø© Ø£ÙˆÙ„Ø§Ù‹';
+  String get printerSelectFirst => 'الرجاء تحديد طابعة أولاً';
 
   @override
-  String get printerDisconnected => 'ØªÙ… Ù‚Ø·Ø¹ Ø§Ù„Ø§ØªØµØ§Ù„';
+  String get printerDisconnected => 'تم قطع الاتصال';
 
   @override
-  String get printerNotConnected => 'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø·Ø§Ø¨Ø¹Ø© Ù…ØªØµÙ„Ø©';
+  String get printerNotConnected => 'لا توجد طابعة متصلة';
 
   @override
-  String get printerConnectionSettings =>
-      'Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§ØªØµØ§Ù„ Ø§Ù„Ø·Ø§Ø¨Ø¹Ø©';
+  String get printerConnectionSettings => 'إعدادات اتصال الطابعة';
 
   @override
-  String get printerSelectDevice =>
-      'Ø§Ø®ØªÙŠØ§Ø± Ø§Ù„Ø·Ø§Ø¨Ø¹Ø© (Ø¨Ù„ÙˆØªÙˆØ«)';
+  String get printerSelectDevice => 'اختيار الطابعة (بلوتوث)';
 
   @override
-  String get printerSelectHint => 'Ø­Ø¯Ø¯ Ø·Ø§Ø¨Ø¹Ø©...';
+  String get printerSelectHint => 'حدد طابعة...';
 
   @override
-  String get printerPaperSize => 'Ø­Ø¬Ù… Ø§Ù„ÙˆØ±Ù‚';
+  String get printerPaperSize => 'حجم الورق';
 
   @override
-  String get printerSize58 => '58 Ù…Ù„ÙŠÙ…ØªØ± (ØµØºÙŠØ±)';
+  String get printerSize58 => '58 مليمتر (صغير)';
 
   @override
-  String get printerSize80 => '80 Ù…Ù„ÙŠÙ…ØªØ± (ÙƒØ¨ÙŠØ±)';
+  String get printerSize80 => '80 مليمتر (كبير)';
 
   @override
-  String get printerRefresh => 'ØªØ­Ø¯ÙŠØ« Ø§Ù„Ù‚Ø§Ø¦Ù…Ø©';
+  String get printerRefresh => 'تحديث القائمة';
 
   @override
-  String get printerConnect => 'ØªÙˆØµÙŠÙ„';
+  String get printerConnect => 'توصيل';
 
   @override
-  String get printerDisconnect => 'Ù‚Ø·Ø¹ Ø§Ù„Ø§ØªØµØ§Ù„';
+  String get printerDisconnect => 'قطع الاتصال';
 
   @override
-  String get brandingErrorPickingImage =>
-      'Ø­Ø¯Ø« Ø®Ø·Ø£ ÙÙŠ Ø§Ø®ØªÙŠØ§Ø± Ø§Ù„ØµÙˆØ±Ø©';
+  String get brandingErrorPickingImage => 'حدث خطأ في اختيار الصورة';
 
   @override
-  String get brandingSavedSuccess => 'ØªÙ… Ø§Ù„Ø­ÙØ¸ Ø¨Ù†Ø¬Ø§Ø­';
+  String get brandingSavedSuccess => 'تم الحفظ بنجاح';
 
   @override
-  String get brandingSave => 'Ø­ÙØ¸';
+  String get brandingSave => 'حفظ';
 
   @override
-  String get brandingSelectLogo => 'Ø¥Ø¶Ø§ÙØ© Ø§Ù„Ø´Ø¹Ø§Ø±';
+  String get brandingSelectLogo => 'إضافة الشعار';
 
   @override
-  String get brandingRemoveLogo => 'Ø¥Ø²Ø§Ù„Ø© Ø§Ù„Ø´Ø¹Ø§Ø±';
+  String get brandingRemoveLogo => 'إزالة الشعار';
 
   @override
-  String get brandingStoreName => 'Ø§Ø³Ù… Ø§Ù„Ù…ØªØ¬Ø±';
+  String get brandingStoreName => 'اسم المتجر';
 
   @override
-  String get brandingStorePhone => 'Ø±Ù‚Ù… Ù‡Ø§ØªÙ Ø§Ù„Ù…ØªØ¬Ø±';
+  String get brandingStorePhone => 'رقم هاتف المتجر';
 
   @override
-  String get brandingStoreAddress => 'Ø§Ù„Ø¹Ù†ÙˆØ§Ù†';
+  String get brandingStoreAddress => 'العنوان';
 
   @override
-  String get brandingTaxSettings =>
-      'Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© Ø§Ù„Ø§ÙØªØ±Ø§Ø¶ÙŠØ©';
+  String get brandingTaxSettings => 'إعدادات الضريبة الافتراضية';
 
   @override
-  String get brandingDefaultTax =>
-      'Ù†Ø³Ø¨Ø© Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© Ø§Ù„Ø§ÙØªØ±Ø§Ø¶ÙŠØ© (%)';
+  String get brandingDefaultTax => 'نسبة الضريبة الافتراضية (%)';
 
   @override
   String get brandingDefaultTaxHelper =>
-      'Ù‡Ø°Ù‡ Ù‡ÙŠ Ø§Ù„Ù†Ø³Ø¨Ø© Ø§Ù„ØªÙŠ Ø³ÙŠØªÙ… ØªØ·Ø¨ÙŠÙ‚Ù‡Ø§ ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹ Ø¹Ù„Ù‰ Ø£ÙŠ Ù…Ù†ØªØ¬ Ø¬Ø¯ÙŠØ¯ ØªØ¶ÙŠÙÙ‡. ÙŠÙ…ÙƒÙ†Ùƒ ØªØºÙŠÙŠØ± Ø§Ù„Ù†Ø³Ø¨Ø© Ù„ÙƒÙ„ Ù…Ù†ØªØ¬ Ù„Ø§Ø­Ù‚Ø§Ù‹ Ù…Ù† Ù‚Ø³Ù… Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª.';
+      'هذه هي النسبة التي سيتم تطبيقها تلقائياً على أي منتج جديد تضيفه. يمكنك تغيير النسبة لكل منتج لاحقاً من قسم المنتجات.';
 
   @override
-  String get brandingTaxInclusive =>
-      'Ø§Ù„Ø£Ø³Ø¹Ø§Ø± ØªØ´Ù…Ù„ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø© (Ø§Ù„Ø§ÙØªØ±Ø§Ø¶ÙŠ)';
+  String get brandingTaxInclusive => 'الأسعار تشمل الضريبة (الافتراضي)';
 
   @override
   String get brandingTaxInclusiveHelper =>
-      'ØªÙØ¹ÙŠÙ„ Ù‡Ø°Ø§ Ø§Ù„Ø®ÙŠØ§Ø± ÙŠØ¹Ù†ÙŠ Ø£Ù† Ø§Ù„Ø³Ø¹Ø± Ø§Ù„Ø°ÙŠ ØªØ¯Ø®Ù„Ù‡ Ù„Ù„Ù…Ù†ØªØ¬ Ù‡Ùˆ Ø§Ù„Ø³Ø¹Ø± Ø§Ù„Ù†Ù‡Ø§Ø¦ÙŠ Ø§Ù„Ø´Ø§Ù…Ù„ Ù„Ù„Ø¶Ø±ÙŠØ¨Ø©.';
+      'تفعيل هذا الخيار يعني أن السعر الذي تدخله للمنتج هو السعر النهائي الشامل للضريبة.';
 
   @override
-  String get brandingZatcaTitle =>
-      'Ù…ØªØ·Ù„Ø¨Ø§Øª Ø§Ù„ÙÙˆØªØ±Ø© Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠØ© (ZATCA)';
+  String get brandingZatcaTitle => 'متطلبات الفوترة الإلكترونية (ZATCA)';
 
   @override
   String get brandingZatcaDesc =>
-      'Ù…Ø·Ù„ÙˆØ¨Ø© Ù„Ù€ \"Ø§Ù„ÙÙˆØªØ±Ø© Ø§Ù„Ø¥Ù„ÙƒØªØ±ÙˆÙ†ÙŠØ©\". ÙŠÙØ±Ø¬Ù‰ ØªØ¹Ø¨Ø¦Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ø¶Ø±ÙŠØ¨ÙŠØ© Ù„ÙŠØªÙ… Ø·Ø¨Ø§Ø¹ØªÙ‡Ø§ ÙÙŠ Ø§Ù„ÙÙˆØ§ØªÙŠØ± Ø§Ù„Ø­Ø±Ø§Ø±ÙŠØ© Ù…Ø¹ Ø±Ù…Ø² QR Ù…ØªÙˆØ§ÙÙ‚ Ù…Ø¹ Ù‡ÙŠØ¦Ø© Ø§Ù„Ø²ÙƒØ§Ø© ÙˆØ§Ù„Ø¶Ø±ÙŠØ¨Ø© ÙˆØ§Ù„Ø¬Ù…Ø§Ø±Ùƒ (ZATCA) Ø¨Ø§Ù„Ù…Ù…Ù„ÙƒØ© Ø§Ù„Ø¹Ø±Ø¨ÙŠØ© Ø§Ù„Ø³Ø¹ÙˆØ¯ÙŠØ©.';
+      'مطلوبة لـ \"الفوترة الإلكترونية\". يُرجى تعبئة البيانات الضريبية ليتم طباعتها في الفواتير الحرارية مع رمز QR متوافق مع هيئة الزكاة والضريبة والجمارك (ZATCA) بالمملكة العربية السعودية.';
 
   @override
-  String get brandingVatNumber => 'Ø§Ù„Ø±Ù‚Ù… Ø§Ù„Ø¶Ø±ÙŠØ¨ÙŠ (VAT Number)';
+  String get brandingVatNumber => 'الرقم الضريبي (VAT Number)';
 
   @override
-  String get brandingVatHelper =>
-      'ÙŠØªÙƒÙˆÙ† Ù…Ù† 15 Ø±Ù‚Ù…Ø§Ù‹ ÙˆÙŠØ¨Ø¯Ø£ ÙˆÙŠÙ†ØªÙ‡ÙŠ Ø¨Ø±Ù‚Ù… 3.';
+  String get brandingVatHelper => 'يتكون من 15 رقماً ويبدأ وينتهي برقم 3.';
 
   @override
-  String get brandingCrNumber => 'Ø±Ù‚Ù… Ø§Ù„Ø³Ø¬Ù„ Ø§Ù„ØªØ¬Ø§Ø±ÙŠ (CR Number)';
+  String get brandingCrNumber => 'رقم السجل التجاري (CR Number)';
 
   @override
-  String get brandingCrHelper =>
-      'Ø§Ø®ØªÙŠØ§Ø±ÙŠØŒ ÙŠØ·Ø¨Ø¹ ÙÙŠ Ø§Ù„ÙØ§ØªÙˆØ±Ø© Ø¥Ù† ÙˆØ¬Ø¯.';
+  String get brandingCrHelper => 'اختياري، يطبع في الفاتورة إن وجد.';
 
   @override
-  String get purchaseSuccess => 'ØªÙ… Ø§Ù„Ø´Ø±Ø§Ø¡ Ø¨Ù†Ø¬Ø§Ø­!';
+  String get purchaseSuccess => 'تم الشراء بنجاح!';
 
   @override
-  String get purchaseError => 'Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ù„Ø´Ø±Ø§Ø¡';
+  String get purchaseError => 'خطأ أثناء الشراء';
 
   @override
-  String get restoreSuccess =>
-      'ØªÙ… Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø´ØªØ±ÙŠØ§Øª Ø¨Ù†Ø¬Ø§Ø­!';
+  String get restoreSuccess => 'تم استعادة المشتريات بنجاح!';
 
   @override
-  String get restoreNoActive =>
-      'Ù„Ù… ÙŠØªÙ… Ø§Ù„Ø¹Ø«ÙˆØ± Ø¹Ù„Ù‰ Ø§Ø´ØªØ±Ø§ÙƒØ§Øª ÙØ¹Ø§Ù„Ø©.';
+  String get restoreNoActive => 'لم يتم العثور على اشتراكات فعالة.';
 
   @override
-  String get restoreError =>
-      'Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø´ØªØ±ÙŠØ§Øª';
+  String get restoreError => 'خطأ أثناء استعادة المشتريات';
 
   @override
-  String get subscriptionTitle => 'Ø§Ù„Ø§Ø´ØªØ±Ø§Ùƒ ÙˆØ§Ù„Ø¨Ø§Ù‚Ø§Øª';
+  String get subscriptionTitle => 'الاشتراك والباقات';
 
   @override
-  String get premiumAccessTitle =>
-      'Ø§ÙØªØ­ Ø¬Ù…ÙŠØ¹ Ø§Ù„Ù…Ù…ÙŠØ²Ø§Øª Ø§Ù„Ø§Ø­ØªØ±Ø§ÙÙŠØ©';
+  String get premiumAccessTitle => 'افتح جميع المميزات الاحترافية';
 
   @override
   String get premiumAccessDesc =>
-      'Ø£Ø¯Ø± Ù…ØªØ¬Ø±Ùƒ Ø¨ÙƒÙØ§Ø¡Ø© Ø¹Ø§Ù„ÙŠØ© Ù…Ø¹ ØªÙ‚Ø§Ø±ÙŠØ± Ù…ØªÙ‚Ø¯Ù…Ø© ÙˆØ·Ù„Ø¨Ø§Øª ØºÙŠØ± Ù…Ø­Ø¯ÙˆØ¯Ø© Ù„ØªÙ†Ù…ÙŠØ© Ù…Ø¨ÙŠØ¹Ø§ØªÙƒ.';
+      'أدر متجرك بكفاءة عالية مع تقارير متقدمة وطلبات غير محدودة لتنمية مبيعاتك.';
 
   @override
-  String get monthlyPlanTitle => 'Ø§Ù„Ø§Ø´ØªØ±Ø§Ùƒ Ø§Ù„Ø´Ù‡Ø±ÙŠ';
+  String get monthlyPlanTitle => 'الاشتراك الشهري';
 
   @override
-  String get featureUnlimitedOrders =>
-      'Ø·Ù„Ø¨Ø§Øª ÙˆÙÙˆØ§ØªÙŠØ± ØºÙŠØ± Ù…Ø­Ø¯ÙˆØ¯Ø©';
+  String get featureUnlimitedOrders => 'طلبات وفواتير غير محدودة';
 
   @override
-  String get featureInventorySync =>
-      'Ø¥Ø¯Ø§Ø±Ø© Ù…ØªÙ‚Ø¯Ù…Ø© Ù„Ù„Ù…Ø®Ø²ÙˆÙ† ÙˆØ§Ù„Ù…Ø³ØªÙˆØ¯Ø¹';
+  String get featureInventorySync => 'إدارة متقدمة للمخزون والمستودع';
 
   @override
-  String get featureAdvancedReports =>
-      'ØªÙ‚Ø§Ø±ÙŠØ± Ù…Ø§Ù„ÙŠØ© ÙˆÙ…Ø¨ÙŠØ¹Ø§Øª Ù…ÙØµÙ„Ø©';
+  String get featureAdvancedReports => 'تقارير مالية ومبيعات مفصلة';
 
   @override
-  String get featurePrioritySupport =>
-      'Ø¯Ø¹Ù… ÙÙ†ÙŠ Ø¹Ù„Ù‰ Ù…Ø¯Ø§Ø± Ø§Ù„Ø³Ø§Ø¹Ø©';
+  String get featurePrioritySupport => 'دعم فني على مدار الساعة';
 
   @override
   String subscribeFor(String price) {
-    return 'Ø§Ø´ØªØ±Ùƒ Ø§Ù„Ø¢Ù† Ø¨Ù€ $price';
+    return 'اشترك الآن بـ $price';
   }
 
   @override
   String get noPackagesAvailable =>
-      'Ù„Ø§ ØªÙˆØ¬Ø¯ Ø¨Ø§Ù‚Ø§Øª Ù…ØªØ§Ø­Ø© Ø­Ø§Ù„ÙŠØ§Ù‹ØŒ ÙŠØ±Ø¬Ù‰ Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø© Ù„Ø§Ø­Ù‚Ø§Ù‹.';
+      'لا توجد باقات متاحة حالياً، يرجى المحاولة لاحقاً.';
 
   @override
-  String get restorePurchasesBtn => 'Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø´ØªØ±ÙŠØ§Øª';
+  String get restorePurchasesBtn => 'استعادة المشتريات';
 
   @override
   String get subscriptionTermsDesc =>
-      'ÙŠØªÙ… ØªØ¬Ø¯ÙŠØ¯ Ø§Ù„Ø§Ø´ØªØ±Ø§Ùƒ ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹. ÙŠÙ…ÙƒÙ†Ùƒ Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø§Ø´ØªØ±Ø§Ùƒ ÙÙŠ Ø£ÙŠ ÙˆÙ‚Øª Ù…Ù† Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ø­Ø³Ø§Ø¨Ùƒ.';
+      'يتم تجديد الاشتراك تلقائياً. يمكنك إلغاء الاشتراك في أي وقت من إعدادات حسابك.';
 
   @override
-  String get confirmExit => 'ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø®Ø±ÙˆØ¬';
+  String get confirmExit => 'تأكيد الخروج';
 
   @override
-  String get confirmExitMessage =>
-      'Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ø£Ù†Ùƒ ØªØ±ÙŠØ¯ Ø§Ù„Ø®Ø±ÙˆØ¬ Ù…Ù† Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ØŸ';
+  String get confirmExitMessage => 'هل أنت متأكد أنك تريد الخروج من التطبيق؟';
 
   @override
-  String get exit => 'Ø®Ø±ÙˆØ¬';
+  String get exit => 'خروج';
 
   @override
   String employeePrefix(String name) {
-    return 'Ù…ÙˆØ¸Ù: $name';
+    return 'موظف: $name';
   }
 
   @override
-  String get merchantAccount => 'Ø­Ø³Ø§Ø¨ Ø§Ù„ØªØ§Ø¬Ø± (Ø§Ù„Ø¥Ø¯Ø§Ø±Ø©)';
+  String get merchantAccount => 'حساب التاجر (الإدارة)';
 
   @override
-  String get rawMaterials => 'Ø§Ù„Ù…ÙˆØ§Ø¯ Ø§Ù„Ø®Ø§Ù…';
+  String get rawMaterials => 'المواد الخام';
 
   @override
-  String get employeesPermissionsPro =>
-      'Ø§Ù„Ù…ÙˆØ¸ÙÙŠÙ† ÙˆØ§Ù„ØµÙ„Ø§Ø­ÙŠØ§Øª (Pro)';
+  String get employeesPermissionsPro => 'الموظفين والصلاحيات (Pro)';
 
   @override
-  String get closeShiftZReport => 'Ø¥ØºÙ„Ø§Ù‚ Ø§Ù„ÙˆØ±Ø¯ÙŠØ© (Z-Report)';
+  String get closeShiftZReport => 'إغلاق الوردية (Z-Report)';
 
   @override
   String get errorFetchingInventory =>
-      'ØªØ¹Ø°Ø± Ø¬Ù„Ø¨ Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„Ù…Ø®Ø²ÙˆÙ†. ÙŠØ±Ø¬Ù‰ Ø§Ù„ØªØ­Ù‚Ù‚ Ù…Ù† Ø§ØªØµØ§Ù„Ùƒ Ø¨Ø§Ù„Ø¥Ù†ØªØ±Ù†Øª.';
+      'تعذر جلب بيانات المخزون. يرجى التحقق من اتصالك بالإنترنت.';
 
   @override
   String lowStockAlert(String count) {
-    return 'ØªÙ†Ø¨ÙŠÙ‡: ÙŠÙˆØ¬Ø¯ $count Ù…Ù†ØªØ¬ ÙŠÙˆØ´Ùƒ Ø¹Ù„Ù‰ Ø§Ù„Ù†ÙØ§Ø° Ù…Ù† Ø§Ù„Ù…Ø®Ø²ÙˆÙ†!';
+    return 'تنبيه: يوجد $count منتج يوشك على النفاذ من المخزون!';
   }
 
   @override
   String get completeStoreBrandingAlert =>
-      'âš ï¸ ÙŠØ±Ø¬Ù‰ Ø¥ÙƒÙ…Ø§Ù„ Ø¥Ø¹Ø¯Ø§Ø¯Ø§Øª Ù‡ÙˆÙŠØ© Ø§Ù„Ù…ØªØ¬Ø± (Ø§Ù„Ø§Ø³Ù…ØŒ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©) Ù„Ø¶Ù…Ø§Ù† Ø·Ø¨Ø§Ø¹Ø© Ø§Ù„ÙÙˆØ§ØªÙŠØ± Ø¨Ø´ÙƒÙ„ ØµØ­ÙŠØ­ ÙˆÙ…Ø·Ø§Ø¨Ù‚ Ù„Ù„Ù…ÙˆØ§ØµÙØ§Øª.';
+      '⚠️ يرجى إكمال إعدادات هوية المتجر (الاسم، الضريبة) لضمان طباعة الفواتير بشكل صحيح ومطابق للمواصفات.';
 
   @override
-  String get completeNow => 'Ø£ÙƒÙ…Ù„ Ø§Ù„Ø¢Ù†';
+  String get completeNow => 'أكمل الآن';
 
   @override
-  String get posCashier => 'ÙƒØ§Ø´ÙŠØ± (POS)';
+  String get posCashier => 'كاشير (POS)';
 
   @override
   String errorPrefix(String error) {
-    return 'Ø®Ø·Ø£: $error';
+    return 'خطأ: $error';
   }
 
   @override
-  String get folder => 'Ø§Ù„Ù…Ø¬Ù„Ø¯';
+  String get folder => 'المجلد';
 
   @override
-  String get totalDebts => 'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø¯ÙŠÙˆÙ†';
+  String get totalDebts => 'إجمالي الديون';
 
   @override
-  String get warningDeleteCustomer => 'ØªØ­Ø°ÙŠØ±: Ø­Ø°Ù Ù…Ù„Ù Ø¹Ù…ÙŠÙ„';
+  String get warningDeleteCustomer => 'تحذير: حذف ملف عميل';
 
   @override
-  String get sortAlphabetical => 'Ø£Ø¨Ø¬Ø¯ÙŠ';
+  String get sortAlphabetical => 'أبجدي';
 
   @override
   String totalCustomerDebtText(String debt) {
-    return 'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø¯ÙŠÙ† Ø§Ù„Ø¹Ù…ÙŠÙ„: $debt';
+    return 'إجمالي دين العميل: $debt';
   }
 
   @override
   String get deleteCustomerWarningText =>
-      'Ø­Ø°Ù Ø§Ù„Ø¹Ù…ÙŠÙ„ Ø³ÙŠØ¤Ø¯ÙŠ Ø¥Ù„Ù‰ Ù…Ø³Ø­ Ø³Ø¬Ù„Ù‡ Ø§Ù„Ù…Ø§Ù„ÙŠ ÙˆØ¯ÙŠÙˆÙ†Ù‡ Ù…Ù† Ø§Ù„Ù†Ø¸Ø§Ù… Ù†Ù‡Ø§Ø¦ÙŠØ§Ù‹. Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø§Ù„ØªØ±Ø§Ø¬Ø¹ Ø¹Ù† Ù‡Ø°Ø§ Ø§Ù„Ø¥Ø¬Ø±Ø§Ø¡.';
+      'حذف العميل سيؤدي إلى مسح سجله المالي وديونه من النظام نهائياً. لا يمكن التراجع عن هذا الإجراء.';
 
   @override
   String get leaveEmptyToRemoveFromFolder =>
-      'Ø§ØªØ±Ùƒ Ø§Ù„Ø­Ù‚Ù„ ÙØ§Ø±ØºØ§Ù‹ Ù„Ø¥Ø²Ø§Ù„Ø© Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡ Ù…Ù† Ø£ÙŠ Ù…Ø¬Ù„Ø¯.';
+      'اترك الحقل فارغاً لإزالة العملاء من أي مجلد.';
 
   @override
-  String get multiSelect => 'ØªØ­Ø¯ÙŠØ¯ Ù…ØªØ¹Ø¯Ø¯';
+  String get multiSelect => 'تحديد متعدد';
 
   @override
-  String get noCustomersToExport => 'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø¹Ù…Ù„Ø§Ø¡ Ù„Ù„ØªØµØ¯ÙŠØ±';
+  String get noCustomersToExport => 'لا يوجد عملاء للتصدير';
 
   @override
-  String get hasDebts => 'Ø¹Ù„ÙŠÙ‡Ù… Ø¯ÙŠÙˆÙ†';
+  String get hasDebts => 'عليهم ديون';
 
   @override
-  String get totalPurchases => 'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ù…Ø´ØªØ±ÙŠØ§Øª';
+  String get totalPurchases => 'إجمالي المشتريات';
 
   @override
   String selectedCount(String count) {
-    return '$count Ù…Ø­Ø¯Ø¯';
+    return '$count محدد';
   }
 
   @override
-  String get general => 'Ø¹Ø§Ù…';
+  String get general => 'عام';
 
   @override
-  String get whatsapp => 'ÙˆØ§ØªØ³Ø§Ø¨';
+  String get whatsapp => 'واتساب';
 
   @override
-  String get moveToFolder => 'Ù†Ù‚Ù„ Ø¥Ù„Ù‰ Ù…Ø¬Ù„Ø¯';
+  String get moveToFolder => 'نقل إلى مجلد';
 
   @override
-  String get dateAdded => 'ØªØ§Ø±ÙŠØ® Ø§Ù„Ø¥Ø¶Ø§ÙØ©';
+  String get dateAdded => 'تاريخ الإضافة';
 
   @override
-  String get payDebt => 'ØªØ³Ø¯ÙŠØ¯ Ø¯ÙØ¹Ø© / ØªØµÙÙŠØ© Ø¯ÙŠÙ†';
+  String get payDebt => 'تسديد دفعة / تصفية دين';
 
   @override
-  String get customersList => 'Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø¹Ù…Ù„Ø§Ø¡';
+  String get customersList => 'قائمة العملاء';
 
   @override
-  String get searchNamePhone => 'Ø¨Ø­Ø« Ø¨Ø§Ù„Ø§Ø³Ù… Ø£Ùˆ Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ';
+  String get searchNamePhone => 'بحث بالاسم أو رقم الهاتف';
 
   @override
-  String get customerName => 'Ø§Ø³Ù… Ø§Ù„Ø¹Ù…ÙŠÙ„';
+  String get customerName => 'اسم العميل';
 
   @override
-  String get generalCustomers => 'Ø¹Ù…Ù„Ø§Ø¡ Ø¹Ø§Ù…ÙˆÙ†';
+  String get generalCustomers => 'عملاء عامون';
 
   @override
-  String get sortBy => 'ØªØ±ØªÙŠØ¨: ';
+  String get sortBy => 'ترتيب: ';
 
   @override
-  String get noCustomersMatch =>
-      'Ù„Ø§ ÙŠÙˆØ¬Ø¯ Ø¹Ù…Ù„Ø§Ø¡ ÙŠØ·Ø§Ø¨Ù‚ÙˆÙ† Ø§Ù„Ø¨Ø­Ø«';
+  String get noCustomersMatch => 'لا يوجد عملاء يطابقون البحث';
 
   @override
-  String get move => 'Ù†Ù‚Ù„';
+  String get move => 'نقل';
 
   @override
   String debtAmount(String debt, String currency) {
-    return 'Ø¯ÙŠÙ†: $debt $currency';
+    return 'دين: $debt $currency';
   }
 
   @override
   String printError(String error) {
-    return 'Ø­Ø¯Ø« Ø®Ø·Ø£ ÙÙŠ Ø§Ù„Ø·Ø¨Ø§Ø¹Ø©: $error';
+    return 'حدث خطأ في الطباعة: $error';
   }
 
   @override
-  String get phoneNumber => 'Ø±Ù‚Ù… Ø§Ù„Ù‡Ø§ØªÙ';
+  String get phoneNumber => 'رقم الهاتف';
 
   @override
-  String get exportExcel => 'ØªØµØ¯ÙŠØ± Ù„Ø¥ÙƒØ³Ù„';
+  String get exportExcel => 'تصدير لإكسل';
 
   @override
   String byCreator(String creator) {
-    return 'Ø¨ÙˆØ§Ø³Ø·Ø©: $creator';
+    return 'بواسطة: $creator';
   }
 
   @override
   String exportError(String error) {
-    return 'Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ù„ØªØµØ¯ÙŠØ±: $error';
+    return 'حدث خطأ أثناء التصدير: $error';
   }
 
   @override
-  String get highestDebt => 'Ø§Ù„Ø£Ø¹Ù„Ù‰ Ø¯ÙŠÙ†Ø§Ù‹';
+  String get highestDebt => 'الأعلى ديناً';
 
   @override
-  String get paidAmount => 'Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø³Ø¯Ø¯ Ù…Ù† Ø§Ù„Ø¯ÙŠÙ†';
+  String get paidAmount => 'المبلغ المسدد من الدين';
 
   @override
   String get rawMaterialsGuide =>
-      'ðŸ’¡ Ø¯Ù„ÙŠÙ„ Ø§Ù„Ù…ÙˆØ§Ø¯ Ø§Ù„Ø®Ø§Ù…: Ù‡Ù†Ø§ ÙŠÙ…ÙƒÙ†Ùƒ Ø¥Ø¶Ø§ÙØ© Ù…ÙƒÙˆÙ†Ø§Øª Ù…Ø³ØªÙˆØ¯Ø¹Ùƒ (Ù…Ø«Ù„: Ù„Ø­Ù… Ø¨Ø±Ø¬Ø±ØŒ Ø¬Ø¨Ù†ØŒ Ø£ÙƒÙˆØ§Ø¨ØŒ Ø¨Ù† Ù‚Ù‡ÙˆØ©). Ø¹Ù†Ø¯ Ø±Ø¨Ø· Ù‡Ø°Ù‡ Ø§Ù„Ù…ÙƒÙˆÙ†Ø§Øª Ø¨ÙˆØµÙØ§Øª Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª ÙÙŠ Ø´Ø§Ø´Ø© Ø§Ù„Ù…Ù†ØªØ¬Ø§ØªØŒ Ø³ÙŠÙ‚ÙˆÙ… Ø§Ù„Ù†Ø¸Ø§Ù… Ø¨Ø®ØµÙ… ÙƒÙ…ÙŠØ§ØªÙ‡Ø§ ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹ Ø¹Ù†Ø¯ ÙƒÙ„ Ø¹Ù…Ù„ÙŠØ© Ø¨ÙŠØ¹ Ù„Ø­Ù…Ø§ÙŠØ© Ù…Ø´Ø±ÙˆØ¹Ùƒ Ù…Ù† Ø§Ù„Ù‡Ø¯Ø± ÙˆÙ…Ø¹Ø±ÙØ© Ø§Ù„ØªÙƒÙ„ÙØ© Ø§Ù„Ø­Ù‚ÙŠÙ‚ÙŠØ© Ù„Ø£Ø±Ø¨Ø§Ø­Ùƒ.';
+      '💡 دليل المواد الخام: هنا يمكنك إضافة مكونات مستودعك (مثل: لحم برجر، جبن، أكواب، بن قهوة). عند ربط هذه المكونات بوصفات المنتجات في شاشة المنتجات، سيقوم النظام بخصم كمياتها تلقائياً عند كل عملية بيع لحماية مشروعك من الهدر ومعرفة التكلفة الحقيقية لأرباحك.';
 
   @override
-  String get mlLabel => 'Ù…Ù„Ù„ÙŠ (ml)';
+  String get mlLabel => 'مللي (ml)';
 
   @override
   String get rawMaterialsUsageHint =>
-      'ðŸ’¡ Ø³ØªØ³ØªØ®Ø¯Ù… Ù‡Ø°Ù‡ Ø§Ù„Ù…Ø§Ø¯Ø© Ù„Ø±Ø¨Ø·Ù‡Ø§ Ø¨ÙˆØ¬Ø¨Ø§Øª ÙˆÙ…Ù†ØªØ¬Ø§Øª Ø§Ù„Ø¨ÙŠØ¹ Ù„ÙŠØªÙ… Ø§Ù„Ø®ØµÙ… Ø§Ù„ØªÙ„Ù‚Ø§Ø¦ÙŠ Ø¹Ù†Ø¯ Ø¥ØµØ¯Ø§Ø± Ø§Ù„ÙÙˆØ§ØªÙŠØ±.';
+      '💡 ستستخدم هذه المادة لربطها بوجبات ومنتجات البيع ليتم الخصم التلقائي عند إصدار الفواتير.';
 
   @override
-  String get gLabel => 'Ø¬Ø±Ø§Ù… (g)';
+  String get gLabel => 'جرام (g)';
 
   @override
-  String get editRawMaterial => 'ØªØ¹Ø¯ÙŠÙ„ Ù…Ø§Ø¯Ø© Ø®Ø§Ù…';
+  String get editRawMaterial => 'تعديل مادة خام';
 
   @override
-  String get measuringUnit => 'ÙˆØ­Ø¯Ø© Ø§Ù„Ù‚ÙŠØ§Ø³:';
+  String get measuringUnit => 'وحدة القياس:';
 
   @override
   String get noRawMaterialsFound =>
-      'Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…ÙˆØ§Ø¯ Ø®Ø§Ù… ÙÙŠ Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹ Ø¨Ø¹Ø¯.\nØ§Ø¶ØºØ· Ø¹Ù„Ù‰ Ø²Ø± \"Ø¥Ø¶Ø§ÙØ© Ù…Ø§Ø¯Ø© Ø®Ø§Ù…\" Ø¨Ø§Ù„Ø£Ø³ÙÙ„ Ù„Ù„Ø¨Ø¯Ø¡!';
+      'لا توجد مواد خام في المستودع بعد.\nاضغط على زر \"إضافة مادة خام\" بالأسفل للبدء!';
 
   @override
   String availableBalance(String quantity, String unit) {
-    return 'Ø§Ù„Ø±ØµÙŠØ¯ Ø§Ù„Ù…ØªÙˆÙØ±: $quantity  ($unit)';
+    return 'الرصيد المتوفر: $quantity  ($unit)';
   }
 
   @override
-  String get saveInWarehouse => 'Ø­ÙØ¸ ÙÙŠ Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹';
+  String get saveInWarehouse => 'حفظ في المستودع';
 
   @override
-  String get addRawMaterial => 'Ø¥Ø¶Ø§ÙØ© Ù…Ø§Ø¯Ø© Ø®Ø§Ù…';
+  String get addRawMaterial => 'إضافة مادة خام';
 
   @override
-  String get addNewRawMaterial => 'Ø¥Ø¶Ø§ÙØ© Ù…Ø§Ø¯Ø© Ø®Ø§Ù… Ø¬Ø¯ÙŠØ¯Ø©';
+  String get addNewRawMaterial => 'إضافة مادة خام جديدة';
 
   @override
-  String get pieceUnit => 'Ù‚Ø·Ø¹Ø© / Ø­Ø¨Ø©';
+  String get pieceUnit => 'قطعة / حبة';
 
   @override
-  String get pieceUnitDesc =>
-      'Ù‚Ø·Ø¹Ø© / Ø­Ø¨Ø© (piece) - Ù„Ù„Ø£ÙƒÙˆØ§Ø¨ ÙˆØ§Ù„Ø®Ø¨Ø² ÙˆØ§Ù„Ø¹Ø¨ÙˆØ§Øª';
+  String get pieceUnitDesc => 'قطعة / حبة (piece) - للأكواب والخبز والعبوات';
 
   @override
-  String get pleaseEnterRawMaterialName =>
-      'ÙŠØ±Ø¬Ù‰ Ø¥Ø¯Ø®Ø§Ù„ Ø§Ø³Ù… Ø§Ù„Ù…Ø§Ø¯Ø© Ø§Ù„Ø®Ø§Ù… Ø£ÙˆÙ„Ø§Ù‹';
+  String get pleaseEnterRawMaterialName => 'يرجى إدخال اسم المادة الخام أولاً';
 
   @override
-  String get currentAvailableQuantity =>
-      'Ø§Ù„ÙƒÙ…ÙŠØ© Ø§Ù„Ù…ØªÙˆÙØ±Ø© Ø­Ø§Ù„ÙŠØ§Ù‹ ÙÙŠ Ø§Ù„Ù…Ø³ØªÙˆØ¯Ø¹';
+  String get currentAvailableQuantity => 'الكمية المتوفرة حالياً في المستودع';
 
   @override
-  String get gUnitDesc =>
-      'Ø¬Ø±Ø§Ù… (g) - Ù„Ù„ÙˆØ²Ù† Ù…Ø«Ù„ Ø§Ù„Ù„Ø­ÙˆÙ… ÙˆØ§Ù„Ù‚Ù‡ÙˆØ©';
+  String get gUnitDesc => 'جرام (g) - للوزن مثل اللحوم والقهوة';
 
   @override
-  String get mlUnitDesc => 'Ù…Ù„Ù„ÙŠ (ml) - Ù„Ù„Ø³ÙˆØ§Ø¦Ù„ ÙˆØ§Ù„ØµÙ„ØµØ§Øª';
+  String get mlUnitDesc => 'مللي (ml) - للسوائل والصلصات';
 
   @override
-  String get resourceRunningOut =>
-      'ØªÙ†Ø¨ÙŠÙ‡: Ø§Ù„Ù…ÙˆØ±Ø¯ Ù‚Ø§Ø±Ø¨ Ø¹Ù„Ù‰ Ø§Ù„Ø§Ù†ØªÙ‡Ø§Ø¡';
+  String get resourceRunningOut => 'تنبيه: المورد قارب على الانتهاء';
 
   @override
   String get rawMaterialNameExample =>
-      'Ø§Ø³Ù… Ø§Ù„Ù…Ø§Ø¯Ø© Ø§Ù„Ø®Ø§Ù… (Ù…Ø«Ø§Ù„: Ù„Ø­Ù… Ø¨Ø±Ø¬Ø±ØŒ Ø¬Ø¨Ù†ØŒ Ù‚Ù‡ÙˆØ© Ø¨Ù†)';
+      'اسم المادة الخام (مثال: لحم برجر، جبن، قهوة بن)';
 
   @override
-  String get rawMaterialsWarehouse =>
-      'Ø§Ù„Ù…ÙˆØ§Ø¯ Ø§Ù„Ø®Ø§Ù… (Ù…Ø³ØªÙˆØ¯Ø¹ Ø§Ù„Ù…ÙƒÙˆÙ†Ø§Øª)';
+  String get rawMaterialsWarehouse => 'المواد الخام (مستودع المكونات)';
 
   @override
   String orderNumberLabel(String number) {
-    return 'Ø·Ù„Ø¨ #$number';
+    return 'طلب #$number';
   }
 
   @override
   String thisWeekFromTo(String start, String end) {
-    return 'Ù‡Ø°Ø§ Ø§Ù„Ø£Ø³Ø¨ÙˆØ¹ (Ù…Ù† $start Ø¥Ù„Ù‰ $end)';
+    return 'هذا الأسبوع (من $start إلى $end)';
   }
 
   @override
-  String get thermalPrint => 'Ø·Ø¨Ø§Ø¹Ø© Ø­Ø±Ø§Ø±ÙŠØ©';
+  String get thermalPrint => 'طباعة حرارية';
 
   @override
   String invoicePermanentlyDeleted(String number, String user) {
-    return 'ØªÙ… Ø­Ø°Ù Ø§Ù„ÙØ§ØªÙˆØ±Ø© Ø±Ù‚Ù… #$number Ù†Ù‡Ø§Ø¦ÙŠØ§Ù‹ Ù…Ù† Ù‚Ø¨Ù„ $user';
+    return 'تم حذف الفاتورة رقم #$number نهائياً من قبل $user';
   }
 
   @override
-  String get scheduledOrders => 'Ø·Ù„Ø¨Ø§Øª Ù…Ø¬Ø¯ÙˆÙ„Ø© ðŸ—“';
+  String get scheduledOrders => 'طلبات مجدولة 🗓';
 
   @override
-  String get totalIncome => 'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø¯Ø®Ù„: ';
+  String get totalIncome => 'إجمالي الدخل: ';
 
   @override
-  String get monthPrefix => 'Ø´Ù‡Ø± ';
+  String get monthPrefix => 'شهر ';
 
   @override
-  String get deleteInvoice => 'Ø­Ø°Ù Ø§Ù„ÙØ§ØªÙˆØ±Ø©';
+  String get deleteInvoice => 'حذف الفاتورة';
 
   @override
   String get confirmDeleteInvoiceMsg =>
-      'Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ù…Ø³Ø­ Ù‡Ø°Ù‡ Ø§Ù„ÙØ§ØªÙˆØ±Ø©ØŸ (Ø³ÙŠØ¹ÙˆØ¯ Ø§Ù„Ù…Ø®Ø²ÙˆÙ† Ù„Ù„Ù…Ù†ØªØ¬Ø§Øª)';
+      'هل أنت متأكد من مسح هذه الفاتورة؟ (سيعود المخزون للمنتجات)';
 
   @override
-  String get bankTransferMethod => 'ØªØ­ÙˆÙŠÙ„ Ø¨Ù†ÙƒÙŠ ðŸ¦';
+  String get bankTransferMethod => 'تحويل بنكي 🏦';
 
   @override
-  String get cashMethod => 'Ø¯ÙØ¹ ÙƒØ§Ø´ ðŸ’µ';
+  String get cashMethod => 'دفع كاش 💵';
 
   @override
-  String get agoPrefix => 'Ù‚Ø¨Ù„ ';
+  String get agoPrefix => 'قبل ';
 
   @override
-  String get deleteBtn => 'Ø­Ø°Ù';
+  String get deleteBtn => 'حذف';
 
   @override
-  String get madaMethod => 'Ø¯ÙØ¹ Ù…Ø¯Ù‰ ðŸ’³';
+  String get madaMethod => 'دفع مدى 💳';
 
   @override
-  String get warningFinalDelete => 'ØªØ­Ø°ÙŠØ±: Ø­Ø°Ù Ù†Ù‡Ø§Ø¦ÙŠ Ù„Ù„Ø·Ù„Ø¨';
+  String get warningFinalDelete => 'تحذير: حذف نهائي للطلب';
 
   @override
-  String get hideBtn => 'Ø¥Ø®ÙØ§Ø¡';
+  String get hideBtn => 'إخفاء';
 
   @override
   String weekFromTo(String start, String end) {
-    return ' Ø£Ø³Ø¨ÙˆØ¹ (Ù…Ù† $start Ø¥Ù„Ù‰ $end)';
+    return ' أسبوع (من $start إلى $end)';
   }
 
   @override
-  String get pdfInvoice => 'ÙØ§ØªÙˆØ±Ø© PDF';
+  String get pdfInvoice => 'فاتورة PDF';
 
   @override
   String get finalDeleteWarningMsg =>
-      'Ø§Ù„Ø­Ø°Ù Ø§Ù„Ù†Ù‡Ø§Ø¦ÙŠ Ø³ÙŠÙ…Ø­Ùˆ Ù‡Ø°Ø§ Ø§Ù„Ø·Ù„Ø¨ Ù…Ù† Ø§Ù„Ø³Ø¬Ù„Ø§Øª ØªÙ…Ø§Ù…Ø§Ù‹ Ø¨Ø§Ù„Ø¥Ø¶Ø§ÙØ© Ø¥Ù„Ù‰ Ø¥Ø±Ø¬Ø§Ø¹ Ø§Ù„Ø£Ù…ÙˆØ§Ù„ ÙˆØ¹ÙƒØ³ Ø§Ù„Ø¯ÙŠÙˆÙ†. Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø§Ø³ØªØ¹Ø§Ø¯Ø© Ø§Ù„ÙØ§ØªÙˆØ±Ø©. Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ØŸ';
+      'الحذف النهائي سيمحو هذا الطلب من السجلات تماماً بالإضافة إلى إرجاع الأموال وعكس الديون. لا يمكن استعادة الفاتورة. هل أنت متأكد؟';
 
   @override
   String get failDeleteInvoiceNoPermission =>
-      'ÙØ´Ù„ Ù…Ø³Ø­ Ø§Ù„ÙØ§ØªÙˆØ±Ø© Ù†Ù‡Ø§Ø¦ÙŠØ§Ù‹ Ù„Ø¹Ø¯Ù… ÙˆØ¬ÙˆØ¯ ØµÙ„Ø§Ø­ÙŠØ© Ø£Ùˆ Ù„Ø§ ØªÙˆØ¬Ø¯ ÙØ§ØªÙˆØ±Ø©.';
+      'فشل مسح الفاتورة نهائياً لعدم وجود صلاحية أو لا توجد فاتورة.';
 
   @override
-  String get todayPrefix => 'Ø§Ù„ÙŠÙˆÙ… - ';
+  String get todayPrefix => 'اليوم - ';
 
   @override
-  String get posTitle => 'Ù†Ù‚Ø·Ø© Ø§Ù„Ø¨ÙŠØ¹ (POS)';
+  String get posTitle => 'نقطة البيع (POS)';
 
   @override
   String byCreatorIcon(String creator) {
-    return 'ðŸ‘¤ Ø¨ÙˆØ§Ø³Ø·Ø©: $creator';
+    return '👤 بواسطة: $creator';
   }
 
   @override
-  String get deleteInvoiceAction => 'Ø­Ø°Ù ÙØ§ØªÙˆØ±Ø©';
+  String get deleteInvoiceAction => 'حذف فاتورة';
 
   @override
-  String get invoiceDeletedSuccessfully =>
-      'ØªÙ… Ø­Ø°Ù Ø§Ù„ÙØ§ØªÙˆØ±Ø© Ø¨Ù†Ø¬Ø§Ø­';
+  String get invoiceDeletedSuccessfully => 'تم حذف الفاتورة بنجاح';
 
   @override
-  String get yearPrefix => 'Ø³Ù†Ø© ';
+  String get yearPrefix => 'سنة ';
 
   @override
-  String get deliveryDate => 'Ù…ÙˆØ¹Ø¯ Ø§Ù„ØªØ³Ù„ÙŠÙ…: ';
+  String get deliveryDate => 'موعد التسليم: ';
 
   @override
-  String get yesterdayPrefix => 'Ø£Ù…Ø³ - ';
+  String get yesterdayPrefix => 'أمس - ';
 
   @override
-  String get paymentMethod => ' (Ø§Ù„Ø¯ÙØ¹: ';
+  String get paymentMethod => ' (الدفع: ';
 
   @override
   String invoiceCancelledMsg(String number, String value) {
-    return 'ØªÙ… Ø¥Ù„ØºØ§Ø¡ Ø§Ù„ÙØ§ØªÙˆØ±Ø© Ø±Ù‚Ù… #$number Ø¨Ù‚ÙŠÙ…Ø© $value';
+    return 'تم إلغاء الفاتورة رقم #$number بقيمة $value';
   }
 
   @override
   String get confirmFinalDeleteMsg =>
-      'Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø±ØºØ¨ØªÙƒ ÙÙŠ Ù…Ø³Ø­ Ø§Ù„ÙØ§ØªÙˆØ±Ø© Ù†Ù‡Ø§Ø¦ÙŠØ§Ù‹ØŸ Ù„Ø§ ÙŠÙ…ÙƒÙ† Ø§Ù„ØªØ±Ø§Ø¬Ø¹ Ø¹Ù† Ù‡Ø°Ù‡ Ø§Ù„Ø®Ø·ÙˆØ©.';
+      'هل أنت متأكد من رغبتك في مسح الفاتورة نهائياً؟ لا يمكن التراجع عن هذه الخطوة.';
 
   @override
   String errorOccurred(String error) {
-    return 'Ø­Ø¯Ø« Ø®Ø·Ø£: $error';
+    return 'حدث خطأ: $error';
   }
 
   @override
-  String get invoiceDeletedPermanently =>
-      'ØªÙ… Ø­Ø°Ù Ø§Ù„ÙØ§ØªÙˆØ±Ø© Ù†Ù‡Ø§Ø¦ÙŠØ§Ù‹';
+  String get invoiceDeletedPermanently => 'تم حذف الفاتورة نهائياً';
 
   @override
-  String get cancelOrder => 'Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø·Ù„Ø¨';
+  String get cancelOrder => 'إلغاء الطلب';
 
   @override
   String orderDetailsTitle(String number) {
-    return 'ØªÙØ§ØµÙŠÙ„ Ø§Ù„Ø·Ù„Ø¨ #$number';
+    return 'تفاصيل الطلب #$number';
   }
 
   @override
-  String get orderConfirmed => 'âœ… Ø·Ù„Ø¨ Ù…Ø¤ÙƒØ¯ / Ù…ÙƒØªÙ…Ù„';
+  String get orderConfirmed => '✅ طلب مؤكد / مكتمل';
 
   @override
-  String get invoiceOptions => 'âš™ï¸ Ø®ÙŠØ§Ø±Ø§Øª Ø§Ù„ÙØ§ØªÙˆØ±Ø©';
+  String get invoiceOptions => '⚙️ خيارات الفاتورة';
 
   @override
-  String get creditMethod => 'Ø¢Ø¬Ù„ / Ø°Ù…Ù… (Credit)';
+  String get creditMethod => 'آجل / ذمم (Credit)';
 
   @override
-  String get warningCancelOrder => 'ØªØ­Ø°ÙŠØ±: Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø·Ù„Ø¨';
+  String get warningCancelOrder => 'تحذير: إلغاء الطلب';
 
   @override
-  String get confirmFinalDelete => 'ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø­Ø°Ù Ø§Ù„Ù†Ù‡Ø§Ø¦ÙŠ';
+  String get confirmFinalDelete => 'تأكيد الحذف النهائي';
 
   @override
-  String get subtotalBeforeTax => 'Ø§Ù„Ø¥Ø¬Ù…Ø§Ù„ÙŠ (Ù‚Ø¨Ù„ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©)';
+  String get subtotalBeforeTax => 'الإجمالي (قبل الضريبة)';
 
   @override
   String get cancelOrderWarningMsg =>
-      'Ø¥Ù„ØºØ§Ø¡ Ø§Ù„Ø·Ù„Ø¨ Ø³ÙŠØ¤Ø¯ÙŠ Ø¥Ù„Ù‰ Ø¥Ø±Ø¬Ø§Ø¹ Ø§Ù„Ù…Ù†ØªØ¬Ø§Øª Ù„Ù„Ù…Ø®Ø²ÙˆÙ†ØŒ ÙˆØ®ØµÙ… Ø§Ù„Ø£Ù…ÙˆØ§Ù„ Ø§Ù„Ù…Ø¯ÙÙˆØ¹Ø© Ù…Ù† Ø§Ù„ÙˆØ±Ø¯ÙŠØ© Ø§Ù„Ø­Ø§Ù„ÙŠØ©ØŒ ÙˆØ¹ÙƒØ³ Ø¯ÙŠÙˆÙ† Ø§Ù„Ø¹Ù…ÙŠÙ„. Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ØŸ';
+      'إلغاء الطلب سيؤدي إلى إرجاع المنتجات للمخزون، وخصم الأموال المدفوعة من الوردية الحالية، وعكس ديون العميل. هل أنت متأكد؟';
 
   @override
-  String get unitPricePrefix => 'Ø³Ø¹Ø± Ø§Ù„ÙˆØ­Ø¯Ø©: ';
+  String get unitPricePrefix => 'سعر الوحدة: ';
 
   @override
-  String get finalDeleteBtn => 'Ø­Ø°Ù Ù†Ù‡Ø§Ø¦ÙŠ';
+  String get finalDeleteBtn => 'حذف نهائي';
 
   @override
-  String get itemsList =>
-      'ðŸ›ï¸ Ù‚Ø§Ø¦Ù…Ø© Ø§Ù„Ø£ØµÙ†Ø§Ù ÙˆØ§Ù„Ù…Ù†ØªØ¬Ø§Øª';
+  String get itemsList => '🛍️ قائمة الأصناف والمنتجات';
 
   @override
   String get confirmCancelInvoiceMsg =>
-      'Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø±ØºØ¨ØªÙƒ ÙÙŠ Ø¥Ù„ØºØ§Ø¡ Ù‡Ø°Ù‡ Ø§Ù„ÙØ§ØªÙˆØ±Ø©ØŸ Ø³ÙŠØªÙ… Ø¥Ø±Ø¬Ø§Ø¹ ÙƒÙ…ÙŠØ§Øª Ø§Ù„Ø£ØµÙ†Ø§Ù Ù„Ù„Ù…Ø®Ø²ÙˆÙ† ØªÙ„Ù‚Ø§Ø¦ÙŠØ§Ù‹.';
+      'هل أنت متأكد من رغبتك في إلغاء هذه الفاتورة؟ سيتم إرجاع كميات الأصناف للمخزون تلقائياً.';
 
   @override
-  String get orderCancelledStatus => 'âŒ Ø·Ù„Ø¨ Ù…Ù„ØºÙŠ';
+  String get orderCancelledStatus => '❌ طلب ملغي';
 
   @override
-  String get cancelInvoiceBtn => 'Ø¥Ù„ØºØ§Ø¡ ÙØ§ØªÙˆØ±Ø©';
+  String get cancelInvoiceBtn => 'إلغاء فاتورة';
 
   @override
-  String get invoiceGrandTotal =>
-      'Ø§Ù„Ù…Ø¬Ù…ÙˆØ¹ Ø§Ù„Ù†Ù‡Ø§Ø¦ÙŠ Ù„Ù„ÙØ§ØªÙˆØ±Ø©';
+  String get invoiceGrandTotal => 'المجموع النهائي للفاتورة';
 
   @override
   String get invoiceCancelledSuccessfully =>
-      'ØªÙ… Ø¥Ù„ØºØ§Ø¡ Ø§Ù„ÙØ§ØªÙˆØ±Ø© Ø¨Ù†Ø¬Ø§Ø­ ÙˆØ¥Ø±Ø¬Ø§Ø¹ Ø§Ù„Ù…ÙˆØ§Ø¯ Ù„Ù„Ù…Ø®Ø²ÙˆÙ†';
+      'تم إلغاء الفاتورة بنجاح وإرجاع المواد للمخزون';
 
   @override
-  String get totalTax => 'Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©';
+  String get totalTax => 'إجمالي الضريبة';
 
   @override
-  String get confirmCancelBtn => 'ØªØ£ÙƒÙŠØ¯ Ø§Ù„Ø¥Ù„ØºØ§Ø¡';
+  String get confirmCancelBtn => 'تأكيد الإلغاء';
 
   @override
-  String get goBackBtn => 'ØªØ±Ø§Ø¬Ø¹';
+  String get goBackBtn => 'تراجع';
 
   @override
-  String get yesterday => 'Ø£Ù…Ø³';
+  String get yesterday => 'أمس';
 
   @override
-  String get expensesDistribution => 'ØªÙˆØ²ÙŠØ¹ Ø§Ù„Ù…ØµØ±ÙˆÙØ§Øª';
+  String get expensesDistribution => 'توزيع المصروفات';
 
   @override
-  String get preparingExcelReport =>
-      'Ø¬Ø§Ø±ÙŠ ØªØ¬Ù‡ÙŠØ² Ø§Ù„ØªÙ‚Ø±ÙŠØ± (Ø¥ÙƒØ³Ù„)...';
+  String get preparingExcelReport => 'جاري تجهيز التقرير (إكسل)...';
 
   @override
   String unitsSold(String quantity) {
-    return '$quantity ÙˆØ­Ø¯Ø© Ù…Ø¨Ø§Ø¹Ø©';
+    return '$quantity وحدة مباعة';
   }
 
   @override
-  String get oneWeek => 'Ø£Ø³Ø¨ÙˆØ¹';
+  String get oneWeek => 'أسبوع';
 
   @override
   String excelExportError(String error) {
-    return 'Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ ØªØµØ¯ÙŠØ± Ø¥ÙƒØ³Ù„: $error';
+    return 'حدث خطأ أثناء تصدير إكسل: $error';
   }
 
   @override
-  String get reportExtractionError =>
-      'Ø­Ø¯Ø« Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø§Ø³ØªØ®Ø±Ø§Ø¬ Ø§Ù„ØªÙ‚Ø±ÙŠØ±';
+  String get reportExtractionError => 'حدث خطأ أثناء استخراج التقرير';
 
   @override
-  String get oneMonth => 'Ø´Ù‡Ø±';
+  String get oneMonth => 'شهر';
 
   @override
-  String get semiAnnual => 'Ù†ØµÙ Ø³Ù†ÙˆÙŠ';
+  String get semiAnnual => 'نصف سنوي';
 
   @override
-  String get oneYear => 'Ø³Ù†Ø©';
+  String get oneYear => 'سنة';
 
   @override
-  String get today => 'Ø§Ù„ÙŠÙˆÙ…';
+  String get today => 'اليوم';
 
   @override
-  String get preparingPdfReport =>
-      'Ø¬Ø§Ø±ÙŠ ØªØ¬Ù‡ÙŠØ² Ø§Ù„ØªÙ‚Ø±ÙŠØ± (PDF)...';
+  String get preparingPdfReport => 'جاري تجهيز التقرير (PDF)...';
 
   @override
-  String get twoDaysAgo => 'Ù‚Ø¨Ù„ ÙŠÙˆÙ…ÙŠÙ†';
+  String get twoDaysAgo => 'قبل يومين';
 
   @override
-  String get noExpensesInPeriod =>
-      'Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…ØµØ±ÙˆÙØ§Øª ÙÙŠ Ù‡Ø°Ù‡ Ø§Ù„ÙØªØ±Ø©';
+  String get noExpensesInPeriod => 'لا توجد مصروفات في هذه الفترة';
 
   @override
   String get cash => 'cash';
@@ -1577,95 +1484,85 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unknown => 'unknown';
 
   @override
-  String get aboutApp => 'Ø­ÙˆÙ„ Ø§Ù„ØªØ·Ø¨ÙŠÙ‚';
+  String get aboutApp => 'حول التطبيق';
 
   @override
-  String get databaseBackupText =>
-      'Ù†Ø³Ø® Ø§Ø­ØªÙŠØ§Ø·ÙŠ Ù„Ù‚Ø§Ø¹Ø¯Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª';
+  String get databaseBackupText => 'نسخ احتياطي لقاعدة البيانات';
 
   @override
-  String get thermalPrinterText => 'Ø§Ù„Ø·Ø§Ø¨Ø¹Ø© Ø§Ù„Ø­Ø±Ø§Ø±ÙŠØ©';
+  String get thermalPrinterText => 'الطابعة الحرارية';
 
   @override
-  String get setupChecklistTitle => 'Ø¬Ù‡Ø² Ù…ØªØ¬Ø±Ùƒ Ù„Ù„Ø¨ÙŠØ¹';
+  String get setupChecklistTitle => 'جهز متجرك للبيع';
 
   @override
-  String get setupStep1 => 'Ø£Ø³Ø³ Ù…ØªØ¬Ø±Ùƒ (Ø£Ø¶Ù ØªØµÙ†ÙŠÙ)';
+  String get setupStep1 => 'أسس متجرك (أضف تصنيف)';
 
   @override
-  String get setupStep2 => 'ØªØ¬Ù‡ÙŠØ² Ø§Ù„Ø±ÙÙˆÙ (Ø£Ø¶Ù Ù…Ù†ØªØ¬)';
+  String get setupStep2 => 'تجهيز الرفوف (أضف منتج)';
 
   @override
-  String get setupStep3 => 'Ø§Ø³ØªÙ„Ø§Ù… Ø§Ù„Ø¹Ù‡Ø¯Ø© (Ø§ÙØªØ­ ÙˆØ±Ø¯ÙŠØ©)';
+  String get setupStep3 => 'استلام العهدة (افتح وردية)';
 
   @override
-  String get setupStep4 => 'Ø£ÙˆÙ„ ØºÙŠØ« (Ø£Ù†Ø´Ø¦ Ù…Ø¨ÙŠØ¹Ø©)';
+  String get setupStep4 => 'أول غيث (أنشئ مبيعة)';
 
   @override
-  String get setupCompleted => 'Ø£Ù†Øª Ø¬Ø§Ù‡Ø² ØªÙ…Ø§Ù…Ø§Ù‹ Ù„Ù„Ø¨ÙŠØ¹! ðŸŽ‰';
+  String get setupCompleted => 'أنت جاهز تماماً للبيع! 🎉';
 
   @override
-  String get taxModeTitle => 'Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©';
+  String get taxModeTitle => 'الضريبة';
 
   @override
-  String get taxModeStore => 'Ø§Ø³ØªØ®Ø¯Ø§Ù… Ø¶Ø±ÙŠØ¨Ø© Ø§Ù„Ù…ØªØ¬Ø±';
+  String get taxModeStore => 'استخدام ضريبة المتجر';
 
   @override
-  String get taxModeCustom => 'Ø¶Ø±ÙŠØ¨Ø© Ù…Ø®ØµØµØ©';
+  String get taxModeCustom => 'ضريبة مخصصة';
 
   @override
-  String get taxModeExempt => 'Ù…Ø¹ÙÙ‰ Ù…Ù† Ø§Ù„Ø¶Ø±ÙŠØ¨Ø©';
+  String get taxModeExempt => 'معفى من الضريبة';
 
   @override
-  String get paywallMainPlan => 'Ø§Ù„Ø¨Ø§Ù‚Ø© Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠØ©';
+  String get paywallMainPlan => 'الباقة الرئيسية';
 
   @override
-  String get paywallMainDesc1 => 'ÙØ±Ø¹ Ø±Ø¦ÙŠØ³ÙŠ ÙƒØ§Ù…Ù„';
+  String get paywallMainDesc1 => 'فرع رئيسي كامل';
 
   @override
-  String get paywallMainDesc2 =>
-      'ØµÙ„Ø§Ø­ÙŠØ§Øª ØªØ§Ø¬Ø± ÙƒØ§Ù…Ù„Ø© Ù„Ù„ÙØ±Ø¹ Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠ';
+  String get paywallMainDesc2 => 'صلاحيات تاجر كاملة للفرع الرئيسي';
 
   @override
-  String get paywallMainDesc3 =>
-      'Ø­ØªÙ‰ 3 Ù…ÙˆØ¸ÙÙŠÙ† ÙÙŠ Ø§Ù„ÙØ±Ø¹ Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠ';
+  String get paywallMainDesc3 => 'حتى 3 موظفين في الفرع الرئيسي';
 
   @override
-  String get paywallMainDesc4 =>
-      'Ø¥Ù…ÙƒØ§Ù†ÙŠØ© Ø¥Ø¶Ø§ÙØ© ÙØ±ÙˆØ¹ ØªØ¬Ø±ÙŠØ¨ÙŠØ©';
+  String get paywallMainDesc4 => 'إمكانية إضافة فروع تجريبية';
 
   @override
-  String get paywallMainDesc5 =>
-      'Ø§Ù„ÙØ±ÙˆØ¹ Ø§Ù„ØªØ¬Ø±ÙŠØ¨ÙŠØ© ØªØ¨Ù‚Ù‰ Ù…Ø­Ø¯ÙˆØ¯Ø©';
+  String get paywallMainDesc5 => 'الفروع التجريبية تبقى محدودة';
 
   @override
-  String get paywallMultiPlan => 'Ø¨Ø§Ù‚Ø© Ù…ØªØ¹Ø¯Ø¯ Ø§Ù„ÙØ±ÙˆØ¹';
+  String get paywallMultiPlan => 'باقة متعدد الفروع';
 
   @override
-  String get paywallMultiDesc1 =>
-      'Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠ + 3 ÙØ±ÙˆØ¹ Ø¥Ù†ØªØ§Ø¬ÙŠØ© Ø¥Ø¶Ø§ÙÙŠØ©';
+  String get paywallMultiDesc1 => 'الرئيسي + 3 فروع إنتاجية إضافية';
 
   @override
-  String get paywallMultiDesc2 => 'Ø­Ø¯ Ø£Ù‚ØµÙ‰ 4 ÙØ±ÙˆØ¹ ÙƒØ§Ù…Ù„Ø©';
+  String get paywallMultiDesc2 => 'حد أقصى 4 فروع كاملة';
 
   @override
-  String get paywallMultiDesc3 =>
-      'Ù…ÙˆØ¸ÙÙŠ Ø§Ù„Ø±Ø¦ÙŠØ³ÙŠ = 3ØŒ Ø§Ù„Ø¥Ø¶Ø§ÙÙŠ = 2 Ù„ÙƒÙ„ ÙØ±Ø¹';
+  String get paywallMultiDesc3 => 'موظفي الرئيسي = 3، الإضافي = 2 لكل فرع';
 
   @override
-  String get paywallMultiDesc4 => 'Ø­Ø¯ Ø£Ù‚ØµÙ‰ 9 Ù…ÙˆØ¸ÙÙŠÙ† Ø¥Ø¬Ù…Ø§Ù„Ø§Ù‹';
+  String get paywallMultiDesc4 => 'حد أقصى 9 موظفين إجمالاً';
 
   @override
-  String get paywallMultiDesc5 =>
-      'ØµÙ„Ø§Ø­ÙŠØ§Øª Ø§Ù„ÙØ±ÙˆØ¹ Ø§Ù„Ù…ØªØ¹Ø¯Ø¯Ø© ÙƒØ§Ù…Ù„Ø©';
+  String get paywallMultiDesc5 => 'صلاحيات الفروع المتعددة كاملة';
 
   @override
-  String get paywallMultiDesc6 =>
-      'Ø­ÙØ¸ Ø¥Ù…ÙƒØ§Ù†ÙŠØ§Øª Ù†Ù‚Ù„ Ø§Ù„Ù…Ø®Ø²ÙˆÙ† Ø§Ù„Ø­Ø§Ù„ÙŠØ©';
+  String get paywallMultiDesc6 => 'حفظ إمكانيات نقل المخزون الحالية';
 
   @override
-  String get pricePendingStore =>
-      'Ø§Ù„Ø³Ø¹Ø± Ù…ØªØ§Ø­ Ø¨Ø¹Ø¯ Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø§Ù„Ù…ØªØ¬Ø±';
+  String get pricePendingStore => 'السعر متاح بعد الاتصال بالمتجر';
 
   @override
   String get freeLimitReachedTitle => 'اكتملت تجربتك المجانية';

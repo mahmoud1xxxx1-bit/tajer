@@ -75,7 +75,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
             padding: const EdgeInsets.all(24),
             child: Text(
               isAr
-                  ? 'Ù„ÙŠØ³ Ù„Ø¯ÙŠÙƒ ØµÙ„Ø§Ø­ÙŠØ© Ø¹Ø±Ø¶ Ø§Ù„ØªÙ‚Ø§Ø±ÙŠØ±.'
+                  ? 'ليس لديك صلاحية عرض التقارير.'
                   : 'You do not have permission to view reports.',
               textAlign: TextAlign.center,
               style: const TextStyle(fontFamily: 'Tajawal'),
