@@ -1,0 +1,91 @@
+name: Retry Supplier Debt Lifecycle Fix
+
+on:
+  push:
+    branches: [ "audit/pre-google-play-414" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit/pre-google-play-414
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.7'
+          channel: stable
+          cache: true
+
+      - name: Dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Reuse already-verified patch payloads
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64
+          import re
+          from pathlib import Path
+          source = Path('.github/workflows/apply_supplier_debt_lifecycle_fix.yml').read_text(encoding='utf-8')
+          matches = re.findall(r"echo '([A-Za-z0-9+/=]+)' \| base64 --decode > ([^\n]+)", source)
+          assert len(matches) == 2, matches
+          for payload, target in matches:
+              target = target.strip()
+              path = Path(target)
+              path.parent.mkdir(parents=True, exist_ok=True)
+              path.write_bytes(base64.b64decode(payload))
+          PY
+
+      - name: Apply guarded repository and UI patch
+        run: python /tmp/supplier_patch.py
+
+      - name: Format changed Dart files
+        run: dart format lib/features/suppliers/data/supplier_repository.dart lib/features/suppliers/presentation/supplier_details_screen.dart test/supplier_debt_lifecycle_atomicity_test.dart
+
+      - name: Analyze changed supplier code
+        run: flutter analyze lib/features/suppliers/data/supplier_repository.dart lib/features/suppliers/presentation/supplier_details_screen.dart test/supplier_debt_lifecycle_atomicity_test.dart --no-fatal-warnings --no-fatal-infos
+
+      - name: Supplier accounting regression tests
+        run: |
+          flutter test test/supplier_debt_lifecycle_atomicity_test.dart --reporter expanded
+          flutter test test/pre_release_supplier_branch_debt_test.dart --reporter expanded
+          flutter test test/pre_release_supplier_reversal_test.dart --reporter expanded
+          flutter test test/supplier_creation_atomicity_test.dart --reporter expanded
+          flutter test test/pre_release_accounting_matrix_test.dart --reporter expanded
+
+      - name: Remove unrelated generated localization drift
+        run: git checkout -- lib/l10n/app_localizations.dart lib/l10n/app_localizations_ar.dart
+
+      - name: Verify intended diff only
+        shell: bash
+        run: |
+          git status --short
+          python - <<'PY'
+          import subprocess
+          lines = subprocess.check_output(['git','status','--porcelain'], text=True).splitlines()
+          paths = {line[3:] for line in lines}
+          expected = {
+            'lib/features/suppliers/data/supplier_repository.dart',
+            'lib/features/suppliers/presentation/supplier_details_screen.dart',
+            'test/supplier_debt_lifecycle_atomicity_test.dart',
+          }
+          assert paths == expected, (paths, expected)
+          PY
+
+      - name: Commit verified accounting repair
+        shell: bash
+        run: |
+          git config user.name "Tajer Audit Bot"
+          git config user.email "actions@github.com"
+          git add lib/features/suppliers/data/supplier_repository.dart \
+                  lib/features/suppliers/presentation/supplier_details_screen.dart \
+                  test/supplier_debt_lifecycle_atomicity_test.dart
+          git commit -m "fix: make supplier debt lifecycle branch-atomic"
+          git push origin HEAD:audit/pre-google-play-414
