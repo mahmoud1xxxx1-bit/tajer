@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../domain/supplier.dart';
+import '../domain/supplier_transaction.dart';
 
 class SupplierRepository {
   final FirebaseFirestore _firestore;
@@ -40,15 +41,65 @@ class SupplierRepository {
     });
   }
 
-  Future<void> addSupplier(Supplier supplier) async {
-    await EntitlementIntegration.checkAndConsumeQuota(
-      firestore: _firestore,
+  Future<void> addSupplier(
+    Supplier supplier, {
+    SupplierTransaction? openingTransaction,
+  }) async {
+    final branchId = supplier.associatedBranchIds.isNotEmpty
+        ? supplier.associatedBranchIds.first
+        : 'main';
+
+    if (!supplier.totalDebt.isFinite || supplier.totalDebt < 0) {
+      throw Exception('قيمة الدين الافتتاحي غير صالحة.');
+    }
+    if (supplier.totalDebt > 0 && openingTransaction == null) {
+      throw Exception('يجب تسجيل حركة الرصيد الافتتاحي مع المورد.');
+    }
+    if (openingTransaction != null) {
+      if (openingTransaction.supplierId != supplier.id ||
+          openingTransaction.merchantId != supplier.merchantId ||
+          openingTransaction.branchId != branchId ||
+          openingTransaction.type != 'debt_addition' ||
+          !openingTransaction.amount.isFinite ||
+          openingTransaction.amount <= 0 ||
+          (openingTransaction.amount - supplier.totalDebt).abs() > 0.000001) {
+        throw Exception('بيانات الرصيد الافتتاحي للمورد غير متطابقة.');
+      }
+    }
+
+    await EntitlementIntegration.runWithQuotaLock<void>(
       merchantId: supplier.merchantId,
-      branchId: supplier.associatedBranchIds.isNotEmpty ? supplier.associatedBranchIds.first : 'main',
       resourceType: 'suppliers',
-      plan: null,
+      action: () async {
+        final reservation = await EntitlementIntegration.prepareQuotaReservation(
+          firestore: _firestore,
+          merchantId: supplier.merchantId,
+          branchId: branchId,
+          resourceType: 'suppliers',
+          plan: null,
+        );
+        final supplierRef = _suppliersRef.doc(supplier.id);
+
+        await _firestore.runTransaction<void>((transaction) async {
+          final existingSupplier = await transaction.get(supplierRef);
+          if (existingSupplier.exists) {
+            throw Exception('المورد موجود بالفعل.');
+          }
+          final consumption = await reservation.validate(transaction);
+
+          transaction.set(supplierRef, supplier.toJson());
+          if (openingTransaction != null) {
+            transaction.set(
+              supplierRef
+                  .collection('transactions')
+                  .doc(openingTransaction.id),
+              openingTransaction.toJson(),
+            );
+          }
+          consumption.apply(transaction);
+        });
+      },
     );
-    await _suppliersRef.doc(supplier.id).set(supplier.toJson());
   }
 
   Future<void> updateSupplier(Supplier supplier) async {

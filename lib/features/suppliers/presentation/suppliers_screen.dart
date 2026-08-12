@@ -5,6 +5,8 @@ import 'package:uuid/uuid.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/services/guest_limit_service.dart';
+import '../../../core/services/app_error_mapper.dart';
+import '../../../core/widgets/tajer_message.dart';
 import '../../../core/providers/effective_merchant.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/supplier_repository.dart';
@@ -272,6 +274,8 @@ class SuppliersScreen extends ConsumerWidget {
     final phoneController = TextEditingController();
     final debtController = TextEditingController();
 
+    var isSaving = false;
+
     showDialog(
       context: context,
       builder: (context) {
@@ -310,46 +314,82 @@ class SuppliersScreen extends ConsumerWidget {
               child: Text(AppLocalizations.of(context)!.text43),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
+                if (isSaving) return;
                 final user = ref.read(authRepositoryProvider).currentUser;
                 final appUser = ref.read(appUserProvider).value;
                 if (user == null || appUser == null) return;
 
-                if (nameController.text.isEmpty) return;
-
-                final activeBranchId = ref.read(selectedBranchIdProvider);
-                final initialDebt = double.tryParse(debtController.text) ?? 0.0;
-                final supplier = Supplier(
-                  id: Uuid().v4(),
-                  merchantId: currentEffectiveMerchantId(appUser),
-                  name: nameController.text,
-                  phone: phoneController.text,
-                  totalDebt: initialDebt,
-                  associatedBranchIds: activeBranchId != null ? [activeBranchId] : [],
-                  branchDebts: activeBranchId != null ? {activeBranchId: initialDebt} : {},
-                  createdAt: DateTime.now(),
-                );
-
-                ref.read(supplierRepositoryProvider)?.addSupplier(supplier);
-
-                if (initialDebt > 0) {
-                  final tx = SupplierTransaction(
-                    id: const Uuid().v4(),
-                    supplierId: supplier.id,
-                    merchantId: supplier.merchantId,
-                    branchId: activeBranchId,
-                    amount: initialDebt,
-                    type: 'debt_addition',
-                    description: 'رصيد افتتاحي / دين أولي',
-                    date: DateTime.now(),
-                    createdAt: DateTime.now(),
+                final supplierName = nameController.text.trim();
+                if (supplierName.isEmpty) {
+                  await TajerMessage.show(
+                    context,
+                    AppErrorMapper.validation(
+                      ar: 'أدخل اسم المورد.',
+                      en: 'Enter the supplier name.',
+                    ),
                   );
-                  ref
-                      .read(supplierTransactionRepositoryProvider)
-                      ?.addTransaction(tx);
+                  return;
                 }
 
-                Navigator.pop(context);
+                final rawDebt = debtController.text.trim();
+                final initialDebt = rawDebt.isEmpty ? 0.0 : double.tryParse(rawDebt);
+                if (initialDebt == null || !initialDebt.isFinite || initialDebt < 0) {
+                  await TajerMessage.show(
+                    context,
+                    AppErrorMapper.validation(
+                      ar: 'أدخل رصيدًا افتتاحيًا صحيحًا يساوي صفرًا أو أكبر.',
+                      en: 'Enter a valid opening balance greater than or equal to zero.',
+                    ),
+                  );
+                  return;
+                }
+
+                final activeBranchId = ref.read(selectedBranchIdProvider);
+                final branchId = activeBranchId ?? 'main';
+                final now = DateTime.now();
+                final supplier = Supplier(
+                  id: const Uuid().v4(),
+                  merchantId: currentEffectiveMerchantId(appUser),
+                  name: supplierName,
+                  phone: phoneController.text.trim(),
+                  totalDebt: initialDebt,
+                  associatedBranchIds: [branchId],
+                  branchDebts: {branchId: initialDebt},
+                  createdAt: now,
+                );
+                final openingTransaction = initialDebt > 0
+                    ? SupplierTransaction(
+                        id: const Uuid().v4(),
+                        supplierId: supplier.id,
+                        merchantId: supplier.merchantId,
+                        branchId: branchId,
+                        amount: initialDebt,
+                        type: 'debt_addition',
+                        description: 'رصيد افتتاحي / دين أولي',
+                        date: now,
+                        createdAt: now,
+                      )
+                    : null;
+
+                final repository = ref.read(supplierRepositoryProvider);
+                if (repository == null) return;
+                isSaving = true;
+                try {
+                  await repository.addSupplier(
+                    supplier,
+                    openingTransaction: openingTransaction,
+                  );
+                  if (context.mounted) Navigator.pop(context);
+                } catch (e) {
+                  isSaving = false;
+                  if (context.mounted) {
+                    await TajerMessage.show(
+                      context,
+                      AppErrorMapper.fromError(e, domain: 'supplier'),
+                    );
+                  }
+                }
               },
               child: Text(AppLocalizations.of(context)!.text44),
             ),
