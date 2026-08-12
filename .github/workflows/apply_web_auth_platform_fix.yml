@@ -1,0 +1,46 @@
+name: Apply Web Auth Platform Fix
+
+on:
+  push:
+    branches:
+      - audit/accounting-integrity-109
+    paths:
+      - .github/workflows/apply_web_auth_platform_fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit/accounting-integrity-109
+          fetch-depth: 0
+      - name: Apply web-safe platform detection
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('lib/features/authentication/data/auth_repository.dart')
+          text = path.read_text(encoding='utf-8')
+          original = text
+          text = text.replace("import 'dart:io' show Platform;\n", '')
+          text = text.replace('if (Platform.isAndroid) {', 'if (defaultTargetPlatform == TargetPlatform.android) {')
+          text = text.replace('} else if (Platform.isIOS) {', '} else if (defaultTargetPlatform == TargetPlatform.iOS) {')
+          if text == original:
+              raise SystemExit('No auth platform changes were needed or expected anchors are missing')
+          if "dart:io" in text or 'Platform.isAndroid' in text or 'Platform.isIOS' in text:
+              raise SystemExit('Web-unsafe platform dependency remains')
+          path.write_text(text, encoding='utf-8')
+          PY
+          git diff --check
+      - name: Commit fix
+        shell: bash
+        run: |
+          git config user.name 'tajer-release-audit-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add lib/features/authentication/data/auth_repository.dart
+          git commit -m 'fix(web): make auth device detection web-safe'
+          git push origin HEAD:audit/accounting-integrity-109
