@@ -48,37 +48,10 @@ class BranchCatalogMigrationBootstrapService {
         .collection('merchants')
         .doc(merchantId)
         .collection('migration_state')
-        .doc('global_catalog_migration_v1');
+        .doc('global_catalog_migration_v2');
         
     final globalState = await globalStateRef.get();
     if (globalState.data()?['status'] == 'completed') return;
-
-    final pSnap = await firestore
-        .collection('products')
-        .where('merchantId', isEqualTo: merchantId)
-        .limit(1)
-        .get(const GetOptions(source: Source.server));
-        
-    final rSnap = await firestore
-        .collection('raw_materials')
-        .where('merchantId', isEqualTo: merchantId)
-        .limit(1)
-        .get(const GetOptions(source: Source.server));
-        
-    final cSnap = await firestore
-        .collection('merchants')
-        .doc(merchantId)
-        .collection('categories')
-        .limit(1)
-        .get(const GetOptions(source: Source.server));
-
-    if (pSnap.docs.isEmpty && rSnap.docs.isEmpty && cSnap.docs.isEmpty) {
-      await globalStateRef.set({
-        'status': 'completed',
-        'updatedAt': FieldValue.serverTimestamp(),
-      }, SetOptions(merge: true));
-      return;
-    }
 
     final branchIds = await _runStep<List<String>>(
       merchantId: merchantId,
