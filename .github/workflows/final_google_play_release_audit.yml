@@ -1,0 +1,193 @@
+name: Final Google Play Release Audit
+
+on:
+  push:
+    branches:
+      - audit/accounting-integrity-109
+    paths:
+      - .github/workflows/final_google_play_release_audit.yml
+      - lib/**
+      - test/**
+      - integration_test/**
+      - android/**
+      - web/**
+      - functions/**
+      - firestore.rules
+      - firestore.indexes.json
+      - pubspec.yaml
+      - pubspec.lock
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  final-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout exact audited branch
+        uses: actions/checkout@v4
+        with:
+          ref: audit/accounting-integrity-109
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '21'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.0'
+          channel: stable
+          cache: true
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+
+      - name: Flutter dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Backend dependencies
+        run: npm ci
+        working-directory: functions
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Localization and encoding integrity
+        shell: bash
+        run: |
+          flutter test test/localization_integrity_test.dart --reporter expanded
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          bad = ('Ã','Â','Ø','Ù','â€','ðŸ','ï¿½','�')
+          for name in ('lib/l10n/app_ar.arb','lib/l10n/app_en.arb'):
+              data=json.loads(Path(name).read_text(encoding='utf-8-sig'))
+              hits=[(k,v) for k,v in data.items() if isinstance(v,str) and any(x in v for x in bad)]
+              print(name, 'KEYS=', len(data), 'MOJIBAKE=', len(hits))
+              if hits:
+                  print(hits[:30])
+                  raise SystemExit(1)
+          PY
+
+      - name: Generated-model consistency
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Full Flutter static analysis
+        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+
+      - name: Full Flutter unit and widget suite
+        run: flutter test --reporter expanded
+
+      - name: Backend JavaScript syntax scan
+        shell: bash
+        run: |
+          set -e
+          find functions -type f -name '*.js' -not -path '*/node_modules/*' -print0 | while IFS= read -r -d '' f; do
+            echo "Checking $f"
+            node --check "$f"
+          done
+
+      - name: Firestore rules emulator suite
+        run: >-
+          npx firebase-tools emulators:exec
+          --project demo-tajer-rules
+          --only firestore
+          "npm --prefix functions run test:rules && npm --prefix functions run test:zero-state"
+
+      - name: Decode official Android release keystore
+        shell: bash
+        run: |
+          test -n "${{ secrets.ANDROID_KEYSTORE_BASE64 }}"
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/upload-keystore.jks
+          test -s android/app/upload-keystore.jks
+
+      - name: Verify exact v1.0.107 release certificate and Google OAuth registration
+        shell: bash
+        env:
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          keytool -list -v -keystore android/app/upload-keystore.jks -storepass "$STORE_PASSWORD" -alias "$KEY_ALIAS" > /tmp/current.txt
+          git show v1.0.107:android/app/tajer-release.jks > /tmp/v107.jks
+          keytool -list -v -keystore /tmp/v107.jks -storepass 'tajer123' -alias 'tajer' > /tmp/v107.txt
+          python3 - <<'PY'
+          import json,re
+          def sha(path):
+              t=open(path,encoding='utf-8').read(); m=re.search(r'SHA1:\s*([0-9A-F:]+)',t)
+              if not m: raise SystemExit('FAIL: SHA1 missing '+path)
+              return m.group(1).replace(':','').lower()
+          current=sha('/tmp/current.txt'); known=sha('/tmp/v107.txt')
+          print('CURRENT_RELEASE_SHA1='+current); print('V107_RELEASE_SHA1='+known)
+          if current != known: raise SystemExit('FAIL: signing certificate differs from v1.0.107')
+          cfg=json.load(open('android/app/google-services.json',encoding='utf-8'))
+          registered={c['android_info']['certificate_hash'].lower() for app in cfg.get('client',[]) for c in app.get('oauth_client',[]) if c.get('client_type')==1 and c.get('android_info',{}).get('package_name')=='com.allldown.tajer' and c.get('android_info',{}).get('certificate_hash')}
+          if current not in registered: raise SystemExit('FAIL: release SHA1 not registered for Google Sign-In')
+          print('V107_SIGNING_CERTIFICATE_MATCH=PASS')
+          print('GOOGLE_SIGN_IN_CERTIFICATE_MATCH=PASS')
+          PY
+
+      - name: Build signed release APK
+        run: flutter build apk --release --no-pub
+        env:
+          TAJER_STOREFILE: upload-keystore.jks
+          TAJER_STOREPASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          TAJER_KEYALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          TAJER_KEYPASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Build signed Play Store AAB
+        run: flutter build appbundle --release --no-pub
+        env:
+          TAJER_STOREFILE: upload-keystore.jks
+          TAJER_STOREPASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          TAJER_KEYALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          TAJER_KEYPASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Build release Web
+        run: flutter build web --release --no-pub
+
+      - name: Verify final artifacts
+        shell: bash
+        run: |
+          set -e
+          test -s build/app/outputs/flutter-apk/app-release.apk
+          test -s build/app/outputs/bundle/release/app-release.aab
+          test -s build/web/index.html
+          test -s build/web/main.dart.js
+          echo 'APK:' && sha256sum build/app/outputs/flutter-apk/app-release.apk && ls -lh build/app/outputs/flutter-apk/app-release.apk
+          echo 'AAB:' && sha256sum build/app/outputs/bundle/release/app-release.aab && ls -lh build/app/outputs/bundle/release/app-release.aab
+          echo 'WEB_INDEX:' && sha256sum build/web/index.html
+          echo 'FINAL_ARTIFACT_GATE=PASS'
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: tajer-1.1.109-final-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: tajer-1.1.109-final-google-play-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Web
+        uses: actions/upload-artifact@v4
+        with:
+          name: tajer-1.1.109-final-web
+          path: build/web/**
+          if-no-files-found: error
+          retention-days: 30
