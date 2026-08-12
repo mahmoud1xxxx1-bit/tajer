@@ -15,7 +15,9 @@ class SubscriptionService {
   Future<void> initPlatformState() async {
     if (kIsWeb) return; // RevenueCat Flutter SDK is not used on web.
 
-    await Purchases.setLogLevel(LogLevel.debug);
+    if (kDebugMode) {
+      await Purchases.setLogLevel(LogLevel.debug);
+    }
 
     PurchasesConfiguration? configuration;
     if (defaultTargetPlatform == TargetPlatform.android) {
