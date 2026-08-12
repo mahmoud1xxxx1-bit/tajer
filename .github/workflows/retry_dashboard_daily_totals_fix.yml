@@ -1,0 +1,87 @@
+name: Retry Dashboard Daily Totals Fix
+
+on:
+  push:
+    branches: [ "audit/pre-google-play-414" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit/pre-google-play-414
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.7'
+          channel: stable
+          cache: true
+
+      - name: Dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Reuse helper and regression test payloads
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64, re
+          from pathlib import Path
+          source = Path('.github/workflows/apply_dashboard_daily_totals_fix.yml').read_text(encoding='utf-8')
+          matches = re.findall(r"echo '([A-Za-z0-9+/=]+)' \| base64 --decode > ([^\n]+)", source)
+          assert len(matches) >= 2, len(matches)
+          for payload, target in matches[:2]:
+              path = Path(target.strip())
+              path.parent.mkdir(parents=True, exist_ok=True)
+              path.write_bytes(base64.b64decode(payload))
+          PY
+          echo 'ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCgpwYXRoID0gUGF0aCgnbGliL2ZlYXR1cmVzL2Rhc2hib2FyZC9wcmVzZW50YXRpb24vZGFzaGJvYXJkX3NjcmVlbi5kYXJ0JykKdGV4dCA9IHBhdGgucmVhZF90ZXh0KGVuY29kaW5nPSd1dGYtOCcpCgppbXBvcnRfYW5jaG9yID0gImltcG9ydCAnc2V0dXBfY2hlY2tsaXN0X2NhcmQuZGFydCc7XG4iCnJlcGxhY2VtZW50X2ltcG9ydCA9ICJpbXBvcnQgJ3NldHVwX2NoZWNrbGlzdF9jYXJkLmRhcnQnO1xuaW1wb3J0ICdkYXNoYm9hcmRfZGFpbHlfc3VtbWFyeS5kYXJ0JztcbiIKYXNzZXJ0IHRleHQuY291bnQoaW1wb3J0X2FuY2hvcikgPT0gMSwgdGV4dC5jb3VudChpbXBvcnRfYW5jaG9yKQp0ZXh0ID0gdGV4dC5yZXBsYWNlKGltcG9ydF9hbmNob3IsIHJlcGxhY2VtZW50X2ltcG9ydCwgMSkKCm9sZCA9ICIgICAgICAgICAgZmluYWwgbGl2ZU9yZGVycyA9IG9yZGVyc1xuICAgICAgICAgICAgICAud2hlcmUoKG9yZGVyKSA9PlxuICAgICAgICAgICAgICAgICAgb3JkZXIuc3RhdHVzICE9ICdjYW5jZWxsZWQnICYmXG4gICAgICAgICAgICAgICAgICBvcmRlci5zdGF0dXMgIT0gJ2RlYnRfcmVwYXltZW50JylcbiAgICAgICAgICAgICAgLnRvTGlzdCgpO1xuICAgICAgICAgIGZpbmFsIHRvdGFsU2FsZXMgPVxuICAgICAgICAgICAgICBsaXZlT3JkZXJzLmZvbGQ8ZG91YmxlPigwLCAoc3VtLCBvcmRlcikgPT4gc3VtICsgb3JkZXIudG90YWwpO1xuICAgICAgICAgIGZpbmFsIG9yZGVyc0NvdW50ID0gbGl2ZU9yZGVycy5sZW5ndGg7XG4iCm5ldyA9ICcgICAgICAgICAgZmluYWwgZGFpbHlTdW1tYXJ5ID0gRGFzaGJvYXJkRGFpbHlTdW1tYXJ5LmZyb21PcmRlcnMob3JkZXJzKTtcbiAgICAgICAgICBmaW5hbCB0b3RhbFNhbGVzID0gZGFpbHlTdW1tYXJ5LnRvdGFsU2FsZXM7XG4gICAgICAgICAgZmluYWwgb3JkZXJzQ291bnQgPSBkYWlseVN1bW1hcnkub3JkZXJzQ291bnQ7XG4nCmFzc2VydCB0ZXh0LmNvdW50KG9sZCkgPT0gMSwgdGV4dC5jb3VudChvbGQpCnRleHQgPSB0ZXh0LnJlcGxhY2Uob2xkLCBuZXcsIDEpCnBhdGgud3JpdGVfdGV4dCh0ZXh0LCBlbmNvZGluZz0ndXRmLTgnKQo=' | base64 --decode > /tmp/dashboard_patch.py
+
+      - name: Apply corrected dashboard patch
+        run: python /tmp/dashboard_patch.py
+
+      - name: Format changed Dart files
+        run: dart format lib/features/dashboard/presentation/dashboard_screen.dart lib/features/dashboard/presentation/dashboard_daily_summary.dart test/dashboard_daily_summary_test.dart
+
+      - name: Analyze dashboard fix
+        run: flutter analyze lib/features/dashboard/presentation/dashboard_screen.dart lib/features/dashboard/presentation/dashboard_daily_summary.dart test/dashboard_daily_summary_test.dart --no-fatal-warnings --no-fatal-infos
+
+      - name: Dashboard daily totals regression test
+        run: flutter test test/dashboard_daily_summary_test.dart --reporter expanded
+
+      - name: Orders regression tests
+        shell: bash
+        run: |
+          flutter test test/branch_inventory_order_lifecycle_contract_test.dart --reporter expanded
+          flutter test test/pre_release_accounting_matrix_test.dart --reporter expanded
+
+      - name: Verify intended diff only
+        shell: bash
+        run: |
+          git status --short
+          python - <<'PY'
+          import subprocess
+          paths = {line[3:] for line in subprocess.check_output(['git','status','--porcelain'], text=True).splitlines()}
+          expected = {
+            'lib/features/dashboard/presentation/dashboard_screen.dart',
+            'lib/features/dashboard/presentation/dashboard_daily_summary.dart',
+            'test/dashboard_daily_summary_test.dart',
+          }
+          assert paths == expected, (paths, expected)
+          PY
+
+      - name: Commit verified dashboard fix
+        shell: bash
+        run: |
+          git config user.name "Tajer Audit Bot"
+          git config user.email "actions@github.com"
+          git add lib/features/dashboard/presentation/dashboard_screen.dart \
+                  lib/features/dashboard/presentation/dashboard_daily_summary.dart \
+                  test/dashboard_daily_summary_test.dart
+          git commit -m "fix(dashboard): scope sales and order count to today"
+          git push origin HEAD:audit/pre-google-play-414
