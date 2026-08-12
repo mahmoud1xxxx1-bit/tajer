@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -365,7 +366,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
                 } catch (e) {
                   // If it's a TimeoutException, it means the cache updated but server is offline. This is expected.
                   // Only show error if it's not a timeout
-                  if (e is! java.util.concurrent.TimeoutException && !e.toString().contains('TimeoutException')) {
+                  if (e is! TimeoutException && !e.toString().contains('TimeoutException')) {
                     if (context.mounted) AppSnackbar.showError(context, e);
                   }
                 }
@@ -522,7 +523,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
                 );
                 await ref.read(expenseRepositoryProvider)?.addExpense(expense).timeout(const Duration(seconds: 1));
               } catch (e) {
-                if (e is! java.util.concurrent.TimeoutException && !e.toString().contains('TimeoutException')) {
+                if (e is! TimeoutException && !e.toString().contains('TimeoutException')) {
                   if (context.mounted) {
                     AppSnackbar.showError(context, e);
                     setState(() => isLoading = false);

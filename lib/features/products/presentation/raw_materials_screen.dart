@@ -186,7 +186,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                     }
                   }
                 } catch (e) {
-                  if (e is! java.util.concurrent.TimeoutException && !e.toString().contains('TimeoutException')) {
+                  if (e is! TimeoutException && !e.toString().contains('TimeoutException')) {
                     if (mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
                       setDialogState(() => isLoading = false);

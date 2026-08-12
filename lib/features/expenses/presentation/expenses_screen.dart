@@ -1,4 +1,5 @@
 import 'package:tajer/l10n/app_localizations.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -283,7 +284,7 @@ class ExpensesScreen extends ConsumerWidget {
                 try {
                   await ref.read(expenseRepositoryProvider)?.addExpense(expense).timeout(const Duration(seconds: 1));
                 } catch (e) {
-                  if (e is! java.util.concurrent.TimeoutException && !e.toString().contains('TimeoutException')) {
+                  if (e is! TimeoutException && !e.toString().contains('TimeoutException')) {
                     if (context.mounted) {
                       AppSnackbar.showError(context, e);
                       setState(() => isLoading = false);
