@@ -150,7 +150,10 @@ class OrderRepository {
 
     // PRE-FETCH all needed products concurrently
     final productIds = order.items.map((i) => i.productId).where((id) => id.isNotEmpty).toSet().toList();
-    final productFutures = productIds.map((id) => _firestore.collection('products').doc(id).get(const GetOptions(source: Source.serverAndCache)));
+    final productFutures = productIds.map((id) => _firestore.collection('products').doc(id).get(const GetOptions(source: Source.serverAndCache)).timeout(
+      const Duration(milliseconds: 1500), 
+      onTimeout: () => _firestore.collection('products').doc(id).get(const GetOptions(source: Source.cache)),
+    ));
     final productSnaps = await Future.wait(productFutures);
     final Map<String, DocumentSnapshot> productsCache = { for (var snap in productSnaps) if (snap.exists) snap.id: snap };
     
@@ -168,7 +171,10 @@ class OrderRepository {
       }
     }
     
-    final rmFutures = rawMaterialIds.map((id) => _firestore.collection('raw_materials').doc(id).get(const GetOptions(source: Source.serverAndCache)));
+    final rmFutures = rawMaterialIds.map((id) => _firestore.collection('raw_materials').doc(id).get(const GetOptions(source: Source.serverAndCache)).timeout(
+      const Duration(milliseconds: 1500),
+      onTimeout: () => _firestore.collection('raw_materials').doc(id).get(const GetOptions(source: Source.cache)),
+    ));
     final rmSnaps = await Future.wait(rmFutures);
     final Map<String, DocumentSnapshot> rawMaterialsCache = { for (var snap in rmSnaps) if (snap.exists) snap.id: snap };
 
@@ -262,7 +268,10 @@ class OrderRepository {
     }
 
     if (order.customerId != 'walk_in' && order.customerId.isNotEmpty) {
-      final customerDoc = await customerRef.get();
+      final customerDoc = await customerRef.get(const GetOptions(source: Source.serverAndCache)).timeout(
+        const Duration(milliseconds: 1500),
+        onTimeout: () => customerRef.get(const GetOptions(source: Source.cache)),
+      );
       if (customerDoc.exists) {
         final debtIncrease = order.isCredit ? (order.total - order.paidAmount) : 0.0;
         batch.update(customerRef, {

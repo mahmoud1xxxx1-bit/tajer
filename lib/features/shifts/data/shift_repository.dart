@@ -14,12 +14,11 @@ class ShiftRepository {
     return _firestore
         .collection('shifts')
         .where('merchantId', isEqualTo: merchantId)
-        .where('status', isEqualTo: 'open')
-        .limit(1)
         .snapshots()
         .map((snapshot) {
-      if (snapshot.docs.isNotEmpty) {
-        return Shift.fromJson(snapshot.docs.first.data());
+      final openShifts = snapshot.docs.where((doc) => doc.data()['status'] == 'open').toList();
+      if (openShifts.isNotEmpty) {
+        return Shift.fromJson(openShifts.first.data());
       }
       return null;
     });
@@ -27,13 +26,14 @@ class ShiftRepository {
 
   Future<void> openShift(Shift shift) async {
     // Ensure no other open shift for this merchant
-    final openShifts = await _firestore
+    final allShifts = await _firestore
         .collection('shifts')
         .where('merchantId', isEqualTo: shift.merchantId)
-        .where('status', isEqualTo: 'open')
         .get();
         
-    if (openShifts.docs.isNotEmpty) {
+    final openShifts = allShifts.docs.where((doc) => doc.data()['status'] == 'open').toList();
+        
+    if (openShifts.isNotEmpty) {
       throw Exception('يوجد وردية مفتوحة حالياً، الرجاء إغلاقها أولاً.');
     }
 
@@ -62,10 +62,15 @@ class ShiftRepository {
     final snapshot = await _firestore
         .collection('shifts')
         .where('merchantId', isEqualTo: merchantId)
-        .where('status', isEqualTo: 'closed')
-        .orderBy('endTime', descending: true)
         .get();
-    return snapshot.docs.map((doc) => Shift.fromJson(doc.data())).toList();
+        
+    var closedShifts = snapshot.docs
+        .map((doc) => Shift.fromJson(doc.data()))
+        .where((s) => s.status == 'closed')
+        .toList();
+        
+    closedShifts.sort((a, b) => (b.endTime ?? DateTime.now()).compareTo(a.endTime ?? DateTime.now()));
+    return closedShifts;
   }
 }
 
@@ -89,8 +94,10 @@ Stream<List<Shift>> shiftsStream(ShiftsStreamRef ref) {
   return repository._firestore
       .collection('shifts')
       .where('merchantId', isEqualTo: appUser.merchantId ?? appUser.id)
-      .orderBy('startTime', descending: true)
-      .limit(100)
       .snapshots()
-      .map((snapshot) => snapshot.docs.map((doc) => Shift.fromJson(doc.data())).toList());
+      .map((snapshot) {
+        var shifts = snapshot.docs.map((doc) => Shift.fromJson(doc.data())).toList();
+        shifts.sort((a, b) => b.startTime.compareTo(a.startTime));
+        return shifts.take(100).toList();
+      });
 }

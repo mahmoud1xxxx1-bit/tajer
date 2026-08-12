@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -134,7 +135,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
       );
 
       if (isEditing) {
-        await productRepo.updateProduct(newProduct);
+        await productRepo.updateProduct(newProduct).timeout(const Duration(seconds: 1));
         ActivityLogger.log(
           user: appUser,
           actionType: 'Edit Product|تعديل منتج',
@@ -150,10 +151,10 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             userEmail: user.email,
             userName: appUser?.name ?? user.email,
             itemType: 'product',
-          );
+          ).timeout(const Duration(seconds: 1));
         }
       } else {
-        await productRepo.addProduct(newProduct);
+        await productRepo.addProduct(newProduct).timeout(const Duration(seconds: 1));
         ActivityLogger.log(
           user: appUser,
           actionType: 'Add Product|إضافة منتج',
@@ -169,16 +170,22 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             userEmail: user.email,
             userName: appUser?.name ?? user.email,
             itemType: 'product',
-          );
+          ).timeout(const Duration(seconds: 1));
         }
       }
       if (mounted) Navigator.pop(context);
     } catch (e) {
+      if (e is TimeoutException || e.toString().contains('TimeoutException')) {
+        // It's a timeout, meaning it saved offline. We should close the dialog.
+        if (mounted) Navigator.pop(context);
+        return;
+      }
       if (mounted) {
         final l10n = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${l10n.error}: $e', style: TextStyle(fontFamily: 'Tajawal'))),
         );
+        setState(() => _isLoading = false);
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);

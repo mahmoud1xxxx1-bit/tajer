@@ -16,6 +16,7 @@ class Expense {
   final DateTime createdAt;
   final bool isFromShiftDrawer;
   final bool isCancelled;
+  final String? shiftId;
 
   const Expense({
     required this.id,
@@ -32,6 +33,7 @@ class Expense {
     required this.createdAt,
     this.isFromShiftDrawer = true, // Default to true for backward compatibility
     this.isCancelled = false,
+    this.shiftId,
   });
 
   factory Expense.fromJson(Map<String, dynamic> json) {
@@ -50,6 +52,7 @@ class Expense {
       createdAt: const TimestampConverter().fromJson(json['createdAt']),
       isFromShiftDrawer: json['isFromShiftDrawer'] as bool? ?? true,
       isCancelled: json['isCancelled'] as bool? ?? false,
+      shiftId: json['shiftId'] as String?,
     );
   }
 
@@ -69,6 +72,7 @@ class Expense {
       'createdAt': const TimestampConverter().toJson(createdAt),
       'isFromShiftDrawer': isFromShiftDrawer,
       'isCancelled': isCancelled,
+      'shiftId': shiftId,
     };
   }
 
@@ -87,6 +91,7 @@ class Expense {
     DateTime? createdAt,
     bool? isFromShiftDrawer,
     bool? isCancelled,
+    String? shiftId,
   }) {
     return Expense(
       id: id ?? this.id,
@@ -103,6 +108,7 @@ class Expense {
       createdAt: createdAt ?? this.createdAt,
       isFromShiftDrawer: isFromShiftDrawer ?? this.isFromShiftDrawer,
       isCancelled: isCancelled ?? this.isCancelled,
+      shiftId: shiftId ?? this.shiftId,
     );
   }
 }
