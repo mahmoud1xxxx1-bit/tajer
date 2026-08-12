@@ -4,7 +4,6 @@ import 'package:integration_test/integration_test.dart';
 import 'package:tajer/main.dart' as app;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:tajer/features/authentication/data/auth_repository.dart';
 import 'dart:async';
 
 Future<void> pumpUntilFound(WidgetTester tester, Finder finder, {Duration timeout = const Duration(seconds: 20)}) async {

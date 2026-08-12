@@ -141,8 +141,8 @@ class ShiftDetailsScreen extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   decoration: BoxDecoration(
                     color: isMatched 
-                        ? Colors.green.withOpacity(0.1) 
-                        : (hasShortage ? Colors.red.withOpacity(0.1) : Colors.amber.withOpacity(0.1)),
+                        ? Colors.green.withValues(alpha: 0.1) 
+                        : (hasShortage ? Colors.red.withValues(alpha: 0.1) : Colors.amber.withValues(alpha: 0.1)),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isMatched ? Colors.green : (hasShortage ? Colors.red : Colors.amber),

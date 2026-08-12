@@ -1,9 +1,7 @@
-import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart';
 import '../data/reports_service.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
@@ -86,7 +84,6 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           IconButton(
             icon: Icon(Icons.table_view, color: Colors.green),
             onPressed: () async {
-              if (reportsService == null) return;
               try {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(isAr ? 'جاري تجهيز التقرير (إكسل)...' : 'Preparing Excel report...', style: const TextStyle(fontFamily: 'Tajawal'))),
@@ -102,8 +99,6 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           IconButton(
             icon: Icon(Icons.picture_as_pdf, color: Colors.red),
             onPressed: () async {
-              if (reportsService == null) return;
-              
               final storeProfile = ref.read(storeProfileProvider).value;
               double taxPercentage = storeProfile?.defaultTaxPercentage ?? 0.0;
               bool isInclusive = false; // default for reports if not set
@@ -194,7 +189,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: Colors.blue.withOpacity(0.1),
+                                    color: Colors.blue.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: SelectableText(
@@ -377,13 +372,13 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                             barRods: [
                               BarChartRodData(
                                 toY: e.value.amount,
-                                color: Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8),
                                 width: dailySales.length <= 3 ? 30 : 16,
                                 borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
                                 backDrawRodData: BackgroundBarChartRodData(
                                   show: true,
                                   toY: dailySales.isEmpty ? 100 : (dailySales.map((d) => d.amount).reduce((a, b) => a > b ? a : b) * 1.1).clamp(100.0, double.infinity),
-                                  color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
                                 ),
                               ),
                             ],
@@ -488,7 +483,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     margin: EdgeInsets.only(bottom: 8),
                     child: ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: Theme.of(context).colorScheme.secondary.withOpacity(0.2),
+                        backgroundColor: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.2),
                         child: Text('${index + 1}', style: TextStyle(color: Theme.of(context).colorScheme.secondary, fontWeight: FontWeight.bold)),
                       ),
                       title: Text(item.product.name, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),

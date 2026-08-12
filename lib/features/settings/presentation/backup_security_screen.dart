@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import 'package:tajer/features/authentication/data/auth_repository.dart';
 import 'package:tajer/core/services/backup_service.dart';
-import '../../authentication/domain/app_user.dart';
 import '../../../core/theme/glass_card.dart';
 
 class BackupSecurityScreen extends ConsumerStatefulWidget {
@@ -110,7 +109,7 @@ class _BackupSecurityScreenState extends ConsumerState<BackupSecurityScreen> {
                         Text(
                           l10n.localBackupDesc,
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontFamily: 'Tajawal', fontSize: 13, height: 1.5),
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontFamily: 'Tajawal', fontSize: 13, height: 1.5),
                         ),
                         const SizedBox(height: 24),
                         ElevatedButton.icon(

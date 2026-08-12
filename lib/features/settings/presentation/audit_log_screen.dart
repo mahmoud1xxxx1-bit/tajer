@@ -7,9 +7,7 @@ import '../../orders/data/order_repository.dart';
 import '../../orders/domain/order.dart';
 import '../../orders/presentation/order_details_screen.dart';
 import '../../expenses/data/expense_repository.dart';
-import '../../expenses/domain/expense.dart';
 import '../../../core/providers/settings_provider.dart';
-import '../../../core/theme/glass_card.dart';
 
 class AuditLogItem {
   final String id;
@@ -53,13 +51,13 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.05)),
+        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.05)),
       ),
       child: ListTile(
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: item.badgeColor.withOpacity(0.1),
+            color: item.badgeColor.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -99,10 +97,10 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
         },
       ),
     );
-    } catch (e, st) {
+    } catch (e) {
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        color: Colors.red.withOpacity(0.1),
+        color: Colors.red.withValues(alpha: 0.1),
         child: Text('خطأ في العنصر: $e', style: const TextStyle(color: Colors.red)),
       );
     }
@@ -309,16 +307,16 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.history_edu_outlined, size: 80, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4)),
+                        Icon(Icons.history_edu_outlined, size: 80, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4)),
                         const SizedBox(height: 20),
                         Text(
                           isAr ? 'لا توجد حركات أو مبيعات مسجلة في المتجر حتى الآن' : 'No store actions or sales recorded yet',
-                          style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontWeight: FontWeight.bold),
+                          style: TextStyle(fontFamily: 'Tajawal', fontSize: 18, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6), fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           isAr ? 'أي فاتورة، مصروف، أو تعديل مخزون سيظهر هنا بالتفصيل التام' : 'Any order, expense, or inventory change will appear here in detail',
-                          style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+                          style: TextStyle(fontFamily: 'Tajawal', fontSize: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)),
                         ),
                       ],
                     ),
@@ -352,10 +350,10 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surface,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: theme.colorScheme.primary.withOpacity(0.1)),
+                        border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.1)),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -366,8 +364,8 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                         child: ExpansionTile(
                           initiallyExpanded: index == 0,
                           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          backgroundColor: theme.colorScheme.primary.withOpacity(0.08),
-                          collapsedBackgroundColor: theme.colorScheme.primary.withOpacity(0.04),
+                          backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.08),
+                          collapsedBackgroundColor: theme.colorScheme.primary.withValues(alpha: 0.04),
                           leading: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
@@ -403,11 +401,11 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                         ),
                       ),
                     );
-                    } catch (e, st) {
+                    } catch (e) {
                       return Container(
                         margin: const EdgeInsets.all(16),
                         padding: const EdgeInsets.all(16),
-                        color: Colors.red.withOpacity(0.1),
+                        color: Colors.red.withValues(alpha: 0.1),
                         child: Text('خطأ أثناء بناء قائمة اليوم:\n$e', style: const TextStyle(color: Colors.red)),
                       );
                     }

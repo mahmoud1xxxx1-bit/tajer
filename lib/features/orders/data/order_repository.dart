@@ -1,9 +1,6 @@
-import 'package:tajer/features/authentication/domain/app_user.dart';
-import 'package:tajer/l10n/app_localizations.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/utils/date_parser.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../authentication/data/auth_repository.dart';

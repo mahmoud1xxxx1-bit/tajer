@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../features/authentication/data/auth_repository.dart';
 import '../../features/authentication/domain/app_user.dart';
 
 part 'limits_service.g.dart';

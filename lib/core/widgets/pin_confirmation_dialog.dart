@@ -145,9 +145,9 @@ class _PinConfirmationDialogState extends State<PinConfirmationDialog> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isDarkMode ? Colors.red.withOpacity(0.1) : Colors.red.shade50,
+              color: isDarkMode ? Colors.red.withValues(alpha: 0.1) : Colors.red.shade50,
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.red.withOpacity(0.3)),
+              border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
             ),
             child: Text(
               widget.warningText,

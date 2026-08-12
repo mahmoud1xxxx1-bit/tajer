@@ -1,4 +1,3 @@
-import '../../../core/theme/glass_card.dart';
 import '../../../core/services/subscription_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -133,7 +132,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: [
-                      Colors.amber.withOpacity(isDark ? 0.2 : 0.4),
+                      Colors.amber.withValues(alpha: isDark ? 0.2 : 0.4),
                       Colors.transparent,
                     ],
                   ),
@@ -183,7 +182,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
                               Container(
                                 padding: const EdgeInsets.all(20),
                                 decoration: BoxDecoration(
-                                  color: Colors.amber.withOpacity(0.15),
+                                  color: Colors.amber.withValues(alpha: 0.15),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(Icons.workspace_premium_rounded, size: 64, color: Colors.amber),
@@ -266,10 +265,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
                 Container(
                   padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.black.withOpacity(0.3) : Colors.white.withOpacity(0.6),
+                    color: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.6),
                     borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5)),
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, -5)),
                     ],
                   ),
                   child: _packages.isEmpty
@@ -285,7 +284,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
                                   backgroundColor: isDark ? const Color(0xFFFDE047) : const Color(0xFFFACC15),
                                   foregroundColor: Colors.black87,
                                   elevation: 8,
-                                  shadowColor: Colors.amber.withOpacity(0.5),
+                                  shadowColor: Colors.amber.withValues(alpha: 0.5),
                                   padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
@@ -316,7 +315,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
           
           if (_isLoading)
             Container(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               child: const Center(child: CircularProgressIndicator(color: Colors.amber)),
             ),
         ],
@@ -340,10 +339,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.15),
+              color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: isDark ? color : color.withOpacity(0.9), size: 24),
+            child: Icon(icon, color: isDark ? color : color.withValues(alpha: 0.9), size: 24),
           ),
           const SizedBox(width: 16),
           Expanded(

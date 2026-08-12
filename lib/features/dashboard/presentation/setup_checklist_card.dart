@@ -7,7 +7,6 @@ import '../../categories/data/category_repository.dart';
 import '../../products/data/product_repository.dart';
 import '../../shifts/data/shift_repository.dart';
 import '../../orders/data/order_repository.dart';
-import '../../authentication/domain/app_user.dart';
 import '../../authentication/data/auth_repository.dart';
 import 'package:go_router/go_router.dart';
 
@@ -85,7 +84,7 @@ class SetupChecklistCard extends ConsumerWidget {
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 8,
-                backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                 valueColor: AlwaysStoppedAnimation<Color>(Theme.of(context).colorScheme.primary),
               ),
             ),

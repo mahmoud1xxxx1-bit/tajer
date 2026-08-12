@@ -1,39 +1,37 @@
-import 'package:tajer/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/authentication/data/auth_repository.dart';
 import '../../features/authentication/domain/app_user.dart';
-import '../../features/authentication/presentation/auth_controller.dart';
 import 'limits_service.dart';
 
 class GuestLimitService {
   static Future<bool> canAddProduct(BuildContext context, WidgetRef ref) async {
-    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddProduct(user as AppUser));
+    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddProduct(user));
   }
 
   static Future<bool> canAddCustomer(BuildContext context, WidgetRef ref) async {
-    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddCustomer(user as AppUser));
+    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddCustomer(user));
   }
 
   static Future<bool> canAddOrder(BuildContext context, WidgetRef ref) async {
-    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddOrder(user as AppUser));
+    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddOrder(user));
   }
 
   static Future<bool> canAddExpense(BuildContext context, WidgetRef ref) async {
-    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddExpense(user as AppUser));
+    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddExpense(user));
   }
 
   static Future<bool> canAddCategory(BuildContext context, WidgetRef ref) async {
-    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddCategory(user as AppUser));
+    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddCategory(user));
   }
 
   static Future<bool> canAddSupplier(BuildContext context, WidgetRef ref) async {
-    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddSupplier(user as AppUser));
+    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddSupplier(user));
   }
 
   static Future<bool> canAddEmployee(BuildContext context, WidgetRef ref) async {
-    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddEmployee(user as AppUser));
+    return _checkLimit(context, ref, (user) => ref.read(limitsServiceProvider).canAddEmployee(user));
   }
 
   static Future<bool> _checkLimit(

@@ -2,10 +2,8 @@ import 'package:tajer/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../core/theme/glass_card.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/inventory_log_repository.dart';
-import '../../../core/services/pin_service.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../domain/inventory_log.dart';
 import '../../../core/services/activity_logger.dart';
@@ -120,7 +118,7 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -147,7 +145,7 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Theme.of(context).primaryColor.withOpacity(0.05)),
+                  border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.05)),
                 ),
                 child: Opacity(
                   opacity: log.isReverted ? 0.5 : 1.0,
@@ -158,7 +156,7 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: isPositive ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                          color: isPositive ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -192,7 +190,7 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
-                                      color: log.itemType == 'raw_material' ? Colors.green.withOpacity(0.1) : Colors.blue.withOpacity(0.1),
+                                      color: log.itemType == 'raw_material' ? Colors.green.withValues(alpha: 0.1) : Colors.blue.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
@@ -231,7 +229,7 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: Colors.grey.withOpacity(0.1),
+                                    color: Colors.grey.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
@@ -243,7 +241,7 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      Icon(Icons.person_pin, size: 14, color: Colors.blueAccent.withOpacity(0.7)),
+                                      Icon(Icons.person_pin, size: 14, color: Colors.blueAccent.withValues(alpha: 0.7)),
                                       const SizedBox(width: 4),
                                       Text(
                                         log.userName ?? log.userEmail!,
@@ -306,11 +304,11 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
           ),
         ),
       );
-      } catch (e, st) {
+      } catch (e) {
         return Container(
           margin: const EdgeInsets.all(16),
           padding: const EdgeInsets.all(16),
-          color: Colors.red.withOpacity(0.1),
+          color: Colors.red.withValues(alpha: 0.1),
           child: Text('خطأ أثناء بناء القائمة:\n$e', style: const TextStyle(color: Colors.red)),
         );
       }

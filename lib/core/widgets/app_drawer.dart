@@ -49,7 +49,7 @@ class AppDrawer extends ConsumerWidget {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(Icons.storefront, color: Colors.white, size: 32),
@@ -77,7 +77,7 @@ class AppDrawer extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: appUser?.role == 'employee' ? Colors.amber.withOpacity(0.2) : Colors.green.withOpacity(0.2),
+                      color: appUser?.role == 'employee' ? Colors.amber.withValues(alpha: 0.2) : Colors.green.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: appUser?.role == 'employee' ? Colors.amberAccent : Colors.greenAccent,
@@ -114,7 +114,7 @@ class AppDrawer extends ConsumerWidget {
                     const SizedBox(height: 6),
                     Text(
                       '📞 ${storeProfile.phone}',
-                      style: TextStyle(color: Colors.white.withOpacity(0.8), fontSize: 12, fontFamily: 'Tajawal'),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.8), fontSize: 12, fontFamily: 'Tajawal'),
                     ),
                   ],
                 ],

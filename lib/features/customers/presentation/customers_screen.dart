@@ -8,8 +8,6 @@ import '../../authentication/data/auth_repository.dart';
 import 'add_customer_dialog.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../../core/theme/glass_card.dart';
-import '../../../core/services/printer_service.dart';
-import '../../../core/services/pin_service.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../../../core/services/pdf_service.dart';
 import '../../orders/data/order_repository.dart';
@@ -152,7 +150,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                             label: Text(l10n.hasDebts, style: TextStyle(fontFamily: 'Tajawal')),
                             selected: _filterHasDebt,
                             onSelected: (val) => setState(() => _filterHasDebt = val),
-                            selectedColor: Colors.red.withOpacity(0.2),
+                            selectedColor: Colors.red.withValues(alpha: 0.2),
                             checkmarkColor: Colors.red,
                           ),
                           const Spacer(),
@@ -202,7 +200,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                                 margin: const EdgeInsets.symmetric(vertical: 8),
                                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                                 decoration: BoxDecoration(
-                                  color: isGeneral ? Colors.grey.withOpacity(0.2) : Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                  color: isGeneral ? Colors.grey.withValues(alpha: 0.2) : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Row(
@@ -304,7 +302,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),
@@ -354,7 +352,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.green.withOpacity(0.1),
+                              color: Colors.green.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Row(
@@ -377,7 +375,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                          color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
@@ -389,7 +387,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: Colors.teal.withOpacity(0.15),
+                            color: Colors.teal.withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -419,7 +417,7 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
+                      color: Colors.red.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Text(

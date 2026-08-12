@@ -88,7 +88,7 @@ class StoreProfileNotifier extends StateNotifier<AsyncValue<StoreProfile>> {
         state = AsyncValue.data(StoreProfile());
       }
 
-      if (_merchantId != null && _merchantId!.isNotEmpty) {
+      if (_merchantId != null && _merchantId.isNotEmpty) {
         try {
           final doc = await FirebaseFirestore.instance
               .collection('merchants')
@@ -113,7 +113,7 @@ class StoreProfileNotifier extends StateNotifier<AsyncValue<StoreProfile>> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('store_profile', jsonEncode(profile.toJson()));
 
-    if (_merchantId != null && _merchantId!.isNotEmpty) {
+    if (_merchantId != null && _merchantId.isNotEmpty) {
       try {
         await FirebaseFirestore.instance
             .collection('merchants')

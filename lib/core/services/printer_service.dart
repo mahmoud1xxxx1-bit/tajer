@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -330,7 +329,7 @@ class PrinterService {
                     child: pw.BarcodeWidget(
                       barcode: pw.Barcode.qrCode(),
                       data: ZatcaQrGenerator.generateQr(
-                        sellerName: storeProfile!.storeName,
+                        sellerName: storeProfile.storeName,
                         vatNumber: storeProfile.vatNumber!,
                         timestamp: order.createdAt,
                         invoiceTotal: taxPercentage != null ? order.total + (order.total * (taxPercentage / 100)) : order.total,

@@ -5,9 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
-import '../../../core/services/pin_service.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
-import '../../authentication/domain/app_user.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/supplier_repository.dart';
 import 'package:tajer/core/utils/app_snackbar.dart';
@@ -58,7 +56,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: currentSupplier.totalDebt > 0 ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+                        color: currentSupplier.totalDebt > 0 ? Colors.red.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -133,7 +131,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
                           final isPayment = t.type == 'payment';
                           return ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: isPayment ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                              backgroundColor: isPayment ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
                               child: Icon(
                                 isPayment ? Icons.arrow_downward : Icons.arrow_upward,
                                 size: 20,
@@ -218,7 +216,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
                                         child: Container(
                                           padding: const EdgeInsets.all(4),
                                           decoration: BoxDecoration(
-                                            color: Colors.orange.withOpacity(0.1),
+                                            color: Colors.orange.withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(6),
                                           ),
                                           child: const Icon(Icons.cancel_outlined, color: Colors.orange, size: 16),
@@ -241,7 +239,7 @@ class SupplierDetailsScreen extends ConsumerWidget {
                                     margin: EdgeInsets.only(top: 4),
                                     padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                                     decoration: BoxDecoration(
-                                      color: t.paymentMethod == 'network' ? Colors.blue.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
+                                      color: t.paymentMethod == 'network' ? Colors.blue.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
                                     child: Text(
@@ -441,9 +439,9 @@ class SupplierDetailsScreen extends ConsumerWidget {
               const SizedBox(height: 16),
               Container(
                 decoration: BoxDecoration(
-                  color: isFromShiftDrawer ? Colors.red.withOpacity(0.05) : Colors.grey.withOpacity(0.05),
+                  color: isFromShiftDrawer ? Colors.red.withValues(alpha: 0.05) : Colors.grey.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: isFromShiftDrawer ? Colors.red.withOpacity(0.3) : Colors.grey.withOpacity(0.3)),
+                  border: Border.all(color: isFromShiftDrawer ? Colors.red.withValues(alpha: 0.3) : Colors.grey.withValues(alpha: 0.3)),
                 ),
                 child: CheckboxListTile(
                   title: const Text('خصم من درج الوردية الحالي؟', style: TextStyle(fontFamily: 'Tajawal', fontSize: 14)),

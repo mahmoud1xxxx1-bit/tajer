@@ -3,7 +3,6 @@ import 'package:integration_test/integration_test.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:tajer/main.dart' as app;
 import 'package:uuid/uuid.dart';
 
 import 'package:tajer/features/orders/data/order_repository.dart';
@@ -15,7 +14,6 @@ import 'package:tajer/features/expenses/data/expense_repository.dart';
 import 'package:tajer/features/expenses/domain/expense.dart';
 import 'package:tajer/features/customers/data/customer_repository.dart';
 import 'package:tajer/features/customers/domain/customer.dart';
-import 'package:tajer/features/authentication/domain/app_user.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();

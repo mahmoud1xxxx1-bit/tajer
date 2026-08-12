@@ -169,9 +169,9 @@ class SettingsScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Colors.blue.withOpacity(0.1),
+                              color: Colors.blue.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                              border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
                             ),
                             child: const SelectableText(
                               'https://alldown.uk/taj',
@@ -335,7 +335,7 @@ class SettingsScreen extends ConsumerWidget {
                 Text(
                   'Tajer POS v1.0.42\nMade with 💛',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontFamily: 'Tajawal', color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4), fontSize: 13, letterSpacing: 1.1),
+                  style: TextStyle(fontFamily: 'Tajawal', color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4), fontSize: 13, letterSpacing: 1.1),
                 ),
               ],
             ),
@@ -394,10 +394,10 @@ class SettingsScreen extends ConsumerWidget {
       leading: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: iconColor.withOpacity(isDark ? 0.15 : 0.1),
+          color: iconColor.withValues(alpha: isDark ? 0.15 : 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: isDark ? iconColor.withOpacity(0.9) : iconColor, size: 22),
+        child: Icon(icon, color: isDark ? iconColor.withValues(alpha: 0.9) : iconColor, size: 22),
       ),
       title: Text(
         title,
@@ -416,12 +416,12 @@ class SettingsScreen extends ConsumerWidget {
                 style: TextStyle(
                   fontFamily: 'Tajawal',
                   fontSize: 12,
-                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                 ),
               ),
             )
           : null,
-      trailing: Icon(trailingIcon, size: 14, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
+      trailing: Icon(trailingIcon, size: 14, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3)),
       onTap: onTap,
     );
   }
@@ -435,7 +435,7 @@ class _CustomDivider extends StatelessWidget {
       height: 1,
       thickness: 1,
       indent: 64,
-      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
+      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.05),
     );
   }
 }
@@ -452,10 +452,10 @@ class _LanguageSelector extends ConsumerWidget {
       leading: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.lightBlue.withOpacity(isDark ? 0.15 : 0.1),
+          color: Colors.lightBlue.withValues(alpha: isDark ? 0.15 : 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(Icons.language_rounded, color: isDark ? Colors.lightBlue.withOpacity(0.9) : Colors.lightBlue, size: 22),
+        child: Icon(Icons.language_rounded, color: isDark ? Colors.lightBlue.withValues(alpha: 0.9) : Colors.lightBlue, size: 22),
       ),
       title: Text(l10n.language, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.w600, fontSize: 14)),
       trailing: Container(
@@ -463,7 +463,7 @@ class _LanguageSelector extends ConsumerWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1)),
+          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1)),
         ),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String>(
@@ -498,7 +498,7 @@ class _CurrencySelector extends ConsumerWidget {
       leading: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.greenAccent.withOpacity(isDark ? 0.15 : 0.1),
+          color: Colors.greenAccent.withValues(alpha: isDark ? 0.15 : 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(Icons.attach_money_rounded, color: isDark ? Colors.greenAccent.shade400 : Colors.green.shade600, size: 22),
@@ -509,7 +509,7 @@ class _CurrencySelector extends ConsumerWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1)),
+          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1)),
         ),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<AppCurrency>(
@@ -546,7 +546,7 @@ class _ThemeSelector extends ConsumerWidget {
       leading: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.deepPurpleAccent.withOpacity(isDark ? 0.15 : 0.1),
+          color: Colors.deepPurpleAccent.withValues(alpha: isDark ? 0.15 : 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(Icons.brightness_6_rounded, color: isDark ? Colors.deepPurpleAccent.shade100 : Colors.deepPurpleAccent, size: 22),
@@ -557,7 +557,7 @@ class _ThemeSelector extends ConsumerWidget {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1)),
+          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1)),
         ),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<ThemeMode>(
@@ -673,7 +673,7 @@ class _PinSettingsTileState extends State<_PinSettingsTile> {
       leading: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.redAccent.withOpacity(isDark ? 0.15 : 0.1),
+          color: Colors.redAccent.withValues(alpha: isDark ? 0.15 : 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(Icons.password_rounded, color: isDark ? Colors.redAccent.shade100 : Colors.redAccent, size: 22),
@@ -689,7 +689,7 @@ class _PinSettingsTileState extends State<_PinSettingsTile> {
       trailing: !isActive 
           ? ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                 foregroundColor: Theme.of(context).colorScheme.primary,
                 elevation: 0,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

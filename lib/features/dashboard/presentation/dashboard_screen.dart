@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:tajer/l10n/app_localizations.dart';
@@ -6,7 +5,6 @@ import '../../products/presentation/products_screen.dart';
 import '../../customers/presentation/customers_screen.dart';
 import '../../orders/presentation/orders_screen.dart';
 import '../../orders/presentation/pos_screen.dart';
-import '../../inventory_log/presentation/inventory_logs_screen.dart';
 import '../../reports/presentation/reports_screen.dart';
 import '../../orders/data/order_repository.dart';
 import '../../products/data/product_repository.dart';
@@ -16,7 +14,6 @@ import '../../../core/providers/store_profile_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../authentication/data/auth_repository.dart';
-import '../../authentication/domain/app_user.dart';
 import '../../../core/services/app_review_service.dart';
 import '../../../core/widgets/app_drawer.dart';
 import 'setup_checklist_card.dart';
@@ -182,9 +179,9 @@ class DashboardHome extends ConsumerWidget {
               margin: EdgeInsets.only(bottom: 16),
               padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
+                color: Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.red.withOpacity(0.5)),
+                border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
               ),
               child: Row(
                 children: [
@@ -206,9 +203,9 @@ class DashboardHome extends ConsumerWidget {
                 margin: EdgeInsets.only(bottom: 16),
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
+                  color: Colors.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.red.withOpacity(0.5)),
+                  border: Border.all(color: Colors.red.withValues(alpha: 0.5)),
                 ),
                 child: Row(
                   children: [
@@ -239,9 +236,9 @@ class DashboardHome extends ConsumerWidget {
                     margin: EdgeInsets.only(bottom: 16),
                     padding: EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.orange.withOpacity(0.1),
+                      color: Colors.orange.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.orange.withOpacity(0.5)),
+                      border: Border.all(color: Colors.orange.withValues(alpha: 0.5)),
                     ),
                     child: Row(
                       children: [
@@ -446,7 +443,7 @@ class _StatCard extends StatelessWidget {
             Container(
               padding: EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, size: 28, color: color),

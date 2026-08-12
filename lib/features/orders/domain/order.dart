@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/utils/date_parser.dart';
-import '../../products/domain/product.dart'; // For TimestampConverter
+// For TimestampConverter
 import 'cart_item.dart';
 
 class AppOrder {

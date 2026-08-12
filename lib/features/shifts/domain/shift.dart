@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/utils/date_parser.dart';
 
 class Shift {

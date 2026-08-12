@@ -1,11 +1,8 @@
-import 'package:tajer/features/authentication/domain/app_user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../data/product_repository.dart';
 import 'add_product_dialog.dart';
-import '../../../core/services/printer_service.dart';
-import '../../../core/services/pin_service.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../../core/theme/glass_card.dart';
@@ -37,9 +34,9 @@ class ProductsScreen extends ConsumerWidget {
             margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.indigo.withOpacity(0.15),
+              color: Colors.indigo.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.indigo.withOpacity(0.3)),
+              border: Border.all(color: Colors.indigo.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
@@ -50,7 +47,7 @@ class ProductsScreen extends ConsumerWidget {
                     l10n.localeName == 'ar' 
                       ? '💡 دليل المنتجات: أضف أصناف وجباتك أو بضائعك هنا. يمكنك ربط المنتج بالمواد الخام (المكونات) ليتم الخصم التلقائي من المستودع عند البيع في شاشة الـ POS.' 
                       : '💡 Products Guide: Add your inventory items or meals here. You can link a product to raw materials for automatic deduction from inventory when sold via POS.',
-                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.4, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.4, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
                   ),
                 ),
               ],
@@ -65,7 +62,7 @@ class ProductsScreen extends ConsumerWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.inventory_2_outlined, size: 80, color: Colors.indigo.withOpacity(0.3)),
+                        Icon(Icons.inventory_2_outlined, size: 80, color: Colors.indigo.withValues(alpha: 0.3)),
                         const SizedBox(height: 16),
                         Text(
                           isAr ? "متجرك فارغ!" : "Your store is empty!",
@@ -114,7 +111,7 @@ class ProductsScreen extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(Icons.inventory_2_rounded, color: Theme.of(context).colorScheme.primary, size: 28),
@@ -182,7 +179,7 @@ class ProductsScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                              color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(

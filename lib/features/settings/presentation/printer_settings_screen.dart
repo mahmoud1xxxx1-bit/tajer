@@ -138,7 +138,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.blueAccent.withOpacity(0.1),
+                              color: Colors.blueAccent.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(Icons.bluetooth_connected_rounded, color: Colors.blueAccent, size: 24),
@@ -155,7 +155,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1)),
+                          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1)),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<BluetoothInfo>(
@@ -177,7 +177,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.orangeAccent.withOpacity(0.1),
+                              color: Colors.orangeAccent.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(Icons.receipt_long_rounded, color: Colors.orangeAccent, size: 24),
@@ -194,7 +194,7 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1)),
+                          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1)),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
@@ -244,9 +244,9 @@ class _PrinterSettingsScreenState extends State<PrinterSettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: _connected ? Colors.green.withOpacity(0.1) : Colors.amber.withOpacity(0.1),
+                  color: _connected ? Colors.green.withValues(alpha: 0.1) : Colors.amber.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: _connected ? Colors.green.withOpacity(0.3) : Colors.amber.withOpacity(0.3)),
+                  border: Border.all(color: _connected ? Colors.green.withValues(alpha: 0.3) : Colors.amber.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [

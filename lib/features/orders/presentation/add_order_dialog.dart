@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../../authentication/data/auth_repository.dart';
-import '../../authentication/domain/app_user.dart';
 import '../../products/data/product_repository.dart';
 import '../../customers/data/customer_repository.dart';
 import '../data/order_repository.dart';
@@ -15,7 +14,6 @@ import '../../../core/utils/barcode_scanner_screen.dart';
 import '../../products/domain/product.dart';
 import '../../customers/domain/customer.dart';
 import '../../../core/services/limits_service.dart';
-import '../../../core/services/guest_limit_service.dart';
 import '../../../core/providers/store_profile_provider.dart';
 
 class AddOrderDialog extends ConsumerStatefulWidget {
@@ -294,7 +292,7 @@ class _AddOrderDialogState extends ConsumerState<AddOrderDialog> {
               data: (products) {
                 _products = products;
                 return DropdownButtonFormField<String>(
-                  value: _selectedProductId,
+                  initialValue: _selectedProductId,
                   decoration: InputDecoration(labelText: l10n.products, border: const OutlineInputBorder()),
                   items: products.map((p) => DropdownMenuItem(value: p.id, child: Text('${p.name} (${l10n.quantity}: ${p.quantity})', style: TextStyle(fontFamily: 'Tajawal')))).toList(),
                   onChanged: (val) => setState(() => _selectedProductId = val),

@@ -5,7 +5,6 @@ import 'package:tajer/l10n/app_localizations.dart';
 import '../../products/data/product_repository.dart';
 import '../../products/domain/product.dart';
 import '../../authentication/data/auth_repository.dart';
-import '../../authentication/domain/app_user.dart';
 import '../data/order_repository.dart';
 import '../domain/order.dart';
 import '../domain/cart_item.dart';
@@ -13,10 +12,7 @@ import '../../customers/domain/customer.dart';
 import 'package:tajer/core/utils/app_snackbar.dart';
 import '../../customers/data/customer_repository.dart';
 import '../../../core/services/activity_logger.dart';
-import '../../../core/services/pdf_service.dart';
-import '../../../core/services/whatsapp_service.dart';
 import '../../../core/services/printer_service.dart';
-import '../../../core/widgets/tax_dialog.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/widgets/app_drawer.dart';
@@ -498,9 +494,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     margin: const EdgeInsets.fromLTRB(12, 8, 12, 4),
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.indigo.withOpacity(0.15),
+                      color: Colors.indigo.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.indigo.withOpacity(0.3)),
+                      border: Border.all(color: Colors.indigo.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       children: [
@@ -511,7 +507,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                             isAr 
                               ? '💡 دليل الكاشير: اضغط على المنتج لإضافته للسلة. لحفظ الفاتورة مؤقتاً أثناء انتظام العميل اضغط على زر "تعليق" بالأعلى. لإصدار الفاتورة اضغط "دفع الإجمالي" بالأسفل.'
                               : '💡 Cashier Guide: Tap product to add to cart. To hold invoice temporarily, tap "Hold" above. To issue invoice, tap "Pay Total" below.',
-                            style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, height: 1.4, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                            style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, height: 1.4, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
                           ),
                         ),
                       ],
@@ -607,7 +603,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                 decoration: BoxDecoration(
                   color: Theme.of(context).cardColor,
                   borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.1), blurRadius: 10, offset: const Offset(0, -5))],
+                  boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, -5))],
                 ),
                 child: Column(
                   children: [
@@ -861,7 +857,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
               duration: const Duration(milliseconds: 300),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: _highlightCustomer ? Colors.red.withOpacity(0.1) : Colors.transparent,
+                color: _highlightCustomer ? Colors.red.withValues(alpha: 0.1) : Colors.transparent,
                 border: Border.all(color: _highlightCustomer ? Colors.red : Colors.transparent, width: 2),
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -955,7 +951,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
                       decoration: BoxDecoration(
-                        color: _highlightCustomer ? Colors.red.withOpacity(0.2) : Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                        color: _highlightCustomer ? Colors.red.withValues(alpha: 0.2) : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: IconButton(
@@ -1110,7 +1106,7 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
                     if (tendered > 0 && change >= 0) {
                       return Container(
                         padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.green)),
+                        decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.green)),
                         child: Text(
                           'المتبقي للعميل: ${change.toStringAsFixed(2)}',
                           style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: Colors.green, fontSize: 16),

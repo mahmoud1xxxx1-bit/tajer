@@ -5,11 +5,9 @@ import 'package:uuid/uuid.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../../../core/services/activity_logger.dart';
 import '../../authentication/data/auth_repository.dart';
-import '../../authentication/domain/app_user.dart';
 import '../data/product_repository.dart';
 import '../domain/product.dart';
 import '../../categories/data/category_repository.dart';
-import '../../categories/domain/category.dart';
 import '../../inventory_log/data/inventory_log_repository.dart';
 import '../../../core/utils/barcode_scanner_screen.dart';
 import '../domain/raw_material.dart';
@@ -239,7 +237,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             categoriesAsync.when(
               data: (categories) {
                 return DropdownButtonFormField<String>(
-                  value: _selectedCategoryId,
+                  initialValue: _selectedCategoryId,
                   decoration: InputDecoration(
                     labelText: l10n.category,
                     border: const OutlineInputBorder(),
@@ -295,9 +293,9 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Theme.of(context).brightness == Brightness.dark ? Colors.blueGrey.withOpacity(0.1) : Colors.blue.withOpacity(0.05),
+                color: Theme.of(context).brightness == Brightness.dark ? Colors.blueGrey.withValues(alpha: 0.1) : Colors.blue.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? Colors.blueGrey.withOpacity(0.3) : Colors.blue.shade100),
+                border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? Colors.blueGrey.withValues(alpha: 0.3) : Colors.blue.shade100),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -366,10 +364,10 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             SizedBox(height: 24),
             Card(
               elevation: 0,
-              color: Theme.of(context).brightness == Brightness.dark ? Colors.orange.withOpacity(0.1) : Colors.orange.withOpacity(0.05),
+              color: Theme.of(context).brightness == Brightness.dark ? Colors.orange.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.05),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
-                side: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent.withOpacity(0.5) : Colors.orange.shade200),
+                side: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent.withValues(alpha: 0.5) : Colors.orange.shade200),
               ),
               child: ExpansionTile(
                 title: Text(
@@ -388,14 +386,14 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<TaxMode>(
-                    value: _taxMode,
+                    initialValue: _taxMode,
                     decoration: InputDecoration(
                       labelText: isAr ? 'نظام الضريبة' : 'Tax Mode',
-                      labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7), fontFamily: 'Tajawal'),
+                      labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7), fontFamily: 'Tajawal'),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent.withOpacity(0.5) : Colors.orange.shade300),
+                        borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent.withValues(alpha: 0.5) : Colors.orange.shade300),
                       ),
                       filled: true,
                       fillColor: Theme.of(context).colorScheme.surface,
@@ -419,11 +417,11 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                       style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontFamily: 'Tajawal'),
                       decoration: InputDecoration(
                         labelText: isAr ? 'نسبة الضريبة الخاصة بالمنتج (%)' : 'Product Tax Percentage (%)',
-                        labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                        labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
-                          borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent.withOpacity(0.5) : Colors.orange.shade300),
+                          borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? Colors.orangeAccent.withValues(alpha: 0.5) : Colors.orange.shade300),
                         ),
                         filled: true,
                         fillColor: Theme.of(context).colorScheme.surface,
@@ -467,7 +465,7 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
                       Expanded(
                         flex: 2,
                         child: DropdownButtonFormField<String>(
-                          value: _selectedRawMaterialId,
+                          initialValue: _selectedRawMaterialId,
                           decoration: InputDecoration(
                             labelText: isAr ? 'اختر المادة الخام' : 'Select Raw Material',
                             border: const OutlineInputBorder(),

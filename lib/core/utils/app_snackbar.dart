@@ -47,7 +47,7 @@ class AppSnackbar {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.error_outline_rounded, color: Colors.white, size: 24),
@@ -66,7 +66,7 @@ class AppSnackbar {
             ),
           ],
         ),
-        backgroundColor: Colors.redAccent.shade700.withOpacity(0.9),
+        backgroundColor: Colors.redAccent.shade700.withValues(alpha: 0.9),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(
@@ -88,7 +88,7 @@ class AppSnackbar {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.check_circle_outline_rounded, color: Colors.white, size: 24),
@@ -107,7 +107,7 @@ class AppSnackbar {
             ),
           ],
         ),
-        backgroundColor: Colors.green.shade600.withOpacity(0.9),
+        backgroundColor: Colors.green.shade600.withValues(alpha: 0.9),
         behavior: SnackBarBehavior.floating,
         margin: const EdgeInsets.all(16),
         shape: RoundedRectangleBorder(

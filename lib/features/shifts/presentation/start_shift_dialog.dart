@@ -4,7 +4,6 @@ import 'package:uuid/uuid.dart';
 import '../domain/shift.dart';
 import '../data/shift_repository.dart';
 import '../../authentication/data/auth_repository.dart';
-import '../../authentication/domain/app_user.dart';
 import '../../../core/services/activity_logger.dart';
 
 class StartShiftDialog extends ConsumerStatefulWidget {
@@ -76,15 +75,15 @@ class _StartShiftDialogState extends ConsumerState<StartShiftDialog> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.indigo.withOpacity(0.15),
+                color: Colors.indigo.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.indigo.withOpacity(0.3)),
+                border: Border.all(color: Colors.indigo.withValues(alpha: 0.3)),
               ),
               child: Text(
                 isAr 
                   ? '💡 لماذا نفتح وردية؟\nنظام الورديات يحمي أموالك! أدخل المبلغ الموجود في الدرج قبل بدء البيع، وسيقوم النظام بحساب مبيعات اليوم ومقارنتها تلقائياً بالدرج لكشف أي عجز أو تلاعب نهاية الوردية.'
                   : '💡 Why open a shift?\nThe shift system protects your money! Enter the amount in the drawer before selling, and the system will calculate today\'s sales and automatically compare it with the drawer to detect any shortage at the end of the shift.',
-                style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.5, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.5, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
               ),
             ),
             const SizedBox(height: 16),

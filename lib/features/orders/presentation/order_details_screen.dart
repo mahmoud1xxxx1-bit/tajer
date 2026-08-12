@@ -2,8 +2,6 @@ import 'package:tajer/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:pdf/pdf.dart';
-import '../../../core/services/pin_service.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../domain/order.dart';
 import '../data/order_repository.dart';
@@ -176,7 +174,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: isCancelled ? Colors.red.withOpacity(0.2) : (currentOrder.isCredit && (currentOrder.paidAmount ?? 0.0) >= currentOrder.total) ? Colors.green.withOpacity(0.2) : Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                            color: isCancelled ? Colors.red.withValues(alpha: 0.2) : (currentOrder.isCredit && (currentOrder.paidAmount ?? 0.0) >= currentOrder.total) ? Colors.green.withValues(alpha: 0.2) : Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(color: isCancelled ? Colors.red : Colors.transparent),
                           ),

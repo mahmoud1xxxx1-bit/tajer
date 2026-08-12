@@ -10,10 +10,7 @@ import 'package:tajer/features/orders/domain/order.dart';
 import 'package:tajer/features/orders/domain/cart_item.dart';
 import 'package:tajer/features/shifts/data/shift_repository.dart';
 import 'package:tajer/features/shifts/domain/shift.dart';
-import 'package:tajer/features/expenses/data/expense_repository.dart';
-import 'package:tajer/features/expenses/domain/expense.dart';
 import 'package:tajer/features/customers/data/customer_repository.dart';
-import 'package:tajer/features/customers/domain/customer.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();

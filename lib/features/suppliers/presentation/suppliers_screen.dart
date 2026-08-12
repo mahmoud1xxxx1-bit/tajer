@@ -9,8 +9,6 @@ import '../../authentication/data/auth_repository.dart';
 import '../data/supplier_repository.dart';
 import '../domain/supplier.dart';
 import 'package:flutter/cupertino.dart';
-import '../../expenses/data/expense_repository.dart';
-import '../../expenses/domain/expense.dart';
 import 'supplier_details_screen.dart';
 import '../data/supplier_transaction_repository.dart';
 import '../domain/supplier_transaction.dart';
@@ -50,7 +48,7 @@ class SuppliersScreen extends ConsumerWidget {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
+                            color: Colors.red.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.money_off, color: Colors.red, size: 32),
@@ -102,7 +100,7 @@ class SuppliersScreen extends ConsumerWidget {
                         width: 52,
                         height: 52,
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         alignment: Alignment.center,
@@ -152,7 +150,7 @@ class SuppliersScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: supplier.totalDebt > 0 ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+                              color: supplier.totalDebt > 0 ? Colors.red.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(

@@ -6,7 +6,6 @@ import '../../../core/theme/glass_card.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/category_repository.dart';
-import '../../../core/services/pin_service.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../domain/category.dart';
 import '../../../core/utils/date_formatter.dart';
@@ -32,7 +31,7 @@ class CategoriesScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.category_outlined, size: 80, color: Colors.blue.withOpacity(0.3)),
+                  Icon(Icons.category_outlined, size: 80, color: Colors.blue.withValues(alpha: 0.3)),
                   const SizedBox(height: 16),
                   Text(
                     isAr ? "نظم متجرك!" : "Organize your store!",
@@ -70,7 +69,7 @@ class CategoriesScreen extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.1),
+                          color: Colors.blue.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(Icons.category, color: Colors.blue, size: 24),

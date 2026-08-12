@@ -100,7 +100,7 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1)),
+            borderSide: BorderSide(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1)),
           ),
           filled: true,
           fillColor: Theme.of(context).colorScheme.surface,
@@ -179,10 +179,10 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
                             decoration: BoxDecoration(
                               color: Theme.of(context).colorScheme.surface,
                               borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3), width: 2),
+                              border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3), width: 2),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                   blurRadius: 15,
                                   offset: const Offset(0, 5),
                                 )
@@ -196,9 +196,9 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
                                 : Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.add_a_photo_rounded, size: 36, color: Theme.of(context).colorScheme.primary.withOpacity(0.6)),
+                                      Icon(Icons.add_a_photo_rounded, size: 36, color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.6)),
                                       const SizedBox(height: 8),
-                                      Text(l10n.brandingSelectLogo, style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Theme.of(context).colorScheme.primary.withOpacity(0.8))),
+                                      Text(l10n.brandingSelectLogo, style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.8))),
                                     ],
                                   ),
                           ),
@@ -268,14 +268,14 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
                         decoration: BoxDecoration(
                           color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1)),
+                          border: Border.all(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1)),
                         ),
                         child: SwitchListTile(
                           title: Text(l10n.brandingTaxInclusive, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
                           subtitle: Text(l10n.brandingTaxInclusiveHelper, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 11)),
                           value: _defaultIsTaxInclusive,
                           onChanged: (val) => setState(() => _defaultIsTaxInclusive = val),
-                          activeColor: Theme.of(context).colorScheme.primary,
+                          activeThumbColor: Theme.of(context).colorScheme.primary,
                           contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                         ),
                       ),
@@ -289,9 +289,9 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.blueAccent.withOpacity(0.05),
+                  color: Colors.blueAccent.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
+                  border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -311,7 +311,7 @@ class _StoreBrandingScreenState extends ConsumerState<StoreBrandingScreen> {
                     const SizedBox(height: 12),
                     Text(
                       l10n.brandingZatcaDesc,
-                      style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, height: 1.6, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                      style: TextStyle(fontFamily: 'Tajawal', fontSize: 12, height: 1.6, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
                     ),
                     const SizedBox(height: 20),
                     _buildTextField(

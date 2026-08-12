@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../products/domain/product.dart'; // For TimestampConverter
 
 class Expense {

@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/shift.dart';
 import '../data/shift_repository.dart';
 import '../../authentication/data/auth_repository.dart';
-import '../../authentication/domain/app_user.dart';
 import '../../../core/services/printer_service.dart';
 import '../../../core/providers/store_profile_provider.dart';
 import '../../expenses/data/expense_repository.dart';

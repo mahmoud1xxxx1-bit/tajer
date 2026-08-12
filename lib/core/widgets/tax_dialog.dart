@@ -74,7 +74,7 @@ class _TaxDialogState extends State<TaxDialog> {
                 style: const TextStyle(fontFamily: 'Tajawal', fontSize: 11, color: Colors.grey),
               ),
               value: _isInclusive,
-              activeColor: Colors.orange,
+              activeThumbColor: Colors.orange,
               onChanged: (val) => setState(() => _isInclusive = val),
               contentPadding: EdgeInsets.zero,
             ),

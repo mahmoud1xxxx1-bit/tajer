@@ -1,6 +1,5 @@
 import 'package:url_launcher/url_launcher.dart';
 import 'package:tajer/features/orders/domain/order.dart';
-import 'package:tajer/core/providers/settings_provider.dart';
 import 'package:tajer/core/utils/date_formatter.dart';
 
 class WhatsAppService {

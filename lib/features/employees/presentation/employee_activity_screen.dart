@@ -7,7 +7,6 @@ import '../../orders/data/order_repository.dart';
 import '../../orders/domain/order.dart';
 import '../../orders/presentation/order_details_screen.dart';
 import '../../expenses/data/expense_repository.dart';
-import '../../expenses/domain/expense.dart';
 import '../../../core/providers/settings_provider.dart';
 import '../../../../../../../../core/theme/glass_card.dart';
 
@@ -284,8 +283,8 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
                         child: ExpansionTile(
                           initiallyExpanded: index == 0,
                           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          backgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.35),
-                          collapsedBackgroundColor: theme.colorScheme.surfaceVariant.withOpacity(0.18),
+                          backgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+                          collapsedBackgroundColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.18),
                           leading: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
@@ -335,7 +334,7 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: theme.dividerColor.withOpacity(0.5))),
+          border: Border(bottom: BorderSide(color: theme.dividerColor.withValues(alpha: 0.5))),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -343,7 +342,7 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: item.badgeColor.withOpacity(0.1),
+                color: item.badgeColor.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(_getIconForAction(item.actionType, item.isSale), color: item.badgeColor, size: 24),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tajer/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import '../data/shift_repository.dart';
 import '../domain/shift.dart';
@@ -86,7 +85,7 @@ class ShiftsArchiveScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                       decoration: BoxDecoration(
-                        color: isFullyMatched ? Colors.green.withOpacity(0.1) : Colors.amber.withOpacity(0.1),
+                        color: isFullyMatched ? Colors.green.withValues(alpha: 0.1) : Colors.amber.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: isFullyMatched ? Colors.green : Colors.amber),
                       ),
@@ -130,7 +129,7 @@ class ShiftsArchiveScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.blueGrey.withOpacity(0.05),
+                  color: Colors.blueGrey.withValues(alpha: 0.05),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(

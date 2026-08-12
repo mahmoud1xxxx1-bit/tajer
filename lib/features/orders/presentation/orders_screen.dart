@@ -4,26 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../data/order_repository.dart';
-import 'add_order_dialog.dart';
 import 'pos_screen.dart';
 import 'order_details_screen.dart';
 import 'pdf_viewer_screen.dart';
 import '../../../core/services/guest_limit_service.dart';
-import '../../../core/services/pdf_service.dart';
-import '../../../core/services/whatsapp_service.dart';
 import '../../../core/services/printer_service.dart';
-import '../../../core/services/pin_service.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
 
 import '../../../core/providers/settings_provider.dart';
 import '../../../core/providers/store_profile_provider.dart';
 import '../../../core/widgets/tax_dialog.dart';
-import '../../../core/utils/date_formatter.dart';
 
 import '../../../core/theme/glass_card.dart';
 import '../../authentication/data/auth_repository.dart';
-import '../../authentication/domain/app_user.dart';
-import '../../../core/services/activity_logger.dart';
 
 class OrdersScreen extends ConsumerWidget {
   const OrdersScreen({super.key});
@@ -130,9 +123,9 @@ class OrdersScreen extends ConsumerWidget {
                         },
                         child: Container(
                           decoration: order.status == 'cancelled' ? BoxDecoration(
-                            color: Colors.red.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.1),
+                            color: Colors.red.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.1),
                             borderRadius: BorderRadius.circular(20.0),
-                            border: Border.all(color: Colors.red.withOpacity(0.5), width: 1),
+                            border: Border.all(color: Colors.red.withValues(alpha: 0.5), width: 1),
                           ) : null,
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
@@ -144,7 +137,7 @@ class OrdersScreen extends ConsumerWidget {
                                   Container(
                                     padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Icon(Icons.shopping_bag_outlined, color: Theme.of(context).colorScheme.primary, size: 24),
@@ -198,7 +191,7 @@ class OrdersScreen extends ConsumerWidget {
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                             decoration: BoxDecoration(
-                                              color: Colors.orange.withOpacity(0.2),
+                                              color: Colors.orange.withValues(alpha: 0.2),
                                               borderRadius: BorderRadius.circular(8),
                                             ),
                                             child: Text(
@@ -212,7 +205,7 @@ class OrdersScreen extends ConsumerWidget {
                                           Container(
                                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                             decoration: BoxDecoration(
-                                              color: Colors.purple.withOpacity(0.2),
+                                              color: Colors.purple.withValues(alpha: 0.2),
                                               borderRadius: BorderRadius.circular(8),
                                             ),
                                             child: Text(
@@ -229,7 +222,7 @@ class OrdersScreen extends ConsumerWidget {
                                             Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                               decoration: BoxDecoration(
-                                                color: Colors.blue.withOpacity(0.1),
+                                                color: Colors.blue.withValues(alpha: 0.1),
                                                 borderRadius: BorderRadius.circular(8),
                                               ),
                                               child: Text(
@@ -241,7 +234,7 @@ class OrdersScreen extends ConsumerWidget {
                                               Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                                 decoration: BoxDecoration(
-                                                  color: Colors.teal.withOpacity(0.15),
+                                                  color: Colors.teal.withValues(alpha: 0.15),
                                                   borderRadius: BorderRadius.circular(8),
                                                 ),
                                                 child: Text(
@@ -257,7 +250,7 @@ class OrdersScreen extends ConsumerWidget {
                                 ],
                               ),
                               const SizedBox(height: 12),
-                              Divider(color: Colors.white.withOpacity(0.1)),
+                              Divider(color: Colors.white.withValues(alpha: 0.1)),
                               Wrap(
                                 alignment: WrapAlignment.spaceBetween,
                                 crossAxisAlignment: WrapCrossAlignment.center,

@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/utils/date_parser.dart';
-import 'product.dart';
 
 class RawMaterial {
   final String id;

@@ -71,9 +71,9 @@ class ExpensesScreen extends ConsumerWidget {
                 margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Colors.indigo.withOpacity(0.15),
+                  color: Colors.indigo.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.indigo.withOpacity(0.3)),
+                  border: Border.all(color: Colors.indigo.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
@@ -84,7 +84,7 @@ class ExpensesScreen extends ConsumerWidget {
                         isAr 
                           ? '💡 دليل المصروفات: سجل هنا كافة مصاريف تشغيل مشروعك (مثل: إيجار، رواتب، فواتير كهرباء أو وقود). يقوم التطبيق بخصمها من إجمالي المبيعات لحساب صافي أرباحك الحقيقي بدقة.'
                           : '💡 Expenses Guide: Log all operational expenses here (e.g., rent, salaries, utility bills). The app accurately deducts them from gross sales to calculate true net profit.',
-                        style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.4, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                        style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.4, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
                       ),
                     ),
                   ],
@@ -217,9 +217,9 @@ class ExpensesScreen extends ConsumerWidget {
                   SizedBox(height: 16),
                   Container(
                     decoration: BoxDecoration(
-                      color: isFromShiftDrawer ? Colors.red.withOpacity(0.05) : Colors.grey.withOpacity(0.05),
+                      color: isFromShiftDrawer ? Colors.red.withValues(alpha: 0.05) : Colors.grey.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: isFromShiftDrawer ? Colors.red.withOpacity(0.3) : Colors.grey.withOpacity(0.3)),
+                      border: Border.all(color: isFromShiftDrawer ? Colors.red.withValues(alpha: 0.3) : Colors.grey.withValues(alpha: 0.3)),
                     ),
                     child: CheckboxListTile(
                       title: Text('خصم من درج الوردية الحالي؟', style: TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
@@ -345,7 +345,7 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
             Container(
               padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.1),
+                color: Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -363,7 +363,7 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
+                    color: Colors.orange.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const Icon(Icons.money_off, color: Colors.orange, size: 20),
@@ -415,11 +415,11 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                             Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.person_pin, size: 12, color: Colors.purple.withOpacity(0.7)),
+                                Icon(Icons.person_pin, size: 12, color: Colors.purple.withValues(alpha: 0.7)),
                                 const SizedBox(width: 4),
                                 Text(
                                   expense.creatorName!,
-                                  style: TextStyle(fontFamily: 'Tajawal', color: Colors.purple.withOpacity(0.8), fontSize: 11, fontWeight: FontWeight.bold),
+                                  style: TextStyle(fontFamily: 'Tajawal', color: Colors.purple.withValues(alpha: 0.8), fontSize: 11, fontWeight: FontWeight.bold),
                                 ),
                               ],
                             ),
@@ -427,7 +427,7 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                             Container(
                               padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: Colors.blue.withOpacity(0.1),
+                                color: Colors.blue.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Row(
@@ -443,7 +443,7 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                             Container(
                               padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: expense.isFromShiftDrawer ? Colors.red.withOpacity(0.1) : Colors.green.withOpacity(0.1),
+                                color: expense.isFromShiftDrawer ? Colors.red.withValues(alpha: 0.1) : Colors.green.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Row(
@@ -467,7 +467,7 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         margin: const EdgeInsets.only(bottom: 4),
-                        decoration: BoxDecoration(color: Colors.grey.withOpacity(0.2), borderRadius: BorderRadius.circular(4)),
+                        decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.2), borderRadius: BorderRadius.circular(4)),
                         child: const Text('ملغي', style: TextStyle(color: Colors.grey, fontSize: 10, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                       ),
                     Text(
@@ -543,7 +543,7 @@ Widget _buildExpenseGroup(BuildContext context, WidgetRef ref, String title, Lis
                         child: Container(
                           padding: const EdgeInsets.all(4),
                           decoration: BoxDecoration(
-                            color: Colors.orange.withOpacity(0.1),
+                            color: Colors.orange.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: const Icon(Icons.cancel_outlined, color: Colors.orange, size: 16),

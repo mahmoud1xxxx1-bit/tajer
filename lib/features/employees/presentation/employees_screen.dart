@@ -9,7 +9,6 @@ import 'package:go_router/go_router.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../orders/data/order_repository.dart';
 
-import '../../../core/services/pin_service.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../../../core/providers/settings_provider.dart';
 import 'employee_activity_screen.dart';
@@ -26,7 +25,7 @@ void showBeautifulUpgradeDialog(BuildContext context) {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.amber.withOpacity(0.1),
+              color: Colors.amber.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.workspace_premium, color: Colors.amber, size: 48),
@@ -239,7 +238,7 @@ Do not share this PIN with anyone!
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: Colors.grey.withOpacity(0.5)),
+                                border: Border.all(color: Colors.grey.withValues(alpha: 0.5)),
                               ),
                               child: Text(_merchantEmail, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                             ),
