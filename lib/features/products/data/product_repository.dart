@@ -672,10 +672,15 @@ Stream<List<Product>> productsStream(ProductsStreamRef ref) async* {
       branchId: branchId,
     );
     if (!migrationCompleted) {
-      baseProducts = await repository.readLegacyProductsForBranch(
-        merchantId: merchantId,
-        branchId: branchId,
-      );
+      try {
+        baseProducts = await repository.readLegacyProductsForBranch(
+          merchantId: merchantId,
+          branchId: branchId,
+        );
+      } on StateError {
+        // If manifest is not ready yet, just return empty to prevent 'Bad state' crash in UI.
+        baseProducts = [];
+      }
     }
     
     final quantities = <String, double>{
