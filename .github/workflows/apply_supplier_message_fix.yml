@@ -1,0 +1,148 @@
+name: Apply Supplier Message Fix
+
+on:
+  push:
+    branches: [ "audit/pre-google-play-414" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit/pre-google-play-414
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.7'
+          channel: stable
+          cache: true
+
+      - name: Dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Apply guarded supplier message patch
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('lib/features/suppliers/presentation/supplier_details_screen.dart')
+          s = p.read_text(encoding='utf-8')
+
+          anchor = "import '../../../core/services/activity_logger.dart';\n"
+          addition = (
+              "import '../../../core/services/activity_logger.dart';\n"
+              "import '../../../core/services/app_error_mapper.dart';\n"
+              "import '../../../core/widgets/tajer_message.dart';\n"
+          )
+          assert s.count(anchor) == 1, 'activity logger import anchor mismatch'
+          assert "app_error_mapper.dart" not in s, 'AppErrorMapper already imported'
+          assert "tajer_message.dart" not in s, 'TajerMessage already imported'
+          s = s.replace(anchor, addition, 1)
+
+          raw_error = re.compile(
+              r"if \(context\.mounted\) \{\s*"
+              r"ScaffoldMessenger\.of\(context\)\.showSnackBar\(\s*"
+              r"SnackBar\(\s*"
+              r"content: Text\(\s*"
+              r"e\.toString\(\)\.replaceAll\('Exception: ', ''\),\s*"
+              r"style: const TextStyle\(fontFamily: 'Tajawal'\),\s*"
+              r"\),\s*"
+              r"backgroundColor: Colors\.red,\s*"
+              r"\),\s*"
+              r"\);\s*"
+              r"\}"
+          )
+          matches = list(raw_error.finditer(s))
+          assert len(matches) == 2, f'expected 2 raw supplier error snackbars, got {len(matches)}'
+          s = raw_error.sub(
+              "if (context.mounted) {\n"
+              "        await TajerMessage.show(\n"
+              "          context,\n"
+              "          AppErrorMapper.fromError(e, domain: 'supplier'),\n"
+              "        );\n"
+              "      }",
+              s,
+          )
+
+          overpay = re.compile(
+              r"ScaffoldMessenger\.of\(context\)\.showSnackBar\(\s*"
+              r"SnackBar\(\s*"
+              r"content: Text\(\s*"
+              r"isAr\s*\? 'مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق في هذا الفرع\.'\s*"
+              r": 'Payment cannot exceed the supplier outstanding debt in this branch\.',\s*"
+              r"style: const TextStyle\(fontFamily: 'Tajawal'\),?\s*"
+              r"\),\s*"
+              r"backgroundColor: Colors\.orange,?\s*"
+              r"\),\s*"
+              r"\);"
+          )
+          assert len(list(overpay.finditer(s))) == 1, 'supplier overpayment snackbar mismatch'
+          s = overpay.sub(
+              "await TajerMessage.show(\n"
+              "                    context,\n"
+              "                    AppErrorMapper.validation(\n"
+              "                      ar: 'مبلغ السداد لا يمكن أن يتجاوز دين المورد المستحق في هذا الفرع.',\n"
+              "                      en: 'Payment cannot exceed the supplier outstanding debt in this branch.',\n"
+              "                    ),\n"
+              "                  );",
+              s,
+          )
+
+          no_shift = re.compile(
+              r"ScaffoldMessenger\.of\(context\)\.showSnackBar\(\s*"
+              r"SnackBar\(\s*"
+              r"content: Text\(\s*"
+              r"isAr\s*\? 'لا يمكن خصم سداد المورد من الدرج بدون وردية مفتوحة في هذا الفرع\.'\s*"
+              r": 'Open a shift in this branch before deducting supplier payment from the drawer\.',\s*"
+              r"style: const TextStyle\(fontFamily: 'Tajawal'\),?\s*"
+              r"\),\s*"
+              r"backgroundColor: Colors\.orange,?\s*"
+              r"\),\s*"
+              r"\);"
+          )
+          assert len(list(no_shift.finditer(s))) == 1, 'supplier open-shift snackbar mismatch'
+          s = no_shift.sub(
+              "await TajerMessage.show(\n"
+              "                    context,\n"
+              "                    AppErrorMapper.validation(\n"
+              "                      ar: 'لا يمكن خصم سداد المورد من الدرج بدون وردية مفتوحة في هذا الفرع.',\n"
+              "                      en: 'Open a shift in this branch before deducting supplier payment from the drawer.',\n"
+              "                    ),\n"
+              "                  );",
+              s,
+          )
+
+          assert 'ScaffoldMessenger.of(context)' not in s, 'raw ScaffoldMessenger remains in supplier details'
+          assert "e.toString().replaceAll('Exception: ', '')" not in s, 'raw exception remains'
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Format supplier screen
+        run: dart format lib/features/suppliers/presentation/supplier_details_screen.dart
+
+      - name: Analyze supplier screen
+        run: flutter analyze lib/features/suppliers/presentation/supplier_details_screen.dart --no-fatal-warnings --no-fatal-infos
+
+      - name: Supplier regression tests
+        run: |
+          flutter test test/pre_release_supplier_branch_debt_test.dart --reporter expanded
+          flutter test test/pre_release_supplier_reversal_test.dart --reporter expanded
+          flutter test test/supplier_atomicity_test.dart --reporter expanded
+
+      - name: Commit verified repair
+        shell: bash
+        run: |
+          test -n "$(git status --porcelain)"
+          git config user.name "Tajer Audit Bot"
+          git config user.email "actions@github.com"
+          git add lib/features/suppliers/presentation/supplier_details_screen.dart
+          git commit -m "fix: route supplier feedback through TajerMessage"
+          git push origin HEAD:audit/pre-google-play-414
