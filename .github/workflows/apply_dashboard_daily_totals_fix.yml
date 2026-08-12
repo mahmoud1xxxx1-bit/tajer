@@ -1,0 +1,78 @@
+name: Apply Dashboard Daily Totals Fix
+
+on:
+  push:
+    branches: [ "audit/pre-google-play-414" ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit/pre-google-play-414
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.7'
+          channel: stable
+          cache: true
+
+      - name: Dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Materialize guarded fix payloads
+        shell: bash
+        run: |
+          echo 'aW1wb3J0ICcuLi8uLi9vcmRlcnMvZG9tYWluL29yZGVyLmRhcnQnOwoKY2xhc3MgRGFzaGJvYXJkRGFpbHlTdW1tYXJ5IHsKICBmaW5hbCBkb3VibGUgdG90YWxTYWxlczsKICBmaW5hbCBpbnQgb3JkZXJzQ291bnQ7CgogIGNvbnN0IERhc2hib2FyZERhaWx5U3VtbWFyeSh7CiAgICByZXF1aXJlZCB0aGlzLnRvdGFsU2FsZXMsCiAgICByZXF1aXJlZCB0aGlzLm9yZGVyc0NvdW50LAogIH0pOwoKICBmYWN0b3J5IERhc2hib2FyZERhaWx5U3VtbWFyeS5mcm9tT3JkZXJzKAogICAgTGlzdDxBcHBPcmRlcj4gb3JkZXJzLCB7CiAgICBEYXRlVGltZT8gbm93LAogIH0pIHsKICAgIGZpbmFsIGN1cnJlbnQgPSBub3cgPz8gRGF0ZVRpbWUubm93KCk7CiAgICBmaW5hbCBzdGFydE9mRGF5ID0gRGF0ZVRpbWUoY3VycmVudC55ZWFyLCBjdXJyZW50Lm1vbnRoLCBjdXJyZW50LmRheSk7CiAgICBmaW5hbCBzdGFydE9mTmV4dERheSA9IHN0YXJ0T2ZEYXkuYWRkKGNvbnN0IER1cmF0aW9uKGRheXM6IDEpKTsKCiAgICBmaW5hbCB0b2RheU9yZGVycyA9IG9yZGVycy53aGVyZSgob3JkZXIpIHsKICAgICAgZmluYWwgaXNMaXZlID0gb3JkZXIuc3RhdHVzICE9ICdjYW5jZWxsZWQnICYmCiAgICAgICAgICBvcmRlci5zdGF0dXMgIT0gJ2RlYnRfcmVwYXltZW50JzsKICAgICAgZmluYWwgaXNUb2RheSA9ICFvcmRlci5jcmVhdGVkQXQuaXNCZWZvcmUoc3RhcnRPZkRheSkgJiYKICAgICAgICAgIG9yZGVyLmNyZWF0ZWRBdC5pc0JlZm9yZShzdGFydE9mTmV4dERheSk7CiAgICAgIHJldHVybiBpc0xpdmUgJiYgaXNUb2RheTsKICAgIH0pLnRvTGlzdCgpOwoKICAgIHJldHVybiBEYXNoYm9hcmREYWlseVN1bW1hcnkoCiAgICAgIHRvdGFsU2FsZXM6CiAgICAgICAgICB0b2RheU9yZGVycy5mb2xkPGRvdWJsZT4oMCwgKHN1bSwgb3JkZXIpID0+IHN1bSArIG9yZGVyLnRvdGFsKSwKICAgICAgb3JkZXJzQ291bnQ6IHRvZGF5T3JkZXJzLmxlbmd0aCwKICAgICk7CiAgfQp9Cg==' | base64 --decode > lib/features/dashboard/presentation/dashboard_daily_summary.dart
+          echo 'aW1wb3J0ICdwYWNrYWdlOmZsdXR0ZXJfdGVzdC9mbHV0dGVyX3Rlc3QuZGFydCc7CmltcG9ydCAncGFja2FnZTp0YWplci9mZWF0dXJlcy9kYXNoYm9hcmQvcHJlc2VudGF0aW9uL2Rhc2hib2FyZF9kYWlseV9zdW1tYXJ5LmRhcnQnOwppbXBvcnQgJ3BhY2thZ2U6dGFqZXIvZmVhdHVyZXMvb3JkZXJzL2RvbWFpbi9vcmRlci5kYXJ0JzsKCkFwcE9yZGVyIG1ha2VPcmRlcih7CiAgcmVxdWlyZWQgU3RyaW5nIGlkLAogIHJlcXVpcmVkIGRvdWJsZSB0b3RhbCwKICByZXF1aXJlZCBEYXRlVGltZSBjcmVhdGVkQXQsCiAgU3RyaW5nIHN0YXR1cyA9ICdjb21wbGV0ZWQnLAp9KSB7CiAgcmV0dXJuIEFwcE9yZGVyKAogICAgaWQ6IGlkLAogICAgbWVyY2hhbnRJZDogJ20xJywKICAgIGJyYW5jaElkOiAnbWFpbicsCiAgICBjdXN0b21lcklkOiAnJywKICAgIGN1c3RvbWVyTmFtZTogJycsCiAgICB0b3RhbDogdG90YWwsCiAgICBzdGF0dXM6IHN0YXR1cywKICAgIGNyZWF0ZWRBdDogY3JlYXRlZEF0LAogICk7Cn0KCnZvaWQgbWFpbigpIHsKICB0ZXN0KCdkYXNoYm9hcmQgdG90YWxzIGluY2x1ZGUgb25seSBsaXZlIG9yZGVycyBmcm9tIHRoZSBsb2NhbCBjYWxlbmRhciBkYXknLCAoKSB7CiAgICBmaW5hbCBub3cgPSBEYXRlVGltZSgyMDI2LCA4LCAxMiwgMTQsIDMwKTsKCiAgICBmaW5hbCBzdW1tYXJ5ID0gRGFzaGJvYXJkRGFpbHlTdW1tYXJ5LmZyb21PcmRlcnMoCiAgICAgIFsKICAgICAgICBtYWtlT3JkZXIoCiAgICAgICAgICBpZDogJ3RvZGF5LTEnLAogICAgICAgICAgdG90YWw6IDEwMCwKICAgICAgICAgIGNyZWF0ZWRBdDogRGF0ZVRpbWUoMjAyNiwgOCwgMTIsIDAsIDApLAogICAgICAgICksCiAgICAgICAgbWFrZU9yZGVyKAogICAgICAgICAgaWQ6ICd0b2RheS0yJywKICAgICAgICAgIHRvdGFsOiA1MCwKICAgICAgICAgIGNyZWF0ZWRBdDogRGF0ZVRpbWUoMjAyNiwgOCwgMTIsIDIzLCA1OSwgNTkpLAogICAgICAgICksCiAgICAgICAgbWFrZU9yZGVyKAogICAgICAgICAgaWQ6ICd5ZXN0ZXJkYXknLAogICAgICAgICAgdG90YWw6IDk5OSwKICAgICAgICAgIGNyZWF0ZWRBdDogRGF0ZVRpbWUoMjAyNiwgOCwgMTEsIDIzLCA1OSwgNTkpLAogICAgICAgICksCiAgICAgICAgbWFrZU9yZGVyKAogICAgICAgICAgaWQ6ICd0b21vcnJvdycsCiAgICAgICAgICB0b3RhbDogOTk5LAogICAgICAgICAgY3JlYXRlZEF0OiBEYXRlVGltZSgyMDI2LCA4LCAxMywgMCwgMCksCiAgICAgICAgKSwKICAgICAgICBtYWtlT3JkZXIoCiAgICAgICAgICBpZDogJ2NhbmNlbGxlZCcsCiAgICAgICAgICB0b3RhbDogNDAwLAogICAgICAgICAgY3JlYXRlZEF0OiBEYXRlVGltZSgyMDI2LCA4LCAxMiwgMTIpLAogICAgICAgICAgc3RhdHVzOiAnY2FuY2VsbGVkJywKICAgICAgICApLAogICAgICAgIG1ha2VPcmRlcigKICAgICAgICAgIGlkOiAnZGVidC1yZXBheW1lbnQnLAogICAgICAgICAgdG90YWw6IDMwMCwKICAgICAgICAgIGNyZWF0ZWRBdDogRGF0ZVRpbWUoMjAyNiwgOCwgMTIsIDEzKSwKICAgICAgICAgIHN0YXR1czogJ2RlYnRfcmVwYXltZW50JywKICAgICAgICApLAogICAgICBdLAogICAgICBub3c6IG5vdywKICAgICk7CgogICAgZXhwZWN0KHN1bW1hcnkudG90YWxTYWxlcywgMTUwKTsKICAgIGV4cGVjdChzdW1tYXJ5Lm9yZGVyc0NvdW50LCAyKTsKICB9KTsKfQo=' | base64 --decode > test/dashboard_daily_summary_test.dart
+          echo 'ZnJvbSBwYXRobGliIGltcG9ydCBQYXRoCgpwYXRoID0gUGF0aCgnbGliL2ZlYXR1cmVzL2Rhc2hib2FyZC9wcmVzZW50YXRpb24vZGFzaGJvYXJkX3NjcmVlbi5kYXJ0JykKdGV4dCA9IHBhdGgucmVhZF90ZXh0KGVuY29kaW5nPSd1dGYtOCcpCgppbXBvcnRfYW5jaG9yID0gImltcG9ydCAnc2V0dXBfY2hlY2tsaXN0X2NhcmQuZGFydCc7XFxuIgpyZXBsYWNlbWVudF9pbXBvcnQgPSAiaW1wb3J0ICdzZXR1cF9jaGVja2xpc3RfY2FyZC5kYXJ0JztcXG5pbXBvcnQgJ2Rhc2hib2FyZF9kYWlseV9zdW1tYXJ5LmRhcnQnO1xcbiIKYXNzZXJ0IHRleHQuY291bnQoaW1wb3J0X2FuY2hvcikgPT0gMSwgdGV4dC5jb3VudChpbXBvcnRfYW5jaG9yKQp0ZXh0ID0gdGV4dC5yZXBsYWNlKGltcG9ydF9hbmNob3IsIHJlcGxhY2VtZW50X2ltcG9ydCwgMSkKCm9sZCA9ICIgICAgICAgICAgZmluYWwgbGl2ZU9yZGVycyA9IG9yZGVyc1xuICAgICAgICAgICAgICAud2hlcmUoKG9yZGVyKSA9PlxuICAgICAgICAgICAgICAgICAgb3JkZXIuc3RhdHVzICE9ICdjYW5jZWxsZWQnICYmXG4gICAgICAgICAgICAgICAgICBvcmRlci5zdGF0dXMgIT0gJ2RlYnRfcmVwYXltZW50JylcbiAgICAgICAgICAgICAgLnRvTGlzdCgpO1xuICAgICAgICAgIGZpbmFsIHRvdGFsU2FsZXMgPVxuICAgICAgICAgICAgICBsaXZlT3JkZXJzLmZvbGQ8ZG91YmxlPigwLCAoc3VtLCBvcmRlcikgPT4gc3VtICsgb3JkZXIudG90YWwpO1xuICAgICAgICAgIGZpbmFsIG9yZGVyc0NvdW50ID0gbGl2ZU9yZGVycy5sZW5ndGg7XG4iCm5ldyA9ICcgICAgICAgICAgZmluYWwgZGFpbHlTdW1tYXJ5ID0gRGFzaGJvYXJkRGFpbHlTdW1tYXJ5LmZyb21PcmRlcnMob3JkZXJzKTtcbiAgICAgICAgICBmaW5hbCB0b3RhbFNhbGVzID0gZGFpbHlTdW1tYXJ5LnRvdGFsU2FsZXM7XG4gICAgICAgICAgZmluYWwgb3JkZXJzQ291bnQgPSBkYWlseVN1bW1hcnkub3JkZXJzQ291bnQ7XG4nCmFzc2VydCB0ZXh0LmNvdW50KG9sZCkgPT0gMSwgdGV4dC5jb3VudChvbGQpCnRleHQgPSB0ZXh0LnJlcGxhY2Uob2xkLCBuZXcsIDEpCnBhdGgud3JpdGVfdGV4dCh0ZXh0LCBlbmNvZGluZz0ndXRmLTgnKQo=' | base64 --decode > /tmp/dashboard_patch.py
+
+      - name: Apply dashboard patch
+        run: python /tmp/dashboard_patch.py
+
+      - name: Format changed Dart files
+        run: dart format lib/features/dashboard/presentation/dashboard_screen.dart lib/features/dashboard/presentation/dashboard_daily_summary.dart test/dashboard_daily_summary_test.dart
+
+      - name: Analyze dashboard fix
+        run: flutter analyze lib/features/dashboard/presentation/dashboard_screen.dart lib/features/dashboard/presentation/dashboard_daily_summary.dart test/dashboard_daily_summary_test.dart --no-fatal-warnings --no-fatal-infos
+
+      - name: Dashboard daily totals regression test
+        run: flutter test test/dashboard_daily_summary_test.dart --reporter expanded
+
+      - name: Orders regression tests
+        shell: bash
+        run: |
+          flutter test test/branch_inventory_order_lifecycle_contract_test.dart --reporter expanded
+          flutter test test/pre_release_accounting_matrix_test.dart --reporter expanded
+
+      - name: Verify intended diff only
+        shell: bash
+        run: |
+          git status --short
+          python - <<'PY'
+          import subprocess
+          paths = {line[3:] for line in subprocess.check_output(['git','status','--porcelain'], text=True).splitlines()}
+          expected = {
+            'lib/features/dashboard/presentation/dashboard_screen.dart',
+            'lib/features/dashboard/presentation/dashboard_daily_summary.dart',
+            'test/dashboard_daily_summary_test.dart',
+          }
+          assert paths == expected, (paths, expected)
+          PY
+
+      - name: Commit verified dashboard fix
+        shell: bash
+        run: |
+          git config user.name "Tajer Audit Bot"
+          git config user.email "actions@github.com"
+          git add lib/features/dashboard/presentation/dashboard_screen.dart \
+                  lib/features/dashboard/presentation/dashboard_daily_summary.dart \
+                  test/dashboard_daily_summary_test.dart
+          git commit -m "fix(dashboard): scope sales and order count to today"
+          git push origin HEAD:audit/pre-google-play-414
