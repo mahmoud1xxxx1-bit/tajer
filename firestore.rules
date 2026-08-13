@@ -13,7 +13,7 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      return isAuthenticated() && request.auth.token.email == 'dotkxxx1@gmail.com';
+      return isAuthenticated() && 'email' in request.auth.token && request.auth.token.email == 'dotkxxx1@gmail.com';
     }
 
     // Basic access (read-only for employees usually, full access for merchants)
@@ -28,6 +28,85 @@ service cloud.firestore {
     function isOwner(merchantId) {
       let data = getUserData();
       return isAdmin() || (isAuthenticated() && data != null && data.get('isRevoked', false) == false && data.get('role', '') == 'merchant' && request.auth.uid == merchantId);
+    }
+    
+    function isStockSideEffectVerified(itemId, isRawMaterial) {
+      let orderId = request.resource.data.get('lastOrderId', '');
+      let orderAfter = orderId != '' ? getAfter(/databases/$(database)/documents/orders/$(orderId)) : null;
+      let expectedDelta = orderAfter != null ? (isRawMaterial ? orderAfter.data.get('rmQuantities', {}).get(itemId, 0) : orderAfter.data.get('itemQuantities', {}).get(itemId, 0)) : 0;
+      let orderBefore = orderId != '' ? get(/databases/$(database)/documents/orders/$(orderId)) : null;
+      let isCancelling = orderAfter != null && orderBefore != null && orderBefore.data.get('status', '') != 'cancelled' && orderAfter.data.get('status', '') == 'cancelled';
+      let isRestoring = orderAfter != null && orderBefore != null && orderBefore.data.get('status', '') == 'cancelled' && orderAfter.data.get('status', '') != 'cancelled';
+      let actualDelta = (orderBefore == null || isRestoring) 
+                        ? (resource.data.get('quantity', 0) - request.resource.data.get('quantity', 0)) 
+                        : (request.resource.data.get('quantity', 0) - resource.data.get('quantity', 0));
+                        
+      return orderAfter != null && (orderBefore == null || isCancelling || isRestoring) && actualDelta == expectedDelta;
+    }
+    
+    function isCustomerPaymentVerified(paymentId) {
+      let paymentAfter = paymentId != '' ? getAfter(/databases/$(database)/documents/merchants/$(request.resource.data.get('merchantId', ''))/payments/$(paymentId)) : null;
+      return paymentAfter != null && (resource.data.get('totalDebt', 0) - request.resource.data.get('totalDebt', 0)) == paymentAfter.data.get('amount', 0);
+    }
+    
+    function isCustomerOrderVerified(orderId) {
+      let orderAfter = orderId != '' ? getAfter(/databases/$(database)/documents/orders/$(orderId)) : null;
+      let debtIncrease = orderAfter != null && orderAfter.data.get('isCredit', false) ? (orderAfter.data.get('total', 0) - orderAfter.data.get('paidAmount', 0)) : 0;
+      let purchaseIncrease = orderAfter != null ? orderAfter.data.get('total', 0) : 0;
+      let orderBefore = orderId != '' ? get(/databases/$(database)/documents/orders/$(orderId)) : null;
+      
+      let isCancelling = orderAfter != null && orderBefore != null && orderBefore.data.get('status', '') != 'cancelled' && orderAfter.data.get('status', '') == 'cancelled';
+      let isRestoring = orderAfter != null && orderBefore != null && orderBefore.data.get('status', '') == 'cancelled' && orderAfter.data.get('status', '') != 'cancelled';
+      
+      let actualDebtDelta = (orderBefore == null || isRestoring) ? (request.resource.data.get('totalDebt', 0) - resource.data.get('totalDebt', 0)) : (resource.data.get('totalDebt', 0) - request.resource.data.get('totalDebt', 0));
+      let actualPurchaseDelta = (orderBefore == null || isRestoring) ? (request.resource.data.get('totalPurchases', 0) - resource.data.get('totalPurchases', 0)) : (resource.data.get('totalPurchases', 0) - request.resource.data.get('totalPurchases', 0));
+                        
+      return orderAfter != null && (orderBefore == null || isCancelling || isRestoring) && actualDebtDelta == debtIncrease && actualPurchaseDelta == purchaseIncrease;
+    }
+
+    function isFinancialCustomerUpdateVerified() {
+       let paymentId = request.resource.data.get('lastPaymentId', '');
+       let orderId = request.resource.data.get('lastOrderId', '');
+       return paymentId != '' ? isCustomerPaymentVerified(paymentId) : isCustomerOrderVerified(orderId);
+    }
+    
+    function isShiftPaymentVerified(paymentId) {
+       let paymentAfter = paymentId != '' ? getAfter(/databases/$(database)/documents/merchants/$(request.resource.data.get('merchantId', ''))/payments/$(paymentId)) : null;
+       let pAmount = paymentAfter != null ? paymentAfter.data.get('amount', 0) : 0;
+       let pMethod = paymentAfter != null ? paymentAfter.data.get('paymentMethod', 'cash') : 'cash';
+       
+       return paymentAfter != null &&
+              (request.resource.data.get('debtCollectionsCash', 0) - resource.data.get('debtCollectionsCash', 0)) == (pMethod == 'cash' ? pAmount : 0) &&
+              (request.resource.data.get('debtCollectionsCard', 0) - resource.data.get('debtCollectionsCard', 0)) == ((pMethod == 'card' || pMethod == 'mada' || pMethod == 'apple_pay') ? pAmount : 0) &&
+              (request.resource.data.get('debtCollectionsTransfer', 0) - resource.data.get('debtCollectionsTransfer', 0)) == (pMethod == 'transfer' ? pAmount : 0);
+    }
+    
+    function isShiftOrderVerified(orderId) {
+       let orderAfter = orderId != '' ? getAfter(/databases/$(database)/documents/orders/$(orderId)) : null;
+       let pMethod = orderAfter != null ? orderAfter.data.get('paymentMethod', 'cash') : 'cash';
+       let paid = orderAfter != null ? orderAfter.data.get('paidAmount', 0) : 0;
+       let oCashAmt = pMethod == 'cash' ? paid : (pMethod == 'split' ? orderAfter.data.get('splitCashAmount', 0) : 0);
+       let oCardAmt = (pMethod == 'card' || pMethod == 'mada' || pMethod == 'apple_pay') ? paid : (pMethod == 'split' ? orderAfter.data.get('splitNetworkAmount', 0) : 0);
+       let oTransferAmt = pMethod == 'transfer' ? paid : 0;
+       
+       let orderBefore = orderId != '' ? get(/databases/$(database)/documents/orders/$(orderId)) : null;
+       let isCancelling = orderAfter != null && orderBefore != null && orderBefore.data.get('status', '') != 'cancelled' && orderAfter.data.get('status', '') == 'cancelled';
+       let isRestoring = orderAfter != null && orderBefore != null && orderBefore.data.get('status', '') == 'cancelled' && orderAfter.data.get('status', '') != 'cancelled';
+       
+       return orderAfter != null && ((orderBefore == null || isRestoring) ? 
+                ((request.resource.data.get('cashSales', 0) - resource.data.get('cashSales', 0)) == oCashAmt &&
+                 (request.resource.data.get('cardTotal', 0) - resource.data.get('cardTotal', 0)) == oCardAmt &&
+                 (request.resource.data.get('transferTotal', 0) - resource.data.get('transferTotal', 0)) == oTransferAmt) : 
+                (isCancelling && 
+                 (request.resource.data.get('refundsCash', 0) - resource.data.get('refundsCash', 0)) == oCashAmt &&
+                 (request.resource.data.get('refundsCard', 0) - resource.data.get('refundsCard', 0)) == oCardAmt &&
+                 (request.resource.data.get('refundsTransfer', 0) - resource.data.get('refundsTransfer', 0)) == oTransferAmt));
+    }
+
+    function isShiftUpdateVerified() {
+       let paymentId = request.resource.data.get('lastPaymentId', '');
+       let orderId = request.resource.data.get('lastOrderId', '');
+       return paymentId != '' ? isShiftPaymentVerified(paymentId) : isShiftOrderVerified(orderId);
     }
     
     // Permission based access for employees
@@ -67,31 +146,41 @@ service cloud.firestore {
     match /products/{productId} {
       allow read: if resource == null || hasAccess(resource.data.get('merchantId', ''));
       allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_manage_products');
-      allow update: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_products') || hasPermission(resource.data.get('merchantId', ''), 'can_create_orders');
+      allow update: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_products') || (hasPermission(resource.data.get('merchantId', ''), 'can_create_orders') && isStockSideEffectVerified(productId, false));
       allow delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_products');
     }
     match /customers/{customerId} {
       allow read: if resource == null || hasAccess(resource.data.get('merchantId', ''));
-      allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_manage_customers') || hasPermission(request.resource.data.get('merchantId', ''), 'can_create_orders');
-      allow update: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_customers') || hasPermission(resource.data.get('merchantId', ''), 'can_create_orders');
+      allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_manage_customers');
+      allow update: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_customers') || ((hasPermission(resource.data.get('merchantId', ''), 'can_create_orders') || hasPermission(resource.data.get('merchantId', ''), 'can_receive_payments')) && isFinancialCustomerUpdateVerified());
       allow delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_customers');
     }
     match /orders/{orderId} {
       allow read: if resource == null || hasAccess(resource.data.get('merchantId', '')) || resource.data.get('creatorId', '') == request.auth.uid;
-      allow update: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_create_orders');
-      allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_create_orders');
+      allow update: if resource == null || (
+        hasPermission(resource.data.get('merchantId', ''), 'can_create_orders') && 
+        ((resource.data.get('status', '') != 'cancelled' && request.resource.data.get('status', '') == 'cancelled') || 
+         (resource.data.get('status', '') == 'cancelled' && request.resource.data.get('status', '') != 'cancelled') ? hasPermission(resource.data.get('merchantId', ''), 'can_cancel_orders') : true)
+      );
+      allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_create_orders') && 
+                       (request.resource.data.get('total', 0) > request.resource.data.get('paidAmount', 0) ? hasPermission(request.resource.data.get('merchantId', ''), 'can_sell_on_credit') : true);
       allow delete: if resource == null || isOwner(resource.data.get('merchantId', ''));
     }
     match /shifts/{shiftId} {
-      allow read, update: if resource == null || hasAccess(resource.data.get('merchantId', ''));
+      allow read: if resource == null || hasAccess(resource.data.get('merchantId', ''));
+      allow update: if resource == null || isOwner(resource.data.get('merchantId', '')) || 
+        (hasAccess(resource.data.get('merchantId', '')) && (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'endTime', 'actualCash', 'actualCard', 'actualTransfer', 'difference', 'notes', 'updatedAt', 'totalTax', 'lastOrderId', 'lastPaymentId']) ||
+          isShiftUpdateVerified()
+        ));
       allow delete: if resource == null || isOwner(resource.data.get('merchantId', ''));
       allow create: if hasAccess(request.resource.data.get('merchantId', ''));
     }
     match /raw_materials/{materialId} {
       allow read: if resource == null || hasAccess(resource.data.get('merchantId', ''));
-      allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_manage_products');
-      allow update: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_products') || hasPermission(resource.data.get('merchantId', ''), 'can_create_orders');
-      allow delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_products');
+      allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_manage_inventory');
+      allow update: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_inventory') || (hasPermission(resource.data.get('merchantId', ''), 'can_create_orders') && isStockSideEffectVerified(materialId, true));
+      allow delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_inventory');
     }
 
     // --- MERCHANT SUB-COLLECTIONS ---
@@ -123,6 +212,10 @@ service cloud.firestore {
       }
       match /employee_actions/{actionId} {
         allow read, write: if hasAccess(merchantId);
+      }
+      match /payments/{paymentId} {
+        allow read: if hasAccess(merchantId);
+        allow create: if hasPermission(merchantId, 'can_receive_payments');
       }
       match /{subcollection=**} {
         allow read, write: if hasAccess(merchantId);

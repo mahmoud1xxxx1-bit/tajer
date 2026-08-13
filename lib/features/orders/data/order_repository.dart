@@ -168,7 +168,10 @@ class OrderRepository {
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true)).catchError((_) => <String, dynamic>{});
     
-    final orderWithQueue = order.copyWith(queueNumber: nextQueueNumber);
+    final orderWithQueue = order.copyWith(
+      queueNumber: nextQueueNumber,
+      // Will be populated below
+    );
 
     // PRE-FETCH all needed products concurrently
     final productIds = order.items.map((i) => i.productId).where((id) => id.isNotEmpty).toSet().toList();
@@ -241,6 +244,7 @@ class OrderRepository {
       batch.update(productRef, {
         'quantity': FieldValue.increment(-deducted),
         'updatedAt': FieldValue.serverTimestamp(),
+        'lastOrderId': order.id,
       });
       
       final logRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
@@ -271,6 +275,7 @@ class OrderRepository {
         batch.update(rawMaterialRef, {
           'quantity': FieldValue.increment(-deducted),
           'updatedAt': FieldValue.serverTimestamp(),
+          'lastOrderId': order.id,
         });
         
         final rmLogRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
@@ -301,6 +306,7 @@ class OrderRepository {
           'orderCount': FieldValue.increment(1),
           'totalDebt': FieldValue.increment(debtIncrease),
           'lastPurchaseDate': FieldValue.serverTimestamp(),
+          'lastOrderId': order.id,
         });
       }
     }
@@ -321,6 +327,7 @@ class OrderRepository {
       }
 
       final updates = <String, dynamic>{
+        'lastOrderId': order.id,
         if (orderTax > 0) 'totalTax': FieldValue.increment(orderTax),
       };
 
@@ -339,14 +346,19 @@ class OrderRepository {
         }
       }
       
-      if (updates.isNotEmpty) {
+    if (updates.isNotEmpty) {
         batch.update(shiftRef, updates);
       }
     }
 
-    batch.set(orderRef, orderWithQueue.toJson());
+    final finalOrder = orderWithQueue.copyWith(
+      itemQuantities: productQtyToDeduct,
+      rmQuantities: rmQtyToDeduct,
+    );
+
+    batch.set(orderRef, finalOrder.toJson());
     await batch.commit();
-    return orderWithQueue;
+    return finalOrder;
   }
 
   Future<void> deleteOrder(AppOrder order) async {
@@ -603,6 +615,7 @@ class OrderRepository {
         batch.update(productRef, {
           'quantity': FieldValue.increment(added),
           'updatedAt': FieldValue.serverTimestamp(),
+          'lastOrderId': order.id,
         });
         
         final logRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
@@ -630,6 +643,7 @@ class OrderRepository {
         batch.update(rawMaterialRef, {
           'quantity': FieldValue.increment(added),
           'updatedAt': FieldValue.serverTimestamp(),
+          'lastOrderId': order.id,
         });
         
         final rmLogRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
@@ -660,6 +674,7 @@ class OrderRepository {
             'orderCount': FieldValue.increment(-1),
             'totalDebt': FieldValue.increment(-actualDecrease),
             'updatedAt': FieldValue.serverTimestamp(),
+            'lastOrderId': order.id,
           });
         }
       }
@@ -687,7 +702,9 @@ class OrderRepository {
             }
           }
 
-          final updates = <String, dynamic>{};
+          final updates = <String, dynamic>{
+            'lastOrderId': order.id,
+          };
           // TASK 8: Phantom Taxes - subtract tax from shift
           if (orderTax > 0) {
             updates['totalTax'] = FieldValue.increment(-orderTax);
@@ -764,6 +781,7 @@ class OrderRepository {
         batch.update(productRef, {
           'quantity': FieldValue.increment(-deducted),
           'updatedAt': FieldValue.serverTimestamp(),
+          'lastOrderId': order.id,
         });
         
         final logRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
@@ -791,6 +809,7 @@ class OrderRepository {
         batch.update(rawMaterialRef, {
           'quantity': FieldValue.increment(-deducted),
           'updatedAt': FieldValue.serverTimestamp(),
+          'lastOrderId': order.id,
         });
         
         final rmLogRef = _firestore.collection('merchants').doc(order.merchantId).collection('inventory_logs').doc();
@@ -818,6 +837,7 @@ class OrderRepository {
             'orderCount': FieldValue.increment(1),
             'totalDebt': FieldValue.increment(debtIncrease),
             'updatedAt': FieldValue.serverTimestamp(),
+            'lastOrderId': order.id,
           });
         }
       }
@@ -836,11 +856,13 @@ class OrderRepository {
   }) async {
     if (amountPaid <= 0) return;
 
-    // Concurrency Lock: Read current debt using a transaction
-    final canProceed = await _firestore.runTransaction<bool>((transaction) async {
+    final paymentId = _firestore.collection('merchants').doc(merchantId).collection('payments').doc().id;
+
+    // Concurrency Lock & execution in a single atomic transaction
+    await _firestore.runTransaction((transaction) async {
       final customerRef = _firestore.collection('customers').doc(customerId);
       final customerDoc = await transaction.get(customerRef);
-      if (!customerDoc.exists) return false;
+      if (!customerDoc.exists) return;
 
       final currentDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
       if (amountPaid > currentDebt) {
@@ -850,66 +872,66 @@ class OrderRepository {
       transaction.update(customerRef, {
         'totalDebt': FieldValue.increment(-amountPaid),
         'updatedAt': FieldValue.serverTimestamp(),
+        'lastPaymentId': paymentId,
       });
-      return true;
+
+      // Fetch unpaid credit orders to distribute the payment
+      final allCreditOrdersSnapshot = await _firestore
+          .collection('orders')
+          .where('merchantId', isEqualTo: merchantId)
+          .where('customerId', isEqualTo: customerId)
+          .where('isCredit', isEqualTo: true)
+          .get();
+          
+      var orders = allCreditOrdersSnapshot.docs
+          .map((d) {
+          final data = d.data();
+          data['id'] = d.id;
+          return AppOrder.fromJson(data);
+        })
+          .where((o) => o.status != 'cancelled' && (o.total - o.paidAmount) > 0)
+          .toList();
+      
+      orders.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+      double remainingToDistribute = amountPaid;
+      for (var order in orders) {
+        if (remainingToDistribute <= 0) break;
+        final unpaidForOrder = order.total - order.paidAmount;
+        if (unpaidForOrder > 0) {
+          final amountToApply = remainingToDistribute >= unpaidForOrder ? unpaidForOrder : remainingToDistribute;
+          transaction.update(_firestore.collection('orders').doc(order.id), {
+            'paidAmount': FieldValue.increment(amountToApply),
+          });
+          remainingToDistribute -= amountToApply;
+        }
+      }
+
+      final paymentRef = _firestore.collection('merchants').doc(merchantId).collection('payments').doc(paymentId);
+      transaction.set(paymentRef, {
+        'amount': amountPaid,
+        'merchantId': merchantId,
+        'customerId': customerId,
+        'shiftId': shiftId,
+        'createdAt': FieldValue.serverTimestamp(),
+        'paymentMethod': paymentMethod,
+      });
+
+      if (shiftId != null && shiftId.isNotEmpty) {
+        final shiftRef = _firestore.collection('shifts').doc(shiftId);
+        final shiftUpdates = <String, dynamic>{
+          'lastPaymentId': paymentId,
+        };
+        if (paymentMethod == 'cash') {
+          shiftUpdates['debtCollectionsCash'] = FieldValue.increment(amountPaid);
+        } else if (paymentMethod == 'card' || paymentMethod == 'mada' || paymentMethod == 'apple_pay') {
+          shiftUpdates['debtCollectionsCard'] = FieldValue.increment(amountPaid);
+        } else if (paymentMethod == 'transfer') {
+          shiftUpdates['debtCollectionsTransfer'] = FieldValue.increment(amountPaid);
+        }
+        transaction.update(shiftRef, shiftUpdates);
+      }
     });
-
-    if (!canProceed) return;
-
-    final batch = _firestore.batch();
-
-
-    // 2. Fetch all unpaid credit orders for this customer to distribute the payment
-    final allCreditOrdersSnapshot = await _firestore
-        .collection('orders')
-        .where('merchantId', isEqualTo: merchantId)
-        .where('customerId', isEqualTo: customerId)
-        .where('isCredit', isEqualTo: true)
-        .get();
-        
-    var orders = allCreditOrdersSnapshot.docs
-        .map((d) {
-        final data = d.data();
-        data['id'] = d.id;
-        return AppOrder.fromJson(data);
-      })
-        .where((o) => o.status != 'cancelled' && (o.total - o.paidAmount) > 0)
-        .toList();
-    
-    orders.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-
-    double remainingToDistribute = amountPaid;
-    for (var order in orders) {
-      if (remainingToDistribute <= 0) break;
-      final unpaidForOrder = order.total - order.paidAmount;
-      if (unpaidForOrder > 0) {
-        final amountToApply = remainingToDistribute >= unpaidForOrder ? unpaidForOrder : remainingToDistribute;
-        batch.update(_firestore.collection('orders').doc(order.id), {
-          'paidAmount': FieldValue.increment(amountToApply),
-        });
-        remainingToDistribute -= amountToApply;
-      }
-    }
-
-    // 3. Add to shift debt collections
-    if (shiftId != null && shiftId.isNotEmpty) {
-      final shiftRef = _firestore.collection('shifts').doc(shiftId);
-      if (paymentMethod == 'cash') {
-        batch.update(shiftRef, {
-          'debtCollectionsCash': FieldValue.increment(amountPaid),
-        });
-      } else if (paymentMethod == 'card' || paymentMethod == 'mada') {
-        batch.update(shiftRef, {
-          'debtCollectionsCard': FieldValue.increment(amountPaid),
-        });
-      } else if (paymentMethod == 'transfer') {
-        batch.update(shiftRef, {
-          'debtCollectionsTransfer': FieldValue.increment(amountPaid),
-        });
-      }
-    }
-
-    await batch.commit();
   }
 
   Future<int> getOrderCount(String merchantId) async {
