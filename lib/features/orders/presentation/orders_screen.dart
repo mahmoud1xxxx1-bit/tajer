@@ -17,101 +17,126 @@ import '../../../core/widgets/tax_dialog.dart';
 
 import '../../../core/theme/glass_card.dart';
 import '../../authentication/data/auth_repository.dart';
+import 'package:firebase_ui_firestore/firebase_ui_firestore.dart';
 
-class OrdersScreen extends ConsumerWidget {
+class OrdersScreen extends ConsumerStatefulWidget {
   const OrdersScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<OrdersScreen> createState() => _OrdersScreenState();
+}
+
+class _OrdersScreenState extends ConsumerState<OrdersScreen> {
+  String _searchQuery = '';
+  String _statusFilter = 'all'; // 'all', 'active', 'cancelled'
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final ordersAsyncValue = ref.watch(ordersStreamProvider);
     final currency = ref.watch(currencyProvider).code;
     final appUser = ref.watch(appUserProvider).value;
     final canCreateOrders = appUser?.hasPermission('can_create_orders') ?? false;
     final canCancelOrders = appUser?.hasPermission('can_cancel_orders') ?? false;
     final storeProfile = ref.watch(storeProfileProvider).value;
 
+    final repository = ref.watch(orderRepositoryProvider);
+    final isEmployee = appUser?.role == 'employee';
+    
+    var query = repository.queryOrders(
+      merchantId: appUser?.merchantId ?? appUser?.id ?? '',
+      searchQuery: _searchQuery,
+      limitToRecent: !appUser!.hasPermission('can_view_all_orders'),
+    );
+
+    if (_statusFilter == 'cancelled') {
+      query = query.where('status', isEqualTo: 'cancelled');
+    } else if (_statusFilter == 'active') {
+      query = query.where('status', isNotEqualTo: 'cancelled');
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.orders, style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(l10n.orders, style: const TextStyle(fontFamily: 'Tajawal')),
       ),
-      body: ordersAsyncValue.when(
-        data: (orders) {
-            if (orders.isEmpty) {
-              return Center(
-                child: Text(
-                  AppLocalizations.of(context)!.text86,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontFamily: 'Tajawal', fontSize: 16),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: 'بحث بالاسم أو رقم الفاتورة (5 أرقام)',
+                    labelStyle: const TextStyle(fontFamily: 'Tajawal'),
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                  ),
+                  onChanged: (val) {
+                    setState(() {
+                      _searchQuery = val.trim();
+                    });
+                  },
                 ),
-              );
-            }
-
-            final Map<String, List<AppOrder>> groupedOrders = {};
-            final now = DateTime.now();
-            final today = DateTime(now.year, now.month, now.day);
-            final yesterday = today.subtract(const Duration(days: 1));
-            final startOfWeek = today.subtract(Duration(days: today.weekday % 7));
-
-            for (var order in orders) {
-              final d = order.createdAt;
-              final orderDate = DateTime(d.year, d.month, d.day);
-              
-              String groupKey;
-              if (order.scheduledDate != null) {
-                groupKey = l10n.scheduledOrders;
-              } else if (orderDate == today) {
-                groupKey = l10n.todayPrefix + DateFormat('yyyy/MM/dd').format(orderDate);
-              } else if (orderDate == yesterday) {
-                groupKey = l10n.yesterdayPrefix + DateFormat('yyyy/MM/dd').format(orderDate);
-              } else if (orderDate.isAfter(startOfWeek.subtract(const Duration(days: 1)))) {
-                final endOfWeek = startOfWeek.add(const Duration(days: 6));
-                groupKey = l10n.thisWeekFromTo(DateFormat('MM/dd').format(startOfWeek), DateFormat('MM/dd').format(endOfWeek));
-              } else if (orderDate.isAfter(today.subtract(const Duration(days: 30)))) {
-                final diffDays = startOfWeek.difference(orderDate).inDays;
-                final weeksAgo = (diffDays / 7).floor() + 1;
-                final wStart = startOfWeek.subtract(Duration(days: weeksAgo * 7));
-                final wEnd = wStart.add(const Duration(days: 6));
-                groupKey = l10n.agoPrefix + weeksAgo.toString() + l10n.weekFromTo(DateFormat('MM/dd').format(wStart), DateFormat('MM/dd').format(wEnd));
-              } else if (orderDate.year == today.year) {
-                groupKey = l10n.monthPrefix + DateFormat('MMMM').format(orderDate);
-              } else {
-                groupKey = l10n.yearPrefix + DateFormat('yyyy').format(orderDate);
-              }
-              
-              groupedOrders.putIfAbsent(groupKey, () => []).add(order);
-            }
-            
-            final sortedKeys = groupedOrders.keys.toList()..sort();
-
-            return ListView.builder(
-              itemCount: sortedKeys.length,
-              padding: const EdgeInsets.all(16),
-              itemBuilder: (context, index) {
-                final key = sortedKeys[index];
-                final groupOrders = groupedOrders[key]!;
-                final totalRevenue = groupOrders.where((o) => o.status != 'cancelled').fold(0.0, (sum, o) => sum + o.total);
-                final displayName = key.substring(3);
-                
-                return GlassCard(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: EdgeInsets.zero,
-                  child: Theme(
-                    data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                    child: ExpansionTile(
-                      initiallyExpanded: index == 0,
-                      title: Text(
-                        displayName,
-                        style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16),
+                const SizedBox(height: 12),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      FilterChip(
+                        label: const Text('الكل', style: TextStyle(fontFamily: 'Tajawal')),
+                        selected: _statusFilter == 'all',
+                        onSelected: (val) {
+                          if (val) setState(() => _statusFilter = 'all');
+                        },
                       ),
-                      subtitle: Text(
-                        'إجمالي الدخل: ' + totalRevenue.toStringAsFixed(2) + ' ' + currency,
-                        style: TextStyle(color: Colors.green.shade700, fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+                      const SizedBox(width: 8),
+                      FilterChip(
+                        label: const Text('نشط', style: TextStyle(fontFamily: 'Tajawal')),
+                        selected: _statusFilter == 'active',
+                        selectedColor: Colors.blue.withValues(alpha: 0.2),
+                        checkmarkColor: Colors.blue,
+                        onSelected: (val) {
+                          if (val) setState(() => _statusFilter = 'active');
+                        },
                       ),
-                      childrenPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                      children: groupOrders.map<Widget>((order) {
+                      const SizedBox(width: 8),
+                      FilterChip(
+                        label: const Text('ملغى', style: TextStyle(fontFamily: 'Tajawal')),
+                        selected: _statusFilter == 'cancelled',
+                        selectedColor: Colors.red.withValues(alpha: 0.2),
+                        checkmarkColor: Colors.red,
+                        onSelected: (val) {
+                          if (val) setState(() => _statusFilter = 'cancelled');
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: appUser == null
+                ? const Center(child: CircularProgressIndicator())
+                : FirestoreListView<AppOrder>(
+                    query: query,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    emptyBuilder: (context) => Center(
+                      child: Text(
+                        AppLocalizations.of(context)!.text86,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16),
+                      ),
+                    ),
+                    errorBuilder: (context, error, stackTrace) => Center(
+                      child: Text('${l10n.error}: $error', style: const TextStyle(fontFamily: 'Tajawal')),
+                    ),
+                    itemBuilder: (context, doc) {
+                      final order = doc.data();
+
                       return GlassCard(
-                        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        margin: const EdgeInsets.only(bottom: 12),
                         padding: const EdgeInsets.all(0),
                         onTap: () {
                           Navigator.push(
@@ -122,11 +147,14 @@ class OrdersScreen extends ConsumerWidget {
                           );
                         },
                         child: Container(
-                          decoration: order.status == 'cancelled' ? BoxDecoration(
-                            color: Colors.red.withValues(alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.1),
-                            borderRadius: BorderRadius.circular(20.0),
-                            border: Border.all(color: Colors.red.withValues(alpha: 0.5), width: 1),
-                          ) : null,
+                          decoration: order.status == 'cancelled'
+                              ? BoxDecoration(
+                                  color: Colors.red.withValues(
+                                      alpha: Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.1),
+                                  borderRadius: BorderRadius.circular(20.0),
+                                  border: Border.all(color: Colors.red.withValues(alpha: 0.5), width: 1),
+                                )
+                              : null,
                           padding: const EdgeInsets.all(16.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,7 +168,8 @@ class OrdersScreen extends ConsumerWidget {
                                       color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: Icon(Icons.shopping_bag_outlined, color: Theme.of(context).colorScheme.primary, size: 24),
+                                    child: Icon(Icons.shopping_bag_outlined,
+                                        color: Theme.of(context).colorScheme.primary, size: 24),
                                   ),
                                   const SizedBox(width: 16),
                                   Expanded(
@@ -151,18 +180,23 @@ class OrdersScreen extends ConsumerWidget {
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
                                             Text(
-                                              l10n.orderNumberLabel(order.queueNumber?.toString() ?? (order.id.length >= 5 ? order.id.substring(0, 5).toUpperCase() : order.id.toUpperCase())),
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16),
+                                              l10n.orderNumberLabel(order.queueNumber?.toString() ??
+                                                  (order.id.length >= 5
+                                                      ? order.id.substring(0, 5).toUpperCase()
+                                                      : order.id.toUpperCase())),
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16),
                                             ),
                                             Text(
-                                              order.total.toString() + ' ' + currency,
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green),
+                                              '${order.total} $currency',
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green),
                                             ),
                                           ],
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          l10n.customer + ': ' + (order.customerName == 'walk_in' ? l10n.walkInCustomer : order.customerName),
+                                          '${l10n.customer}: ${order.customerName == 'walk_in' ? l10n.walkInCustomer : order.customerName}',
                                           style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey),
                                         ),
                                         const SizedBox(height: 4),
@@ -170,7 +204,7 @@ class OrdersScreen extends ConsumerWidget {
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
                                             Text(
-                                              l10n.quantity + ': ' + order.items.fold<int>(0, (sum, item) => sum + item.quantity).toString(),
+                                              '${l10n.quantity}: ${order.items.fold<int>(0, (sum, item) => sum + item.quantity)}',
                                               style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey),
                                             ),
                                             Text(
@@ -183,7 +217,8 @@ class OrdersScreen extends ConsumerWidget {
                                           const SizedBox(height: 8),
                                           Text(
                                             l10n.cancelled,
-                                            style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                                            style: const TextStyle(
+                                                color: Colors.red, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
                                           ),
                                         ],
                                         if (order.isCredit) ...[
@@ -195,8 +230,12 @@ class OrdersScreen extends ConsumerWidget {
                                               borderRadius: BorderRadius.circular(8),
                                             ),
                                             child: Text(
-                                              l10n.credit + l10n.paymentMethod + order.paidAmount.toString() + ' ' + currency + ')',
-                                              style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 12),
+                                              '${l10n.credit}${l10n.paymentMethod}${order.paidAmount} $currency)',
+                                              style: const TextStyle(
+                                                  color: Colors.orange,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontFamily: 'Tajawal',
+                                                  fontSize: 12),
                                             ),
                                           ),
                                         ],
@@ -209,8 +248,12 @@ class OrdersScreen extends ConsumerWidget {
                                               borderRadius: BorderRadius.circular(8),
                                             ),
                                             child: Text(
-                                              'موعد التسليم: ' + DateFormat('yyyy/MM/dd HH:mm').format(order.scheduledDate!),
-                                              style: const TextStyle(color: Colors.purple, fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 12),
+                                              'موعد التسليم: ${DateFormat('yyyy/MM/dd HH:mm').format(order.scheduledDate!)}',
+                                              style: const TextStyle(
+                                                  color: Colors.purple,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontFamily: 'Tajawal',
+                                                  fontSize: 12),
                                             ),
                                           ),
                                         ],
@@ -227,7 +270,11 @@ class OrdersScreen extends ConsumerWidget {
                                               ),
                                               child: Text(
                                                 _getPaymentMethodName(context, order.paymentMethod),
-                                                style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 12),
+                                                style: const TextStyle(
+                                                    color: Colors.blue,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontFamily: 'Tajawal',
+                                                    fontSize: 12),
                                               ),
                                             ),
                                             if (order.creatorName != null && order.creatorName!.isNotEmpty)
@@ -239,7 +286,11 @@ class OrdersScreen extends ConsumerWidget {
                                                 ),
                                                 child: Text(
                                                   l10n.byCreatorIcon(order.creatorName!),
-                                                  style: const TextStyle(color: Colors.teal, fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 12),
+                                                  style: const TextStyle(
+                                                      color: Colors.teal,
+                                                      fontWeight: FontWeight.bold,
+                                                      fontFamily: 'Tajawal',
+                                                      fontSize: 12),
                                                 ),
                                               ),
                                           ],
@@ -262,7 +313,8 @@ class OrdersScreen extends ConsumerWidget {
                                     children: [
                                       TextButton.icon(
                                         onPressed: () async {
-                                          bool needsTaxPrompt = order.items.any((item) => (item.taxPercentage == null || item.taxPercentage! <= 0));
+                                          bool needsTaxPrompt = order.items.any(
+                                              (item) => (item.taxPercentage == null || item.taxPercentage! <= 0));
                                           double? tax = storeProfile?.defaultTaxPercentage;
                                           bool isInclusive = storeProfile?.defaultIsTaxInclusive ?? false;
                                           if (needsTaxPrompt && (tax == null || tax <= 0)) {
@@ -276,12 +328,24 @@ class OrdersScreen extends ConsumerWidget {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (_) => PdfViewerScreen(order: order, currency: currency, taxPercentage: tax, defaultIsTaxInclusive: isInclusive),
+                                              builder: (_) => PdfViewerScreen(
+                                                  order: order,
+                                                  currency: currency,
+                                                  taxPercentage: tax,
+                                                  defaultIsTaxInclusive: isInclusive),
                                             ),
                                           );
                                         },
                                         icon: const Icon(Icons.picture_as_pdf, color: Colors.amber, size: 18),
-                                        label: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'فاتورة PDF' : 'PDF Invoice', style: const TextStyle(color: Colors.amber, fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
+                                        label: Text(
+                                            Localizations.localeOf(context).languageCode == 'ar'
+                                                ? 'فاتورة PDF'
+                                                : 'PDF Invoice',
+                                            style: const TextStyle(
+                                                color: Colors.amber,
+                                                fontFamily: 'Tajawal',
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 13)),
                                         style: TextButton.styleFrom(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                                           minimumSize: Size.zero,
@@ -290,7 +354,8 @@ class OrdersScreen extends ConsumerWidget {
                                       ),
                                       TextButton.icon(
                                         onPressed: () async {
-                                          bool needsTaxPrompt = order.items.any((item) => (item.taxPercentage == null || item.taxPercentage! <= 0));
+                                          bool needsTaxPrompt = order.items.any(
+                                              (item) => (item.taxPercentage == null || item.taxPercentage! <= 0));
                                           double? tax = storeProfile?.defaultTaxPercentage;
                                           bool isInclusive = storeProfile?.defaultIsTaxInclusive ?? false;
                                           if (needsTaxPrompt && (tax == null || tax <= 0)) {
@@ -302,17 +367,35 @@ class OrdersScreen extends ConsumerWidget {
                                           }
                                           try {
                                             bool isAr = Localizations.localeOf(context).languageCode == 'ar';
-                                            await PrinterService.printReceipt(order, currency, isKitchen: false, taxPercentage: tax, defaultIsTaxInclusive: isInclusive, isAr: isAr).timeout(const Duration(seconds: 5));
+                                            await PrinterService.printReceipt(order, currency,
+                                                    isKitchen: false,
+                                                    taxPercentage: tax,
+                                                    defaultIsTaxInclusive: isInclusive,
+                                                    isAr: isAr)
+                                                .timeout(const Duration(seconds: 5));
                                           } catch (_) {
                                             if (context.mounted) {
                                               ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'تعذر الاتصال بالطابعة الحرارية. تأكد من إعداد الطابعة بشكل صحيح.' : 'Unable to connect to printer.', style: const TextStyle(fontFamily: 'Tajawal'))),
+                                                SnackBar(
+                                                    content: Text(
+                                                        Localizations.localeOf(context).languageCode == 'ar'
+                                                            ? 'تعذر الاتصال بالطابعة الحرارية. تأكد من إعداد الطابعة بشكل صحيح.'
+                                                            : 'Unable to connect to printer.',
+                                                        style: const TextStyle(fontFamily: 'Tajawal'))),
                                               );
                                             }
                                           }
                                         },
                                         icon: const Icon(Icons.print_outlined, color: Colors.blueAccent, size: 18),
-                                        label: Text(Localizations.localeOf(context).languageCode == 'ar' ? 'طباعة حرارية' : 'Thermal Print', style: const TextStyle(color: Colors.blueAccent, fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
+                                        label: Text(
+                                            Localizations.localeOf(context).languageCode == 'ar'
+                                                ? 'طباعة حرارية'
+                                                : 'Thermal Print',
+                                            style: const TextStyle(
+                                                color: Colors.blueAccent,
+                                                fontFamily: 'Tajawal',
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 13)),
                                         style: TextButton.styleFrom(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                                           minimumSize: Size.zero,
@@ -329,19 +412,24 @@ class OrdersScreen extends ConsumerWidget {
                                           if (!context.mounted) return;
                                           final isAr = Localizations.localeOf(context).languageCode == 'ar';
                                           final success = await PinConfirmationDialog.requirePinOrSetup(
-                                            context, 
+                                            context,
                                             appUser,
                                             title: isAr ? 'تحذير: إلغاء الطلب' : 'Warning: Cancel Order',
-                                            warning: isAr 
-                                              ? 'تحذير: سيتم إلغاء الفاتورة وإرجاع كميات الأصناف للمخزون تلقائياً، وسيتم خصم المبلغ من كاش الوردية إذا كانت مدفوعة كاش.' 
-                                              : 'Warning: This will cancel the order, restore inventory, and deduct the amount from shift drawer if paid in cash.',
+                                            warning: isAr
+                                                ? 'تحذير: سيتم إلغاء الفاتورة وإرجاع كميات الأصناف للمخزون تلقائياً، وسيتم خصم المبلغ من كاش الوردية إذا كانت مدفوعة كاش.'
+                                                : 'Warning: This will cancel the order, restore inventory, and deduct the amount from shift drawer if paid in cash.',
                                           );
                                           if (!success) return;
                                         }
                                         ref.read(orderRepositoryProvider).updateOrderStatus(order, 'cancelled');
                                       },
                                       icon: const Icon(Icons.cancel_outlined, color: Colors.red, size: 18),
-                                      label: Text(l10n.cancel, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 13)),
+                                      label: Text(l10n.cancel,
+                                          style: const TextStyle(
+                                              color: Colors.red,
+                                              fontFamily: 'Tajawal',
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13)),
                                       style: TextButton.styleFrom(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                                         minimumSize: Size.zero,
@@ -354,69 +442,65 @@ class OrdersScreen extends ConsumerWidget {
                           ),
                         ),
                       );
-                      }).toList(),
-                    ),
+                    },
                   ),
-                );
-              },
-            );
-          },
-        loading: () => Center(child: CircularProgressIndicator()),
-
-        error: (e, st) => Center(
-          child: Text('${l10n.error}: $e', style: TextStyle(fontFamily: 'Tajawal')),
-        ),
+          ),
+        ],
       ),
-      floatingActionButton: canCreateOrders ? FloatingActionButton.extended(
-        heroTag: null,
-        onPressed: () async {
-          final canAdd = await GuestLimitService.canAddOrder(context, ref);
-          if (!canAdd) return;
+      floatingActionButton: canCreateOrders
+          ? FloatingActionButton.extended(
+              heroTag: null,
+              onPressed: () async {
+                final canAdd = await GuestLimitService.canAddOrder(context, ref);
+                if (!canAdd) return;
 
-          if (context.mounted) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const PosScreen()),
-            );
-          }
-        },
-        label: Text(l10n.posTitle, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-        icon: Icon(Icons.point_of_sale),
-      ) : null,
+                if (context.mounted) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const PosScreen()),
+                  );
+                }
+              },
+              label: Text(l10n.posTitle, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+              icon: const Icon(Icons.point_of_sale),
+            )
+          : null,
     );
+  }
+
+  String _getPaymentMethodName(BuildContext context, String? method) {
+    bool isAr = Localizations.localeOf(context).languageCode == 'ar';
+    switch (method) {
+      case 'cash':
+        return isAr ? 'كاش' : 'Cash';
+      case 'card':
+        return isAr ? 'بطاقة بنكية' : 'Card';
+      case 'mada':
+        return isAr ? 'مدى' : 'Mada';
+      case 'apple_pay':
+        return 'Apple Pay';
+      case 'transfer':
+        return isAr ? 'تحويل بنكي' : 'Bank Transfer';
+      case 'split':
+        return isAr ? 'دفع مقسم (كاش+شبكة)' : 'Split (Cash+Card)';
+      default:
+        return method;
+    }
   }
 
   Color _getStatusColor(String status) {
     switch (status) {
-      case 'processing': return Colors.blue;
-      case 'shipped': return Colors.orange;
-      case 'delivered': return Colors.green;
-      case 'cancelled': return Colors.red;
+      case 'processing':
+        return Colors.blue;
+      case 'shipped':
+        return Colors.orange;
+      case 'delivered':
+        return Colors.green;
+      case 'cancelled':
+        return Colors.red;
       case 'pending':
       default:
         return Colors.amber.shade700;
-    }
-  }
-
-  String _getStatusLabel(BuildContext context, String status) {
-    switch (status) {
-      case 'processing': return AppLocalizations.of(context)!.text95;
-      case 'shipped': return AppLocalizations.of(context)!.text96;
-      case 'delivered': return AppLocalizations.of(context)!.text97;
-      case 'cancelled': return AppLocalizations.of(context)!.text98;
-      case 'pending':
-      default:
-        return AppLocalizations.of(context)!.text99;
-    }
-  }
-
-  String _getPaymentMethodName(BuildContext context, String? method) {
-    switch (method) {
-      case 'cash': return AppLocalizations.of(context)!.cashMethod;
-      case 'mada': return AppLocalizations.of(context)!.madaMethod;
-      case 'transfer': return AppLocalizations.of(context)!.bankTransferMethod;
-      case 'apple_pay': return 'Apple Pay 🍏';
-      default: return AppLocalizations.of(context)!.cashMethod;
     }
   }
 }

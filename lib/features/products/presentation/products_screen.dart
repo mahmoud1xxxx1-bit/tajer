@@ -12,6 +12,8 @@ import '../../authentication/data/auth_repository.dart';
 import '../../../core/utils/date_formatter.dart';
 import '../../categories/data/category_repository.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_ui_firestore/firebase_ui_firestore.dart';
+import '../domain/product.dart';
 
 class ProductsScreen extends ConsumerWidget {
   const ProductsScreen({super.key});
@@ -19,14 +21,18 @@ class ProductsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final productsAsyncValue = ref.watch(productsStreamProvider);
     final currentCurrency = ref.watch(currencyProvider);
     final appUser = ref.watch(appUserProvider).value;
     final canManageProducts = appUser?.hasPermission('can_manage_products') ?? false;
 
+    final repository = ref.watch(productRepositoryProvider);
+    final query = appUser != null 
+        ? repository.queryProducts(appUser.merchantId ?? appUser.id)
+        : null;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.products, style: TextStyle(fontFamily: 'Tajawal')),
+        title: Text(l10n.products, style: const TextStyle(fontFamily: 'Tajawal')),
       ),
       body: Column(
         children: [
@@ -54,223 +60,220 @@ class ProductsScreen extends ConsumerWidget {
             ),
           ),
           Expanded(
-            child: productsAsyncValue.when(
-              data: (products) {
-                if (products.isEmpty) {
-                  final isAr = l10n.localeName == 'ar';
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.inventory_2_outlined, size: 80, color: Colors.indigo.withValues(alpha: 0.3)),
-                        const SizedBox(height: 16),
-                        Text(
-                          isAr ? "متجرك فارغ!" : "Your store is empty!",
-                          style: TextStyle(fontFamily: 'Tajawal', fontSize: 22, fontWeight: FontWeight.bold, color: Colors.indigo.shade900),
-                        ),
-                        const SizedBox(height: 8),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 32),
-                          child: Text(
-                            isAr 
-                                ? "لا يوجد منتجات بعد! أضف بضاعتك للرفوف لتبدأ البيع فوراً." 
-                                : "No products yet! Add your inventory to the shelves to start selling immediately.",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, color: Colors.grey.shade600, height: 1.5),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-                return ListView.builder(
-                  itemCount: products.length,
-                  padding: EdgeInsets.all(16),
-                  itemBuilder: (context, index) {
-                    final product = products[index];
-                    return GlassCard(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: EdgeInsets.zero,
-                onLongPress: canManageProducts ? () {
-                  showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    builder: (context) => Padding(
-                      padding: EdgeInsets.only(
-                        bottom: MediaQuery.of(context).viewInsets.bottom,
-                      ),
-                      child: AddProductDialog(productToEdit: product),
-                    ),
-                  );
-                } : null,
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(Icons.inventory_2_rounded, color: Theme.of(context).colorScheme.primary, size: 28),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
+            child: query == null
+                ? const Center(child: CircularProgressIndicator())
+                : FirestoreListView<Product>(
+                    query: query,
+                    padding: const EdgeInsets.all(16),
+                    emptyBuilder: (context) {
+                      final isAr = l10n.localeName == 'ar';
+                      return Center(
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            Icon(Icons.inventory_2_outlined, size: 80, color: Colors.indigo.withValues(alpha: 0.3)),
+                            const SizedBox(height: 16),
                             Text(
-                              product.name,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                              isAr ? "متجرك فارغ!" : "Your store is empty!",
+                              style: TextStyle(fontFamily: 'Tajawal', fontSize: 22, fontWeight: FontWeight.bold, color: Colors.indigo.shade900),
                             ),
                             const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 12,
-                              runSpacing: 4,
-                              children: [
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Icons.inventory,
-                                      size: 14,
-                                      color: (!product.isManufacturedOnDemand && product.quantity <= 5) ? Colors.red : Colors.grey[600],
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      product.isManufacturedOnDemand ? 'يُصنع عند الطلب' : '${l10n.quantity}: ${product.quantity}',
-                                      style: TextStyle(
-                                        fontFamily: 'Tajawal',
-                                        color: (!product.isManufacturedOnDemand && product.quantity <= 5) ? Colors.red : Colors.grey[700],
-                                        fontWeight: (!product.isManufacturedOnDemand && product.quantity <= 5) ? FontWeight.bold : FontWeight.normal,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                    if (!product.isManufacturedOnDemand && product.quantity <= 5) ...[
-                                      const SizedBox(width: 4),
-                                      const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 14),
-                                    ],
-                                  ],
-                                ),
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(Icons.calendar_today_outlined, size: 14, color: Colors.teal),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      AppDateFormatter.format(product.createdAt),
-                                      style: const TextStyle(fontFamily: 'Tajawal', color: Colors.teal, fontSize: 12, fontWeight: FontWeight.bold),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 32),
+                              child: Text(
+                                isAr 
+                                    ? "لا يوجد منتجات بعد! أضف بضاعتك للرفوف لتبدأ البيع فوراً." 
+                                    : "No products yet! Add your inventory to the shelves to start selling immediately.",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, color: Colors.grey.shade600, height: 1.5),
+                              ),
                             ),
                           ],
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              '${product.price} ${currentCurrency.code}',
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.secondary,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) => Center(
+                      child: Text('${l10n.error}: $error', style: const TextStyle(fontFamily: 'Tajawal')),
+                    ),
+                    itemBuilder: (context, doc) {
+                      final product = doc.data();
+                      return GlassCard(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: EdgeInsets.zero,
+                        onLongPress: canManageProducts ? () {
+                          showModalBottomSheet(
+                            context: context,
+                            isScrollControlled: true,
+                            builder: (context) => Padding(
+                              padding: EdgeInsets.only(
+                                bottom: MediaQuery.of(context).viewInsets.bottom,
                               ),
+                              child: AddProductDialog(productToEdit: product),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          if (canManageProducts)
-                          PopupMenuButton<String>(
-                            icon: const Icon(Icons.more_vert, color: Colors.grey),
-                            padding: EdgeInsets.zero,
-                            onSelected: (value) async {
-                              if (value == 'edit') {
-                                showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  builder: (context) => Padding(
-                                    padding: EdgeInsets.only(
-                                      bottom: MediaQuery.of(context).viewInsets.bottom,
+                          );
+                        } : null,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(Icons.inventory_2_rounded, color: Theme.of(context).colorScheme.primary, size: 28),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      product.name,
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    child: AddProductDialog(productToEdit: product),
-                                  ),
-                                );
-                              } else if (value == 'delete') {
-                                final appUser = ref.read(appUserProvider).value;
-                                final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-                                if (appUser != null) {
-                                  final success = await PinConfirmationDialog.requirePinOrSetup(
-                                    context,
-                                    appUser,
-                                    title: isArabic ? 'تأكيد الحذف' : 'Confirm Deletion',
-                                    warning: isArabic 
-                                      ? 'حذف هذا المنتج سيمنعك من مسح أو إلغاء أي فاتورة سابقة تحتوي عليه.\nإذا كان المنتج مربوطاً بمواد خام، يجب عليك حذف مواده الخام أولاً.\nهل أنت متأكد من الحذف؟'
-                                      : 'Deleting prevents cancelling past invoices. If linked to raw materials, delete them first. Proceed?',
-                                  );
-                                  if (!success) return;
-                                }
-                                ref.read(productRepositoryProvider).deleteProduct(product.id);
-                                ActivityLogger.log(
-                                  user: appUser,
-                                  actionType: 'Archive Product|أرشفة منتج',
-                                  description: 'Archived product "${product.name}"|تم أرشفة وإخفاء المنتج "${product.name}"',
-                                );
-                              }
-                            },
-                            itemBuilder: (context) => [
-                              PopupMenuItem(
-                                value: 'edit',
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.edit, size: 20, color: Colors.blue),
-                                    const SizedBox(width: 8),
-                                    Text(l10n.edit, style: const TextStyle(fontFamily: 'Tajawal')),
+                                    const SizedBox(height: 8),
+                                    Wrap(
+                                      spacing: 12,
+                                      runSpacing: 4,
+                                      children: [
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              Icons.inventory,
+                                              size: 14,
+                                              color: (!product.isManufacturedOnDemand && product.quantity <= 5) ? Colors.red : Colors.grey[600],
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              product.isManufacturedOnDemand ? 'يُصنع عند الطلب' : '${l10n.quantity}: ${product.quantity}',
+                                              style: TextStyle(
+                                                fontFamily: 'Tajawal',
+                                                color: (!product.isManufacturedOnDemand && product.quantity <= 5) ? Colors.red : Colors.grey[700],
+                                                fontWeight: (!product.isManufacturedOnDemand && product.quantity <= 5) ? FontWeight.bold : FontWeight.normal,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                            if (!product.isManufacturedOnDemand && product.quantity <= 5) ...[
+                                              const SizedBox(width: 4),
+                                              const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 14),
+                                            ],
+                                          ],
+                                        ),
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.calendar_today_outlined, size: 14, color: Colors.teal),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              AppDateFormatter.format(product.createdAt),
+                                              style: const TextStyle(fontFamily: 'Tajawal', color: Colors.teal, fontSize: 12, fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ],
                                 ),
                               ),
-                              PopupMenuItem(
-                                value: 'delete',
-                                child: Row(
-                                  children: [
-                                    const Icon(Icons.delete, color: Colors.red, size: 20),
-                                    const SizedBox(width: 8),
-                                    Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
-                                  ],
-                                ),
+                              const SizedBox(width: 8),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Text(
+                                      '${product.price} ${currentCurrency.code}',
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.secondary,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  if (canManageProducts)
+                                  PopupMenuButton<String>(
+                                    icon: const Icon(Icons.more_vert, color: Colors.grey),
+                                    padding: EdgeInsets.zero,
+                                    onSelected: (value) async {
+                                      if (value == 'edit') {
+                                        showModalBottomSheet(
+                                          context: context,
+                                          isScrollControlled: true,
+                                          builder: (context) => Padding(
+                                            padding: EdgeInsets.only(
+                                              bottom: MediaQuery.of(context).viewInsets.bottom,
+                                            ),
+                                            child: AddProductDialog(productToEdit: product),
+                                          ),
+                                        );
+                                      } else if (value == 'delete') {
+                                        final appUser = ref.read(appUserProvider).value;
+                                        final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+                                        if (appUser != null) {
+                                          final success = await PinConfirmationDialog.requirePinOrSetup(
+                                            context,
+                                            appUser,
+                                            title: isArabic ? 'تأكيد الحذف' : 'Confirm Deletion',
+                                            warning: isArabic 
+                                              ? 'حذف هذا المنتج سيمنعك من مسح أو إلغاء أي فاتورة سابقة تحتوي عليه.\nإذا كان المنتج مربوطاً بمواد خام، يجب عليك حذف مواده الخام أولاً.\nهل أنت متأكد من الحذف؟'
+                                              : 'Deleting prevents cancelling past invoices. If linked to raw materials, delete them first. Proceed?',
+                                          );
+                                          if (!success) return;
+                                        }
+                                        ref.read(productRepositoryProvider).deleteProduct(product.id);
+                                        ActivityLogger.log(
+                                          user: appUser,
+                                          actionType: 'Archive Product|أرشفة منتج',
+                                          description: 'Archived product "${product.name}"|تم أرشفة وإخفاء المنتج "${product.name}"',
+                                        );
+                                      }
+                                    },
+                                    itemBuilder: (context) => [
+                                      PopupMenuItem(
+                                        value: 'edit',
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.edit, size: 20, color: Colors.blue),
+                                            const SizedBox(width: 8),
+                                            Text(l10n.edit, style: const TextStyle(fontFamily: 'Tajawal')),
+                                          ],
+                                        ),
+                                      ),
+                                      PopupMenuItem(
+                                        value: 'delete',
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.delete, color: Colors.red, size: 20),
+                                            const SizedBox(width: 8),
+                                            Text(l10n.delete, style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ],
+                        ),
+                      );
+                    },
                   ),
-                ),
-              );
-            },
-          );
-        },
-        loading: () => Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(
-          child: Text('${l10n.error}: $e', style: TextStyle(fontFamily: 'Tajawal')),
-        ),
+          ),
+        ],
       ),
-    ),
-  ],
-),
-floatingActionButton: canManageProducts ? FloatingActionButton.extended(
+      floatingActionButton: canManageProducts ? FloatingActionButton.extended(
         heroTag: null,
         onPressed: () async {
           final categories = ref.read(categoriesStreamProvider).value;
@@ -332,10 +335,9 @@ floatingActionButton: canManageProducts ? FloatingActionButton.extended(
             );
           }
         },
-        label: Text(l10n.add, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-        icon: Icon(Icons.add),
+        label: Text(l10n.add, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        icon: const Icon(Icons.add),
       ) : null,
     );
   }
 }
-

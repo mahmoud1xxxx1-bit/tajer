@@ -14,6 +14,8 @@ class ProductRepository {
     return _firestore
         .collection('products')
         .where('merchantId', isEqualTo: merchantId)
+        .where('isArchived', isEqualTo: false)
+        .orderBy('name')
         .withConverter(
           fromFirestore: (snapshot, _) {
             final data = snapshot.data()!;

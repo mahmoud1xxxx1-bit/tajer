@@ -12,6 +12,55 @@ class SupplierRepository {
   CollectionReference<Map<String, dynamic>> get _suppliersRef =>
       _firestore.collection('merchants').doc(_merchantId).collection('suppliers');
 
+  Query<Supplier> querySuppliers({
+    String? searchQuery,
+    String? folderName,
+    bool? hasDebt,
+    String sortBy = 'newest', // newest, alpha, debt
+  }) {
+    Query<Map<String, dynamic>> query = _suppliersRef;
+
+    if (folderName != null && folderName.isNotEmpty && folderName != 'موردين عامون' && folderName != 'General Suppliers') {
+      query = query.where('folderName', isEqualTo: folderName);
+    }
+    
+    if (searchQuery != null && searchQuery.isNotEmpty) {
+      query = query
+          .where('name', isGreaterThanOrEqualTo: searchQuery)
+          .where('name', isLessThan: searchQuery + '\uf8ff')
+          .orderBy('name');
+    } else {
+      if (hasDebt == true) {
+        query = query.where('totalDebt', isGreaterThan: 0);
+        query = query.orderBy('totalDebt', descending: true);
+      } else {
+        if (sortBy == 'debt') {
+          query = query.orderBy('totalDebt', descending: true);
+        } else if (sortBy == 'alpha') {
+          query = query.orderBy('name', descending: false);
+        } else {
+          query = query.orderBy('createdAt', descending: true);
+        }
+      }
+    }
+
+    return query.withConverter(
+      fromFirestore: (snapshot, _) {
+        final data = snapshot.data()!;
+        data['id'] = snapshot.id;
+        data['merchantId'] = data['merchantId']?.toString() ?? '';
+        data['name'] = data['name']?.toString() ?? '';
+        data['phone'] = data['phone']?.toString() ?? '';
+        data['totalDebt'] = (data['totalDebt'] ?? 0.0).toDouble();
+        if (data['createdAt'] == null) {
+          data['createdAt'] = Timestamp.now();
+        }
+        return Supplier.fromJson(data);
+      },
+      toFirestore: (supplier, _) => supplier.toJson(),
+    );
+  }
+
   Stream<List<Supplier>> watchSuppliers() {
     return _suppliersRef.withConverter(
       fromFirestore: (snapshot, _) {
@@ -27,7 +76,7 @@ class SupplierRepository {
         return Supplier.fromJson(data);
       },
       toFirestore: (supplier, _) => supplier.toJson(),
-    ).orderBy('createdAt', descending: true).snapshots().map((snapshot) {
+    ).orderBy('createdAt', descending: true).limit(1000).snapshots().map((snapshot) {
       return snapshot.docs.map((doc) => doc.data()).toList();
     });
   }

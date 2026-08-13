@@ -11,11 +11,24 @@ class RawMaterialRepository {
     return _firestore
         .collection('raw_materials')
         .where('merchantId', isEqualTo: merchantId)
+        .limit(1000)
         .snapshots()
         .map((snapshot) {
       final items = snapshot.docs.map((doc) => RawMaterial.fromJson(doc.data())).toList();
       return items.where((item) => !item.isArchived).toList();
     });
+  }
+
+  Query<RawMaterial> queryRawMaterials(String merchantId) {
+    return _firestore
+        .collection('raw_materials')
+        .where('merchantId', isEqualTo: merchantId)
+        .where('isArchived', isEqualTo: false)
+        .orderBy('name')
+        .withConverter<RawMaterial>(
+          fromFirestore: (snapshot, _) => RawMaterial.fromJson(snapshot.data()!),
+          toFirestore: (rawMaterial, _) => rawMaterial.toJson(),
+        );
   }
 
   Future<void> addRawMaterial(RawMaterial rawMaterial) async {

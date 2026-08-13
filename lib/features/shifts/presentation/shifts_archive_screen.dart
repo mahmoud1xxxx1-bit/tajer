@@ -5,6 +5,8 @@ import '../data/shift_repository.dart';
 import '../domain/shift.dart';
 import '../../../core/theme/glass_card.dart';
 import 'shift_details_screen.dart';
+import '../../authentication/data/auth_repository.dart';
+import 'package:firebase_ui_firestore/firebase_ui_firestore.dart';
 
 class ShiftsArchiveScreen extends ConsumerWidget {
   const ShiftsArchiveScreen({super.key});
@@ -12,38 +14,36 @@ class ShiftsArchiveScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
-    final shiftsAsync = ref.watch(shiftsStreamProvider);
+    final appUser = ref.watch(appUserProvider).value;
+    
+    final repository = ref.watch(shiftRepositoryProvider);
+    final query = appUser != null 
+        ? repository.queryClosedShifts(appUser.merchantId ?? appUser.id)
+        : null;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(isAr ? 'أرشيف الورديات' : 'Shifts Archive', style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
       ),
-      body: shiftsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Error: $error')),
-        data: (shifts) {
-          final closedShifts = shifts.where((s) => s.status == 'closed').toList();
-          closedShifts.sort((a, b) => (b.endTime ?? b.startTime).compareTo(a.endTime ?? a.startTime));
-
-          if (closedShifts.isEmpty) {
-            return Center(
-              child: Text(
-                isAr ? 'لا توجد ورديات مغلقة بعد' : 'No closed shifts yet',
-                style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, color: Colors.grey),
+      body: query == null
+          ? const Center(child: CircularProgressIndicator())
+          : FirestoreListView<Shift>(
+              query: query,
+              padding: const EdgeInsets.all(16),
+              emptyBuilder: (context) => Center(
+                child: Text(
+                  isAr ? 'لا توجد ورديات مغلقة بعد' : 'No closed shifts yet',
+                  style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, color: Colors.grey),
+                ),
               ),
-            );
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: closedShifts.length,
-            itemBuilder: (context, index) {
-              final shift = closedShifts[index];
-              return _buildShiftCard(context, shift, isAr);
-            },
-          );
-        },
-      ),
+              errorBuilder: (context, error, stackTrace) => Center(
+                child: Text('خطأ: $error', style: const TextStyle(fontFamily: 'Tajawal')),
+              ),
+              itemBuilder: (context, doc) {
+                final shift = doc.data();
+                return _buildShiftCard(context, shift, isAr);
+              },
+            ),
     );
   }
 

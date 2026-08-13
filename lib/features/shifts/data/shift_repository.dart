@@ -72,6 +72,28 @@ class ShiftRepository {
     closedShifts.sort((a, b) => (b.endTime ?? DateTime.now()).compareTo(a.endTime ?? DateTime.now()));
     return closedShifts;
   }
+  Query<Shift> queryShifts(String merchantId) {
+    return _firestore
+        .collection('shifts')
+        .where('merchantId', isEqualTo: merchantId)
+        .orderBy('startTime', descending: true)
+        .withConverter<Shift>(
+          fromFirestore: (snapshot, _) => Shift.fromJson(snapshot.data()!),
+          toFirestore: (shift, _) => shift.toJson(),
+        );
+  }
+
+  Query<Shift> queryClosedShifts(String merchantId) {
+    return _firestore
+        .collection('shifts')
+        .where('merchantId', isEqualTo: merchantId)
+        .where('status', isEqualTo: 'closed')
+        .orderBy('endTime', descending: true)
+        .withConverter<Shift>(
+          fromFirestore: (snapshot, _) => Shift.fromJson(snapshot.data()!),
+          toFirestore: (shift, _) => shift.toJson(),
+        );
+  }
 }
 
 @riverpod
@@ -94,10 +116,10 @@ Stream<List<Shift>> shiftsStream(ShiftsStreamRef ref) {
   return repository._firestore
       .collection('shifts')
       .where('merchantId', isEqualTo: appUser.merchantId ?? appUser.id)
+      .orderBy('startTime', descending: true)
+      .limit(100)
       .snapshots()
       .map((snapshot) {
-        var shifts = snapshot.docs.map((doc) => Shift.fromJson(doc.data())).toList();
-        shifts.sort((a, b) => b.startTime.compareTo(a.startTime));
-        return shifts.take(100).toList();
+        return snapshot.docs.map((doc) => Shift.fromJson(doc.data())).toList();
       });
 }

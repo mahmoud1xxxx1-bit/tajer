@@ -14,6 +14,35 @@ class InventoryLogRepository {
   CollectionReference<Map<String, dynamic>> get _logsRef =>
       _firestore.collection('merchants').doc(_merchantId).collection('inventory_logs');
 
+  Query<InventoryLog> queryLogs() {
+    return _logsRef
+        .withConverter<InventoryLog?>(
+          fromFirestore: (snapshot, _) {
+            try {
+              final data = Map<String, dynamic>.from(snapshot.data() ?? {});
+              data['id'] = snapshot.id;
+              data['productId'] = data['productId']?.toString() ?? '';
+              data['productName'] = data['productName']?.toString() ?? '';
+              data['reason'] = data['reason']?.toString() ?? '';
+              data['merchantId'] = data['merchantId']?.toString() ?? '';
+              data['changeQuantity'] = double.tryParse(data['changeQuantity']?.toString() ?? '0') ?? 0.0;
+              data['previousQuantity'] = double.tryParse(data['previousQuantity']?.toString() ?? '0') ?? 0.0;
+              data['newQuantity'] = double.tryParse(data['newQuantity']?.toString() ?? '0') ?? 0.0;
+              if (data['date'] == null) data['date'] = Timestamp.now();
+              return InventoryLog.fromJson(data);
+            } catch (e) {
+              debugPrint('Error parsing InventoryLog ${snapshot.id}: $e');
+              return null;
+            }
+          },
+          toFirestore: (log, _) => log?.toJson() ?? {},
+        )
+        .orderBy('date', descending: true)
+        // Note: FirestoreListView cannot easily filter out specific document IDs (like 'store_profile_doc') natively without breaking limit.
+        // We will just return null for them and handle nulls in the builder.
+        .where('date', isLessThanOrEqualTo: Timestamp.now()) as Query<InventoryLog>;
+  }
+
   Stream<List<InventoryLog>> watchLogs() {
     return _logsRef.withConverter<InventoryLog?>(
       fromFirestore: (snapshot, _) {
@@ -35,7 +64,7 @@ class InventoryLogRepository {
         }
       },
       toFirestore: (log, _) => log?.toJson() ?? {},
-    ).orderBy('date', descending: true).snapshots().map((snapshot) {
+    ).orderBy('date', descending: true).limit(1000).snapshots().map((snapshot) {
       return snapshot.docs
           .where((doc) => doc.id != 'store_profile_doc' && !doc.id.startsWith('counter_') && !doc.id.startsWith('act_'))
           .map((doc) => doc.data())

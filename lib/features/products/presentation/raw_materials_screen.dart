@@ -10,6 +10,7 @@ import '../../authentication/data/auth_repository.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
 
 import '../../../../../../../../core/theme/glass_card.dart';
+import 'package:firebase_ui_firestore/firebase_ui_firestore.dart';
 
 class RawMaterialsScreen extends ConsumerStatefulWidget {
   const RawMaterialsScreen({super.key});
@@ -58,7 +59,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                 children: [
                   Text(
                     l10n.rawMaterialsUsageHint,
-                    style: TextStyle(
+                    style: const TextStyle(
                         fontFamily: 'Tajawal',
                         fontSize: 12,
                         color: Colors.amber),
@@ -97,7 +98,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(l10n.measuringUnit,
-                      style: TextStyle(
+                      style: const TextStyle(
                           fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
@@ -111,17 +112,17 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                       DropdownMenuItem(
                           value: 'g',
                           child: Text(l10n.gUnitDesc,
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontFamily: 'Tajawal', fontSize: 13))),
                       DropdownMenuItem(
                           value: 'ml',
                           child: Text(l10n.mlUnitDesc,
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontFamily: 'Tajawal', fontSize: 13))),
                       DropdownMenuItem(
                           value: 'piece',
                           child: Text(l10n.pieceUnitDesc,
-                              style: TextStyle(
+                              style: const TextStyle(
                                   fontFamily: 'Tajawal', fontSize: 13))),
                     ],
                     onChanged: isLoading
@@ -158,7 +159,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                   isLoading
                       ? (isAr ? 'جاري الحفظ...' : 'Saving...')
                       : l10n.saveInWarehouse,
-                  style: TextStyle(
+                  style: const TextStyle(
                       fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.amber,
@@ -177,7 +178,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                       if (name.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                             content: Text(l10n.pleaseEnterRawMaterialName,
-                                style: TextStyle(fontFamily: 'Tajawal'))));
+                                style: const TextStyle(fontFamily: 'Tajawal'))));
                         return;
                       }
 
@@ -284,13 +285,13 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
 
     if (merchantId == null) return const Scaffold();
 
-    final materialsAsync = ref.watch(rawMaterialsStreamProvider(merchantId));
+    final query = ref.watch(rawMaterialRepositoryProvider).queryRawMaterials(merchantId);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.rawMaterialsWarehouse,
             style:
-                TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+                const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
       ),
       floatingActionButton: canManageInventory
           ? FloatingActionButton.extended(
@@ -298,7 +299,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
               onPressed: () => _showAddEditDialog(),
               icon: const Icon(Icons.add),
               label: Text(l10n.addRawMaterial,
-                  style: TextStyle(
+                  style: const TextStyle(
                       fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
               backgroundColor: Colors.amber,
               foregroundColor: Colors.black,
@@ -336,119 +337,115 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
             ),
           ),
           Expanded(
-            child: materialsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Center(child: Text('Error: $err')),
-              data: (materials) {
-                if (materials.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+            child: FirestoreListView<RawMaterial>(
+              query: query,
+              padding: const EdgeInsets.only(bottom: 80),
+              emptyBuilder: (context) => Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.inventory_2_outlined,
+                        size: 64, color: Colors.grey.shade600),
+                    const SizedBox(height: 16),
+                    Text(l10n.noRawMaterialsFound,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontSize: 16,
+                            color: Colors.grey)),
+                  ],
+                ),
+              ),
+              errorBuilder: (context, error, stackTrace) => Center(
+                child: Text('Error: $error', style: const TextStyle(fontFamily: 'Tajawal')),
+              ),
+              itemBuilder: (ctx, doc) {
+                final item = doc.data();
+                String unitLabel = item.unit == 'g'
+                    ? l10n.gLabel
+                    : item.unit == 'ml'
+                        ? l10n.mlLabel
+                        : l10n.pieceUnit;
+                bool isLowStock = item.initialQuantity > 0 &&
+                    item.quantity <= (item.initialQuantity * 0.10);
+                return GlassCard(
+                  margin: const EdgeInsets.symmetric(
+                      horizontal: 12, vertical: 6),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: isLowStock
+                          ? Colors.red.withValues(alpha: 0.2)
+                          : Colors.amber.withValues(alpha: 0.2),
+                      child: Icon(
+                          isLowStock
+                              ? Icons.warning_amber_rounded
+                              : Icons.inventory,
+                          color: isLowStock ? Colors.red : Colors.amber),
+                    ),
+                    title: Text(item.name,
+                        style: const TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16)),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.inventory_2_outlined,
-                            size: 64, color: Colors.grey.shade600),
-                        const SizedBox(height: 16),
-                        Text(l10n.noRawMaterialsFound,
-                            textAlign: TextAlign.center,
+                        Text(
+                            l10n.availableBalance(
+                                item.quantity.toString(), unitLabel),
                             style: TextStyle(
                                 fontFamily: 'Tajawal',
-                                fontSize: 16,
-                                color: Colors.grey)),
+                                fontWeight: isLowStock
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                color: isLowStock ? Colors.red : null)),
                       ],
                     ),
-                  );
-                }
-                return ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 80),
-                  itemCount: materials.length,
-                  itemBuilder: (ctx, index) {
-                    final item = materials[index];
-                    String unitLabel = item.unit == 'g'
-                        ? l10n.gLabel
-                        : item.unit == 'ml'
-                            ? l10n.mlLabel
-                            : l10n.pieceUnit;
-                    bool isLowStock = item.initialQuantity > 0 &&
-                        item.quantity <= (item.initialQuantity * 0.10);
-                    return GlassCard(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: isLowStock
-                              ? Colors.red.withValues(alpha: 0.2)
-                              : Colors.amber.withValues(alpha: 0.2),
-                          child: Icon(
-                              isLowStock
-                                  ? Icons.warning_amber_rounded
-                                  : Icons.inventory,
-                              color: isLowStock ? Colors.red : Colors.amber),
-                        ),
-                        title: Text(item.name,
-                            style: const TextStyle(
-                                fontFamily: 'Tajawal',
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16)),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                                l10n.availableBalance(
-                                    item.quantity.toString(), unitLabel),
-                                style: TextStyle(
-                                    fontFamily: 'Tajawal',
-                                    fontWeight: isLowStock
-                                        ? FontWeight.bold
-                                        : FontWeight.normal)),
-                            if (isLowStock)
-                              Text(l10n.resourceRunningOut,
-                                  style: const TextStyle(
-                                      fontFamily: 'Tajawal',
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                        trailing: canManageInventory
-                            ? Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.edit,
-                                        color: Colors.blue),
-                                    onPressed: () => _showAddEditDialog(item),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete,
-                                        color: Colors.red),
-                                    onPressed: () async {
-                                      final appUser =
-                                          ref.read(appUserProvider).value;
-                                      if (appUser != null) {
-                                        final success =
-                                            await PinConfirmationDialog
-                                                .requirePinOrSetup(
-                                          context,
-                                          appUser,
-                                          title: isAr
-                                              ? 'تحذير: حذف مادة خام'
-                                              : 'Warning: Delete Raw Material',
-                                          warning: isAr
-                                              ? 'هل أنت متأكد من حذف هذه المادة الخام (${item.name})؟'
-                                              : 'Are you sure you want to delete this raw material (${item.name})?',
-                                        );
-                                        if (!success) return;
-                                      }
-                                      ref
-                                          .read(rawMaterialRepositoryProvider)
-                                          .deleteRawMaterial(item.id);
-                                    },
-                                  ),
-                                ],
-                              )
-                            : null,
-                      ),
-                    );
-                  },
+                    trailing: canManageInventory
+                        ? PopupMenuButton<String>(
+                            onSelected: (value) async {
+                              if (value == 'edit') {
+                                _showAddEditDialog(item);
+                              } else if (value == 'delete') {
+                                final isAr = Localizations.localeOf(context)
+                                        .languageCode ==
+                                    'ar';
+                                final success = await PinConfirmationDialog
+                                    .requirePinOrSetup(
+                                  context,
+                                  user!,
+                                  title: isAr
+                                      ? 'تأكيد الحذف'
+                                      : 'Confirm Delete',
+                                  warning: isAr
+                                      ? 'هل أنت متأكد من حذف هذه المادة؟ (لن تُحذف من المنتجات المرتبطة بها تلقائياً، يجب تعديل المنتجات يدوياً)'
+                                      : 'Are you sure? (Will not be removed from linked products automatically)',
+                                );
+                                if (!success) return;
+
+                                ref
+                                    .read(rawMaterialRepositoryProvider)
+                                    .deleteRawMaterial(item.id);
+                              }
+                            },
+                            itemBuilder: (ctx) => [
+                              PopupMenuItem(
+                                value: 'edit',
+                                child: Text(isAr ? 'تعديل' : 'Edit',
+                                    style: const TextStyle(
+                                        fontFamily: 'Tajawal')),
+                              ),
+                              PopupMenuItem(
+                                value: 'delete',
+                                child: Text(isAr ? 'حذف' : 'Delete',
+                                    style: const TextStyle(
+                                        fontFamily: 'Tajawal',
+                                        color: Colors.red)),
+                              ),
+                            ],
+                          )
+                        : null,
+                  ),
                 );
               },
             ),

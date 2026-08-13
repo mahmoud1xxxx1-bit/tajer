@@ -12,6 +12,26 @@ class ExpenseRepository {
   CollectionReference<Map<String, dynamic>> get _expensesRef =>
       _firestore.collection('merchants').doc(_merchantId).collection('expenses');
 
+  Query<Expense> queryExpenses({String sortBy = 'newest', bool includeCancelled = false}) {
+    Query<Map<String, dynamic>> query = _expensesRef;
+
+    if (!includeCancelled) {
+      query = query.where('isCancelled', isEqualTo: false);
+    }
+    
+    query = query.orderBy('date', descending: true);
+
+    return query.withConverter(
+      fromFirestore: (snapshot, _) {
+        final data = snapshot.data()!;
+        data['id'] = snapshot.id;
+        data['amount'] = (data['amount'] ?? 0.0).toDouble();
+        return Expense.fromJson(data);
+      },
+      toFirestore: (expense, _) => expense.toJson(),
+    );
+  }
+
   Stream<List<Expense>> watchExpenses() {
     return _expensesRef.withConverter(
       fromFirestore: (snapshot, _) {
@@ -21,7 +41,7 @@ class ExpenseRepository {
         return Expense.fromJson(data);
       },
       toFirestore: (expense, _) => expense.toJson(),
-    ).orderBy('date', descending: true).snapshots().map((snapshot) {
+    ).orderBy('date', descending: true).limit(1000).snapshots().map((snapshot) {
       return snapshot.docs.map((doc) => doc.data()).toList();
     });
   }

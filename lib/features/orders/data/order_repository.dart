@@ -13,44 +13,69 @@ class OrderRepository {
 
   OrderRepository(this._firestore);
 
-  Query<AppOrder> queryOrders(String merchantId) {
-    return _firestore
+  Query<AppOrder> queryOrders({
+    required String merchantId,
+    String searchQuery = '',
+    bool limitToRecent = false,
+  }) {
+    Query<Map<String, dynamic>> query = _firestore
         .collection('orders')
-        .where('merchantId', isEqualTo: merchantId)
-        .withConverter(
-          fromFirestore: (snapshot, _) {
-            final data = snapshot.data()!;
-            data['id'] = snapshot.id;
-            data['merchantId'] = data['merchantId']?.toString() ?? '';
-            data['quantity'] = (data['quantity'] ?? 0).toInt();
-            data['total'] = (data['total'] ?? 0.0).toDouble();
-            data['customerId'] = data['customerId']?.toString() ?? '';
-            data['customerName'] = data['customerName']?.toString() ?? '';
-            data['status'] = data['status']?.toString() ?? 'pending';
-            data['paidAmount'] = (data['paidAmount'] ?? 0.0).toDouble();
-            data['isCredit'] = data['isCredit'] ?? false;
-            
-            // Backward compatibility: Convert old single product order to items list
-            if (data['items'] == null && data['productId'] != null) {
-              data['items'] = [
-                {
-                  'productId': data['productId']?.toString() ?? '',
-                  'productName': data['productName']?.toString() ?? '',
-                  'quantity': (data['quantity'] ?? 0).toInt(),
-                  'price': (data['price'] ?? 0.0).toDouble(),
-                  'total': data['total'],
-                }
-              ];
-            } else if (data['items'] != null) {
-              data['items'] = List<Map<String, dynamic>>.from(data['items'].map((x) => Map<String, dynamic>.from(x)));
-            } else {
-              data['items'] = [];
+        .where('merchantId', isEqualTo: merchantId);
+
+    if (searchQuery.isNotEmpty) {
+      if (int.tryParse(searchQuery) != null) {
+        // Search by queueNumber
+        query = query.where('queueNumber', isEqualTo: int.parse(searchQuery));
+      } else {
+        // Search by customerName
+        query = query.where('customerName', isGreaterThanOrEqualTo: searchQuery)
+                     .where('customerName', isLessThan: searchQuery + '\uf8ff');
+      }
+    } else {
+      query = query.orderBy('createdAt', descending: true);
+    }
+    
+    // We can't do inequality filter on createdAt if we are doing inequality on customerName
+    // We will just do client side filter for limitToRecent if needed, or if no search query, we can filter.
+    if (limitToRecent && searchQuery.isEmpty) {
+       final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
+       query = query.where('createdAt', isGreaterThanOrEqualTo: sevenDaysAgo);
+    }
+
+    return query.withConverter(
+      fromFirestore: (snapshot, _) {
+        final data = snapshot.data()!;
+        data['id'] = snapshot.id;
+        data['merchantId'] = data['merchantId']?.toString() ?? '';
+        data['quantity'] = (data['quantity'] ?? 0).toInt();
+        data['total'] = (data['total'] ?? 0.0).toDouble();
+        data['customerId'] = data['customerId']?.toString() ?? '';
+        data['customerName'] = data['customerName']?.toString() ?? '';
+        data['status'] = data['status']?.toString() ?? 'pending';
+        data['paidAmount'] = (data['paidAmount'] ?? 0.0).toDouble();
+        data['isCredit'] = data['isCredit'] ?? false;
+        
+        // Backward compatibility: Convert old single product order to items list
+        if (data['items'] == null && data['productId'] != null) {
+          data['items'] = [
+            {
+              'productId': data['productId']?.toString() ?? '',
+              'productName': data['productName']?.toString() ?? '',
+              'quantity': (data['quantity'] ?? 0).toInt(),
+              'price': (data['price'] ?? 0.0).toDouble(),
+              'total': data['total'],
             }
-            
-            return AppOrder.fromJson(data);
-          },
-          toFirestore: (order, _) => order.toJson(),
-        );
+          ];
+        } else if (data['items'] != null) {
+          data['items'] = List<Map<String, dynamic>>.from(data['items'].map((x) => Map<String, dynamic>.from(x)));
+        } else {
+          data['items'] = [];
+        }
+        
+        return AppOrder.fromJson(data);
+      },
+      toFirestore: (order, _) => order.toJson(),
+    );
   }
 
   Future<AppOrder> createOrder(AppOrder order, {String? shiftId}) async {
@@ -909,7 +934,10 @@ Stream<List<AppOrder>> ordersStream(OrdersStreamRef ref) {
 
   final repository = ref.watch(orderRepositoryProvider);
   
-  return repository.queryOrders(appUser.merchantId ?? appUser.id)
+  return repository.queryOrders(
+        merchantId: appUser.merchantId ?? appUser.id,
+      )
+      .limit(1000)
       .snapshots()
       .map(
         (snapshot) {
@@ -920,7 +948,6 @@ Stream<List<AppOrder>> ordersStream(OrdersStreamRef ref) {
             orders = orders.where((o) => o.createdAt.isAfter(sevenDaysAgo)).toList();
           }
           
-          orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
           return orders;
         },
       );
