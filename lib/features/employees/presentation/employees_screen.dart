@@ -12,6 +12,7 @@ import '../../orders/data/order_repository.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../../../core/providers/settings_provider.dart';
 import 'employee_activity_screen.dart';
+import 'employee_permissions_screen.dart';
 import '../../../../../../../../core/theme/glass_card.dart';
 
 void showBeautifulUpgradeDialog(BuildContext context) {
@@ -127,19 +128,6 @@ Do not share this PIN with anyone!
       builder: (context) => EmployeeDialog(
         merchantEmail: _merchantEmail,
         ref: ref,
-      ),
-    );
-  }
-
-  void _showEditEmployeeDialog(String id, Map<String, dynamic> data) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => EmployeeDialog(
-        merchantEmail: _merchantEmail,
-        ref: ref,
-        employeeUid: id,
-        initialData: data,
       ),
     );
   }
@@ -328,9 +316,19 @@ Do not share this PIN with anyone!
                                       onPressed: () => _shareCredentials(context, name, pin),
                                     ),
                                     IconButton(
-                                      icon: const Icon(Icons.edit, color: Colors.blue),
-                                      tooltip: isAr ? "تعديل الصلاحيات" : "Edit permissions",
-                                      onPressed: () => _showEditEmployeeDialog(id, data),
+                                      icon: const Icon(Icons.security, color: Colors.blue),
+                                      tooltip: isAr ? "صلاحيات الموظف" : "Employee permissions",
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => EmployeePermissionsScreen(
+                                              employeeUid: id,
+                                              initialData: data,
+                                            ),
+                                          ),
+                                        );
+                                      },
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.delete, color: Colors.red),
