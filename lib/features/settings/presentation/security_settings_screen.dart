@@ -25,7 +25,7 @@ class _SecuritySettingsScreenState extends ConsumerState<SecuritySettingsScreen>
 
   Future<void> _loadSettings() async {
     final user = ref.read(appUserProvider).value;
-    if (user == null || user.isEmployee) return;
+    if (user == null || user.role == 'employee') return;
 
     try {
       final doc = await FirebaseFirestore.instance
@@ -55,7 +55,7 @@ class _SecuritySettingsScreenState extends ConsumerState<SecuritySettingsScreen>
 
   Future<void> _saveSettings() async {
     final user = ref.read(appUserProvider).value;
-    if (user == null || user.isEmployee) return;
+    if (user == null || user.role == 'employee') return;
 
     try {
       await FirebaseFirestore.instance
