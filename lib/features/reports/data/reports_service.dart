@@ -38,8 +38,8 @@ class ReportsService {
   ReportsService(this.orders, this.products, this.expenses, this.customers, this.suppliers, {this.defaultTaxPercentage = 0.0, this.defaultIsTaxInclusive = true});
 
   ReportsService filterByDate(DateTime start, DateTime end) {
-    final filteredOrders = orders.where((o) => o.createdAt.isAfter(start) && o.createdAt.isBefore(end)).toList();
-    final filteredExpenses = expenses.where((e) => e.date.isAfter(start) && e.date.isBefore(end)).toList();
+    final filteredOrders = orders.where((o) => !o.createdAt.isBefore(start) && o.createdAt.isBefore(end)).toList();
+    final filteredExpenses = expenses.where((e) => !e.date.isBefore(start) && e.date.isBefore(end)).toList();
     return ReportsService(
       filteredOrders, 
       products, 

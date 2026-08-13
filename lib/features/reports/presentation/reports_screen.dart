@@ -25,7 +25,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   ReportsService _getFilteredService(ReportsService service) {
     final now = DateTime.now();
     DateTime start;
-    DateTime end = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    DateTime end = DateTime(now.year, now.month, now.day + 1);
 
     switch (_selectedFilter) {
       case 'اليوم':
@@ -33,14 +33,14 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
         break;
       case 'أمس':
         start = DateTime(now.year, now.month, now.day - 1);
-        end = DateTime(now.year, now.month, now.day - 1, 23, 59, 59);
+        end = DateTime(now.year, now.month, now.day);
         break;
       case 'قبل يومين':
         start = DateTime(now.year, now.month, now.day - 2);
-        end = DateTime(now.year, now.month, now.day - 2, 23, 59, 59);
+        end = DateTime(now.year, now.month, now.day - 1);
         break;
       case 'أسبوع':
-        start = now.subtract(const Duration(days: 7));
+        start = DateTime(now.year, now.month, now.day - 6);
         break;
       case 'شهر':
         start = DateTime(now.year, now.month - 1, now.day);
