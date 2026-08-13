@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../domain/shift.dart';
 import '../../../core/theme/glass_card.dart';
+import '../../expenses/data/expense_repository.dart';
 
-class ShiftDetailsScreen extends StatelessWidget {
+class ShiftDetailsScreen extends ConsumerWidget {
   final Shift shift;
   const ShiftDetailsScreen({super.key, required this.shift});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     final dateFormat = DateFormat('yyyy-MM-dd HH:mm');
     
@@ -26,6 +28,27 @@ class ShiftDetailsScreen extends StatelessWidget {
     final expectedTransfer = shift.transferTotal ?? 0.0;
     final actualTransfer = shift.actualTransfer ?? 0.0;
     final diffTransfer = actualTransfer - expectedTransfer;
+
+    final expenses = ref.watch(expensesStreamProvider).value ?? [];
+    final allShiftExpenses = expenses.where((e) => e.date.isAfter(shift.startTime) && (shift.endTime == null || e.date.isBefore(shift.endTime!)));
+    
+    final operatingExpensesCash = allShiftExpenses
+        .where((e) => !e.isSupplierPayment && e.paymentMethod == 'cash' && e.isFromShiftDrawer && !e.isCancelled)
+        .fold(0.0, (sum, e) => sum + e.amount);
+    final operatingExpensesNetwork = allShiftExpenses
+        .where((e) => !e.isSupplierPayment && e.paymentMethod == 'network' && !e.isCancelled)
+        .fold(0.0, (sum, e) => sum + e.amount);
+        
+    final supplierPaymentsCash = allShiftExpenses
+        .where((e) => e.isSupplierPayment && e.paymentMethod == 'cash' && e.isFromShiftDrawer && !e.isCancelled)
+        .fold(0.0, (sum, e) => sum + e.amount);
+    final supplierPaymentsNetwork = allShiftExpenses
+        .where((e) => e.isSupplierPayment && e.paymentMethod == 'network' && !e.isCancelled)
+        .fold(0.0, (sum, e) => sum + e.amount);
+        
+    final totalRefundsCash = shift.refundsCash ?? 0.0;
+    final totalRefundsCard = shift.refundsCard ?? 0.0;
+    final totalRefundsTransfer = shift.refundsTransfer ?? 0.0;
 
     return Scaffold(
       appBar: AppBar(
@@ -57,9 +80,28 @@ class ShiftDetailsScreen extends StatelessWidget {
                     _buildRow(isAr ? 'الإغلاق:' : 'Closed:', shift.endTime != null ? dateFormat.format(shift.endTime!) : '-'),
                     const Divider(height: 24),
                     _buildRow(isAr ? 'العهدة الافتتاحية:' : 'Opening Cash:', '${shift.startCash} ${isAr ? 'ر.س' : 'SAR'}'),
-                    _buildRow(isAr ? 'مبيعات الكاش:' : 'Cash Sales:', '${shift.cashSales ?? 0} ${isAr ? 'ر.س' : 'SAR'}'),
-                    _buildRow(isAr ? 'ديون محصلة (كاش):' : 'Debts Collected (Cash):', '${shift.debtCollectionsCash ?? 0} ${isAr ? 'ر.س' : 'SAR'}'),
-                    _buildRow(isAr ? 'إجمالي الضريبة:' : 'Total Tax:', '${(shift.totalTax ?? 0).toStringAsFixed(2)} ${isAr ? 'ر.س' : 'SAR'}'),
+                    _buildRow(isAr ? 'مبيعات الكاش:' : 'Cash Sales:', '${shift.cashSales ?? 0} ${isAr ? 'ر.س' : 'SAR'}', color: Colors.green),
+                    _buildRow(isAr ? 'ديون محصلة (كاش):' : 'Debts Collected (Cash):', '${shift.debtCollectionsCash ?? 0} ${isAr ? 'ر.س' : 'SAR'}', color: Colors.teal),
+                    if (totalRefundsCash > 0)
+                      _buildRow(isAr ? 'إجمالي المرتجعات (كاش):' : 'Total Refunds (Cash):', '-$totalRefundsCash ${isAr ? 'ر.س' : 'SAR'}', color: Colors.red.shade400),
+                    if (operatingExpensesCash > 0)
+                      _buildRow(isAr ? 'مصروفات تشغيلية (كاش):' : 'Op. Expenses (Cash):', '-$operatingExpensesCash ${isAr ? 'ر.س' : 'SAR'}', color: Colors.red.shade400),
+                    if (operatingExpensesNetwork > 0)
+                      _buildRow(isAr ? 'مصروفات تشغيلية (شبكة):' : 'Op. Expenses (Network):', '$operatingExpensesNetwork ${isAr ? 'ر.س' : 'SAR'}', color: Colors.orange),
+                    if (supplierPaymentsCash > 0)
+                      _buildRow(isAr ? 'سداد موردين (كاش):' : 'Supplier (Cash):', '-$supplierPaymentsCash ${isAr ? 'ر.س' : 'SAR'}', color: Colors.red.shade400),
+                    if (supplierPaymentsNetwork > 0)
+                      _buildRow(isAr ? 'سداد موردين (شبكة):' : 'Supplier (Network):', '$supplierPaymentsNetwork ${isAr ? 'ر.س' : 'SAR'}', color: Colors.orange),
+                    const Divider(height: 16),
+                    _buildRow(isAr ? 'إجمالي الضريبة:' : 'Total Tax:', '${(shift.totalTax ?? 0).toStringAsFixed(2)} ${isAr ? 'ر.س' : 'SAR'}', color: Colors.grey.shade600),
+                    const Divider(height: 16),
+                    _buildRow(isAr ? 'إجمالي مبيعات مدى:' : 'Total Mada Sales:', '${shift.cardTotal ?? 0} ${isAr ? 'ر.س' : 'SAR'}'),
+                    if (totalRefundsCard > 0)
+                      _buildRow(isAr ? 'مرتجعات مدى:' : 'Refunds (Mada):', '-$totalRefundsCard ${isAr ? 'ر.س' : 'SAR'}', color: Colors.red.shade400),
+                    const Divider(height: 16),
+                    _buildRow(isAr ? 'إجمالي الحوالات البنكية:' : 'Total Bank Transfers:', '${shift.transferTotal ?? 0} ${isAr ? 'ر.س' : 'SAR'}'),
+                    if (totalRefundsTransfer > 0)
+                      _buildRow(isAr ? 'مرتجعات حوالات:' : 'Refunds (Transfer):', '-$totalRefundsTransfer ${isAr ? 'ر.س' : 'SAR'}', color: Colors.red.shade400),
                   ],
                 ),
               ),
@@ -104,14 +146,14 @@ class ShiftDetailsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildRow(String label, String value) {
+  Widget _buildRow(String label, String value, {Color? color}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
-          Text(value, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+          Text(label, style: TextStyle(fontFamily: 'Tajawal', color: color ?? Colors.grey)),
+          Text(value, style: TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, color: color)),
         ],
       ),
     );

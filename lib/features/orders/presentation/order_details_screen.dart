@@ -370,6 +370,75 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> {
               ),
             ),
             const SizedBox(height: 24),
+            
+            // Payment Breakdown Card
+            if (currentOrder.paymentMethod != 'debt' && currentOrder.paymentMethod != null)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    isAr ? '💳 تفاصيل الدفع' : '💳 Payment Breakdown',
+                    style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  GlassCard(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          if (currentOrder.paymentMethod == 'split') ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(isAr ? 'مدفوع كاش:' : 'Paid in Cash:', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 15)),
+                                Text('${(currentOrder.splitCashAmount ?? 0.0).toStringAsFixed(2)} ${currency.code}', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 15, fontWeight: FontWeight.bold, color: Colors.green)),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(isAr ? 'مدفوع شبكة:' : 'Paid via Network:', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 15)),
+                                Text('${(currentOrder.splitNetworkAmount ?? 0.0).toStringAsFixed(2)} ${currency.code}', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 15, fontWeight: FontWeight.bold, color: Colors.blue)),
+                              ],
+                            ),
+                          ] else ...[
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(isAr ? 'طريقة الدفع الأساسية:' : 'Primary Method:', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 15)),
+                                Text(_getPaymentMethodName(context, currentOrder.paymentMethod), style: const TextStyle(fontFamily: 'Tajawal', fontSize: 15, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ],
+                          
+                          if ((currentOrder.tenderedAmount ?? 0.0) > 0 && currentOrder.paymentMethod != 'card' && currentOrder.paymentMethod != 'transfer') ...[
+                            const SizedBox(height: 8),
+                            const Divider(),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(isAr ? 'المبلغ المستلم (من العميل):' : 'Tendered Amount:', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 15)),
+                                Text('${(currentOrder.tenderedAmount ?? 0.0).toStringAsFixed(2)} ${currency.code}', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 15, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(isAr ? 'الباقي المرجع للعميل:' : 'Change Returned:', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 15)),
+                                Text('${(currentOrder.changeAmount ?? 0.0).toStringAsFixed(2)} ${currency.code}', style: TextStyle(fontFamily: 'Tajawal', fontSize: 15, fontWeight: FontWeight.bold, color: theme.colorScheme.error)),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
 
             // Actions Section
             Text(
