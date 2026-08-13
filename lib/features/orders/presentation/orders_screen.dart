@@ -484,7 +484,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
       case 'split':
         return isAr ? 'دفع مقسم (كاش+شبكة)' : 'Split (Cash+Card)';
       default:
-        return method;
+        return method ?? 'غير محدد';
     }
   }
 
