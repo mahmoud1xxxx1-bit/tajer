@@ -8,7 +8,6 @@ import '../../../core/services/guest_limit_service.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../data/expense_repository.dart';
 import '../../../core/services/pin_service.dart';
-import '../../../core/services/activity_logger.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../domain/expense.dart';
 import 'package:intl/intl.dart';
@@ -162,7 +161,7 @@ class ExpensesScreen extends ConsumerWidget {
                                     borderRadius: BorderRadius.circular(4),
                                   ),
                                   child: Text(
-                                    expense.category,
+                                    expense.category ?? '',
                                     style: const TextStyle(color: Colors.blue, fontSize: 10, fontFamily: 'Tajawal'),
                                   ),
                                 ),
@@ -176,20 +175,26 @@ class ExpensesScreen extends ConsumerWidget {
                                 constraints: const BoxConstraints(),
                                 tooltip: AppLocalizations.of(context)!.text74,
                                 onPressed: () async {
-                                  final pinService = ref.read(pinServiceProvider);
-                                  bool hasPin = await pinService.hasPin();
-                                  
-                                  if (hasPin) {
-                                    if (context.mounted) {
-                                      showDialog(
-                                        context: context,
-                                        builder: (context) => PinConfirmationDialog(
-                                          onSuccess: () => _cancelExpense(context, ref, expense),
-                                        ),
-                                      );
+                                  final currentAppUser = ref.read(appUserProvider).value;
+                                  if (currentAppUser != null) {
+                                    final correctPin = await PinService.getDeletePin(currentAppUser);
+                                    if (correctPin != null && correctPin.isNotEmpty) {
+                                      if (context.mounted) {
+                                        final success = await PinConfirmationDialog.show(
+                                          context, 
+                                          correctPin,
+                                          title: AppLocalizations.of(context)!.text74,
+                                          warning: AppLocalizations.of(context)!.text75,
+                                        );
+                                        if (success == true) {
+                                          if (context.mounted) _cancelExpense(context, ref, expense);
+                                        }
+                                      }
+                                    } else {
+                                      if (context.mounted) _showCancelConfirmationDialog(context, ref, expense);
                                     }
                                   } else {
-                                    _showCancelConfirmationDialog(context, ref, expense);
+                                    if (context.mounted) _showCancelConfirmationDialog(context, ref, expense);
                                   }
                                 },
                               ),
@@ -243,19 +248,6 @@ class ExpensesScreen extends ConsumerWidget {
   Future<void> _cancelExpense(BuildContext context, WidgetRef ref, Expense expense) async {
     try {
       await ref.read(expenseRepositoryProvider)?.cancelExpense(expense);
-      final currentAppUser = ref.read(appUserProvider).value;
-      if (currentAppUser != null) {
-        ref.read(activityLoggerProvider).logActivity(
-          merchantId: expense.merchantId,
-          userId: currentAppUser.id,
-          userName: currentAppUser.name,
-          userRole: currentAppUser.role,
-          action: 'cancel_expense',
-          details: 'ألغى المصروف: ${expense.title} بقيمة ${expense.amount}',
-          category: 'expenses',
-          shiftId: null, // Since we cancel, we just log globally
-        );
-      }
       if (context.mounted) {
         AppSnackbar.showSuccess(context, 'تم إلغاء المصروف بنجاح');
       }
