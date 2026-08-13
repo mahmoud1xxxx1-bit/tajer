@@ -42,7 +42,7 @@ class _DamagedGoodsDialogState extends ConsumerState<DamagedGoodsDialog> {
     setState(() => _isLoading = true);
 
     try {
-      final qtyToDeduct = double.parse(_qtyController.text);
+      final qtyToDeduct = int.parse(_qtyController.text);
       final isAr = Localizations.localeOf(context).languageCode == 'ar';
       
       // 1. Update Product Inventory
@@ -57,22 +57,16 @@ class _DamagedGoodsDialogState extends ConsumerState<DamagedGoodsDialog> {
           
       final logReason = '$logTypeLabel: ${_notesController.text.trim()}';
       
-      final invLog = InventoryLog(
-        id: const Uuid().v4(),
-        merchantId: appUser.merchantId ?? appUser.id,
+      await ref.read(inventoryLogRepositoryProvider)?.logChange(
         productId: widget.product.id,
         productName: widget.product.name,
-        changeQuantity: -qtyToDeduct,
         previousQuantity: widget.product.quantity,
         newQuantity: newQuantity,
         reason: logReason,
         userEmail: appUser.email,
         userName: appUser.name,
         itemType: 'product',
-        date: DateTime.now(),
       );
-      
-      await ref.read(inventoryLogRepositoryProvider)?.addLog(invLog);
 
       // 3. Create Expense for Damaged Goods (Financial Loss)
       if (_type == 'damaged') {
@@ -234,8 +228,8 @@ class _DamagedGoodsDialogState extends ConsumerState<DamagedGoodsDialog> {
             // Quantity
             TextFormField(
               controller: _qtyController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*'))],
+              keyboardType: const TextInputType.numberWithOptions(),
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: InputDecoration(
                 labelText: isAr ? 'الكمية' : 'Quantity',
                 hintText: isAr ? 'المخزون الحالي: ${widget.product.quantity}' : 'Current: ${widget.product.quantity}',
@@ -244,7 +238,7 @@ class _DamagedGoodsDialogState extends ConsumerState<DamagedGoodsDialog> {
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) return isAr ? 'مطلوب' : 'Required';
-                final qty = double.tryParse(value);
+                final qty = int.tryParse(value);
                 if (qty == null || qty <= 0) return isAr ? 'كمية غير صالحة' : 'Invalid quantity';
                 if (qty > widget.product.quantity) return isAr ? 'الكمية تتجاوز المخزون' : 'Exceeds current stock';
                 return null;
