@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import '../data/product_repository.dart';
 import 'add_product_dialog.dart';
+import 'damaged_goods_dialog.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../../core/theme/glass_card.dart';
@@ -278,6 +279,17 @@ class ProductsScreen extends ConsumerWidget {
                                             child: AddProductDialog(productToEdit: product),
                                           ),
                                         );
+                                      } else if (value == 'damaged') {
+                                        showModalBottomSheet(
+                                          context: context,
+                                          isScrollControlled: true,
+                                          builder: (context) => Padding(
+                                            padding: EdgeInsets.only(
+                                              bottom: MediaQuery.of(context).viewInsets.bottom,
+                                            ),
+                                            child: DamagedGoodsDialog(product: product),
+                                          ),
+                                        );
                                       } else if (value == 'delete') {
                                         final appUser = ref.read(appUserProvider).value;
                                         final isArabic = Localizations.localeOf(context).languageCode == 'ar';
@@ -308,6 +320,16 @@ class ProductsScreen extends ConsumerWidget {
                                             const Icon(Icons.edit, size: 20, color: Colors.blue),
                                             const SizedBox(width: 8),
                                             Text(l10n.edit, style: const TextStyle(fontFamily: 'Tajawal')),
+                                          ],
+                                        ),
+                                      ),
+                                      PopupMenuItem(
+                                        value: 'damaged',
+                                        child: Row(
+                                          children: [
+                                            const Icon(Icons.delete_sweep, size: 20, color: Colors.orange),
+                                            const SizedBox(width: 8),
+                                            Text(l10n.localeName == 'ar' ? 'توالف ومرتجعات' : 'Damaged / Returns', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.orange)),
                                           ],
                                         ),
                                       ),
