@@ -60,6 +60,15 @@ class ProductRepository {
     await docRef.update(product.toJson());
   }
 
+  Future<void> addProductsBatch(List<Product> products) async {
+    final batch = _firestore.batch();
+    for (var product in products) {
+      final docRef = _firestore.collection('products').doc(product.id);
+      batch.set(docRef, product.toJson());
+    }
+    await batch.commit();
+  }
+
   Future<void> deleteProduct(String productId) async {
     await _firestore.collection('products').doc(productId).update({
       'isArchived': true,

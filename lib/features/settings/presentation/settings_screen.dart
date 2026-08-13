@@ -10,6 +10,7 @@ import '../../authentication/domain/app_user.dart';
 import '../../../core/services/app_review_service.dart';
 import '../../../core/services/pin_service.dart';
 import '../../../core/theme/glass_card.dart';
+import 'security_settings_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -70,6 +71,15 @@ class SettingsScreen extends ConsumerWidget {
                     title: l10n.settingsCentralizedAuditLog,
                     subtitle: l10n.settingsMonitorActions,
                     onTap: () => context.push('/audit_log'),
+                  ),
+                  const _CustomDivider(),
+                  _buildSettingsTile(
+                    context: context,
+                    icon: Icons.security,
+                    iconColor: Colors.red,
+                    title: isAr ? 'إعدادات الحماية الذكية (Anti-Theft)' : 'Smart Security Settings',
+                    subtitle: isAr ? 'إشعارات حماية من السرقات والتلاعب' : 'Anti-Theft push notifications',
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SecuritySettingsScreen())),
                   ),
                 ],
               ],

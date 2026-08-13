@@ -14,6 +14,7 @@ import '../../categories/data/category_repository.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_ui_firestore/firebase_ui_firestore.dart';
 import '../domain/product.dart';
+import '../../../core/services/excel_import_service.dart';
 
 class ProductsScreen extends ConsumerWidget {
   const ProductsScreen({super.key});
@@ -33,6 +34,66 @@ class ProductsScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.products, style: const TextStyle(fontFamily: 'Tajawal')),
+        actions: [
+          if (canManageProducts)
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.download_rounded, color: Colors.green),
+              tooltip: l10n.localeName == 'ar' ? 'استيراد من إكسيل' : 'Import from Excel',
+              onSelected: (value) async {
+                if (value == 'download_template') {
+                  await ExcelImportService.downloadTemplate();
+                } else if (value == 'import_excel') {
+                  if (appUser == null) return;
+                  final products = await ExcelImportService.pickAndParseProductsExcel(appUser.merchantId ?? appUser.id);
+                  if (products != null && products.isNotEmpty) {
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          l10n.localeName == 'ar' ? 'جاري رفع ${products.length} منتج...' : 'Uploading ${products.length} products...',
+                          style: const TextStyle(fontFamily: 'Tajawal'),
+                        ),
+                        backgroundColor: Colors.blue,
+                      ),
+                    );
+                    await repository.addProductsBatch(products);
+                    // ignore: use_build_context_synchronously
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          l10n.localeName == 'ar' ? 'تم استيراد ${products.length} منتج بنجاح!' : 'Successfully imported ${products.length} products!',
+                          style: const TextStyle(fontFamily: 'Tajawal'),
+                        ),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'download_template',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.file_download, color: Colors.blue, size: 20),
+                      const SizedBox(width: 8),
+                      Text(l10n.localeName == 'ar' ? 'تحميل قالب الإكسيل' : 'Download Excel Template', style: const TextStyle(fontFamily: 'Tajawal')),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'import_excel',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.upload_file, color: Colors.green, size: 20),
+                      const SizedBox(width: 8),
+                      Text(l10n.localeName == 'ar' ? 'رفع ملف المنتجات' : 'Upload Products File', style: const TextStyle(fontFamily: 'Tajawal')),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+        ],
       ),
       body: Column(
         children: [

@@ -127,75 +127,135 @@ class _EmployeePermissionsScreenState extends ConsumerState<EmployeePermissionsS
     final descriptions = _getPermissionDescriptions(context, isAr);
     final risks = _getPermissionRisks();
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
+        elevation: 0,
+        backgroundColor: theme.colorScheme.primaryContainer,
         title: Text(isAr ? "صلاحيات الموظف" : "Employee Permissions", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
         actions: [
           if (_isSaving)
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))),
+              child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
             )
           else
             TextButton(
               onPressed: _saveChanges,
-              child: Text(isAr ? "حفظ" : "Save", style: const TextStyle(fontFamily: 'Tajawal', color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+              child: Text(isAr ? "حفظ" : "Save", style: TextStyle(fontFamily: 'Tajawal', color: theme.colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 16)),
             ),
         ],
       ),
       body: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
-            color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer,
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(24),
+                bottomRight: Radius.circular(24),
+              ),
+            ),
             child: Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  child: const Icon(Icons.person, color: Colors.white),
+                  radius: 28,
+                  backgroundColor: theme.colorScheme.primary,
+                  child: const Icon(Icons.person, color: Colors.white, size: 32),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(widget.initialData['name'] ?? '', style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text(widget.initialData['name'] ?? '', style: TextStyle(fontFamily: 'Tajawal', fontSize: 20, fontWeight: FontWeight.bold, color: theme.colorScheme.onPrimaryContainer)),
                       const SizedBox(height: 4),
-                      Text('${isAr ? "رمز الدخول:" : "PIN:"} ${widget.initialData['pin']}', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.grey)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.surface.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text('${isAr ? "رمز الدخول:" : "PIN:"} ${widget.initialData['pin']}', style: TextStyle(fontFamily: 'Tajawal', color: theme.colorScheme.onPrimaryContainer, fontWeight: FontWeight.w600)),
+                      ),
                     ],
                   ),
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 16),
           Expanded(
-            child: ListView.separated(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: _permissions.keys.length,
-              separatorBuilder: (context, index) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final key = _permissions.keys.elementAt(index);
                 final isRisky = risks[key] ?? false;
                 
-                return SwitchListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  title: Row(
-                    children: [
-                      if (isRisky) const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 20),
-                      if (isRisky) const SizedBox(width: 8),
-                      Expanded(child: Text(labels[key] ?? key, style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold, color: isRisky ? Colors.orange[800] : null))),
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: isDark ? theme.colorScheme.surfaceContainerHighest : Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: isDark ? [] : [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      )
                     ],
+                    border: Border.all(
+                      color: isRisky ? Colors.orange.withValues(alpha: 0.5) : (isDark ? Colors.white12 : Colors.grey.shade200),
+                      width: 1,
+                    ),
                   ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 6.0),
-                    child: Text(descriptions[key] ?? '', style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.4, color: Colors.grey[700])),
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    title: Row(
+                      children: [
+                        if (isRisky) ...[
+                          const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 22),
+                          const SizedBox(width: 8),
+                        ],
+                        Expanded(
+                          child: Text(
+                            labels[key] ?? key, 
+                            style: TextStyle(
+                              fontFamily: 'Tajawal', 
+                              fontSize: 16, 
+                              fontWeight: FontWeight.bold, 
+                              color: isRisky ? Colors.orange : theme.colorScheme.onSurface
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        descriptions[key] ?? '', 
+                        style: TextStyle(
+                          fontFamily: 'Tajawal', 
+                          fontSize: 13, 
+                          height: 1.5, 
+                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade600
+                        ),
+                      ),
+                    ),
+                    value: _permissions[key]!,
+                    activeColor: isRisky ? Colors.orange : theme.colorScheme.primary,
+                    onChanged: (val) {
+                      setState(() {
+                        _permissions[key] = val;
+                      });
+                    },
                   ),
-                  value: _permissions[key]!,
-                  activeColor: Theme.of(context).colorScheme.primary,
-                  onChanged: (val) {
-                    setState(() {
-                      _permissions[key] = val;
-                    });
-                  },
                 );
               },
             ),

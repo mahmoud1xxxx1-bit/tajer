@@ -439,7 +439,7 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
     final isEdit = widget.employeeUid != null;
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
     return AlertDialog(
-      title: Text(isEdit ? (isAr ? "تعديل الموظف والصلاحيات" : "Edit Employee & Permissions") : (isAr ? "إضافة موظف جديد" : "Add New Employee"), style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+      title: Text(isAr ? "إضافة موظف جديد" : "Add New Employee", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
       content: SizedBox(
         width: double.maxFinite,
         child: SingleChildScrollView(
@@ -468,21 +468,6 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
                   helperStyle: const TextStyle(fontFamily: 'Tajawal')
                 ),
               ),
-              const Divider(height: 32),
-              Text(isAr ? "صلاحيات الموظف:" : "Employee Permissions:", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold, fontSize: 16)),
-              const SizedBox(height: 8),
-              ...permissions.keys.map((key) {
-                final labels = _getPermissionLabels(context);
-                return SwitchListTile(
-                  title: Text(labels[key] ?? key, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14)),
-                  value: permissions[key]!,
-                  onChanged: (val) {
-                    setState(() {
-                      permissions[key] = val;
-                    });
-                  },
-                );
-              }),
             ],
           ),
         ),
@@ -511,9 +496,23 @@ class _EmployeeDialogState extends State<EmployeeDialog> {
               if (isEdit) {
                 await widget.ref.read(authRepositoryProvider).updateEmployeePermissions(widget.employeeUid!, permissions);
                 if (mounted) Navigator.of(context).pop();
-                _showSuccess(isAr ? "تم تحديث الصلاحيات بنجاح" : "Permissions updated successfully");
+                _showSuccess(isAr ? "تم تحديث البيانات بنجاح" : "Updated successfully");
               } else {
-                await widget.ref.read(authRepositoryProvider).createEmployee(widget.merchantEmail, name, pin, permissions: permissions);
+                // Secure default permissions
+                final defaultPermissions = {
+                  'can_manage_products': false,
+                  'can_view_cost': false,
+                  'can_manage_inventory': false,
+                  'can_create_orders': true,
+                  'can_cancel_orders': false,
+                  'can_sell_on_credit': false,
+                  'can_manage_customers': true,
+                  'can_receive_payments': true,
+                  'can_manage_expenses': false,
+                  'can_view_reports': false,
+                  'can_view_all_orders': false,
+                };
+                await widget.ref.read(authRepositoryProvider).createEmployee(widget.merchantEmail, name, pin, permissions: defaultPermissions);
                 if (mounted) Navigator.of(context).pop();
                 _showSuccess(isAr ? "تم إضافة الموظف بنجاح" : "Employee added successfully");
               }
