@@ -67,12 +67,14 @@ service cloud.firestore {
     match /products/{productId} {
       allow read: if resource == null || hasAccess(resource.data.get('merchantId', ''));
       allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_manage_products');
-      allow update, delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_products');
+      allow update: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_products') || hasPermission(resource.data.get('merchantId', ''), 'can_create_orders');
+      allow delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_products');
     }
     match /customers/{customerId} {
       allow read: if resource == null || hasAccess(resource.data.get('merchantId', ''));
-      allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_manage_customers');
-      allow update, delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_customers');
+      allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_manage_customers') || hasPermission(request.resource.data.get('merchantId', ''), 'can_create_orders');
+      allow update: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_customers') || hasPermission(resource.data.get('merchantId', ''), 'can_create_orders');
+      allow delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_customers');
     }
     match /orders/{orderId} {
       allow read: if resource == null || hasAccess(resource.data.get('merchantId', '')) || resource.data.get('creatorId', '') == request.auth.uid;
@@ -88,7 +90,8 @@ service cloud.firestore {
     match /raw_materials/{materialId} {
       allow read: if resource == null || hasAccess(resource.data.get('merchantId', ''));
       allow create: if hasPermission(request.resource.data.get('merchantId', ''), 'can_manage_products');
-      allow update, delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_products');
+      allow update: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_products') || hasPermission(resource.data.get('merchantId', ''), 'can_create_orders');
+      allow delete: if resource == null || hasPermission(resource.data.get('merchantId', ''), 'can_manage_products');
     }
 
     // --- MERCHANT SUB-COLLECTIONS ---
@@ -112,7 +115,8 @@ service cloud.firestore {
       }
       match /inventory_logs/{logId} {
         allow read: if hasAccess(merchantId);
-        allow create, update, delete: if hasPermission(merchantId, 'can_manage_inventory');
+        allow create: if hasPermission(merchantId, 'can_manage_inventory') || hasPermission(merchantId, 'can_create_orders');
+        allow update, delete: if hasPermission(merchantId, 'can_manage_inventory');
       }
       match /counters/{counterId} {
         allow read, write: if hasAccess(merchantId);
