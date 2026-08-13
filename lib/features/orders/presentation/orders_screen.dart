@@ -51,7 +51,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
     if (_statusFilter == 'cancelled') {
       query = query.where('status', isEqualTo: 'cancelled');
     } else if (_statusFilter == 'active') {
-      query = query.where('status', isNotEqualTo: 'cancelled');
+      query = query.where('status', isEqualTo: 'pending');
     }
 
     return Scaffold(
