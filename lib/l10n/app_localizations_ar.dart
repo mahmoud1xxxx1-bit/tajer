@@ -729,7 +729,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذر فتح المتصفح. تأكد من وجود متصفح في جهازك.';
 
   @override
-  String get settingsAppVersion => 'بسطه - نقطة بيع v1.0.42\nصُنع بحب 💛';
+  String get settingsAppVersion => 'بسطه - نقطة بيع v1.0.120\nصُنع بحب 💛';
 
   @override
   String get empPermViewCostProfits => 'رؤية التكلفة والأرباح';

@@ -11,6 +11,7 @@ import '../../../core/services/app_review_service.dart';
 import '../../../core/services/pin_service.dart';
 import '../../../core/theme/glass_card.dart';
 import 'security_settings_screen.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -342,10 +343,17 @@ class SettingsScreen extends ConsumerWidget {
               children: [
                 Image.asset('assets/images/logo.png', width: 48, height: 48, errorBuilder: (_,__,___) => const SizedBox()),
                 const SizedBox(height: 12),
-                Text(
-                  'Tajer POS v1.0.42\nMade with 💛',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontFamily: 'Tajawal', color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4), fontSize: 13, letterSpacing: 1.1),
+                FutureBuilder<PackageInfo>(
+                  future: PackageInfo.fromPlatform(),
+                  builder: (context, snapshot) {
+                    final version = snapshot.hasData ? snapshot.data!.version : '1.0.120';
+                    final appName = isAr ? 'بسطه - نقطة بيع' : 'Tajer POS';
+                    return Text(
+                      '$appName v$version\n${isAr ? "صُنع بحب 💛" : "Made with 💛"}',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontFamily: 'Tajawal', color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4), fontSize: 13, letterSpacing: 1.1),
+                    );
+                  },
                 ),
               ],
             ),

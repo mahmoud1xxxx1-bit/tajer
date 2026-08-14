@@ -729,7 +729,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsCouldNotOpenBrowser => 'Could not open browser.';
 
   @override
-  String get settingsAppVersion => 'Tajer POS v1.0.42\nMade with 💛';
+  String get settingsAppVersion => 'Tajer POS v1.0.120\nMade with 💛';
 
   @override
   String get empPermViewCostProfits => 'View cost and profits';

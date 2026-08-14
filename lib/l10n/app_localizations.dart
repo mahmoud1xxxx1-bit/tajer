@@ -1523,7 +1523,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAppVersion.
   ///
   /// In ar, this message translates to:
-  /// **'بسطه - نقطة بيع v1.0.42\nصُنع بحب 💛'**
+  /// **'بسطه - نقطة بيع v1.0.120\nصُنع بحب 💛'**
   String get settingsAppVersion;
 
   /// No description provided for @empPermViewCostProfits.
