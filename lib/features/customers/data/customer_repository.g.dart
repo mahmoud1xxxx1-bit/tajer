@@ -23,7 +23,7 @@ final customerRepositoryProvider =
 );
 
 typedef CustomerRepositoryRef = AutoDisposeProviderRef<CustomerRepository>;
-String _$customersStreamHash() => r'b10009e541b5c0df09fd64eed59b5396540ce0ab';
+String _$customersStreamHash() => r'7e9e5953bdb707e054108e93bf3b52c09342658e';
 
 /// See also [customersStream].
 @ProviderFor(customersStream)

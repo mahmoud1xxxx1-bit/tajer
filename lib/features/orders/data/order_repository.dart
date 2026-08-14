@@ -170,7 +170,7 @@ class OrderRepository {
     
     final orderWithQueue = order.copyWith(
       queueNumber: nextQueueNumber,
-      // Will be populated below
+      initialPaidAmount: order.paidAmount,
     );
 
     // PRE-FETCH all needed products concurrently

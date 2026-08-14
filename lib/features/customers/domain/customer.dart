@@ -9,6 +9,7 @@ class Customer {
   final double totalPurchases;
   final int orderCount;
   final double totalDebt;
+  final double? initialDebt; // NEW
   final DateTime? lastPurchaseDate;
   final DateTime createdAt;
   final String? creatorName;
@@ -23,6 +24,7 @@ class Customer {
     this.totalPurchases = 0.0,
     this.orderCount = 0,
     this.totalDebt = 0.0,
+    this.initialDebt, // NEW
     this.lastPurchaseDate,
     required this.createdAt,
     this.creatorName,
@@ -38,6 +40,7 @@ class Customer {
     double? totalPurchases,
     int? orderCount,
     double? totalDebt,
+    double? initialDebt, // NEW
     DateTime? lastPurchaseDate,
     DateTime? createdAt,
     String? creatorName,
@@ -52,6 +55,7 @@ class Customer {
       totalPurchases: totalPurchases ?? this.totalPurchases,
       orderCount: orderCount ?? this.orderCount,
       totalDebt: totalDebt ?? this.totalDebt,
+      initialDebt: initialDebt ?? this.initialDebt, // NEW
       lastPurchaseDate: lastPurchaseDate ?? this.lastPurchaseDate,
       createdAt: createdAt ?? this.createdAt,
       creatorName: creatorName ?? this.creatorName,
@@ -69,6 +73,7 @@ class Customer {
       totalPurchases: (json['totalPurchases'] as num?)?.toDouble() ?? 0.0,
       orderCount: (json['orderCount'] as num?)?.toInt() ?? 0,
       totalDebt: (json['totalDebt'] as num?)?.toDouble() ?? 0.0,
+      initialDebt: (json['initialDebt'] as num?)?.toDouble(), // NEW
       lastPurchaseDate: json['lastPurchaseDate'] != null
           ? safeParseDate(json['lastPurchaseDate'])
           : null,
@@ -90,6 +95,7 @@ class Customer {
       'totalPurchases': totalPurchases,
       'orderCount': orderCount,
       'totalDebt': totalDebt,
+      if (initialDebt != null) 'initialDebt': initialDebt, // NEW
       'lastPurchaseDate': lastPurchaseDate != null ? Timestamp.fromDate(lastPurchaseDate!) : null,
       'createdAt': Timestamp.fromDate(createdAt),
       'creatorName': creatorName,

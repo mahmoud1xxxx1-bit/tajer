@@ -21,7 +21,7 @@ final orderRepositoryProvider = AutoDisposeProvider<OrderRepository>.internal(
 );
 
 typedef OrderRepositoryRef = AutoDisposeProviderRef<OrderRepository>;
-String _$ordersStreamHash() => r'ab016e5cabdb869f4290df2d87c508af565f7259';
+String _$ordersStreamHash() => r'32d457dc0ce7601eaf399821dccd75ab1c0888b4';
 
 /// See also [ordersStream].
 @ProviderFor(ordersStream)

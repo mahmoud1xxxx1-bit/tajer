@@ -6,6 +6,7 @@ import '../data/customer_repository.dart';
 import '../domain/customer.dart';
 import '../../authentication/data/auth_repository.dart';
 import 'add_customer_dialog.dart';
+import 'customer_statement_screen.dart';
 import 'package:firebase_ui_firestore/firebase_ui_firestore.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../../core/theme/glass_card.dart';
@@ -469,9 +470,26 @@ class _CustomersScreenState extends ConsumerState<CustomersScreen> {
                             );
                           }
                         }
+                      } else if (value == 'statement') {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CustomerStatementScreen(customer: customer),
+                          ),
+                        );
                       }
                     },
                     itemBuilder: (context) => [
+                      PopupMenuItem(
+                        value: 'statement',
+                        child: Row(
+                          children: [
+                            const Icon(Icons.receipt_long, size: 20, color: Colors.purple),
+                            const SizedBox(width: 8),
+                            Text(Localizations.localeOf(context).languageCode == 'ar' ? 'كشف الحساب' : 'Account Statement', style: const TextStyle(fontFamily: 'Tajawal', color: Colors.purple, fontWeight: FontWeight.bold)),
+                          ],
+                        ),
+                      ),
                       if (canManageCustomers)
                         PopupMenuItem(
                           value: 'edit',

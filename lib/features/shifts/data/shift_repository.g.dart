@@ -170,7 +170,7 @@ class _CurrentShiftProviderElement
   String get merchantId => (origin as CurrentShiftProvider).merchantId;
 }
 
-String _$shiftsStreamHash() => r'3d0649257eb670606ffff44f0b522a3800db2cfc';
+String _$shiftsStreamHash() => r'e95112afbcb6904108be221270c9ba80cf3f1bc4';
 
 /// See also [shiftsStream].
 @ProviderFor(shiftsStream)

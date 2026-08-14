@@ -54,6 +54,7 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
       final isEditing = widget.customerToEdit != null;
       final isAr = Localizations.localeOf(context).languageCode == 'ar';
 
+      final double parsedDebt = double.tryParse(_debtController.text.trim()) ?? 0.0;
       final newCustomer = Customer(
         id: isEditing ? widget.customerToEdit!.id : Uuid().v4(),
         merchantId: isEditing ? widget.customerToEdit!.merchantId : (appUser?.merchantId ?? user.uid),
@@ -62,7 +63,8 @@ class _AddCustomerDialogState extends ConsumerState<AddCustomerDialog> {
         createdAt: isEditing ? widget.customerToEdit!.createdAt : DateTime.now(),
         totalPurchases: isEditing ? widget.customerToEdit!.totalPurchases : 0.0,
         orderCount: isEditing ? widget.customerToEdit!.orderCount : 0,
-        totalDebt: double.tryParse(_debtController.text.trim()) ?? 0.0,
+        totalDebt: parsedDebt,
+        initialDebt: isEditing ? widget.customerToEdit!.initialDebt : parsedDebt, // NEW
         creatorName: isEditing ? widget.customerToEdit!.creatorName : (appUser?.name ?? (isAr ? 'التاجر' : 'Owner')),
       );
 

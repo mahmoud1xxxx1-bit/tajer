@@ -12,6 +12,7 @@ class AppOrder {
   final double total;
   final String status;
   final double paidAmount;
+  final double? initialPaidAmount; // NEW
   final bool isCredit;
   final String? notes;
   final String? creatorId;
@@ -36,6 +37,7 @@ class AppOrder {
     required this.total,
     this.status = 'pending',
     this.paidAmount = 0.0,
+    this.initialPaidAmount, // NEW
     this.isCredit = false,
     this.notes,
     this.creatorId,
@@ -65,6 +67,7 @@ class AppOrder {
       total: (json['total'] as num).toDouble(),
       status: json['status'] as String? ?? 'pending',
       paidAmount: (json['paidAmount'] as num?)?.toDouble() ?? 0.0,
+      initialPaidAmount: (json['initialPaidAmount'] as num?)?.toDouble(), // NEW
       isCredit: json['isCredit'] as bool? ?? false,
       notes: json['notes'] as String?,
       creatorId: json['creatorId'] as String?,
@@ -92,6 +95,7 @@ class AppOrder {
       'total': total,
       'status': status,
       'paidAmount': paidAmount,
+      if (initialPaidAmount != null) 'initialPaidAmount': initialPaidAmount, // NEW
       'isCredit': isCredit,
       'notes': notes,
       'creatorId': creatorId,
@@ -118,6 +122,7 @@ class AppOrder {
     double? total,
     String? status,
     double? paidAmount,
+    double? initialPaidAmount, // NEW
     bool? isCredit,
     String? notes,
     String? creatorId,
@@ -142,6 +147,7 @@ class AppOrder {
       total: total ?? this.total,
       status: status ?? this.status,
       paidAmount: paidAmount ?? this.paidAmount,
+      initialPaidAmount: initialPaidAmount ?? this.initialPaidAmount, // NEW
       isCredit: isCredit ?? this.isCredit,
       notes: notes ?? this.notes,
       creatorId: creatorId ?? this.creatorId,
