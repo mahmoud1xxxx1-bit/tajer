@@ -2,15 +2,19 @@ name: tajer
 description: "Tajer - Merchant Inventory and Order Management System"
 publish_to: 'none'
 version: 1.0.120+120
+
 environment:
   sdk: '>=3.2.0 <4.0.0'
 
 dependencies:
   wakelock_plus: ^1.2.8
+
   flutter:
     sdk: flutter
+
   flutter_localizations:
     sdk: flutter
+
   intl: any
 
   # State Management
@@ -44,9 +48,6 @@ dependencies:
   freezed_annotation: ^2.4.1
   json_annotation: ^4.9.0
 
-  # Monetization
-  # using purchases_flutter instead
-
   # Scanner
   mobile_scanner: ^5.1.1
   permission_handler: ^11.3.1
@@ -72,29 +73,31 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
   build_runner: ^2.4.8
   custom_lint: ^0.6.2
   riverpod_generator: ^2.4.0
   freezed: ^2.4.7
   json_serializable: ^6.8.0
   flutter_launcher_icons: ^0.13.1
+
   integration_test:
     sdk: flutter
 
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/app_icon.jpg"
+  image_path: "assets/app_icon.png"
   web:
     generate: true
-    image_path: "assets/app_icon.jpg"
+    image_path: "assets/app_icon.png"
     background_color: "#ffffff"
 
 flutter:
   uses-material-design: true
   generate: true
   assets:
-    - assets/app_icon.jpg
+    - assets/app_icon.png
     - assets/fonts/
 
 dependency_overrides:
