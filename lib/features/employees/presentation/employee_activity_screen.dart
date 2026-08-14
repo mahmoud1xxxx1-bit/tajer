@@ -207,8 +207,8 @@ class _EmployeeActivityScreenState extends ConsumerState<EmployeeActivityScreen>
                         }
                       } else {
                         // Inventory logs by this employee
-                        final empEmail = data['userEmail']?.toString() ?? '';
-                        if (empEmail == widget.employeeName || empEmail.contains(widget.employeeName)) {
+                        final empName = data['userName']?.toString() ?? data['userEmail']?.toString() ?? '';
+                        if (empName == widget.employeeName || empName.contains(widget.employeeName)) {
                           final ts = safeParseDate(data['date']);
                           final pName = data['productName']?.toString() ?? (isAr ? 'صنف/منتج' : 'Product');
                           final change = (data['changeQuantity'] as num? ?? 0).toInt();

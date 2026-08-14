@@ -258,7 +258,8 @@ class OrderRepository {
         'newQuantity': (data['quantity'] as num? ?? 0) - deducted,
         'reason': 'فاتورة مبيعات #${nextQueueNumber}',
         'date': FieldValue.serverTimestamp(),
-        'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+        'userName': order.creatorName ?? 'Unknown',
+        'userEmail': '',
       });
     }
 
@@ -289,7 +290,8 @@ class OrderRepository {
           'newQuantity': (rmData['quantity'] as num? ?? 0) - deducted,
           'reason': 'مباع ضمن: $productNameForLog (فاتورة #${nextQueueNumber})',
           'date': FieldValue.serverTimestamp(),
-          'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+          'userName': order.creatorName ?? 'Unknown',
+          'userEmail': '',
         });
       }
     }
@@ -434,7 +436,8 @@ class OrderRepository {
           'newQuantity': (data['quantity'] as num? ?? 0) + added,
           'reason': 'استرجاع مخزون بسبب حذف نهائي لفاتورة #${order.queueNumber ?? order.id}',
           'date': FieldValue.serverTimestamp(),
-          'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+          'userName': order.creatorName ?? 'Unknown',
+          'userEmail': '',
         });
       }
 
@@ -461,7 +464,8 @@ class OrderRepository {
           'newQuantity': (rmData['quantity'] as num? ?? 0) + added,
           'reason': 'استرجاع مادة بسبب حذف نهائي لفاتورة #${order.queueNumber ?? order.id}',
           'date': FieldValue.serverTimestamp(),
-          'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+          'userName': order.creatorName ?? 'Unknown',
+          'userEmail': '',
         });
       }
 
@@ -629,7 +633,8 @@ class OrderRepository {
           'newQuantity': (data['quantity'] as num? ?? 0) + added,
           'reason': 'استرجاع مخزون بسبب إلغاء فاتورة #${order.queueNumber ?? order.id}',
           'date': FieldValue.serverTimestamp(),
-          'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+          'userName': order.creatorName ?? 'Unknown',
+          'userEmail': '',
         });
       }
 
@@ -657,7 +662,8 @@ class OrderRepository {
           'newQuantity': (rmData['quantity'] as num? ?? 0) + added,
           'reason': 'استرجاع مادة لمنتج: ${rmParentProductNames[rmId]} (إلغاء فاتورة #${order.queueNumber ?? order.id})',
           'date': FieldValue.serverTimestamp(),
-          'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+          'userName': order.creatorName ?? 'Unknown',
+          'userEmail': '',
         });
       }
 
@@ -795,7 +801,8 @@ class OrderRepository {
           'newQuantity': (data['quantity'] as num? ?? 0) - deducted,
           'reason': 'خصم مخزون بسبب التراجع عن إلغاء الفاتورة #${order.queueNumber ?? order.id}',
           'date': FieldValue.serverTimestamp(),
-          'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+          'userName': order.creatorName ?? 'Unknown',
+          'userEmail': '',
         });
       }
 
@@ -823,7 +830,8 @@ class OrderRepository {
           'newQuantity': (rmData['quantity'] as num? ?? 0) - deducted,
           'reason': 'خصم مادة لمنتج: ${rmParentProductNames[rmId]} (التراجع عن إلغاء فاتورة #${order.queueNumber ?? order.id})',
           'date': FieldValue.serverTimestamp(),
-          'userEmail': FirebaseAuth.instance.currentUser?.email ?? 'Unknown',
+          'userName': order.creatorName ?? 'Unknown',
+          'userEmail': '',
         });
       }
 

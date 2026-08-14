@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -146,8 +146,8 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             previousQuantity: previousQuantity,
             newQuantity: newQuantity,
             reason: AppLocalizations.of(context)!.text100,
-            userEmail: user.email,
-            userName: appUser?.name ?? user.email,
+            userEmail: '',
+            userName: appUser?.name ?? '',
             itemType: 'product',
           ).timeout(const Duration(seconds: 1));
         }
@@ -165,8 +165,8 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
             previousQuantity: 0,
             newQuantity: newQuantity,
             reason: AppLocalizations.of(context)!.text101,
-            userEmail: user.email,
-            userName: appUser?.name ?? user.email,
+            userEmail: '',
+            userName: appUser?.name ?? '',
             itemType: 'product',
           ).timeout(const Duration(seconds: 1));
         }
@@ -513,4 +513,5 @@ class _AddProductDialogState extends ConsumerState<AddProductDialog> {
     );
   }
 }
+
 

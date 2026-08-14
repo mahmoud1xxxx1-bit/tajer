@@ -347,7 +347,7 @@ class SettingsScreen extends ConsumerWidget {
                   future: PackageInfo.fromPlatform(),
                   builder: (context, snapshot) {
                     final version = snapshot.hasData ? snapshot.data!.version : '1.0.120';
-                    final appName = isAr ? 'بسطه - نقطة بيع' : 'Tajer POS';
+                    final appName = isAr ? 'تاجر - نقطة بيع' : 'Tajer POS';
                     return Text(
                       '$appName v$version\n${isAr ? "صُنع بحب 💛" : "Made with 💛"}',
                       textAlign: TextAlign.center,

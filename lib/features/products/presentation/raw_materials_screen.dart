@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -220,7 +220,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                                   newQuantity: qty,
                                   reason:
                                       'إضافة خام جديد / Add New Raw Material',
-                                  userEmail: user?.email,
+                                  userEmail: '',
                                   userName: user?.name ?? user?.email,
                                   itemType: 'raw_material',
                                 )
@@ -246,7 +246,7 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
                                   previousQuantity: rawMaterial.quantity,
                                   newQuantity: qty,
                                   reason: 'تحديث يدوي / Manual Update',
-                                  userEmail: user?.email,
+                                  userEmail: '',
                                   userName: user?.name ?? user?.email,
                                   itemType: 'raw_material',
                                 )
@@ -455,3 +455,4 @@ class _RawMaterialsScreenState extends ConsumerState<RawMaterialsScreen> {
     );
   }
 }
+

@@ -189,14 +189,14 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                                         style: TextStyle(fontSize: 12, color: Colors.grey[400], fontFamily: 'Tajawal'),
                                       ),
                                     ),
-                                    if (log.userName != null || log.userEmail != null)
+                                    if (log.userName != null && log.userName!.trim().isNotEmpty)
                                       Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Icon(Icons.person_pin, size: 14, color: Colors.blueAccent.withValues(alpha: 0.7)),
                                           const SizedBox(width: 4),
                                           Text(
-                                            log.userName ?? log.userEmail!,
+                                            log.userName!,
                                             style: const TextStyle(
                                                 fontSize: 12,
                                                 color: Colors.blueAccent,

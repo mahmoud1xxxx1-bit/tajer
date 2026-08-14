@@ -116,6 +116,12 @@ class AuthRepository {
   }
 
   Future<void> signOut() async {
+    try {
+      await GoogleSignIn().disconnect();
+    } catch (e) {
+      // Ignore disconnect errors
+    }
+    await GoogleSignIn().signOut();
     await _auth.signOut();
   }
 
@@ -322,7 +328,7 @@ class AuthRepository {
           final plan = mDoc.data()?['plan'] ?? 'merchant';
           final email = mDoc.data()?['email'] as String?;
           if (plan != 'premium' && email?.trim().toLowerCase() != 'love.dotk@gmail.com') {
-            await _auth.signOut();
+            await signOut();
             throw Exception("لا يمكن تسجيل الدخول لأن التاجر لم يقم بتفعيل الباقة الشهرية.");
           }
         }

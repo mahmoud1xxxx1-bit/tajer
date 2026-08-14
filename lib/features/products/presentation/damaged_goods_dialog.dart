@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -63,7 +63,7 @@ class _DamagedGoodsDialogState extends ConsumerState<DamagedGoodsDialog> {
         previousQuantity: widget.product.quantity,
         newQuantity: newQuantity,
         reason: logReason,
-        userEmail: appUser.email,
+        userEmail: '',
         userName: appUser.name,
         itemType: 'product',
       );
@@ -286,3 +286,4 @@ class _DamagedGoodsDialogState extends ConsumerState<DamagedGoodsDialog> {
     );
   }
 }
+

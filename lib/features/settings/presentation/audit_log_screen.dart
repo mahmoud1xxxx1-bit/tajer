@@ -73,7 +73,8 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
             Text(item.subtitle, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 12)),
             if (item.details.isNotEmpty)
               Text(item.details, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 11, color: Colors.grey)),
-            Text(item.performedBy, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 10, color: Colors.teal)),
+            if (item.performedBy.isNotEmpty)
+              Text(item.performedBy, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 10, color: Colors.teal)),
           ],
         ),
         trailing: Column(
@@ -281,7 +282,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                         final prev = (data['previousQuantity'] as num? ?? 0).toInt();
                         final next = (data['newQuantity'] as num? ?? 0).toInt();
                         final reason = data['reason']?.toString() ?? (isAr ? 'تعديل أو حركة في المخزون' : 'Inventory movement');
-                        final userEmail = data['userEmail']?.toString() ?? (isAr ? 'التاجر' : 'Merchant');
+                        final userNameStr = data['userName']?.toString() ?? data['employeeName']?.toString() ?? '';
                         
                         final changeStr = change > 0 ? '+$change' : '$change';
                         items.add(
@@ -290,7 +291,7 @@ class _AuditLogScreenState extends ConsumerState<AuditLogScreen> {
                             title: isAr ? '📦 مخزون: $pName ($changeStr)' : '📦 Inventory: $pName ($changeStr)',
                             subtitle: isAr ? '🔄 من ($prev) إلى ($next) | 📝 السبب: $reason' : '🔄 From ($prev) to ($next) | 📝 Reason: $reason',
                             timestamp: ts,
-                            performedBy: userEmail,
+                            performedBy: userNameStr,
                             type: 'مخزون',
                             badgeColor: change > 0 ? Colors.teal : Colors.amber,
                           ),
