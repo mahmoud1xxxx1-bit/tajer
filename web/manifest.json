@@ -1,11 +1,11 @@
 {
-    "name": "tajer",
-    "short_name": "tajer",
+    "name": "Tajer - POS & Inventory",
+    "short_name": "Tajer",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "description": "Tajer POS and inventory management for small businesses.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
