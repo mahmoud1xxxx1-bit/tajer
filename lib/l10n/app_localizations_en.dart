@@ -2004,4 +2004,130 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notebookGuideReports => 'View and print notebook reports here.';
+
+  @override
+  String get notebookWelcomeTitle => 'Welcome to the Accounting Notebook';
+
+  @override
+  String get notebookWelcomeDesc =>
+      'Here you can track your money, income, expenses, debts, and see exactly where your money goes.';
+
+  @override
+  String get notebookSetupNow => 'Start Setting Up';
+
+  @override
+  String get notebookLater => 'Later';
+
+  @override
+  String get notebookGuide => 'Accounting Notebook Guide';
+
+  @override
+  String get notebookNeedBookFirst =>
+      'You need to create a book first before adding this transaction.';
+
+  @override
+  String get notebookNeedAccountFirst =>
+      'You need to add an account first (e.g., Cash or Bank) before adding this transaction.';
+
+  @override
+  String get notebookNeedCategoryFirst =>
+      'You need to add a category first (e.g., Sales or Purchases) before adding this transaction.';
+
+  @override
+  String get notebookNeedTwoAccountsFirst =>
+      'You need to add at least two accounts to transfer between them.';
+
+  @override
+  String get notebookCreateBook => 'Create Book';
+
+  @override
+  String get notebookGuideSec1Title => '1. What is the Accounting Notebook?';
+
+  @override
+  String get notebookGuideSec1Desc =>
+      'The notebook is where you record all your financial transactions (income, expenses, debts) to know your profits and track your money accurately.';
+
+  @override
+  String get notebookGuideSec2Title => '2. Books';
+
+  @override
+  String get notebookGuideSec2Desc =>
+      'You can create more than one book if you have multiple activities (e.g., one for the store and one for personal expenses). Each book is completely separated.';
+
+  @override
+  String get notebookGuideSec3Title => '3. Accounts';
+
+  @override
+  String get notebookGuideSec3Desc =>
+      'An account is where you keep your money (like a Cash drawer, Bank account, or Wallet). When adding an account, you can set the opening balance (e.g., 2000 SAR currently in cash).';
+
+  @override
+  String get notebookGuideSec4Title => '4. Categories';
+
+  @override
+  String get notebookGuideSec4Desc =>
+      'Categories help you know where money comes from and where it goes. (Income examples: Sales, Services. Expense examples: Rent, Salaries, Purchases).';
+
+  @override
+  String get notebookGuideSec5Title => '5. Recording Income';
+
+  @override
+  String get notebookGuideSec5Desc =>
+      'When money comes in, record an (Income). Choose the account that received the money, select the category, and enter the amount.';
+
+  @override
+  String get notebookGuideSec6Title => '6. Recording Expenses';
+
+  @override
+  String get notebookGuideSec6Desc =>
+      'When you pay money, record an (Expense). This amount will be deducted from the chosen account.';
+
+  @override
+  String get notebookGuideSec7Title => '7. Transfer Between Accounts';
+
+  @override
+  String get notebookGuideSec7Desc =>
+      'A transfer is neither income nor expense. It simply moves money. (Example: Transferring 1000 SAR from Cash to Bank means Cash decreases and Bank increases, but your profit remains unchanged).';
+
+  @override
+  String get notebookGuideSec8Title => '8. People';
+
+  @override
+  String get notebookGuideSec8Desc =>
+      'You can add people you deal with on credit (debts), whether they are customers, suppliers, or friends.';
+
+  @override
+  String get notebookGuideSec9Title => '9. Owed To Me';
+
+  @override
+  String get notebookGuideSec9Desc =>
+      'If you give someone money or sell to them on credit, use this. Later, you can record a partial or full repayment.';
+
+  @override
+  String get notebookGuideSec10Title => '10. I Owe';
+
+  @override
+  String get notebookGuideSec10Desc =>
+      'If you borrow money or buy on credit, use this. You can later record your repayments.';
+
+  @override
+  String get notebookGuideSec11Title => '11. Transactions';
+
+  @override
+  String get notebookGuideSec11Desc =>
+      'The transaction log details every operation in the notebook so you can review and track your money flow.';
+
+  @override
+  String get notebookGuideSec12Title => '12. Reports';
+
+  @override
+  String get notebookGuideSec12Desc =>
+      'Reports summarize your numbers clearly. You will know your total income, expenses, net profit, as well as outstanding debts and current account balances.';
+
+  @override
+  String get notebookGuideSec13Title => '13. Archive and Restore';
+
+  @override
+  String get notebookGuideSec13Desc =>
+      'If you no longer want to use an account or person in new transactions, you can archive it. Archiving does not delete historical money or movements from reports, and you can restore it anytime.';
 }

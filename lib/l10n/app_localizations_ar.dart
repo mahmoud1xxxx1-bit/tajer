@@ -2001,4 +2001,130 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notebookGuideReports => 'استعرض واطبع تقارير الدفاتر من هنا.';
+
+  @override
+  String get notebookWelcomeTitle => 'مرحبًا بك في دفتر المحاسبة';
+
+  @override
+  String get notebookWelcomeDesc =>
+      'يمكنك هنا متابعة أموالك ودخلك ومصاريفك وديونك ومعرفة أين تذهب أموالك.';
+
+  @override
+  String get notebookSetupNow => 'ابدأ إعداد دفتري';
+
+  @override
+  String get notebookLater => 'لاحقًا';
+
+  @override
+  String get notebookGuide => 'دليل دفتر المحاسبة';
+
+  @override
+  String get notebookNeedBookFirst =>
+      'تحتاج إلى إنشاء دفتر أولاً قبل إضافة هذه العملية.';
+
+  @override
+  String get notebookNeedAccountFirst =>
+      'تحتاج إلى إضافة حساب أولاً (مثل كاش أو بنك) قبل إضافة هذه العملية.';
+
+  @override
+  String get notebookNeedCategoryFirst =>
+      'تحتاج إلى إضافة تصنيف أولاً (مثل مبيعات أو مشتريات) قبل إضافة هذه العملية.';
+
+  @override
+  String get notebookNeedTwoAccountsFirst =>
+      'تحتاج إلى إضافة حسابين على الأقل للتحويل بينهما.';
+
+  @override
+  String get notebookCreateBook => 'إنشاء دفتر';
+
+  @override
+  String get notebookGuideSec1Title => '١. ما هو دفتر المحاسبة؟';
+
+  @override
+  String get notebookGuideSec1Desc =>
+      'الدفتر هو المكان الذي تسجل فيه كل حركاتك المالية (دخل، مصروف، ديون) لتعرف أرباحك وتتابع أموالك بدقة.';
+
+  @override
+  String get notebookGuideSec2Title => '٢. الدفاتر';
+
+  @override
+  String get notebookGuideSec2Desc =>
+      'يمكنك إنشاء أكثر من دفتر إذا كان لديك أكثر من نشاط (مثلاً دفتر للمحل ودفتر لمصروفاتك الشخصية). كل دفتر منفصل تماماً بحساباته وتصنيفاته.';
+
+  @override
+  String get notebookGuideSec3Title => '٣. الحسابات';
+
+  @override
+  String get notebookGuideSec3Desc =>
+      'الحساب هو المكان الذي تحتفظ فيه بالمال (مثل درج الكاش، حسابك البنكي، أو المحفظة الإلكترونية). عند إضافة حساب جديد، يمكنك وضع الرصيد الافتتاحي (مثلاً 2000 ريال موجودة في الكاش حالياً).';
+
+  @override
+  String get notebookGuideSec4Title => '٤. التصنيفات';
+
+  @override
+  String get notebookGuideSec4Desc =>
+      'التصنيفات تساعدك على معرفة من أين يأتي المال وفيما تنفقه. (أمثلة الدخل: مبيعات، خدمات. أمثلة المصروفات: إيجار، رواتب، مشتريات).';
+
+  @override
+  String get notebookGuideSec5Title => '٥. تسجيل الدخل';
+
+  @override
+  String get notebookGuideSec5Desc =>
+      'عندما يدخل مال إليك، قم بتسجيل (دخل). اختر الحساب الذي دخلت إليه الأموال (مثلاً الكاش)، واختر التصنيف (مثلاً مبيعات)، وأدخل المبلغ.';
+
+  @override
+  String get notebookGuideSec6Title => '٦. تسجيل المصروف';
+
+  @override
+  String get notebookGuideSec6Desc =>
+      'عندما تدفع مالاً، سجل (مصروف). سيتم خصم هذا المبلغ من الحساب الذي تختاره (مثلاً حسابك البنكي).';
+
+  @override
+  String get notebookGuideSec7Title => '٧. التحويل بين الحسابات';
+
+  @override
+  String get notebookGuideSec7Desc =>
+      'التحويل لا يعتبر دخلاً ولا مصروفاً. هو مجرد نقل للمال من مكان لآخر. (مثال: تحويل 1000 ريال من الكاش إلى البنك يعني أن الكاش نقص والبنك زاد، ولكن أرباحك لم تتغير).';
+
+  @override
+  String get notebookGuideSec8Title => '٨. الأشخاص';
+
+  @override
+  String get notebookGuideSec8Desc =>
+      'يمكنك إضافة أشخاص تتعامل معهم بالآجل (الديون) سواء كانوا عملاء، موردين، أو أصدقاء.';
+
+  @override
+  String get notebookGuideSec9Title => '٩. لي عند الغير';
+
+  @override
+  String get notebookGuideSec9Desc =>
+      'إذا أعطيت شخصاً مالاً أو بعت له ديناً، استخدم هذا الخيار. يمكنك لاحقاً الدخول لشاشة الشخص وتسجيل سداد جزئي أو كامل للمبلغ.';
+
+  @override
+  String get notebookGuideSec10Title => '١٠. عليّ للغير';
+
+  @override
+  String get notebookGuideSec10Desc =>
+      'إذا استدنت مالاً أو اشتريت ديناً من شخص أو مورد، استخدم هذا الخيار. يمكنك لاحقاً تسجيل سداد ديونك.';
+
+  @override
+  String get notebookGuideSec11Title => '١١. الحركات';
+
+  @override
+  String get notebookGuideSec11Desc =>
+      'سجل الحركات يوضح لك كل عملية حدثت في الدفتر بالتفصيل لتتمكن من المراجعة وتتبع أين ذهب المال.';
+
+  @override
+  String get notebookGuideSec12Title => '١٢. التقارير';
+
+  @override
+  String get notebookGuideSec12Desc =>
+      'تجمع لك التقارير الأرقام بوضوح. ستعرف إجمالي دخلك ومصروفاتك وصافي نتيجتك، بالإضافة لمعرفة ديونك وأرصدة حساباتك الحالية.';
+
+  @override
+  String get notebookGuideSec13Title => '١٣. الأرشفة والاستعادة';
+
+  @override
+  String get notebookGuideSec13Desc =>
+      'إذا لم تعد تريد استخدام حساب أو شخص في عمليات جديدة، يمكنك أرشفته. الأرشفة لا تحذف الأموال أو الحركات القديمة من التقارير، ويمكنك دائماً استعادة العنصر المؤرشف لاحقاً.';
 }

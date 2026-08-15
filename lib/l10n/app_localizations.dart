@@ -3889,6 +3889,222 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'استعرض واطبع تقارير الدفاتر من هنا.'**
   String get notebookGuideReports;
+
+  /// No description provided for @notebookWelcomeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرحبًا بك في دفتر المحاسبة'**
+  String get notebookWelcomeTitle;
+
+  /// No description provided for @notebookWelcomeDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'يمكنك هنا متابعة أموالك ودخلك ومصاريفك وديونك ومعرفة أين تذهب أموالك.'**
+  String get notebookWelcomeDesc;
+
+  /// No description provided for @notebookSetupNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ إعداد دفتري'**
+  String get notebookSetupNow;
+
+  /// No description provided for @notebookLater.
+  ///
+  /// In ar, this message translates to:
+  /// **'لاحقًا'**
+  String get notebookLater;
+
+  /// No description provided for @notebookGuide.
+  ///
+  /// In ar, this message translates to:
+  /// **'دليل دفتر المحاسبة'**
+  String get notebookGuide;
+
+  /// No description provided for @notebookNeedBookFirst.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحتاج إلى إنشاء دفتر أولاً قبل إضافة هذه العملية.'**
+  String get notebookNeedBookFirst;
+
+  /// No description provided for @notebookNeedAccountFirst.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحتاج إلى إضافة حساب أولاً (مثل كاش أو بنك) قبل إضافة هذه العملية.'**
+  String get notebookNeedAccountFirst;
+
+  /// No description provided for @notebookNeedCategoryFirst.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحتاج إلى إضافة تصنيف أولاً (مثل مبيعات أو مشتريات) قبل إضافة هذه العملية.'**
+  String get notebookNeedCategoryFirst;
+
+  /// No description provided for @notebookNeedTwoAccountsFirst.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحتاج إلى إضافة حسابين على الأقل للتحويل بينهما.'**
+  String get notebookNeedTwoAccountsFirst;
+
+  /// No description provided for @notebookCreateBook.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء دفتر'**
+  String get notebookCreateBook;
+
+  /// No description provided for @notebookGuideSec1Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'١. ما هو دفتر المحاسبة؟'**
+  String get notebookGuideSec1Title;
+
+  /// No description provided for @notebookGuideSec1Desc.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدفتر هو المكان الذي تسجل فيه كل حركاتك المالية (دخل، مصروف، ديون) لتعرف أرباحك وتتابع أموالك بدقة.'**
+  String get notebookGuideSec1Desc;
+
+  /// No description provided for @notebookGuideSec2Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'٢. الدفاتر'**
+  String get notebookGuideSec2Title;
+
+  /// No description provided for @notebookGuideSec2Desc.
+  ///
+  /// In ar, this message translates to:
+  /// **'يمكنك إنشاء أكثر من دفتر إذا كان لديك أكثر من نشاط (مثلاً دفتر للمحل ودفتر لمصروفاتك الشخصية). كل دفتر منفصل تماماً بحساباته وتصنيفاته.'**
+  String get notebookGuideSec2Desc;
+
+  /// No description provided for @notebookGuideSec3Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'٣. الحسابات'**
+  String get notebookGuideSec3Title;
+
+  /// No description provided for @notebookGuideSec3Desc.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحساب هو المكان الذي تحتفظ فيه بالمال (مثل درج الكاش، حسابك البنكي، أو المحفظة الإلكترونية). عند إضافة حساب جديد، يمكنك وضع الرصيد الافتتاحي (مثلاً 2000 ريال موجودة في الكاش حالياً).'**
+  String get notebookGuideSec3Desc;
+
+  /// No description provided for @notebookGuideSec4Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'٤. التصنيفات'**
+  String get notebookGuideSec4Title;
+
+  /// No description provided for @notebookGuideSec4Desc.
+  ///
+  /// In ar, this message translates to:
+  /// **'التصنيفات تساعدك على معرفة من أين يأتي المال وفيما تنفقه. (أمثلة الدخل: مبيعات، خدمات. أمثلة المصروفات: إيجار، رواتب، مشتريات).'**
+  String get notebookGuideSec4Desc;
+
+  /// No description provided for @notebookGuideSec5Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'٥. تسجيل الدخل'**
+  String get notebookGuideSec5Title;
+
+  /// No description provided for @notebookGuideSec5Desc.
+  ///
+  /// In ar, this message translates to:
+  /// **'عندما يدخل مال إليك، قم بتسجيل (دخل). اختر الحساب الذي دخلت إليه الأموال (مثلاً الكاش)، واختر التصنيف (مثلاً مبيعات)، وأدخل المبلغ.'**
+  String get notebookGuideSec5Desc;
+
+  /// No description provided for @notebookGuideSec6Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'٦. تسجيل المصروف'**
+  String get notebookGuideSec6Title;
+
+  /// No description provided for @notebookGuideSec6Desc.
+  ///
+  /// In ar, this message translates to:
+  /// **'عندما تدفع مالاً، سجل (مصروف). سيتم خصم هذا المبلغ من الحساب الذي تختاره (مثلاً حسابك البنكي).'**
+  String get notebookGuideSec6Desc;
+
+  /// No description provided for @notebookGuideSec7Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'٧. التحويل بين الحسابات'**
+  String get notebookGuideSec7Title;
+
+  /// No description provided for @notebookGuideSec7Desc.
+  ///
+  /// In ar, this message translates to:
+  /// **'التحويل لا يعتبر دخلاً ولا مصروفاً. هو مجرد نقل للمال من مكان لآخر. (مثال: تحويل 1000 ريال من الكاش إلى البنك يعني أن الكاش نقص والبنك زاد، ولكن أرباحك لم تتغير).'**
+  String get notebookGuideSec7Desc;
+
+  /// No description provided for @notebookGuideSec8Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'٨. الأشخاص'**
+  String get notebookGuideSec8Title;
+
+  /// No description provided for @notebookGuideSec8Desc.
+  ///
+  /// In ar, this message translates to:
+  /// **'يمكنك إضافة أشخاص تتعامل معهم بالآجل (الديون) سواء كانوا عملاء، موردين، أو أصدقاء.'**
+  String get notebookGuideSec8Desc;
+
+  /// No description provided for @notebookGuideSec9Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'٩. لي عند الغير'**
+  String get notebookGuideSec9Title;
+
+  /// No description provided for @notebookGuideSec9Desc.
+  ///
+  /// In ar, this message translates to:
+  /// **'إذا أعطيت شخصاً مالاً أو بعت له ديناً، استخدم هذا الخيار. يمكنك لاحقاً الدخول لشاشة الشخص وتسجيل سداد جزئي أو كامل للمبلغ.'**
+  String get notebookGuideSec9Desc;
+
+  /// No description provided for @notebookGuideSec10Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'١٠. عليّ للغير'**
+  String get notebookGuideSec10Title;
+
+  /// No description provided for @notebookGuideSec10Desc.
+  ///
+  /// In ar, this message translates to:
+  /// **'إذا استدنت مالاً أو اشتريت ديناً من شخص أو مورد، استخدم هذا الخيار. يمكنك لاحقاً تسجيل سداد ديونك.'**
+  String get notebookGuideSec10Desc;
+
+  /// No description provided for @notebookGuideSec11Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'١١. الحركات'**
+  String get notebookGuideSec11Title;
+
+  /// No description provided for @notebookGuideSec11Desc.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجل الحركات يوضح لك كل عملية حدثت في الدفتر بالتفصيل لتتمكن من المراجعة وتتبع أين ذهب المال.'**
+  String get notebookGuideSec11Desc;
+
+  /// No description provided for @notebookGuideSec12Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'١٢. التقارير'**
+  String get notebookGuideSec12Title;
+
+  /// No description provided for @notebookGuideSec12Desc.
+  ///
+  /// In ar, this message translates to:
+  /// **'تجمع لك التقارير الأرقام بوضوح. ستعرف إجمالي دخلك ومصروفاتك وصافي نتيجتك، بالإضافة لمعرفة ديونك وأرصدة حساباتك الحالية.'**
+  String get notebookGuideSec12Desc;
+
+  /// No description provided for @notebookGuideSec13Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'١٣. الأرشفة والاستعادة'**
+  String get notebookGuideSec13Title;
+
+  /// No description provided for @notebookGuideSec13Desc.
+  ///
+  /// In ar, this message translates to:
+  /// **'إذا لم تعد تريد استخدام حساب أو شخص في عمليات جديدة، يمكنك أرشفته. الأرشفة لا تحذف الأموال أو الحركات القديمة من التقارير، ويمكنك دائماً استعادة العنصر المؤرشف لاحقاً.'**
+  String get notebookGuideSec13Desc;
 }
 
 class _AppLocalizationsDelegate

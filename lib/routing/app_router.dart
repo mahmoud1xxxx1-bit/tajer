@@ -33,6 +33,7 @@ import '../features/accounting_notebook/presentation/notebook_transactions_scree
 import '../features/accounting_notebook/presentation/notebook_transfer_screen.dart';
 import '../features/accounting_notebook/presentation/notebook_payment_screen.dart';
 import '../features/accounting_notebook/presentation/notebook_person_statement_screen.dart';
+import '../features/accounting_notebook/presentation/notebook_guide_screen.dart';
 
 
 
@@ -150,6 +151,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/notebook',
         builder: (context, state) => const NotebookHomeScreen(),
+      ),
+      GoRoute(
+        path: '/notebook/guide',
+        builder: (context, state) => const NotebookGuideScreen(),
       ),
     
       GoRoute(

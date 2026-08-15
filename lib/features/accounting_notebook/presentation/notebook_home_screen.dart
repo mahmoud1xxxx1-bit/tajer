@@ -6,6 +6,7 @@ import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
 import '../utils/notebook_localization_helper.dart';
 import '../../../../core/services/guest_limit_service.dart';
+import '../../../../core/providers/settings_provider.dart';
 
 class NotebookHomeScreen extends ConsumerWidget {
   const NotebookHomeScreen({super.key});
@@ -16,6 +17,10 @@ class NotebookHomeScreen extends ConsumerWidget {
     final accountsAsync = ref.watch(notebookAccountsProvider);
     final transactionsAsync = ref.watch(notebookTransactionsProvider);
     final peopleAsync = ref.watch(notebookPeopleProvider);
+    final booksAsync = ref.watch(notebookBooksProvider);
+    final prefs = ref.watch(sharedPreferencesProvider);
+    final hasDismissedWelcome =
+        prefs.getBool('notebook_welcome_dismissed') ?? false;
 
     double netBalance = 0.0;
     accountsAsync.whenData((accounts) {
@@ -50,12 +55,88 @@ class NotebookHomeScreen extends ConsumerWidget {
           tooltip: l10n.backToTajer,
           onPressed: () => context.go('/dashboard'),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: l10n.notebookGuide,
+            onPressed: () => context.push('/notebook/guide'),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            booksAsync.when(
+              data: (books) {
+                if (books.isEmpty && !hasDismissedWelcome) {
+                  return Card(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    margin: const EdgeInsets.only(bottom: 24),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.menu_book,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onPrimaryContainer),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(l10n.notebookWelcomeTitle,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge
+                                        ?.copyWith(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .onPrimaryContainer,
+                                            fontWeight: FontWeight.bold)),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(l10n.notebookWelcomeDesc,
+                              style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onPrimaryContainer)),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton(
+                                onPressed: () {
+                                  ref.read(sharedPreferencesProvider).setBool(
+                                      'notebook_welcome_dismissed', true);
+                                },
+                                child: Text(l10n.notebookLater),
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton(
+                                onPressed: () {
+                                  context.push('/notebook/books');
+                                },
+                                child: Text(l10n.notebookSetupNow),
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+            ),
             Card(
               elevation: 2,
               shape: RoundedRectangleBorder(
@@ -115,7 +196,11 @@ class NotebookHomeScreen extends ConsumerWidget {
                     child: _buildActionCard(context, Icons.arrow_downward,
                         l10n.income, Colors.green, () async {
                   if (await GuestLimitService.canAddNotebookTransaction(
-                      context, ref)) context.push('/notebook/income');
+                      context, ref)) {
+                    if (await _checkPrereqs(context, ref,
+                        needAccount: true,
+                        needCategory: true)) context.push('/notebook/income');
+                  }
                 })),
                 const SizedBox(width: 16),
                 Expanded(
@@ -123,14 +208,22 @@ class NotebookHomeScreen extends ConsumerWidget {
                         context, Icons.arrow_upward, l10n.expense, Colors.red,
                         () async {
                   if (await GuestLimitService.canAddNotebookTransaction(
-                      context, ref)) context.push('/notebook/expense');
+                      context, ref)) {
+                    if (await _checkPrereqs(context, ref,
+                        needAccount: true,
+                        needCategory: true)) context.push('/notebook/expense');
+                  }
                 })),
                 const SizedBox(width: 16),
                 Expanded(
                     child: _buildActionCard(context, Icons.swap_horiz,
                         l10n.notebookTransfer, Colors.blueGrey, () async {
                   if (await GuestLimitService.canAddNotebookTransaction(
-                      context, ref)) context.push('/notebook/transfer');
+                      context, ref)) {
+                    if (await _checkPrereqs(context, ref,
+                        needTwoAccounts: true))
+                      context.push('/notebook/transfer');
+                  }
                 })),
               ],
             ),
@@ -141,14 +234,20 @@ class NotebookHomeScreen extends ConsumerWidget {
                     child: _buildActionCard(context, Icons.person_add,
                         l10n.moneyOwedToMe, Colors.blue, () async {
                   if (await GuestLimitService.canAddNotebookTransaction(
-                      context, ref)) context.push('/notebook/debt/me');
+                      context, ref)) {
+                    if (await _checkPrereqs(context, ref))
+                      context.push('/notebook/debt/me');
+                  }
                 })),
                 const SizedBox(width: 16),
                 Expanded(
                     child: _buildActionCard(context, Icons.person_remove,
                         l10n.moneyIOwe, Colors.orange, () async {
                   if (await GuestLimitService.canAddNotebookTransaction(
-                      context, ref)) context.push('/notebook/debt/owe');
+                      context, ref)) {
+                    if (await _checkPrereqs(context, ref))
+                      context.push('/notebook/debt/owe');
+                  }
                 })),
               ],
             ),
@@ -250,6 +349,77 @@ class NotebookHomeScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<bool> _checkPrereqs(
+    BuildContext context,
+    WidgetRef ref, {
+    bool needAccount = false,
+    bool needTwoAccounts = false,
+    bool needCategory = false,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final booksAsync = ref.read(notebookBooksProvider);
+    final hasBooks = booksAsync.valueOrNull?.isNotEmpty ?? false;
+
+    if (!hasBooks) {
+      _showPrereqDialog(context, l10n.notebookNeedBookFirst,
+          l10n.notebookCreateBook, () => context.push('/notebook/books'));
+      return false;
+    }
+
+    if (needAccount || needTwoAccounts) {
+      final accountsAsync = ref.read(notebookAccountsProvider);
+      final count = accountsAsync.valueOrNull?.length ?? 0;
+      if (needTwoAccounts && count < 2) {
+        _showPrereqDialog(context, l10n.notebookNeedTwoAccountsFirst,
+            l10n.notebookAddAccount, () => context.push('/notebook/accounts'));
+        return false;
+      }
+      if (needAccount && count < 1) {
+        _showPrereqDialog(context, l10n.notebookNeedAccountFirst,
+            l10n.notebookAddAccount, () => context.push('/notebook/accounts'));
+        return false;
+      }
+    }
+
+    if (needCategory) {
+      final categoriesAsync = ref.read(notebookCategoriesProvider);
+      final hasCategories = categoriesAsync.valueOrNull?.isNotEmpty ?? false;
+      if (!hasCategories) {
+        _showPrereqDialog(
+            context,
+            l10n.notebookNeedCategoryFirst,
+            l10n.notebookAddCategory,
+            () => context.push('/notebook/categories'));
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  void _showPrereqDialog(BuildContext context, String message, String btnText,
+      VoidCallback onAction) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(AppLocalizations.of(context)!.notebookCancel),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              onAction();
+            },
+            child: Text(btnText),
+          ),
+        ],
       ),
     );
   }
