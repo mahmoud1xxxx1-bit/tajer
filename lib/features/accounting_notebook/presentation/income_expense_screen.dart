@@ -307,8 +307,8 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
                                         SnackBar(
                                           content: Text(
                                             l10n.notebookInsufficientBalance(
-                                              amount.toStringAsFixed(2),
                                               account.balance.toStringAsFixed(2),
+                                              amount.toStringAsFixed(2),
                                             ),
                                           ),
                                         ),
