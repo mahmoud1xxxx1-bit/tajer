@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
 import '../utils/notebook_localization_helper.dart';
+import '../utils/notebook_terminology.dart';
 import '../../../../core/services/guest_limit_service.dart';
 import '../../../../core/providers/settings_provider.dart';
 
@@ -42,7 +43,7 @@ class NotebookHomeScreen extends ConsumerWidget {
         .where((p) => p.bookId == selectedBookId)
         .toList();
 
-    final netBalance =
+    final totalAccountBalance =
         accounts.fold<double>(0, (sum, account) => sum + account.balance);
     final totalIncome = transactions
         .where((tx) => tx.type == 'income')
@@ -162,8 +163,6 @@ class NotebookHomeScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-
-            // The current book is explicit at the top of the notebook feature.
             if (activeBooks.isNotEmpty)
               DropdownButtonFormField<String>(
                 value: selectedBookId,
@@ -180,21 +179,26 @@ class NotebookHomeScreen extends ConsumerWidget {
                 },
               ),
             if (activeBooks.isNotEmpty) const SizedBox(height: 16),
-
             Card(
               elevation: 2,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    Text(l10n.netBalance,
-                        style: Theme.of(context).textTheme.titleLarge),
+                    Text(
+                      NotebookTerminology.totalAccountBalance(context),
+                      style: Theme.of(context).textTheme.titleLarge,
+                      textAlign: TextAlign.center,
+                    ),
                     const SizedBox(height: 8),
                     Text(
-                      NumberFormat.currency(symbol: 'SAR ').format(netBalance),
+                      NumberFormat.currency(symbol: 'SAR ')
+                          .format(totalAccountBalance),
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
-                            color: netBalance >= 0 ? Colors.green : Colors.red,
+                            color: totalAccountBalance >= 0
+                                ? Colors.green
+                                : Colors.red,
                           ),
                     ),
                     const Divider(height: 32),
@@ -211,10 +215,18 @@ class NotebookHomeScreen extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildSummaryItem(context, l10n.notebookReceivable,
-                            totalOwedToMe, Colors.blue),
-                        _buildSummaryItem(context, l10n.notebookPayable,
-                            totalIOwe, Colors.orange),
+                        _buildSummaryItem(
+                          context,
+                          NotebookTerminology.accountsReceivable(context),
+                          totalOwedToMe,
+                          Colors.blue,
+                        ),
+                        _buildSummaryItem(
+                          context,
+                          NotebookTerminology.accountsPayable(context),
+                          totalIOwe,
+                          Colors.orange,
+                        ),
                       ],
                     ),
                   ],
@@ -253,7 +265,10 @@ class NotebookHomeScreen extends ConsumerWidget {
             ]),
             const SizedBox(height: 16),
             _actionRow([
-              _buildActionCard(context, Icons.person_add, l10n.moneyOwedToMe,
+              _buildActionCard(
+                  context,
+                  Icons.person_add,
+                  NotebookTerminology.accountsReceivable(context),
                   Colors.blue, () async {
                 if (await GuestLimitService.canAddNotebookTransaction(
                         context, ref) &&
@@ -262,7 +277,10 @@ class NotebookHomeScreen extends ConsumerWidget {
                   context.push('/notebook/debt/me');
                 }
               }),
-              _buildActionCard(context, Icons.person_remove, l10n.moneyIOwe,
+              _buildActionCard(
+                  context,
+                  Icons.person_remove,
+                  NotebookTerminology.accountsPayable(context),
                   Colors.orange, () async {
                 if (await GuestLimitService.canAddNotebookTransaction(
                         context, ref) &&
@@ -321,7 +339,9 @@ class NotebookHomeScreen extends ConsumerWidget {
                   final isPositive =
                       tx.type == 'income' || tx.type == 'receivable_payment';
                   final isNeutral = tx.type == 'opening_balance' ||
-                      tx.type == 'account_transfer';
+                      tx.type == 'account_transfer' ||
+                      tx.type == 'receivable' ||
+                      tx.type == 'payable';
                   return ListTile(
                     title: Text(tx.note ??
                         NotebookLocalizationHelper.getNotebookLocalizedType(
