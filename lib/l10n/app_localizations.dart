@@ -3733,6 +3733,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'المبلغ المراد سداده'**
   String get notebookPartialPaymentHint;
+
+  /// No description provided for @notebookNoCategoriesFound.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد فئات'**
+  String get notebookNoCategoriesFound;
 }
 
 class _AppLocalizationsDelegate

@@ -1,88 +1,122 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
 import '../../../../core/services/guest_limit_service.dart';
 
-class NotebookPeopleScreen extends ConsumerWidget {
+class NotebookPeopleScreen extends ConsumerStatefulWidget {
   const NotebookPeopleScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NotebookPeopleScreen> createState() => _NotebookPeopleScreenState();
+}
+
+class _NotebookPeopleScreenState extends ConsumerState<NotebookPeopleScreen> {
+  String? _selectedBookId;
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final peopleAsync = ref.watch(notebookPeopleProvider);
+    final booksAsync = ref.watch(notebookBooksProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notebookPeople)),
-      body: peopleAsync.when(
-        data: (people) {
-              final booksAsync = ref.watch(notebookBooksProvider);
-          if (people.isEmpty) {
-            return booksAsync.maybeWhen(
-              data: (books) {
-                if (books.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(l10n.notebookEmptyBooks, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: () => context.push('/notebook/books'),
-                          child: Text(l10n.notebookCreateBookCTA),
-                        )
-                      ],
-                    ),
-                  );
-                }
-                return Center(child: Text(l10n.notebookNoPeopleFound));
-              },
-              orElse: () => Center(child: Text(l10n.notebookNoPeopleFound)),
-            );
-          }
-    
-          return ListView.builder(
-            itemCount: people.length,
-            itemBuilder: (context, index) {
-              final p = people[index];
-              final net = p.amountOwedToMe - p.amountIOwe;
-              return ListTile(
-                leading: const Icon(Icons.person),
-                title: Text(p.name),
-                subtitle: (p.phone != null && p.phone!.isNotEmpty) ? Text(p.phone!) : null,
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      net.toStringAsFixed(2),
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: net >= 0 ? Colors.green : Colors.red,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.blue),
-                      onPressed: () => _showEditPersonDialog(context, ref, p.id, p.name, p.phone),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.archive, color: Colors.red),
-                      onPressed: () => _showArchiveDialog(context, ref, p.id),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.assignment, color: Colors.teal),
-                      onPressed: () => context.push('/notebook/people/${p.id}'), // Statement
-                    ),
-                  ],
-                ),
-              );
-            },
-          );
-        },
+      body: booksAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $err')),
+        data: (books) {
+          if (books.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(l10n.notebookEmptyBooks, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.push('/notebook/books'),
+                    child: Text(l10n.notebookCreateBookCTA),
+                  )
+                ],
+              ),
+            );
+          }
+
+          if (_selectedBookId == null || !books.any((b) => b.id == _selectedBookId)) {
+            _selectedBookId = books.first.id;
+          }
+
+          final peopleAsync = ref.watch(notebookPeopleProvider);
+
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text("أضف العملاء أو الموردين أو أي شخص لك أو عليك مبالغ.", style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: DropdownButtonFormField<String>(
+                  value: _selectedBookId,
+                  decoration: InputDecoration(labelText: l10n.notebookBook),
+                  items: books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
+                  onChanged: (val) => setState(() => _selectedBookId = val),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: peopleAsync.when(
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
+                  data: (allPeople) {
+                    final people = allPeople.where((p) => p.bookId == _selectedBookId).toList();
+                    if (people.isEmpty) {
+                      return Center(child: Text(l10n.notebookEmptyPeople));
+                    }
+
+                    return ListView.builder(
+                      itemCount: people.length,
+                      itemBuilder: (context, index) {
+                        final p = people[index];
+                        final net = p.amountOwedToMe - p.amountIOwe;
+                        return ListTile(
+                          leading: const Icon(Icons.person),
+                          title: Text(p.name),
+                          subtitle: (p.phone != null && p.phone!.isNotEmpty) ? Text(p.phone!) : null,
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                net.toStringAsFixed(2),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: net >= 0 ? Colors.green : Colors.red,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.edit, color: Colors.blue),
+                                onPressed: () => _showEditPersonDialog(context, ref, p.id, p.name, p.phone),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.archive, color: Colors.red),
+                                onPressed: () => _showArchiveDialog(context, ref, p.id),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.assignment, color: Colors.teal),
+                                onPressed: () => context.push('/notebook/people/${p.id}'), // Statement
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        },
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
@@ -96,74 +130,15 @@ class NotebookPeopleScreen extends ConsumerWidget {
   }
 
   void _showAddPersonDialog(BuildContext context, WidgetRef ref) {
-    final nameCtrl = TextEditingController();
-    final phoneCtrl = TextEditingController();
-    final noteCtrl = TextEditingController();
-    final l10n = AppLocalizations.of(context)!;
-    String? bookId;
-    final books = ref.read(notebookBooksProvider).value ?? [];
-
     showDialog(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Text(l10n.notebookAddPerson),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                DropdownButtonFormField<String?>(initialValue: bookId,
-                  decoration: InputDecoration(labelText: l10n.notebookBook),
-                  items: books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
-                  onChanged: (val) => setState(() => bookId = val),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: nameCtrl,
-                  decoration: InputDecoration(labelText: l10n.notebookPersonName),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: phoneCtrl,
-                  decoration: InputDecoration(labelText: l10n.notebookPersonPhone),
-                  keyboardType: TextInputType.phone,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: noteCtrl,
-                  decoration: InputDecoration(labelText: l10n.notebookNote),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
-            ElevatedButton(
-              onPressed: () {
-                if (nameCtrl.text.trim().isNotEmpty) {
-                  if (bookId == null) {
-                    ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.notebookCreateBookFirst)));
-                    return;
-                  }
-                  ref.read(accountingNotebookProvider).createPerson(
-                    name: nameCtrl.text.trim(),
-                    phone: phoneCtrl.text.trim(),
-                    bookId: bookId!,
-                  );
-                  Navigator.pop(ctx);
-                }
-              },
-              child: Text(l10n.save),
-            ),
-          ],
-        ),
-      ),
+      builder: (ctx) => const _AddPersonDialog(),
     );
   }
 
   void _showEditPersonDialog(BuildContext context, WidgetRef ref, String id, String oldName, String? oldPhone) {
     final nameCtrl = TextEditingController(text: oldName);
-    final phoneCtrl = TextEditingController(text: oldPhone );
+    final phoneCtrl = TextEditingController(text: oldPhone ?? '');
     final l10n = AppLocalizations.of(context)!;
 
     showDialog(
@@ -226,6 +201,101 @@ class NotebookPeopleScreen extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _AddPersonDialog extends ConsumerStatefulWidget {
+  const _AddPersonDialog();
+  @override
+  ConsumerState<_AddPersonDialog> createState() => _AddPersonDialogState();
+}
+
+class _AddPersonDialogState extends ConsumerState<_AddPersonDialog> {
+  final nameCtrl = TextEditingController();
+  final phoneCtrl = TextEditingController();
+  final noteCtrl = TextEditingController();
+  String? bookId;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final booksAsync = ref.watch(notebookBooksProvider);
+
+    return AlertDialog(
+      title: Text(l10n.notebookAddPerson),
+      content: booksAsync.when(
+        loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
+        error: (err, stack) => Text('${l10n.genericErrorPrefix}: $err'),
+        data: (books) {
+          if (books.isEmpty) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(l10n.notebookEmptyBooks),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    context.push('/notebook/books');
+                  },
+                  child: Text(l10n.notebookCreateBookCTA),
+                )
+              ],
+            );
+          }
+
+          if (bookId == null || !books.any((b) => b.id == bookId)) {
+            bookId = books.first.id;
+          }
+
+          return SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String?>(
+                  value: bookId,
+                  decoration: InputDecoration(labelText: l10n.notebookBook),
+                  items: books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
+                  onChanged: (val) => setState(() => bookId = val),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameCtrl,
+                  decoration: InputDecoration(labelText: l10n.notebookPersonName),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: phoneCtrl,
+                  decoration: InputDecoration(labelText: l10n.notebookPersonPhone),
+                  keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: noteCtrl,
+                  decoration: InputDecoration(labelText: l10n.notebookNote),
+                ),
+              ],
+            ),
+          );
+        }
+      ),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+        ElevatedButton(
+          onPressed: () {
+            if (nameCtrl.text.trim().isNotEmpty && bookId != null) {
+              ref.read(accountingNotebookProvider).createPerson(
+                name: nameCtrl.text.trim(),
+                phone: phoneCtrl.text.trim(),
+                bookId: bookId!,
+              );
+              Navigator.pop(context);
+            }
+          },
+          child: Text(l10n.save),
+        ),
+      ],
     );
   }
 }

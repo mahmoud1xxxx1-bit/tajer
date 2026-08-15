@@ -33,6 +33,10 @@ class _NotebookTransactionsScreenState extends ConsumerState<NotebookTransaction
     final booksAsync = ref.watch(notebookBooksProvider);
     final categoriesAsync = ref.watch(notebookCategoriesProvider);
 
+    final accounts = accountsAsync.value?.where((a) => _selectedBookId == null || a.bookId == _selectedBookId).toList() ?? [];
+    final people = peopleAsync.value?.where((p) => _selectedBookId == null || p.bookId == _selectedBookId).toList() ?? [];
+    final categories = categoriesAsync.value?.where((c) => _selectedBookId == null || c.bookId == _selectedBookId).toList() ?? [];
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notebookTransactions)),
       body: Column(
@@ -95,10 +99,7 @@ class _NotebookTransactionsScreenState extends ConsumerState<NotebookTransaction
                           decoration: InputDecoration(labelText: l10n.notebookFilterAccount, isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
                           items: [
                             DropdownMenuItem(value: null, child: Text(l10n.notebookAll, overflow: TextOverflow.ellipsis)),
-                            ...accountsAsync.maybeWhen(
-                              data: (accs) => accs.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name, overflow: TextOverflow.ellipsis))),
-                              orElse: () => [],
-                            )
+                            ...accounts.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name, overflow: TextOverflow.ellipsis)))
                           ],
                           onChanged: (val) => setState(() => _selectedAccountId = val),
                         ),
@@ -112,10 +113,7 @@ class _NotebookTransactionsScreenState extends ConsumerState<NotebookTransaction
                           decoration: InputDecoration(labelText: l10n.notebookPerson, isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
                           items: [
                             DropdownMenuItem(value: null, child: Text(l10n.notebookAll, overflow: TextOverflow.ellipsis)),
-                            ...peopleAsync.maybeWhen(
-                              data: (pep) => pep.map((p) => DropdownMenuItem(value: p.id, child: Text(p.name, overflow: TextOverflow.ellipsis))),
-                              orElse: () => [],
-                            )
+                            ...people.map((p) => DropdownMenuItem(value: p.id, child: Text(p.name, overflow: TextOverflow.ellipsis)))
                           ],
                           onChanged: (val) => setState(() => _selectedPersonId = val),
                         ),
@@ -129,10 +127,7 @@ class _NotebookTransactionsScreenState extends ConsumerState<NotebookTransaction
                           decoration: InputDecoration(labelText: l10n.notebookCategory, isDense: true, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8)),
                           items: [
                             DropdownMenuItem(value: null, child: Text(l10n.notebookAll, overflow: TextOverflow.ellipsis)),
-                            ...categoriesAsync.maybeWhen(
-                              data: (cats) => cats.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, overflow: TextOverflow.ellipsis))),
-                              orElse: () => [],
-                            )
+                            ...categories.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name, overflow: TextOverflow.ellipsis)))
                           ],
                           onChanged: (val) => setState(() => _selectedCategoryId = val),
                         ),

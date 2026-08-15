@@ -1911,4 +1911,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notebookPartialPaymentHint => 'المبلغ المراد سداده';
+
+  @override
+  String get notebookNoCategoriesFound => 'لا توجد فئات';
 }

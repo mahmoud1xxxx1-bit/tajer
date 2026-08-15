@@ -15,36 +15,78 @@ class _NotebookTransferScreenState extends ConsumerState<NotebookTransferScreen>
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
+  
+  String? _selectedBookId;
   String? _sourceAccountId;
   String? _destAccountId;
-  String? _selectedBookId;
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final accountsAsync = ref.watch(notebookAccountsProvider);
     final booksAsync = ref.watch(notebookBooksProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notebookTransfer )),
-      body: accountsAsync.when(
+      body: booksAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
-        data: (accounts) {
-          if (accounts.length < 2) {
-            return Center(child: Text(l10n.notebookAccountsCreateFirst));
+        data: (books) {
+          if (books.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(l10n.notebookEmptyBooks, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.push('/notebook/books'),
+                    child: Text(l10n.notebookCreateBookCTA),
+                  )
+                ],
+              ),
+            );
           }
-          if (_sourceAccountId == null) _sourceAccountId = accounts[0].id;
-          if (_destAccountId == null) _destAccountId = accounts[1].id;
 
-          return booksAsync.when(
+          if (_selectedBookId == null || !books.any((b) => b.id == _selectedBookId)) {
+            _selectedBookId = books.first.id;
+          }
+
+          final accountsAsync = ref.watch(notebookAccountsProvider);
+          return accountsAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
-            data: (books) {
-              if (books.isEmpty) {
-                return Center(child: Text(l10n.notebookCreateBookFirst));
+            data: (allAccounts) {
+              final accounts = allAccounts.where((a) => a.bookId == _selectedBookId).toList();
+              
+              if (accounts.length < 2) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(l10n.notebookAccountsCreateFirst, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => context.push('/notebook/accounts'),
+                        child: Text(l10n.notebookCreateAccountCTA),
+                      )
+                    ],
+                  ),
+                );
               }
-              if (_selectedBookId == null) _selectedBookId = books.first.id;
+
+              if (_sourceAccountId == null || !accounts.any((a) => a.id == _sourceAccountId)) {
+                _sourceAccountId = accounts[0].id;
+              }
+              if (_destAccountId == null || !accounts.any((a) => a.id == _destAccountId)) {
+                _destAccountId = accounts[1].id;
+              }
 
               return Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -52,19 +94,22 @@ class _NotebookTransferScreenState extends ConsumerState<NotebookTransferScreen>
                   key: _formKey,
                   child: Column(
                     children: [
-                      DropdownButtonFormField<String>(initialValue: _selectedBookId,
+                      DropdownButtonFormField<String>(
+                        value: _selectedBookId,
                         decoration: InputDecoration(labelText: l10n.notebookBooks),
                         items: books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
                         onChanged: (val) => setState(() => _selectedBookId = val),
                       ),
                       const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(initialValue: _sourceAccountId,
+                      DropdownButtonFormField<String>(
+                        value: _sourceAccountId,
                         decoration: InputDecoration(labelText: l10n.notebookSourceAccount ),
                         items: accounts.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name))).toList(),
                         onChanged: (val) => setState(() => _sourceAccountId = val),
                       ),
                       const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(initialValue: _destAccountId,
+                      DropdownButtonFormField<String>(
+                        value: _destAccountId,
                         decoration: InputDecoration(labelText: l10n.notebookDestinationAccount ),
                         items: accounts.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name))).toList(),
                         onChanged: (val) => setState(() => _destAccountId = val),

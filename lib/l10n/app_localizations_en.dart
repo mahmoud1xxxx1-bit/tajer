@@ -1914,4 +1914,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notebookPartialPaymentHint => 'Amount to pay';
+
+  @override
+  String get notebookNoCategoriesFound => 'No categories found';
 }

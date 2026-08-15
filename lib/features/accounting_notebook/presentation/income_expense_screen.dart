@@ -16,67 +16,83 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
-  String? _selectedAccountId;
+
   String? _selectedBookId;
+  String? _selectedAccountId;
   String? _selectedCategoryId;
+
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final title = widget.isIncome ? l10n.income : l10n.expense;
-    final accountsAsync = ref.watch(notebookAccountsProvider);
+    
     final booksAsync = ref.watch(notebookBooksProvider);
-    final categoriesAsync = ref.watch(notebookCategoriesProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(title)),
-      body: accountsAsync.when(
+      body: booksAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $err')),
-        data: (accounts) {
-          if (accounts.isEmpty) {
+        error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
+        data: (books) {
+          if (books.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(l10n.notebookEmptyAccounts, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+                  Text(l10n.notebookEmptyBooks, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
                   const SizedBox(height: 16),
                   ElevatedButton(
-                    onPressed: () => context.push('/notebook/accounts'),
-                    child: Text(l10n.notebookCreateAccountCTA),
+                    onPressed: () => context.push('/notebook/books'),
+                    child: Text(l10n.notebookCreateBookCTA),
                   )
                 ],
               ),
             );
           }
-          if (_selectedAccountId == null) _selectedAccountId = accounts.first.id;
 
-          return booksAsync.when(
+          if (_selectedBookId == null || !books.any((b) => b.id == _selectedBookId)) {
+            _selectedBookId = books.first.id;
+          }
+
+          final accountsAsync = ref.watch(notebookAccountsProvider);
+          return accountsAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
-            data: (books) {
-              if (books.isEmpty) {
+            data: (allAccounts) {
+              final accounts = allAccounts.where((a) => a.bookId == _selectedBookId).toList();
+              if (accounts.isEmpty) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(l10n.notebookEmptyBooks, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+                      Text(l10n.notebookEmptyAccounts, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                        onPressed: () => context.push('/notebook/books'),
-                        child: Text(l10n.notebookCreateBookCTA),
+                        onPressed: () => context.push('/notebook/accounts'),
+                        child: Text(l10n.notebookCreateAccountCTA),
                       )
                     ],
                   ),
                 );
               }
-              if (_selectedBookId == null) _selectedBookId = books.first.id;
 
+              if (_selectedAccountId == null || !accounts.any((a) => a.id == _selectedAccountId)) {
+                _selectedAccountId = accounts.first.id;
+              }
+
+              final categoriesAsync = ref.watch(notebookCategoriesProvider);
               return categoriesAsync.when(
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
                 data: (allCats) {
-                  final cats = allCats.where((c) => c.type == (widget.isIncome ? 'income' : 'expense')).toList();
+                  final cats = allCats.where((c) => c.bookId == _selectedBookId && c.type == (widget.isIncome ? 'income' : 'expense')).toList();
                   if (cats.isEmpty) {
                     return Center(
                       child: Column(
@@ -92,6 +108,7 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
                       ),
                     );
                   }
+
                   if (_selectedCategoryId == null || !cats.any((c) => c.id == _selectedCategoryId)) {
                     _selectedCategoryId = cats.first.id;
                   }
@@ -104,19 +121,22 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
                         children: [
                           Text(widget.isIncome ? l10n.notebookIncomeHint : l10n.notebookExpenseHint, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
                           const SizedBox(height: 16),
-                          DropdownButtonFormField<String>(initialValue: _selectedBookId,
-                            decoration: InputDecoration(labelText: l10n.notebookBooks),
+                          DropdownButtonFormField<String>(
+                            value: _selectedBookId,
+                            decoration: InputDecoration(labelText: l10n.notebookBook),
                             items: books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
                             onChanged: (val) => setState(() => _selectedBookId = val),
                           ),
                           const SizedBox(height: 16),
-                          DropdownButtonFormField<String>(initialValue: _selectedAccountId,
+                          DropdownButtonFormField<String>(
+                            value: _selectedAccountId,
                             decoration: InputDecoration(labelText: l10n.account),
                             items: accounts.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name))).toList(),
                             onChanged: (val) => setState(() => _selectedAccountId = val),
                           ),
                           const SizedBox(height: 16),
-                          DropdownButtonFormField<String>(initialValue: _selectedCategoryId,
+                          DropdownButtonFormField<String>(
+                            value: _selectedCategoryId,
                             decoration: InputDecoration(labelText: l10n.notebookCategories),
                             items: cats.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
                             onChanged: (val) => setState(() => _selectedCategoryId = val),
