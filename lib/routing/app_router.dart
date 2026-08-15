@@ -54,6 +54,15 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         return '/dashboard';
       }
 
+      if (state.uri.path.startsWith('/notebook')) {
+        final appUser = ref.read(appUserProvider).value;
+        if (appUser != null && appUser.role == 'employee') {
+          if (!appUser.hasPermission('can_access_accounting_notebook')) {
+            return '/dashboard';
+          }
+        }
+      }
+
       return null;
     },
     routes: [

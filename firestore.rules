@@ -185,21 +185,21 @@ service cloud.firestore {
 
     // --- MERCHANT SUB-COLLECTIONS ---
     match /merchants/{merchantId} {
-      // --- NOTEBOOK COLLECTIONS (OWNER ONLY) ---
+      // --- NOTEBOOK COLLECTIONS ---
       match /notebook_books/{document=**} {
-        allow read, write: if isOwner(merchantId);
+        allow read, write: if hasPermission(merchantId, 'can_access_accounting_notebook');
       }
       match /notebook_accounts/{document=**} {
-        allow read, write: if isOwner(merchantId);
+        allow read, write: if hasPermission(merchantId, 'can_access_accounting_notebook');
       }
       match /notebook_categories/{document=**} {
-        allow read, write: if isOwner(merchantId);
+        allow read, write: if hasPermission(merchantId, 'can_access_accounting_notebook');
       }
       match /notebook_people/{document=**} {
-        allow read, write: if isOwner(merchantId);
+        allow read, write: if hasPermission(merchantId, 'can_access_accounting_notebook');
       }
       match /notebook_transactions/{document=**} {
-        allow read, write: if isOwner(merchantId);
+        allow read, write: if hasPermission(merchantId, 'can_access_accounting_notebook');
       }
 
       match /categories/{categoryId} {

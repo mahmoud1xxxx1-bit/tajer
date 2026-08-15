@@ -38,6 +38,7 @@ class _EmployeePermissionsScreenState extends ConsumerState<EmployeePermissionsS
       'can_manage_expenses': false,
       'can_view_reports': false,
       'can_view_all_orders': false,
+      'can_access_accounting_notebook': false,
     };
 
     if (widget.initialData['permissions'] != null) {
@@ -76,10 +77,12 @@ class _EmployeePermissionsScreenState extends ConsumerState<EmployeePermissionsS
       'can_manage_expenses': l10n.permCanManageExpenses,
       'can_view_reports': isAr ? 'السماح برؤية قسم التقارير' : 'Allow viewing reports',
       'can_view_all_orders': isAr ? 'السماح برؤية جميع الطلبات' : 'Allow viewing all orders',
+      'can_access_accounting_notebook': l10n.permCanAccessAccountingNotebook,
     };
   }
 
   Map<String, String> _getPermissionDescriptions(BuildContext context, bool isAr) {
+    final l10n = AppLocalizations.of(context)!;
     return {
       'can_manage_products': isAr ? 'يتيح للموظف إضافة، تعديل، أو حذف المنتجات والأصناف من المتجر.' : 'Allows the employee to add, edit, or delete products and categories.',
       'can_view_cost': isAr ? 'يتيح للموظف رؤية سعر التكلفة والأرباح الخاصة بالمنتجات والطلبات.' : 'Allows the employee to view cost price and profits for products and orders.',
@@ -92,6 +95,7 @@ class _EmployeePermissionsScreenState extends ConsumerState<EmployeePermissionsS
       'can_manage_expenses': isAr ? 'يتيح للموظف تسجيل وإدارة المصروفات اليومية للمتجر.' : 'Allows the employee to record and manage daily store expenses.',
       'can_view_reports': isAr ? 'يتيح للموظف رؤية الإحصائيات العامة للمتجر، المبيعات والمصروفات.' : 'Allows the employee to view general store statistics, sales, and expenses.',
       'can_view_all_orders': isAr ? 'يتيح للموظف رؤية جميع الطلبات القديمة للمتجر (إذا كان معطلاً سيرى طلبات آخر 7 أيام فقط).' : 'Allows the employee to view all old orders (if disabled, they only see the last 7 days).',
+      'can_access_accounting_notebook': l10n.permCanAccessAccountingNotebookDesc,
     };
   }
   
@@ -103,6 +107,7 @@ class _EmployeePermissionsScreenState extends ConsumerState<EmployeePermissionsS
       'can_sell_on_credit': true,
       'can_manage_expenses': true,
       'can_view_reports': true,
+      'can_access_accounting_notebook': true,
     };
   }
 

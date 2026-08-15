@@ -93,7 +93,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get barcode => 'الباركود';
 
   @override
-  String get category => 'الفئة';
+  String get category => 'التصنيف';
 
   @override
   String get phone => 'رقم الهاتف';
@@ -729,7 +729,7 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذر فتح المتصفح. تأكد من وجود متصفح في جهازك.';
 
   @override
-  String get settingsAppVersion => 'تاجر - نقطة بيع v1.0.120\nصُنع بحب 💛';
+  String get settingsAppVersion => 'بسطه - نقطة بيع v1.0.42\nصُنع بحب 💛';
 
   @override
   String get empPermViewCostProfits => 'رؤية التكلفة والأرباح';
@@ -1265,7 +1265,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get scheduledOrders => 'طلبات مجدولة 🗓';
 
   @override
-  String get totalIncome => 'إجمالي الدخل';
+  String get totalIncome => 'إجمالي الدخل: ';
 
   @override
   String get monthPrefix => 'شهر ';
@@ -1484,13 +1484,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get unknown => 'unknown';
 
   @override
-  String get aboutApp => '?? ???????';
+  String get aboutApp => 'عن التطبيق';
 
   @override
-  String get databaseBackupText => '????? ?????????';
+  String get databaseBackupText => 'نسخة احتياطية للبيانات';
 
   @override
-  String get thermalPrinterText => '??????? ????????';
+  String get thermalPrinterText => 'طابعة حرارية';
 
   @override
   String get setupChecklistTitle => 'جهز متجرك للبيع';
@@ -1609,10 +1609,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notebookNoTransactionsYet => 'لا توجد حركات بعد';
 
   @override
-  String get notebookExportPdf => '????? PDF';
+  String get notebookExportPdf => 'تصدير PDF';
 
   @override
-  String get notebookExportCsv => '????? CSV';
+  String get notebookExportCsv => 'تصدير Excel (CSV)';
 
   @override
   String get accountingReport => 'تقرير دفتر المحاسبة';
@@ -1705,7 +1705,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notebookDestinationAccount => 'حساب الوجهة';
 
   @override
-  String get notebookPayment => '???? ??? ??';
+  String get notebookPayment => 'سداد';
 
   @override
   String get notebookPartialPayment => 'سداد جزئي';
@@ -1750,7 +1750,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notebookTransactionType => 'نوع الحركة';
 
   @override
-  String get notebookPaymentOfDebt => '???? ??? ????';
+  String get notebookPaymentOfDebt => 'سداد دين';
 
   @override
   String get notebookCreateBookFirst => 'يرجى إنشاء دفتر أولاً.';
@@ -1759,7 +1759,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notebookCreateCategoryFirst => 'يرجى إنشاء تصنيف أولاً.';
 
   @override
-  String get notebookAll => '????';
+  String get notebookAll => 'الكل';
 
   @override
   String get notebookStartDate => 'تاريخ البداية';
@@ -1823,17 +1823,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notebookDelete => 'حذف';
 
   @override
-  String get notebookPayable => '????';
+  String get notebookPayable => 'عليّ';
 
   @override
-  String get notebookReceivable => '??';
+  String get notebookReceivable => 'لي';
 
   @override
-  String get notebookToday => '?????';
+  String get notebookToday => 'اليوم';
 
   @override
-  String get notebookWeek => '???????';
+  String get notebookWeek => 'هذا الأسبوع';
 
   @override
-  String get notebookMonth => '?????';
+  String get notebookMonth => 'هذا الشهر';
+
+  @override
+  String get notebookNetIncome => 'صافي الدخل';
+
+  @override
+  String get notebookDebtAndAccounts => 'الديون والحسابات';
+
+  @override
+  String get permCanAccessAccountingNotebook => 'دفتر المحاسبة';
+
+  @override
+  String get permCanAccessAccountingNotebookDesc =>
+      'السماح للموظف بالدخول إلى دفتر المحاسبة وإدارة بياناته';
 }

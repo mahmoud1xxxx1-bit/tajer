@@ -269,7 +269,7 @@ abstract class AppLocalizations {
   /// No description provided for @category.
   ///
   /// In ar, this message translates to:
-  /// **'الفئة'**
+  /// **'التصنيف'**
   String get category;
 
   /// No description provided for @phone.
@@ -1523,7 +1523,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsAppVersion.
   ///
   /// In ar, this message translates to:
-  /// **'تاجر - نقطة بيع v1.0.120\nصُنع بحب 💛'**
+  /// **'بسطه - نقطة بيع v1.0.42\nصُنع بحب 💛'**
   String get settingsAppVersion;
 
   /// No description provided for @empPermViewCostProfits.
@@ -2501,7 +2501,7 @@ abstract class AppLocalizations {
   /// No description provided for @totalIncome.
   ///
   /// In ar, this message translates to:
-  /// **'إجمالي الدخل'**
+  /// **'إجمالي الدخل: '**
   String get totalIncome;
 
   /// No description provided for @monthPrefix.
@@ -2897,19 +2897,19 @@ abstract class AppLocalizations {
   /// No description provided for @aboutApp.
   ///
   /// In ar, this message translates to:
-  /// **'?? ???????'**
+  /// **'عن التطبيق'**
   String get aboutApp;
 
   /// No description provided for @databaseBackupText.
   ///
   /// In ar, this message translates to:
-  /// **'????? ?????????'**
+  /// **'نسخة احتياطية للبيانات'**
   String get databaseBackupText;
 
   /// No description provided for @thermalPrinterText.
   ///
   /// In ar, this message translates to:
-  /// **'??????? ????????'**
+  /// **'طابعة حرارية'**
   String get thermalPrinterText;
 
   /// No description provided for @setupChecklistTitle.
@@ -3143,13 +3143,13 @@ abstract class AppLocalizations {
   /// No description provided for @notebookExportPdf.
   ///
   /// In ar, this message translates to:
-  /// **'????? PDF'**
+  /// **'تصدير PDF'**
   String get notebookExportPdf;
 
   /// No description provided for @notebookExportCsv.
   ///
   /// In ar, this message translates to:
-  /// **'????? CSV'**
+  /// **'تصدير Excel (CSV)'**
   String get notebookExportCsv;
 
   /// No description provided for @accountingReport.
@@ -3335,7 +3335,7 @@ abstract class AppLocalizations {
   /// No description provided for @notebookPayment.
   ///
   /// In ar, this message translates to:
-  /// **'???? ??? ??'**
+  /// **'سداد'**
   String get notebookPayment;
 
   /// No description provided for @notebookPartialPayment.
@@ -3425,7 +3425,7 @@ abstract class AppLocalizations {
   /// No description provided for @notebookPaymentOfDebt.
   ///
   /// In ar, this message translates to:
-  /// **'???? ??? ????'**
+  /// **'سداد دين'**
   String get notebookPaymentOfDebt;
 
   /// No description provided for @notebookCreateBookFirst.
@@ -3443,7 +3443,7 @@ abstract class AppLocalizations {
   /// No description provided for @notebookAll.
   ///
   /// In ar, this message translates to:
-  /// **'????'**
+  /// **'الكل'**
   String get notebookAll;
 
   /// No description provided for @notebookStartDate.
@@ -3569,32 +3569,56 @@ abstract class AppLocalizations {
   /// No description provided for @notebookPayable.
   ///
   /// In ar, this message translates to:
-  /// **'????'**
+  /// **'عليّ'**
   String get notebookPayable;
 
   /// No description provided for @notebookReceivable.
   ///
   /// In ar, this message translates to:
-  /// **'??'**
+  /// **'لي'**
   String get notebookReceivable;
 
   /// No description provided for @notebookToday.
   ///
   /// In ar, this message translates to:
-  /// **'?????'**
+  /// **'اليوم'**
   String get notebookToday;
 
   /// No description provided for @notebookWeek.
   ///
   /// In ar, this message translates to:
-  /// **'???????'**
+  /// **'هذا الأسبوع'**
   String get notebookWeek;
 
   /// No description provided for @notebookMonth.
   ///
   /// In ar, this message translates to:
-  /// **'?????'**
+  /// **'هذا الشهر'**
   String get notebookMonth;
+
+  /// No description provided for @notebookNetIncome.
+  ///
+  /// In ar, this message translates to:
+  /// **'صافي الدخل'**
+  String get notebookNetIncome;
+
+  /// No description provided for @notebookDebtAndAccounts.
+  ///
+  /// In ar, this message translates to:
+  /// **'الديون والحسابات'**
+  String get notebookDebtAndAccounts;
+
+  /// No description provided for @permCanAccessAccountingNotebook.
+  ///
+  /// In ar, this message translates to:
+  /// **'دفتر المحاسبة'**
+  String get permCanAccessAccountingNotebook;
+
+  /// No description provided for @permCanAccessAccountingNotebookDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'السماح للموظف بالدخول إلى دفتر المحاسبة وإدارة بياناته'**
+  String get permCanAccessAccountingNotebookDesc;
 }
 
 class _AppLocalizationsDelegate

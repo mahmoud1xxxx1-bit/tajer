@@ -1837,4 +1837,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notebookMonth => 'Month';
+
+  @override
+  String get notebookNetIncome => 'Net Income';
+
+  @override
+  String get notebookDebtAndAccounts => 'Debt & Accounts';
+
+  @override
+  String get permCanAccessAccountingNotebook => 'Accounting Notebook';
+
+  @override
+  String get permCanAccessAccountingNotebookDesc =>
+      'Allow employee to access and manage accounting notebook data';
 }

@@ -239,22 +239,18 @@ class DashboardHome extends ConsumerWidget {
             padding: EdgeInsets.all(16.0),
             child: ListView(
               children: [
-                if (appUser?.role == 'merchant')
+                if (appUser?.role == 'merchant' || (appUser?.hasPermission('can_access_accounting_notebook') ?? false))
                   Card(
                     color: Theme.of(context).primaryColor.withOpacity(0.1),
                     margin: const EdgeInsets.only(bottom: 16.0),
                     child: ListTile(
                       leading: const Icon(Icons.book, size: 32),
                       title: Text(
-                        Localizations.localeOf(context).languageCode == 'ar' 
-                            ? '📒 دفتر المحاسبة' 
-                            : '📒 Accounting Notebook',
+                        '📒 ${l10n.notebookTitle}',
                         style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
                       ),
                       subtitle: Text(
-                        Localizations.localeOf(context).languageCode == 'ar'
-                            ? 'إدارة الدخل والمصروف والديون والحسابات'
-                            : 'Manage income, expenses, debts and accounts',
+                        l10n.notebookDebtAndAccounts,
                         style: const TextStyle(fontFamily: 'Tajawal'),
                       ),
                       trailing: const Icon(Icons.arrow_forward_ios),

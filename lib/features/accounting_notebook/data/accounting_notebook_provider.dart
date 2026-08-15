@@ -123,18 +123,24 @@ class AccountingNotebookService {
 
     // In a real app, this should use a transaction/batch to update account balance
     // For V1 baseline, we will do it sequentially or via batch
-    final batch = _repository.accountsRef.firestore.batch();
-    
-    // 1. Add transaction
-    batch.set(_repository.transactionsRef.doc(txId), tx.toMap());
-    
-    // 2. Update account balance
     final accountRef = _repository.accountsRef.doc(accountId);
-    batch.update(accountRef, {
-      'balance': FieldValue.increment(amount)
+    final categoryRef = _repository.categoriesRef.doc(categoryId);
+    final txRef = _repository.transactionsRef.doc(txId);
+
+    await _repository.accountsRef.firestore.runTransaction((transaction) async {
+      final accountSnap = await transaction.get(accountRef);
+      if (!accountSnap.exists) throw Exception('Account not found');
+      if (accountSnap.data()?['bookId'] != bookId) throw Exception('Account bookId mismatch');
+
+      final categorySnap = await transaction.get(categoryRef);
+      if (!categorySnap.exists) throw Exception('Category not found');
+      if (categorySnap.data()?['bookId'] != bookId) throw Exception('Category bookId mismatch');
+
+      final currentBalance = accountSnap.data()?['balance'] as double? ?? 0.0;
+      
+      transaction.set(txRef, tx.toMap());
+      transaction.update(accountRef, {'balance': currentBalance + amount});
     });
-    
-    await batch.commit();
   }
 
   Future<void> createExpense({
@@ -168,7 +174,12 @@ class AccountingNotebookService {
     await _repository.accountsRef.firestore.runTransaction((transaction) async {
       final accountSnap = await transaction.get(accountRef);
       if (!accountSnap.exists) throw Exception('Account not found');
+      if (accountSnap.data()?['bookId'] != bookId) throw Exception('Account bookId mismatch');
       
+      final categorySnap = await transaction.get(_repository.categoriesRef.doc(categoryId));
+      if (!categorySnap.exists) throw Exception('Category not found');
+      if (categorySnap.data()?['bookId'] != bookId) throw Exception('Category bookId mismatch');
+
       final currentBalance = accountSnap.data()?['balance'] as double? ?? 0.0;
       if (currentBalance < amount) {
         throw Exception('insufficient_balance');
@@ -204,17 +215,24 @@ class AccountingNotebookService {
       createdAt: now,
     );
 
-    final batch = _repository.accountsRef.firestore.batch();
-    batch.set(_repository.transactionsRef.doc(txId), tx.toMap());
-    
     final personRef = _repository.peopleRef.doc(personId);
-    if (isOwedToMe) {
-      batch.update(personRef, {'amountOwedToMe': FieldValue.increment(amount)});
-    } else {
-      batch.update(personRef, {'amountIOwe': FieldValue.increment(amount)});
-    }
     
-    await batch.commit();
+    await _repository.peopleRef.firestore.runTransaction((transaction) async {
+      final personSnap = await transaction.get(personRef);
+      if (!personSnap.exists) throw Exception('Person not found');
+      if (personSnap.data()?['bookId'] != bookId) throw Exception('Person bookId mismatch');
+
+      final owedToMe = personSnap.data()?['amountOwedToMe'] as double? ?? 0.0;
+      final iOwe = personSnap.data()?['amountIOwe'] as double? ?? 0.0;
+      
+      transaction.set(_repository.transactionsRef.doc(txId), tx.toMap());
+      
+      if (isOwedToMe) {
+        transaction.update(personRef, {'amountOwedToMe': owedToMe + amount});
+      } else {
+        transaction.update(personRef, {'amountIOwe': iOwe + amount});
+      }
+    });
   }
 
   // Debt Payments
@@ -253,7 +271,10 @@ class AccountingNotebookService {
       final accountSnap = await transaction.get(accountRef);
       
       if (!personSnap.exists) throw Exception('Person not found');
+      if (personSnap.data()?['bookId'] != bookId) throw Exception('Person bookId mismatch');
+
       if (!accountSnap.exists) throw Exception('Account not found');
+      if (accountSnap.data()?['bookId'] != bookId) throw Exception('Account bookId mismatch');
       
       final accountBalance = accountSnap.data()?['balance'] as double? ?? 0.0;
       final owedToMe = personSnap.data()?['amountOwedToMe'] as double? ?? 0.0;
