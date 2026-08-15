@@ -16,14 +16,14 @@ class NotebookHomeScreen extends ConsumerWidget {
     final accountsAsync = ref.watch(notebookAccountsProvider);
     final transactionsAsync = ref.watch(notebookTransactionsProvider);
     final peopleAsync = ref.watch(notebookPeopleProvider);
-    
+
     double netBalance = 0.0;
     accountsAsync.whenData((accounts) {
       for (var acc in accounts) {
         netBalance += acc.balance;
       }
     });
-    
+
     double totalIncome = 0.0;
     double totalExpense = 0.0;
     transactionsAsync.whenData((transactions) {
@@ -58,38 +58,50 @@ class NotebookHomeScreen extends ConsumerWidget {
           children: [
             Card(
               elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    Text(l10n.netBalance, style: Theme.of(context).textTheme.titleLarge),
+                    Text(l10n.netBalance,
+                        style: Theme.of(context).textTheme.titleLarge),
                     const SizedBox(height: 8),
                     accountsAsync.when(
                       data: (_) => Text(
-                        NumberFormat.currency(symbol: 'SAR ').format(netBalance),
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: netBalance >= 0 ? Colors.green : Colors.red,
-                        ),
+                        NumberFormat.currency(symbol: 'SAR ')
+                            .format(netBalance),
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  netBalance >= 0 ? Colors.green : Colors.red,
+                            ),
                       ),
                       loading: () => const CircularProgressIndicator(),
-                      error: (err, stack) => Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $err'),
+                      error: (err, stack) => Text(
+                          '${AppLocalizations.of(context)!.genericErrorPrefix}: $err'),
                     ),
                     const Divider(height: 32),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildSummaryItem(context, l10n.income, totalIncome, Colors.green),
-                        _buildSummaryItem(context, l10n.expense, totalExpense, Colors.red),
+                        _buildSummaryItem(
+                            context, l10n.income, totalIncome, Colors.green),
+                        _buildSummaryItem(
+                            context, l10n.expense, totalExpense, Colors.red),
                       ],
                     ),
                     const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildSummaryItem(context, l10n.notebookReceivable , totalOwedToMe, Colors.blue),
-                        _buildSummaryItem(context, l10n.notebookPayable , totalIOwe, Colors.orange),
+                        _buildSummaryItem(context, l10n.notebookReceivable,
+                            totalOwedToMe, Colors.blue),
+                        _buildSummaryItem(context, l10n.notebookPayable,
+                            totalIOwe, Colors.orange),
                       ],
                     ),
                   ],
@@ -99,59 +111,128 @@ class NotebookHomeScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             Row(
               children: [
-                Expanded(child: _buildActionCard(context, Icons.arrow_downward, l10n.income, Colors.green, () async { if (await GuestLimitService.canAddNotebookTransaction(context, ref)) context.push('/notebook/income'); })),
+                Expanded(
+                    child: _buildActionCard(context, Icons.arrow_downward,
+                        l10n.income, Colors.green, () async {
+                  if (await GuestLimitService.canAddNotebookTransaction(
+                      context, ref)) context.push('/notebook/income');
+                })),
                 const SizedBox(width: 16),
-                Expanded(child: _buildActionCard(context, Icons.arrow_upward, l10n.expense, Colors.red, () async { if (await GuestLimitService.canAddNotebookTransaction(context, ref)) context.push('/notebook/expense'); })),
+                Expanded(
+                    child: _buildActionCard(
+                        context, Icons.arrow_upward, l10n.expense, Colors.red,
+                        () async {
+                  if (await GuestLimitService.canAddNotebookTransaction(
+                      context, ref)) context.push('/notebook/expense');
+                })),
                 const SizedBox(width: 16),
-                Expanded(child: _buildActionCard(context, Icons.swap_horiz, l10n.notebookTransfer, Colors.blueGrey, () async { if (await GuestLimitService.canAddNotebookTransaction(context, ref)) context.push('/notebook/transfer'); })),
+                Expanded(
+                    child: _buildActionCard(context, Icons.swap_horiz,
+                        l10n.notebookTransfer, Colors.blueGrey, () async {
+                  if (await GuestLimitService.canAddNotebookTransaction(
+                      context, ref)) context.push('/notebook/transfer');
+                })),
               ],
             ),
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: _buildActionCard(context, Icons.person_add, l10n.moneyOwedToMe, Colors.blue, () async { if (await GuestLimitService.canAddNotebookTransaction(context, ref)) context.push('/notebook/debt/me'); })),
+                Expanded(
+                    child: _buildActionCard(context, Icons.person_add,
+                        l10n.moneyOwedToMe, Colors.blue, () async {
+                  if (await GuestLimitService.canAddNotebookTransaction(
+                      context, ref)) context.push('/notebook/debt/me');
+                })),
                 const SizedBox(width: 16),
-                Expanded(child: _buildActionCard(context, Icons.person_remove, l10n.moneyIOwe, Colors.orange, () async { if (await GuestLimitService.canAddNotebookTransaction(context, ref)) context.push('/notebook/debt/owe'); })),
+                Expanded(
+                    child: _buildActionCard(context, Icons.person_remove,
+                        l10n.moneyIOwe, Colors.orange, () async {
+                  if (await GuestLimitService.canAddNotebookTransaction(
+                      context, ref)) context.push('/notebook/debt/owe');
+                })),
               ],
             ),
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: _buildActionCard(context, Icons.account_balance, l10n.notebookAccounts, Colors.purple, () => context.push('/notebook/accounts'))),
+                Expanded(
+                    child: _buildActionCard(
+                        context,
+                        Icons.account_balance,
+                        l10n.notebookAccounts,
+                        Colors.purple,
+                        () => context.push('/notebook/accounts'))),
                 const SizedBox(width: 16),
-                Expanded(child: _buildActionCard(context, Icons.people, l10n.notebookPeople, Colors.teal, () => context.push('/notebook/people'))),
+                Expanded(
+                    child: _buildActionCard(
+                        context,
+                        Icons.people,
+                        l10n.notebookPeople,
+                        Colors.teal,
+                        () => context.push('/notebook/people'))),
                 const SizedBox(width: 16),
-                Expanded(child: _buildActionCard(context, Icons.bar_chart, l10n.notebookReports, Colors.brown, () => context.push('/notebook/reports'))),
+                Expanded(
+                    child: _buildActionCard(
+                        context,
+                        Icons.bar_chart,
+                        l10n.notebookReports,
+                        Colors.brown,
+                        () => context.push('/notebook/reports'))),
               ],
             ),
             const SizedBox(height: 16),
-
             Row(
               children: [
-                Expanded(child: _buildActionCard(context, Icons.book, l10n.notebookBooks, Colors.indigo, () => context.push('/notebook/books'))),
+                Expanded(
+                    child: _buildActionCard(
+                        context,
+                        Icons.book,
+                        l10n.notebookBooks,
+                        Colors.indigo,
+                        () => context.push('/notebook/books'))),
                 const SizedBox(width: 16),
-                Expanded(child: _buildActionCard(context, Icons.category, l10n.notebookCategories, Colors.cyan, () => context.push('/notebook/categories'))),
+                Expanded(
+                    child: _buildActionCard(
+                        context,
+                        Icons.category,
+                        l10n.notebookCategories,
+                        Colors.cyan,
+                        () => context.push('/notebook/categories'))),
                 const SizedBox(width: 16),
-                Expanded(child: _buildActionCard(context, Icons.list_alt, l10n.notebookTransactions, Colors.grey, () => context.push('/notebook/transactions'))),
+                Expanded(
+                    child: _buildActionCard(
+                        context,
+                        Icons.list_alt,
+                        l10n.notebookTransactions,
+                        Colors.grey,
+                        () => context.push('/notebook/transactions'))),
               ],
             ),
             const SizedBox(height: 32),
-
-            Text(l10n.recentTransactions, style: Theme.of(context).textTheme.titleLarge),
+            Text(l10n.recentTransactions,
+                style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
             transactionsAsync.when(
               data: (transactions) {
-                if (transactions.isEmpty) return Center(child: Text(AppLocalizations.of(context)!.notebookNoTransactionsYet));
+                if (transactions.isEmpty)
+                  return Center(
+                      child: Text(AppLocalizations.of(context)!
+                          .notebookNoTransactionsYet));
                 return ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: transactions.length > 5 ? 5 : transactions.length,
                   itemBuilder: (context, index) {
                     final tx = transactions[index];
-                    final isPositive = tx.type == 'income' || tx.type == 'receivable_payment';
+                    final isPositive =
+                        tx.type == 'income' || tx.type == 'receivable_payment';
                     return ListTile(
-                      title: Text(tx.note ?? NotebookLocalizationHelper.getNotebookLocalizedType(context, tx.type)),
-                      subtitle: Text(DateFormat.yMMMd(Localizations.localeOf(context).languageCode).format(tx.date)),
+                      title: Text(tx.note ??
+                          NotebookLocalizationHelper.getNotebookLocalizedType(
+                              context, tx.type)),
+                      subtitle: Text(DateFormat.yMMMd(
+                              Localizations.localeOf(context).languageCode)
+                          .format(tx.date)),
                       trailing: Text(
                         '${isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',
                         style: TextStyle(
@@ -164,7 +245,8 @@ class NotebookHomeScreen extends ConsumerWidget {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $err'),
+              error: (err, stack) => Text(
+                  '${AppLocalizations.of(context)!.genericErrorPrefix}: $err'),
             ),
           ],
         ),
@@ -172,7 +254,8 @@ class NotebookHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildActionCard(BuildContext context, IconData icon, String title, Color color, VoidCallback onTap) {
+  Widget _buildActionCard(BuildContext context, IconData icon, String title,
+      Color color, VoidCallback onTap) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -187,20 +270,27 @@ class NotebookHomeScreen extends ConsumerWidget {
           children: [
             Icon(icon, size: 32, color: color),
             const SizedBox(height: 8),
-            Text(title, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
           ],
         ),
       ),
     );
   }
-  Widget _buildSummaryItem(BuildContext context, String label, double amount, Color color) {
+
+  Widget _buildSummaryItem(
+      BuildContext context, String label, double amount, Color color) {
     return Column(
       children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.grey)),
+        Text(label,
+            style: const TextStyle(
+                fontWeight: FontWeight.w600, color: Colors.grey)),
         const SizedBox(height: 4),
         Text(
           NumberFormat.currency(symbol: 'SAR ').format(amount),
-          style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 16),
+          style: TextStyle(
+              fontWeight: FontWeight.bold, color: color, fontSize: 16),
         ),
       ],
     );

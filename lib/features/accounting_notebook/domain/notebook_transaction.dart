@@ -3,7 +3,8 @@ import '../../../core/utils/date_parser.dart';
 
 class NotebookTransaction {
   final String id;
-  final String type; // income, expense, receivable, payable, receivable_payment, payable_payment, account_transfer
+  final String
+      type; // income, expense, receivable, payable, receivable_payment, payable_payment, account_transfer
   final double amount;
   final String bookId;
   final String? accountId; // null for pure debt creation
@@ -28,7 +29,8 @@ class NotebookTransaction {
     required this.createdAt,
   });
 
-  factory NotebookTransaction.fromMap(Map<String, dynamic> data, String documentId) {
+  factory NotebookTransaction.fromMap(
+      Map<String, dynamic> data, String documentId) {
     return NotebookTransaction(
       id: documentId,
       type: data['type']?.toString() ?? '',

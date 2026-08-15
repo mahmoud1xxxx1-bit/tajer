@@ -18,7 +18,8 @@ class NotebookCategory {
     this.isArchived = false,
   });
 
-  factory NotebookCategory.fromMap(Map<String, dynamic> data, String documentId) {
+  factory NotebookCategory.fromMap(
+      Map<String, dynamic> data, String documentId) {
     return NotebookCategory(
       id: documentId,
       name: data['name']?.toString() ?? '',

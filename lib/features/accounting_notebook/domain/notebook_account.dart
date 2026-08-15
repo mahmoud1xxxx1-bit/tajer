@@ -22,7 +22,8 @@ class NotebookAccount {
     this.isArchived = false,
   });
 
-  factory NotebookAccount.fromMap(Map<String, dynamic> data, String documentId) {
+  factory NotebookAccount.fromMap(
+      Map<String, dynamic> data, String documentId) {
     return NotebookAccount(
       id: documentId,
       name: data['name']?.toString() ?? '',

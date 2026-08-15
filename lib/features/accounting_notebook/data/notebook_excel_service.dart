@@ -10,7 +10,7 @@ class NotebookExcelService {
       List<NotebookTransaction> transactions, String title, String currencyCode,
       {bool isAr = true}) async {
     var excel = Excel.createExcel();
-    
+
     // Remove the default sheet
     if (excel.tables.keys.contains('Sheet1')) {
       excel.delete('Sheet1');
@@ -21,25 +21,31 @@ class NotebookExcelService {
     if (sheetName.length > 30) {
       sheetName = sheetName.substring(0, 30);
     }
-    _createTransactionsSheet(excel, transactions, sheetName, currencyCode, isAr);
+    _createTransactionsSheet(
+        excel, transactions, sheetName, currencyCode, isAr);
 
     var fileBytes = excel.save();
     if (fileBytes != null) {
       final directory = await getApplicationDocumentsDirectory();
       final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
-      final String filePath = '${directory.path}/notebook_report_$timestamp.xlsx';
-      
+      final String filePath =
+          '${directory.path}/notebook_report_$timestamp.xlsx';
+
       File file = File(filePath);
       await file.writeAsBytes(fileBytes);
-      
+
       await Share.shareXFiles([XFile(filePath)], text: title);
     }
   }
 
   static void _createTransactionsSheet(
-      Excel excel, List<NotebookTransaction> transactions, String sheetName, String currencyCode, bool isAr) {
+      Excel excel,
+      List<NotebookTransaction> transactions,
+      String sheetName,
+      String currencyCode,
+      bool isAr) {
     Sheet sheetObject = excel[sheetName];
-    
+
     // Headers
     sheetObject.appendRow([
       TextCellValue(isAr ? 'التاريخ (Date)' : 'Date'),
@@ -64,7 +70,12 @@ class NotebookExcelService {
     }
 
     // Summary at the end
-    sheetObject.appendRow([TextCellValue(''), TextCellValue(''), TextCellValue(''), TextCellValue('')]);
+    sheetObject.appendRow([
+      TextCellValue(''),
+      TextCellValue(''),
+      TextCellValue(''),
+      TextCellValue('')
+    ]);
     sheetObject.appendRow([
       TextCellValue(isAr ? 'إجمالي الدخل (Total Income)' : 'Total Income'),
       TextCellValue('$totalIncome'),
@@ -72,7 +83,8 @@ class NotebookExcelService {
       TextCellValue(''),
     ]);
     sheetObject.appendRow([
-      TextCellValue(isAr ? 'إجمالي المصروفات (Total Expenses)' : 'Total Expenses'),
+      TextCellValue(
+          isAr ? 'إجمالي المصروفات (Total Expenses)' : 'Total Expenses'),
       TextCellValue('$totalExpense'),
       TextCellValue(''),
       TextCellValue(''),
@@ -86,15 +98,23 @@ class NotebookExcelService {
   }
 
   static String _getTypeName(String type, bool isAr) {
-    switch(type) {
-      case 'income': return isAr ? 'دخل / Income' : 'Income';
-      case 'expense': return isAr ? 'مصروف / Expense' : 'Expense';
-      case 'receivable': return isAr ? 'دين لنا / Receivable' : 'Receivable';
-      case 'payable': return isAr ? 'دين علينا / Payable' : 'Payable';
-      case 'receivable_payment': return isAr ? 'سداد دين لنا / Rec. Payment' : 'Receivable Payment';
-      case 'payable_payment': return isAr ? 'سداد دين علينا / Pay. Payment' : 'Payable Payment';
-      case 'account_transfer': return isAr ? 'تحويل حساب / Transfer' : 'Transfer';
-      default: return type;
+    switch (type) {
+      case 'income':
+        return isAr ? 'دخل / Income' : 'Income';
+      case 'expense':
+        return isAr ? 'مصروف / Expense' : 'Expense';
+      case 'receivable':
+        return isAr ? 'دين لنا / Receivable' : 'Receivable';
+      case 'payable':
+        return isAr ? 'دين علينا / Payable' : 'Payable';
+      case 'receivable_payment':
+        return isAr ? 'سداد دين لنا / Rec. Payment' : 'Receivable Payment';
+      case 'payable_payment':
+        return isAr ? 'سداد دين علينا / Pay. Payment' : 'Payable Payment';
+      case 'account_transfer':
+        return isAr ? 'تحويل حساب / Transfer' : 'Transfer';
+      default:
+        return type;
     }
   }
 }

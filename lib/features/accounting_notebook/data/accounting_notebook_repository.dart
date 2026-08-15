@@ -7,13 +7,17 @@ import '../domain/notebook_person.dart';
 import '../domain/notebook_transaction.dart';
 import '../../authentication/data/auth_repository.dart';
 
-final accountingNotebookRepositoryProvider = Provider<AccountingNotebookRepository?>((ref) {
+final accountingNotebookRepositoryProvider =
+    Provider<AccountingNotebookRepository?>((ref) {
   final appUser = ref.watch(appUserProvider).value;
   if (appUser == null) return null;
-  if (appUser.role == 'employee' && !appUser.hasPermission('can_access_accounting_notebook')) {
+  if (appUser.role == 'employee' &&
+      !appUser.hasPermission('can_access_accounting_notebook')) {
     return null;
   }
-  final merchantId = appUser.role == 'employee' ? (appUser.merchantId ?? appUser.id) : appUser.id;
+  final merchantId = appUser.role == 'employee'
+      ? (appUser.merchantId ?? appUser.id)
+      : appUser.id;
   return AccountingNotebookRepository(FirebaseFirestore.instance, merchantId);
 });
 
@@ -24,25 +28,40 @@ class AccountingNotebookRepository {
   AccountingNotebookRepository(this._firestore, this.merchantId);
 
   // References
-  CollectionReference<Map<String, dynamic>> get booksRef =>
-      _firestore.collection('merchants').doc(merchantId).collection('notebook_books');
-      
-  CollectionReference<Map<String, dynamic>> get accountsRef =>
-      _firestore.collection('merchants').doc(merchantId).collection('notebook_accounts');
-      
-  CollectionReference<Map<String, dynamic>> get categoriesRef =>
-      _firestore.collection('merchants').doc(merchantId).collection('notebook_categories');
-      
-  CollectionReference<Map<String, dynamic>> get peopleRef =>
-      _firestore.collection('merchants').doc(merchantId).collection('notebook_people');
-      
-  CollectionReference<Map<String, dynamic>> get transactionsRef =>
-      _firestore.collection('merchants').doc(merchantId).collection('notebook_transactions');
+  CollectionReference<Map<String, dynamic>> get booksRef => _firestore
+      .collection('merchants')
+      .doc(merchantId)
+      .collection('notebook_books');
+
+  CollectionReference<Map<String, dynamic>> get accountsRef => _firestore
+      .collection('merchants')
+      .doc(merchantId)
+      .collection('notebook_accounts');
+
+  CollectionReference<Map<String, dynamic>> get categoriesRef => _firestore
+      .collection('merchants')
+      .doc(merchantId)
+      .collection('notebook_categories');
+
+  CollectionReference<Map<String, dynamic>> get peopleRef => _firestore
+      .collection('merchants')
+      .doc(merchantId)
+      .collection('notebook_people');
+
+  CollectionReference<Map<String, dynamic>> get transactionsRef => _firestore
+      .collection('merchants')
+      .doc(merchantId)
+      .collection('notebook_transactions');
 
   // --- Books ---
   Stream<List<NotebookBook>> watchBooks() {
-    return booksRef.orderBy('createdAt', descending: true).snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => NotebookBook.fromMap(doc.data(), doc.id)).toList();
+    return booksRef
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => NotebookBook.fromMap(doc.data(), doc.id))
+          .toList();
     });
   }
 
@@ -52,8 +71,13 @@ class AccountingNotebookRepository {
 
   // --- Accounts ---
   Stream<List<NotebookAccount>> watchAccounts(String bookId) {
-    return accountsRef.where('bookId', isEqualTo: bookId).snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => NotebookAccount.fromMap(doc.data(), doc.id)).toList();
+    return accountsRef
+        .where('bookId', isEqualTo: bookId)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => NotebookAccount.fromMap(doc.data(), doc.id))
+          .toList();
     });
   }
 
@@ -68,7 +92,9 @@ class AccountingNotebookRepository {
         .where('type', isEqualTo: type)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => NotebookCategory.fromMap(doc.data(), doc.id)).toList();
+      return snapshot.docs
+          .map((doc) => NotebookCategory.fromMap(doc.data(), doc.id))
+          .toList();
     });
   }
 
@@ -78,8 +104,13 @@ class AccountingNotebookRepository {
 
   // --- People ---
   Stream<List<NotebookPerson>> watchPeople(String bookId) {
-    return peopleRef.where('bookId', isEqualTo: bookId).snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => NotebookPerson.fromMap(doc.data(), doc.id)).toList();
+    return peopleRef
+        .where('bookId', isEqualTo: bookId)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => NotebookPerson.fromMap(doc.data(), doc.id))
+          .toList();
     });
   }
 
@@ -94,7 +125,9 @@ class AccountingNotebookRepository {
         .orderBy('date', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => NotebookTransaction.fromMap(doc.data(), doc.id)).toList();
+      return snapshot.docs
+          .map((doc) => NotebookTransaction.fromMap(doc.data(), doc.id))
+          .toList();
     });
   }
 
@@ -103,22 +136,25 @@ class AccountingNotebookRepository {
         .where('bookId', isEqualTo: bookId)
         .orderBy('date', descending: true)
         .withConverter<NotebookTransaction>(
-          fromFirestore: (snapshot, _) => NotebookTransaction.fromMap(snapshot.data()!, snapshot.id),
+          fromFirestore: (snapshot, _) =>
+              NotebookTransaction.fromMap(snapshot.data()!, snapshot.id),
           toFirestore: (tx, _) => tx.toMap(),
         );
   }
 
-  Query<NotebookTransaction> queryPersonTransactions(String bookId, String personId) {
+  Query<NotebookTransaction> queryPersonTransactions(
+      String bookId, String personId) {
     return transactionsRef
         .where('bookId', isEqualTo: bookId)
         .where('personId', isEqualTo: personId)
         .orderBy('date', descending: true)
         .withConverter<NotebookTransaction>(
-          fromFirestore: (snapshot, _) => NotebookTransaction.fromMap(snapshot.data()!, snapshot.id),
+          fromFirestore: (snapshot, _) =>
+              NotebookTransaction.fromMap(snapshot.data()!, snapshot.id),
           toFirestore: (tx, _) => tx.toMap(),
         );
   }
-  
+
   // Transaction processing logic will go here (batch writes for balance updates)
   Future<void> createTransaction(NotebookTransaction transaction) async {
     await transactionsRef.doc(transaction.id).set(transaction.toMap());
