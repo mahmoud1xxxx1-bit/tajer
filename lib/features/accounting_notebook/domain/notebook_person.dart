@@ -36,6 +36,7 @@ class NotebookPerson {
       amountIOwe: (data['amountIOwe'] as num?)?.toDouble() ?? 0.0,
       bookId: data['bookId']?.toString() ?? '',
       createdAt: safeParseDate(data['createdAt']),
+      isArchived: data['isArchived'] ?? false,
     );
   }
 
@@ -48,6 +49,7 @@ class NotebookPerson {
       'amountIOwe': amountIOwe,
       'bookId': bookId,
       'createdAt': Timestamp.fromDate(createdAt),
+      'isArchived': isArchived,
     };
   }
 }

@@ -1917,4 +1917,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notebookNoCategoriesFound => 'No categories found';
+
+  @override
+  String get notebookGuideBooks =>
+      '💡 Books Guide: Create a book for each branch or activity (e.g. Branch A, Delivery).';
+
+  @override
+  String get notebookGuideAccounts =>
+      '💡 Accounts Guide: Add cash boxes or bank accounts to track your balances.';
+
+  @override
+  String get notebookGuidePeople =>
+      '💡 People Guide: Add customers, suppliers, or employees to track debts.';
+
+  @override
+  String get notebookGuideCategories =>
+      '💡 Categories Guide: Add expense or income categories (e.g. Salaries, Utilities) for reports.';
+
+  @override
+  String get notebookGuideTransactions =>
+      '💡 Transactions Guide: View all operations for the selected book with date and amount.';
+
+  @override
+  String get notebookInsufficientBalance => 'Insufficient balance.';
+
+  @override
+  String get notebookArchived => 'Archived';
+
+  @override
+  String get notebookRestore => 'Restore';
+
+  @override
+  String get notebookArchiveWarning =>
+      'Are you sure you want to archive this item? You won\'t be able to use it in new operations. Requires security PIN.';
+
+  @override
+  String get notebookOpeningBalanceTitle => 'Opening Balance';
 }

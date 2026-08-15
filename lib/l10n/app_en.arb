@@ -772,5 +772,15 @@
   "notebookOverpaymentError": "Amount entered exceeds the remaining balance",
   "notebookSameAccountError": "Cannot transfer to the same account",
   "notebookPartialPaymentHint": "Amount to pay",
-  "notebookNoCategoriesFound": "No categories found"
+  "notebookNoCategoriesFound": "No categories found",
+  "notebookGuideBooks": "💡 Books Guide: Create a book for each branch or activity (e.g. Branch A, Delivery).",
+  "notebookGuideAccounts": "💡 Accounts Guide: Add cash boxes or bank accounts to track your balances.",
+  "notebookGuidePeople": "💡 People Guide: Add customers, suppliers, or employees to track debts.",
+  "notebookGuideCategories": "💡 Categories Guide: Add expense or income categories (e.g. Salaries, Utilities) for reports.",
+  "notebookGuideTransactions": "💡 Transactions Guide: View all operations for the selected book with date and amount.",
+  "notebookInsufficientBalance": "Insufficient balance.",
+  "notebookArchived": "Archived",
+  "notebookRestore": "Restore",
+  "notebookArchiveWarning": "Are you sure you want to archive this item? You won't be able to use it in new operations. Requires security PIN.",
+  "notebookOpeningBalanceTitle": "Opening Balance"
 }

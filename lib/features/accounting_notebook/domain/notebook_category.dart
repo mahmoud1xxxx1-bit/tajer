@@ -25,6 +25,7 @@ class NotebookCategory {
       type: data['type']?.toString() ?? 'expense',
       bookId: data['bookId']?.toString() ?? '',
       createdAt: safeParseDate(data['createdAt']),
+      isArchived: data['isArchived'] ?? false,
     );
   }
 
@@ -34,6 +35,7 @@ class NotebookCategory {
       'type': type,
       'bookId': bookId,
       'createdAt': Timestamp.fromDate(createdAt),
+      'isArchived': isArchived,
     };
   }
 }

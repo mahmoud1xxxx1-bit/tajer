@@ -28,6 +28,7 @@ class NotebookAccount {
       balance: (data['balance'] as num?)?.toDouble() ?? 0.0,
       bookId: data['bookId']?.toString() ?? '',
       createdAt: safeParseDate(data['createdAt']),
+      isArchived: data['isArchived'] ?? false,
     );
   }
 
@@ -38,6 +39,7 @@ class NotebookAccount {
       'balance': balance,
       'bookId': bookId,
       'createdAt': Timestamp.fromDate(createdAt),
+      'isArchived': isArchived,
     };
   }
 }

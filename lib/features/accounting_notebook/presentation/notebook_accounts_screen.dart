@@ -3,7 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
+import '../utils/notebook_localization_helper.dart';
 import '../../../../core/services/guest_limit_service.dart';
+import '../../../../core/widgets/pin_confirmation_dialog.dart';
+import '../../../authentication/data/auth_repository.dart';
+
 
 class NotebookAccountsScreen extends ConsumerStatefulWidget {
   const NotebookAccountsScreen({super.key});
@@ -178,26 +182,38 @@ class _NotebookAccountsScreenState extends ConsumerState<NotebookAccountsScreen>
     );
   }
 
-  void _showArchiveDialog(BuildContext context, WidgetRef ref, String id) {
+  void _showArchiveDialog(BuildContext context, WidgetRef ref, String id) async {
     final l10n = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.notebookArchiveAccount),
-        content: Text(l10n.notebookArchiveConfirm),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              ref.read(accountingNotebookProvider).archiveAccount(id);
-              Navigator.pop(ctx);
-            },
-            child: Text(l10n.archive, style: const TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
+    final appUser = ref.read(appUserProvider).value;
+    if (appUser == null) return;
+    
+    final proceed = await PinConfirmationDialog.requirePinOrSetup(
+      context, 
+      appUser,
+      title: l10n.notebookArchiveAccount,
+      warning: l10n.notebookArchiveWarning,
     );
+    
+    if (proceed && context.mounted) {
+      ref.read(accountingNotebookProvider).archiveAccount(id);
+    }
+  }
+
+  void _showRestoreDialog(BuildContext context, WidgetRef ref, String id) async {
+    final l10n = AppLocalizations.of(context)!;
+    final appUser = ref.read(appUserProvider).value;
+    if (appUser == null) return;
+    
+    final proceed = await PinConfirmationDialog.requirePinOrSetup(
+      context, 
+      appUser,
+      title: l10n.notebookRestore,
+      warning: l10n.localeName == 'ar' ? 'استرجاع هذا العنصر سيجعله متاحًا في العمليات الجديدة.' : 'Restoring this item will make it available for new operations.',
+    );
+    
+    if (proceed && context.mounted) {
+      ref.read(accountingNotebookProvider).restoreAccount(id);
+    }
   }
 }
 

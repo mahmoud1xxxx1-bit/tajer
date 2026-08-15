@@ -21,28 +21,28 @@ final notebookBooksProvider = StreamProvider.autoDispose<List<NotebookBook>>((re
   final repo = ref.watch(accountingNotebookRepositoryProvider);
   if (repo == null) return const Stream.empty();
   return repo.booksRef.snapshots().map((snap) => 
-    snap.docs.map((d) => NotebookBook.fromMap(d.data(), d.id)).where((x) => !x.isArchived).toList());
+    snap.docs.map((d) => NotebookBook.fromMap(d.data(), d.id)).toList());
 });
 
 final notebookAccountsProvider = StreamProvider.autoDispose<List<NotebookAccount>>((ref) {
   final repo = ref.watch(accountingNotebookRepositoryProvider);
   if (repo == null) return const Stream.empty();
   return repo.accountsRef.snapshots().map((snap) => 
-    snap.docs.map((d) => NotebookAccount.fromMap(d.data(), d.id)).where((x) => !x.isArchived).toList());
+    snap.docs.map((d) => NotebookAccount.fromMap(d.data(), d.id)).toList());
 });
 
 final notebookCategoriesProvider = StreamProvider.autoDispose<List<NotebookCategory>>((ref) {
   final repo = ref.watch(accountingNotebookRepositoryProvider);
   if (repo == null) return const Stream.empty();
   return repo.categoriesRef.snapshots().map((snap) => 
-    snap.docs.map((d) => NotebookCategory.fromMap(d.data(), d.id)).where((x) => !x.isArchived).toList());
+    snap.docs.map((d) => NotebookCategory.fromMap(d.data(), d.id)).toList());
 });
 
 final notebookPeopleProvider = StreamProvider.autoDispose<List<NotebookPerson>>((ref) {
   final repo = ref.watch(accountingNotebookRepositoryProvider);
   if (repo == null) return const Stream.empty();
   return repo.peopleRef.snapshots().map((snap) => 
-    snap.docs.map((d) => NotebookPerson.fromMap(d.data(), d.id)).where((x) => !x.isArchived).toList());
+    snap.docs.map((d) => NotebookPerson.fromMap(d.data(), d.id)).toList());
 });
 
 final notebookTransactionsProvider = StreamProvider.autoDispose<List<NotebookTransaction>>((ref) {
@@ -369,16 +369,16 @@ class AccountingNotebookService {
   }
 
   // People
-  Future<void> createPerson({required String bookId, required String name, String? phone}) async {
+  Future<void> createPerson({required String bookId, required String name, String? phone, String? notes}) async {
     if (_repository == null) return;
     final id = _uuid.v4();
-    final p = NotebookPerson(id: id, bookId: bookId, name: name, phone: phone, amountOwedToMe: 0, amountIOwe: 0, createdAt: DateTime.now());
+    final p = NotebookPerson(id: id, bookId: bookId, name: name, phone: phone, notes: notes, amountOwedToMe: 0, amountIOwe: 0, createdAt: DateTime.now());
     await _repository.createPerson(p);
   }
 
-  Future<void> updatePerson(String id, {required String name, String? phone}) async {
+  Future<void> updatePerson(String id, {required String name, String? phone, String? notes}) async {
     if (_repository == null) return;
-    await _repository.peopleRef.doc(id).update({'name': name, 'phone': phone});
+    await _repository.peopleRef.doc(id).update({'name': name, 'phone': phone, 'notes': notes});
   }
 
   Future<void> archivePerson(String id) async {

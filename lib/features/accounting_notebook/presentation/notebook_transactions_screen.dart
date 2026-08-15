@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
+import '../domain/notebook_account.dart';
+import '../domain/notebook_category.dart';
+import '../domain/notebook_person.dart';
 import '../utils/notebook_localization_helper.dart';
 
 class NotebookTransactionsScreen extends ConsumerStatefulWidget {
@@ -28,6 +31,14 @@ class _NotebookTransactionsScreenState extends ConsumerState<NotebookTransaction
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final txAsync = ref.watch(notebookTransactionsProvider);
+    final allAccounts = ref.watch(notebookAccountsProvider).value ?? [];
+    final allCategories = ref.watch(notebookCategoriesProvider).value ?? [];
+    final allPeople = ref.watch(notebookPeopleProvider).value ?? [];
+
+    String getAccountName(String? id) => allAccounts.firstWhere((a) => a.id == id, orElse: () => NotebookAccount(id: '', name: '...', type: '', balance: 0, bookId: '', createdAt: DateTime.now(), isArchived: false)).name;
+    String getCategoryName(String? id) => allCategories.firstWhere((c) => c.id == id, orElse: () => NotebookCategory(id: '', name: '...', type: '', bookId: '', createdAt: DateTime.now(), isArchived: false)).name;
+    String getPersonName(String? id) => allPeople.firstWhere((p) => p.id == id, orElse: () => NotebookPerson(id: '', name: '...', amountOwedToMe: 0, amountIOwe: 0, bookId: '', createdAt: DateTime.now(), isArchived: false)).name;
+
     final peopleAsync = ref.watch(notebookPeopleProvider);
     final accountsAsync = ref.watch(notebookAccountsProvider);
     final booksAsync = ref.watch(notebookBooksProvider);
@@ -41,6 +52,27 @@ class _NotebookTransactionsScreenState extends ConsumerState<NotebookTransaction
       appBar: AppBar(title: Text(l10n.notebookTransactions)),
       body: Column(
         children: [
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.indigo.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.indigo.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.lightbulb_outline, color: Colors.amber, size: 26),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    l10n.notebookGuideTransactions,
+                    style: TextStyle(fontFamily: 'Tajawal', fontSize: 13, height: 1.4, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7)),
+                  ),
+                ),
+              ],
+            ),
+          ),
           Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(

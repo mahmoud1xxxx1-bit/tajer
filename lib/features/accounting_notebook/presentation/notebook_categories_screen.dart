@@ -144,26 +144,38 @@ class _NotebookCategoriesScreenState extends ConsumerState<NotebookCategoriesScr
     );
   }
 
-  void _showArchiveDialog(BuildContext context, WidgetRef ref, String id) {
+  void _showArchiveDialog(BuildContext context, WidgetRef ref, String id) async {
     final l10n = AppLocalizations.of(context)!;
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.notebookArchiveCategory),
-        content: Text(l10n.notebookArchiveConfirm),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () {
-              ref.read(accountingNotebookProvider).archiveCategory(id);
-              Navigator.pop(ctx);
-            },
-            child: Text(l10n.archive, style: const TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
+    final appUser = ref.read(appUserProvider).value;
+    if (appUser == null) return;
+    
+    final proceed = await PinConfirmationDialog.requirePinOrSetup(
+      context, 
+      appUser,
+      title: l10n.notebookArchiveCategory,
+      warning: l10n.notebookArchiveWarning,
     );
+    
+    if (proceed && context.mounted) {
+      ref.read(accountingNotebookProvider).archiveCategory(id);
+    }
+  }
+
+  void _showRestoreDialog(BuildContext context, WidgetRef ref, String id) async {
+    final l10n = AppLocalizations.of(context)!;
+    final appUser = ref.read(appUserProvider).value;
+    if (appUser == null) return;
+    
+    final proceed = await PinConfirmationDialog.requirePinOrSetup(
+      context, 
+      appUser,
+      title: l10n.notebookRestore,
+      warning: l10n.localeName == 'ar' ? 'استرجاع هذا العنصر سيجعله متاحًا في العمليات الجديدة.' : 'Restoring this item will make it available for new operations.',
+    );
+    
+    if (proceed && context.mounted) {
+      ref.read(accountingNotebookProvider).restoreCategory(id);
+    }
   }
 }
 

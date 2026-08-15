@@ -1737,7 +1737,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notebookTypeCard => 'بطاقة';
 
   @override
-  String get notebookTypeWallet => 'محفظة إلكترونية';
+  String get notebookTypeWallet => 'محفظة';
 
   @override
   String get notebookTypeOther => 'أخرى';
@@ -1914,4 +1914,40 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notebookNoCategoriesFound => 'لا توجد فئات';
+
+  @override
+  String get notebookGuideBooks =>
+      '💡 دليل الدفاتر: قم بإنشاء دفتر لكل فرع أو نشاط (مثال: بوفية، كافتيريا).';
+
+  @override
+  String get notebookGuideAccounts =>
+      '💡 دليل الحسابات: أضف صناديق الكاش أو الحسابات البنكية لهذا الدفتر لضبط الأرصدة.';
+
+  @override
+  String get notebookGuidePeople =>
+      '💡 دليل الأشخاص: أضف العملاء أو الموردين أو الموظفين لتسجيل ديونهم أو ما لهم.';
+
+  @override
+  String get notebookGuideCategories =>
+      '💡 دليل التصنيفات: أضف بنود المصروفات أو الإيرادات (مثال: رواتب، مشتريات) لتنظيم التقارير.';
+
+  @override
+  String get notebookGuideTransactions =>
+      '💡 سجل الحركات: يعرض جميع عمليات الدفتر الحالي بالتاريخ والمبلغ والحساب.';
+
+  @override
+  String get notebookInsufficientBalance => 'الرصيد غير كافٍ.';
+
+  @override
+  String get notebookArchived => 'مؤرشف';
+
+  @override
+  String get notebookRestore => 'استرجاع';
+
+  @override
+  String get notebookArchiveWarning =>
+      'هل أنت متأكد من أرشفة هذا العنصر؟ لن تتمكن من إجراء عمليات جديدة عليه. سيتطلب تأكيد أمان.';
+
+  @override
+  String get notebookOpeningBalanceTitle => 'رصيد افتتاحي';
 }

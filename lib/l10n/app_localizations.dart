@@ -3401,7 +3401,7 @@ abstract class AppLocalizations {
   /// No description provided for @notebookTypeWallet.
   ///
   /// In ar, this message translates to:
-  /// **'محفظة إلكترونية'**
+  /// **'محفظة'**
   String get notebookTypeWallet;
 
   /// No description provided for @notebookTypeOther.
@@ -3739,6 +3739,66 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'لا توجد فئات'**
   String get notebookNoCategoriesFound;
+
+  /// No description provided for @notebookGuideBooks.
+  ///
+  /// In ar, this message translates to:
+  /// **'💡 دليل الدفاتر: قم بإنشاء دفتر لكل فرع أو نشاط (مثال: بوفية، كافتيريا).'**
+  String get notebookGuideBooks;
+
+  /// No description provided for @notebookGuideAccounts.
+  ///
+  /// In ar, this message translates to:
+  /// **'💡 دليل الحسابات: أضف صناديق الكاش أو الحسابات البنكية لهذا الدفتر لضبط الأرصدة.'**
+  String get notebookGuideAccounts;
+
+  /// No description provided for @notebookGuidePeople.
+  ///
+  /// In ar, this message translates to:
+  /// **'💡 دليل الأشخاص: أضف العملاء أو الموردين أو الموظفين لتسجيل ديونهم أو ما لهم.'**
+  String get notebookGuidePeople;
+
+  /// No description provided for @notebookGuideCategories.
+  ///
+  /// In ar, this message translates to:
+  /// **'💡 دليل التصنيفات: أضف بنود المصروفات أو الإيرادات (مثال: رواتب، مشتريات) لتنظيم التقارير.'**
+  String get notebookGuideCategories;
+
+  /// No description provided for @notebookGuideTransactions.
+  ///
+  /// In ar, this message translates to:
+  /// **'💡 سجل الحركات: يعرض جميع عمليات الدفتر الحالي بالتاريخ والمبلغ والحساب.'**
+  String get notebookGuideTransactions;
+
+  /// No description provided for @notebookInsufficientBalance.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرصيد غير كافٍ.'**
+  String get notebookInsufficientBalance;
+
+  /// No description provided for @notebookArchived.
+  ///
+  /// In ar, this message translates to:
+  /// **'مؤرشف'**
+  String get notebookArchived;
+
+  /// No description provided for @notebookRestore.
+  ///
+  /// In ar, this message translates to:
+  /// **'استرجاع'**
+  String get notebookRestore;
+
+  /// No description provided for @notebookArchiveWarning.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل أنت متأكد من أرشفة هذا العنصر؟ لن تتمكن من إجراء عمليات جديدة عليه. سيتطلب تأكيد أمان.'**
+  String get notebookArchiveWarning;
+
+  /// No description provided for @notebookOpeningBalanceTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'رصيد افتتاحي'**
+  String get notebookOpeningBalanceTitle;
 }
 
 class _AppLocalizationsDelegate
