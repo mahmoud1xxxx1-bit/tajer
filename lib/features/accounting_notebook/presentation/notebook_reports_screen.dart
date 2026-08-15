@@ -375,6 +375,7 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                               l10n,
                               Localizations.localeOf(context).languageCode ==
                                   'ar',
+                              currencyCode,
                             );
                             await NotebookCsvService.shareCsv(
                               csvData,
