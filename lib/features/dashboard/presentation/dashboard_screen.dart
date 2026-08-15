@@ -358,14 +358,15 @@ class DashboardHome extends ConsumerWidget {
                         onNavigateToTab(2);
                       },
                     ),
-                    _QuickAction(
-                      icon: Icons.person_outline,
-                      label: l10n.customers,
-                      color: Theme.of(context).colorScheme.secondary,
-                      onTap: () {
-                        onNavigateToTab(3);
-                      },
-                    ),
+                    if (canManageCustomers)
+                      _QuickAction(
+                        icon: Icons.person_outline,
+                        label: l10n.customers,
+                        color: Theme.of(context).colorScheme.secondary,
+                        onTap: () {
+                          onNavigateToTab(3);
+                        },
+                      ),
                   ],
                 ),
                 SizedBox(height: 24),
