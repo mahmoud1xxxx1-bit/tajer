@@ -7,7 +7,7 @@ import '../utils/notebook_localization_helper.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../../authentication/data/auth_repository.dart';
-
+import '../domain/notebook_account.dart';
 
 class NotebookAccountsScreen extends ConsumerStatefulWidget {
   const NotebookAccountsScreen({super.key});
