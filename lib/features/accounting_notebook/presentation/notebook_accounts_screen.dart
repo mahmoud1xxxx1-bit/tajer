@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
+import '../../../../core/services/guest_limit_service.dart';
 
 class NotebookAccountsScreen extends ConsumerWidget {
   const NotebookAccountsScreen({super.key});
@@ -18,27 +19,22 @@ class NotebookAccountsScreen extends ConsumerWidget {
           if (accounts.isEmpty) return Center(child: Text(AppLocalizations.of(context)!.notebookNoAccountsFound));
           return ListView.builder(
             itemCount: accounts.length,
-            itemBuilder: (context, index) {
-              final acc = accounts[index];
+            itemBuilder: (ctx, i) {
+              final a = accounts[i];
               return ListTile(
                 leading: const Icon(Icons.account_balance_wallet),
-                title: Text(acc.name),
-                subtitle: Text(acc.type),
+                title: Text(a.name),
+                subtitle: Text('${l10n.balance}: ${a.balance.toStringAsFixed(2)} | ${AppLocalizations.of(context)!.notebookType}: ${a.type}'),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      acc.balance.toStringAsFixed(2),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(width: 8),
                     IconButton(
                       icon: const Icon(Icons.edit, color: Colors.blue),
-                      onPressed: () => _showEditAccountDialog(context, ref, acc.id, acc.name, acc.type),
+                      onPressed: () => _showEditAccountDialog(context, ref, a.id, a.name, a.type),
                     ),
                     IconButton(
                       icon: const Icon(Icons.archive, color: Colors.red),
-                      onPressed: () => _showArchiveDialog(context, ref, acc.id),
+                      onPressed: () => _showArchiveDialog(context, ref, a.id),
                     ),
                   ],
                 ),
@@ -50,7 +46,11 @@ class NotebookAccountsScreen extends ConsumerWidget {
         error: (err, stack) => Center(child: Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $err')),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddAccountDialog(context, ref),
+        onPressed: () async {
+          if (await GuestLimitService.canAddNotebookAccount(context, ref)) {
+            _showAddAccountDialog(context, ref);
+          }
+        },
         child: const Icon(Icons.add),
       ),
     );

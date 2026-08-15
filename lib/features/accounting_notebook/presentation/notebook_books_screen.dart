@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
+import '../../../../core/services/guest_limit_service.dart';
 
 class NotebookBooksScreen extends ConsumerWidget {
   const NotebookBooksScreen({super.key});
@@ -14,7 +15,11 @@ class NotebookBooksScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notebookBooks)),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddBookDialog(context, ref),
+        onPressed: () async {
+          if (await GuestLimitService.canAddNotebookBook(context, ref)) {
+            _showAddBookDialog(context, ref);
+          }
+        },
         child: const Icon(Icons.add),
       ),
       body: booksAsync.when(

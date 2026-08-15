@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
+import '../../../../core/services/guest_limit_service.dart';
 import '../utils/notebook_localization_helper.dart';
 
 class NotebookPersonStatementScreen extends ConsumerWidget {
@@ -96,18 +97,18 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: person.amountOwedToMe > 0 
-                          ? () => context.push('/notebook/payment/$personId/true') // Receive payment
-                          : null,
+                        onPressed: person.amountOwedToMe > 0
+                              ? () async { if (await GuestLimitService.canAddNotebookTransaction(context, ref)) context.push('/notebook/payment/$personId/true'); }
+                              : null,
                         child: Text(l10n.notebookPayment),
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: person.amountIOwe > 0 
-                          ? () => context.push('/notebook/payment/$personId/false') // Make payment
-                          : null,
+                        onPressed: person.amountIOwe > 0
+                              ? () async { if (await GuestLimitService.canAddNotebookTransaction(context, ref)) context.push('/notebook/payment/$personId/false'); }
+                              : null,
                         child: Text(l10n.notebookPayment),
                       ),
                     ),

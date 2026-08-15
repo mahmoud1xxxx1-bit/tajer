@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
+import '../../../../core/services/guest_limit_service.dart';
 
 class NotebookPeopleScreen extends ConsumerWidget {
   const NotebookPeopleScreen({super.key});
@@ -59,7 +60,11 @@ class NotebookPeopleScreen extends ConsumerWidget {
         error: (err, stack) => Center(child: Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $err')),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddPersonDialog(context, ref),
+        onPressed: () async {
+          if (await GuestLimitService.canAddNotebookPerson(context, ref)) {
+            _showAddPersonDialog(context, ref);
+          }
+        },
         child: const Icon(Icons.add),
       ),
     );

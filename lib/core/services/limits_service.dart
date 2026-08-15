@@ -25,6 +25,17 @@ class LimitsService {
   static const int guestMaxSuppliers = 2;
   static const int guestMaxEmployees = 0; // Employees locked for guest users
 
+  // Accounting Notebook Limits
+  static const int freeMaxNotebookBooks = 2;
+  static const int freeMaxNotebookAccounts = 2;
+  static const int freeMaxNotebookPeople = 5;
+  static const int freeMaxNotebookTransactions = 20;
+
+  static const int guestMaxNotebookBooks = 1;
+  static const int guestMaxNotebookAccounts = 1;
+  static const int guestMaxNotebookPeople = 2;
+  static const int guestMaxNotebookTransactions = 5;
+
   Future<bool> canAddCustomer(AppUser user) async {
     final limit = user.isAnonymous ? guestMaxCustomers : freeMaxCustomers;
     return _canAdd(user, 'customers', limit);
@@ -60,6 +71,83 @@ class LimitsService {
     return _canAdd(user, 'employees', limit);
   }
 
+  Future<bool> canAddNotebookBook(AppUser user) async {
+    return _canAddNotebook(user, 'notebook_books', guestMaxNotebookBooks, freeMaxNotebookBooks);
+  }
+
+  Future<bool> canAddNotebookAccount(AppUser user) async {
+    return _canAddNotebook(user, 'notebook_accounts', guestMaxNotebookAccounts, freeMaxNotebookAccounts);
+  }
+
+  Future<bool> canAddNotebookPerson(AppUser user) async {
+    return _canAddNotebook(user, 'notebook_people', guestMaxNotebookPeople, freeMaxNotebookPeople);
+  }
+
+  Future<bool> canAddNotebookTransaction(AppUser user) async {
+    return _canAddNotebook(user, 'notebook_transactions', guestMaxNotebookTransactions, freeMaxNotebookTransactions);
+  }
+
+  Future<bool> _canAddNotebook(AppUser user, String collectionName, int guestLimit, int freeLimit) async {
+    if (user.plan == 'banned_device' && user.isAnonymous) return false;
+
+    final String merchantId = user.merchantId?.isNotEmpty == true ? user.merchantId! : user.id;
+
+    bool isPremium = false;
+    bool isGuest = false;
+
+    if (user.id == merchantId) {
+      isPremium = user.plan == 'pro' || user.plan == 'premium' || user.email?.trim().toLowerCase() == 'love.dotk@gmail.com';
+      isGuest = user.isAnonymous;
+    } else {
+      try {
+        final merchantDoc = await _firestore.collection('users').doc(merchantId).get();
+        if (merchantDoc.exists) {
+          final merchantData = merchantDoc.data()!;
+          final plan = merchantData['plan'] as String? ?? 'guest';
+          final email = merchantData['email'] as String? ?? '';
+          final isAnonymous = merchantData['isAnonymous'] == true;
+          isPremium = plan == 'pro' || plan == 'premium' || email.trim().toLowerCase() == 'love.dotk@gmail.com';
+          isGuest = isAnonymous;
+        }
+      } catch (e) {
+        isPremium = false;
+      }
+    }
+
+    if (isPremium) return true;
+
+    final limit = isGuest ? guestLimit : freeLimit;
+
+    final Query query = _firestore.collection('merchants').doc(merchantId).collection(collectionName);
+
+    try {
+      final snapshot = await query.get();
+      int activeCount = 0;
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        final isArchived = data['isArchived'] == true;
+        if (!isArchived) activeCount++;
+      }
+      return activeCount < limit;
+    } catch (e) {
+      if (e.toString().contains('UNAVAILABLE') || e.toString().contains('offline') || e.toString().contains('failed-precondition')) {
+        try {
+          final snapshot = await query.get(const GetOptions(source: Source.cache));
+          int activeCount = 0;
+          for (var doc in snapshot.docs) {
+            final data = doc.data() as Map<String, dynamic>;
+            final isArchived = data['isArchived'] == true;
+            if (!isArchived) activeCount++;
+          }
+          return activeCount < limit;
+        } catch (_) {
+          return true; // Safe fallback
+        }
+      }
+      rethrow;
+    }
+  }
+
   Future<bool> _canAdd(AppUser user, String collectionName, int maxLimit) async {
     // Banned devices cannot add anything (0 limit) ONLY if they are anonymous
     if (user.plan == 'banned_device' && user.isAnonymous) return false;
@@ -85,8 +173,6 @@ class LimitsService {
             : _firestore.collection('merchants').doc(merchantId).collection(collectionName);
 
     // Products and Raw Materials support Soft Delete (isArchived).
-    // We cannot use `.where('isArchived', isEqualTo: false)` because old products without the field would be ignored and NOT counted.
-    // So we fetch the documents and filter locally.
     try {
       if (collectionName == 'products' || collectionName == 'raw_materials') {
         final snapshot = await query.get();

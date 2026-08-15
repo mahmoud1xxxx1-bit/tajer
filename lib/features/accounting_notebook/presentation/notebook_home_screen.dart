@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
 import '../utils/notebook_localization_helper.dart';
+import '../../../../core/services/guest_limit_service.dart';
 
 class NotebookHomeScreen extends ConsumerWidget {
   const NotebookHomeScreen({super.key});
@@ -98,19 +99,19 @@ class NotebookHomeScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             Row(
               children: [
-                Expanded(child: _buildActionCard(context, Icons.arrow_downward, l10n.income, Colors.green, () => context.push('/notebook/income'))),
+                Expanded(child: _buildActionCard(context, Icons.arrow_downward, l10n.income, Colors.green, () async { if (await GuestLimitService.canAddNotebookTransaction(context, ref)) context.push('/notebook/income'); })),
                 const SizedBox(width: 16),
-                Expanded(child: _buildActionCard(context, Icons.arrow_upward, l10n.expense, Colors.red, () => context.push('/notebook/expense'))),
+                Expanded(child: _buildActionCard(context, Icons.arrow_upward, l10n.expense, Colors.red, () async { if (await GuestLimitService.canAddNotebookTransaction(context, ref)) context.push('/notebook/expense'); })),
                 const SizedBox(width: 16),
-                Expanded(child: _buildActionCard(context, Icons.swap_horiz, l10n.notebookTransfer, Colors.blueGrey, () => context.push('/notebook/transfer'))),
+                Expanded(child: _buildActionCard(context, Icons.swap_horiz, l10n.notebookTransfer, Colors.blueGrey, () async { if (await GuestLimitService.canAddNotebookTransaction(context, ref)) context.push('/notebook/transfer'); })),
               ],
             ),
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: _buildActionCard(context, Icons.person_add, l10n.moneyOwedToMe, Colors.blue, () => context.push('/notebook/debt/me'))),
+                Expanded(child: _buildActionCard(context, Icons.person_add, l10n.moneyOwedToMe, Colors.blue, () async { if (await GuestLimitService.canAddNotebookTransaction(context, ref)) context.push('/notebook/debt/me'); })),
                 const SizedBox(width: 16),
-                Expanded(child: _buildActionCard(context, Icons.person_remove, l10n.moneyIOwe, Colors.orange, () => context.push('/notebook/debt/owe'))),
+                Expanded(child: _buildActionCard(context, Icons.person_remove, l10n.moneyIOwe, Colors.orange, () async { if (await GuestLimitService.canAddNotebookTransaction(context, ref)) context.push('/notebook/debt/owe'); })),
               ],
             ),
             const SizedBox(height: 16),
