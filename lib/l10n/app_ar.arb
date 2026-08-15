@@ -774,13 +774,16 @@
   "notebookPartialPaymentHint": "المبلغ المراد سداده",
   "notebookNoCategoriesFound": "لا توجد فئات",
   "notebookGuideBooks": "💡 دليل الدفاتر: قم بإنشاء دفتر لكل فرع أو نشاط (مثال: بوفية، كافتيريا).",
-  "notebookGuideAccounts": "💡 دليل الحسابات: أضف صناديق الكاش أو الحسابات البنكية لهذا الدفتر لضبط الأرصدة.",
-  "notebookGuidePeople": "💡 دليل الأشخاص: أضف العملاء أو الموردين أو الموظفين لتسجيل ديونهم أو ما لهم.",
-  "notebookGuideCategories": "💡 دليل التصنيفات: أضف بنود المصروفات أو الإيرادات (مثال: رواتب، مشتريات) لتنظيم التقارير.",
+  "notebookGuideAccounts": "الحساب هو المكان الذي تحتفظ فيه بالمال، مثل: الصندوق أو البنك.",
+  "notebookGuidePeople": "الأشخاص هم العملاء أو الموردون الذين تتعامل معهم بالآجل (دين).",
+  "notebookGuideCategories": "التصنيفات تساعدك في ترتيب وتنظيم حركاتك المالية مثل (رواتب، إيجار، مبيعات).",
   "notebookGuideTransactions": "💡 سجل الحركات: يعرض جميع عمليات الدفتر الحالي بالتاريخ والمبلغ والحساب.",
-  "notebookInsufficientBalance": "الرصيد غير كافٍ.",
+  "notebookInsufficientBalance": "الرصيد غير كافٍ. الرصيد الحالي: {balance} والمطلوب: {amount}",
   "notebookArchived": "مؤرشف",
   "notebookRestore": "استرجاع",
   "notebookArchiveWarning": "هل أنت متأكد من أرشفة هذا العنصر؟ لن تتمكن من إجراء عمليات جديدة عليه. سيتطلب تأكيد أمان.",
-  "notebookOpeningBalanceTitle": "رصيد افتتاحي"
+  "notebookOpeningBalanceTitle": "رصيد افتتاحي",
+  "notebookGuideIncomeExpense": "الدخل هو أي مبلغ يدخل لحسابك. المصروف هو أي مبلغ يخرج من حسابك.",
+  "notebookGuideReceivablePayable": "لي: مبالغ تطالب بها الآخرين. عليّ: مبالغ يطالبك بها الآخرون.",
+  "notebookGuideTransferPayment": "التحويل لنقل المال بين حساباتك. السداد لتسديد الديون للأشخاص."
 }

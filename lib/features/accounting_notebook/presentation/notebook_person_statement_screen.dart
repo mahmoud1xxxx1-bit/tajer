@@ -33,29 +33,48 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                   child: Column(
                     children: [
                       Text(person.name, style: Theme.of(context).textTheme.headlineSmall),
-                      const SizedBox(height: 8),
+                      if (person.notes != null && person.notes!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          person.notes!,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                      const SizedBox(height: 16),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          Text(l10n.notebookTotalOwedToMe),
-                          Text(person.amountOwedToMe.toStringAsFixed(2), style: const TextStyle(color: Colors.green)),
+                          Column(
+                            children: [
+                              Text(l10n.notebookTotalOwedToMe, style: const TextStyle(color: Colors.green)),
+                              const SizedBox(height: 4),
+                              Text(person.amountOwedToMe.toStringAsFixed(2), style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16)),
+                            ],
+                          ),
+                          Column(
+                            children: [
+                              Text(l10n.notebookTotalIOwe, style: const TextStyle(color: Colors.red)),
+                              const SizedBox(height: 4),
+                              Text(person.amountIOwe.toStringAsFixed(2), style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16)),
+                            ],
+                          ),
                         ],
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(l10n.notebookTotalIOwe),
-                          Text(person.amountIOwe.toStringAsFixed(2), style: const TextStyle(color: Colors.red)),
-                        ],
-                      ),
+                      const SizedBox(height: 12),
                       const Divider(),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      const SizedBox(height: 8),
+                      Column(
                         children: [
-                          Text(l10n.notebookNetBalance),
+                          Text(l10n.notebookNetBalance, style: Theme.of(context).textTheme.titleMedium),
+                          const SizedBox(height: 4),
                           Text(
                             netBalance.toStringAsFixed(2), 
-                            style: TextStyle(fontWeight: FontWeight.bold, color: netBalance >= 0 ? Colors.green : Colors.red),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold, 
+                              fontSize: 20,
+                              color: netBalance > 0 ? Colors.green : (netBalance < 0 ? Colors.red : Colors.grey),
+                            ),
                           ),
                         ],
                       ),
@@ -74,8 +93,8 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                         final tx = personTxs[index];
                         final isPositive = tx.type == 'receivable' || tx.type == 'payable_payment';
                         return ListTile(
-                          title: Text(getNotebookLocalizedType(context, tx.type)),
-                          subtitle: Text('${DateFormat.yMMMd().format(tx.date)} - ${tx.note }'),
+                          title: Text(NotebookLocalizationHelper.getNotebookLocalizedType(context, tx.type)),
+                          subtitle: Text('${DateFormat.yMMMd().format(tx.date)} - ${tx.note ?? ''}'),
                           trailing: Text(
                             '${isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',
                             style: TextStyle(

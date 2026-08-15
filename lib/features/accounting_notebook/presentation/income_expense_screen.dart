@@ -66,7 +66,7 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
             data: (allAccounts) {
-              final accounts = allAccounts.where((a) => a.bookId == _selectedBookId).toList();
+              final accounts = allAccounts.where((a) => a.bookId == _selectedBookId && !(a.isArchived ?? false)).toList();
               if (accounts.isEmpty) {
                 return Center(
                   child: Column(
@@ -92,7 +92,7 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
                 data: (allCats) {
-                  final cats = allCats.where((c) => c.bookId == _selectedBookId && c.type == (widget.isIncome ? 'income' : 'expense')).toList();
+                  final cats = allCats.where((c) => c.bookId == _selectedBookId && c.type == (widget.isIncome ? 'income' : 'expense') && !(c.isArchived ?? false)).toList();
                   if (cats.isEmpty) {
                     return Center(
                       child: Column(
@@ -119,7 +119,28 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
                       key: _formKey,
                       child: Column(
                         children: [
-                          Text(widget.isIncome ? l10n.notebookIncomeHint : l10n.notebookExpenseHint, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    l10n.notebookGuideIncomeExpense,
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      color: Theme.of(context).colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                           const SizedBox(height: 16),
                           DropdownButtonFormField<String>(
                             value: _selectedBookId,
@@ -174,7 +195,15 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
                                     }
                                     if (mounted) context.pop();
                                   } catch (e) {
-                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l10n.genericErrorPrefix}: $e')));
+                                    if (e.toString().contains('insufficient_balance')) {
+                                      final selectedAccount = accounts.firstWhere((a) => a.id == _selectedAccountId);
+                                      final msg = l10n.notebookInsufficientBalance
+                                          .replaceAll('{balance}', selectedAccount.balance.toStringAsFixed(2))
+                                          .replaceAll('{amount}', amt.toStringAsFixed(2));
+                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.red));
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l10n.genericErrorPrefix}: $e')));
+                                    }
                                   }
                                 }
                               },

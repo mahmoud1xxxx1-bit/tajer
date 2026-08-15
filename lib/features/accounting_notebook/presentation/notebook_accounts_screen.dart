@@ -56,7 +56,28 @@ class _NotebookAccountsScreenState extends ConsumerState<NotebookAccountsScreen>
             children: [
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Text("الحساب هو المكان الذي تحتفظ فيه بالمال، مثل: الصندوق أو البنك.", style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          l10n.notebookGuideAccounts,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -82,21 +103,42 @@ class _NotebookAccountsScreenState extends ConsumerState<NotebookAccountsScreen>
                       itemCount: accounts.length,
                       itemBuilder: (ctx, i) {
                         final a = accounts[i];
+                        final isArchived = a.isArchived ?? false;
                         return ListTile(
-                          leading: const Icon(Icons.account_balance_wallet),
-                          title: Text(a.name),
-                          subtitle: Text('${l10n.notebookBalance}: ${a.balance.toStringAsFixed(2)} | ${l10n.notebookAccountType}: ${a.type}'),
+                          enabled: !isArchived,
+                          leading: Icon(
+                            Icons.account_balance_wallet,
+                            color: isArchived ? Colors.grey : null,
+                          ),
+                          title: Text(
+                            isArchived ? '${a.name} (${l10n.notebookArchived})' : a.name,
+                            style: TextStyle(
+                              decoration: isArchived ? TextDecoration.lineThrough : null,
+                              color: isArchived ? Colors.grey : null,
+                            ),
+                          ),
+                          subtitle: Text(
+                            '${l10n.notebookBalance}: ${a.balance.toStringAsFixed(2)} | ${l10n.notebookAccountType}: ${NotebookLocalizationHelper.getAccountTypeName(context, a.type)}',
+                            style: TextStyle(color: isArchived ? Colors.grey : null),
+                          ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () => _showEditAccountDialog(context, ref, a.id, a.name, a.type),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.archive, color: Colors.red),
-                                onPressed: () => _showArchiveDialog(context, ref, a.id),
-                              ),
+                              if (!isArchived)
+                                IconButton(
+                                  icon: const Icon(Icons.edit, color: Colors.blue),
+                                  onPressed: () => _showEditAccountDialog(context, ref, a.id, a.name, a.type),
+                                ),
+                              if (!isArchived)
+                                IconButton(
+                                  icon: const Icon(Icons.archive, color: Colors.red),
+                                  onPressed: () => _showArchiveDialog(context, ref, a.id),
+                                )
+                              else
+                                IconButton(
+                                  icon: const Icon(Icons.restore, color: Colors.green),
+                                  onPressed: () => _showRestoreDialog(context, ref, a.id),
+                                ),
                             ],
                           ),
                         );

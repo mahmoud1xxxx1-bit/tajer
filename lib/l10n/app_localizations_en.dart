@@ -1924,22 +1924,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notebookGuideAccounts =>
-      '💡 Accounts Guide: Add cash boxes or bank accounts to track your balances.';
+      'An account is where you keep money, like: Cash or Bank.';
 
   @override
   String get notebookGuidePeople =>
-      '💡 People Guide: Add customers, suppliers, or employees to track debts.';
+      'People are customers or suppliers you deal with on credit.';
 
   @override
   String get notebookGuideCategories =>
-      '💡 Categories Guide: Add expense or income categories (e.g. Salaries, Utilities) for reports.';
+      'Categories help you organize your financial transactions like (Salaries, Rent, Sales).';
 
   @override
   String get notebookGuideTransactions =>
       '💡 Transactions Guide: View all operations for the selected book with date and amount.';
 
   @override
-  String get notebookInsufficientBalance => 'Insufficient balance.';
+  String notebookInsufficientBalance(Object amount, Object balance) {
+    return 'Insufficient balance. Current balance: $balance, Required: $amount';
+  }
 
   @override
   String get notebookArchived => 'Archived';
@@ -1953,4 +1955,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notebookOpeningBalanceTitle => 'Opening Balance';
+
+  @override
+  String get notebookGuideIncomeExpense =>
+      'Income is any money entering your account. Expense is any money leaving.';
+
+  @override
+  String get notebookGuideReceivablePayable =>
+      'Owed to me: Money you claim from others. I owe: Money others claim from you.';
+
+  @override
+  String get notebookGuideTransferPayment =>
+      'Transfer moves money between your accounts. Payment settles debts with people.';
 }

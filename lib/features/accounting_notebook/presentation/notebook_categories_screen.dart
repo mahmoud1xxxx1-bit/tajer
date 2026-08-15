@@ -53,7 +53,28 @@ class _NotebookCategoriesScreenState extends ConsumerState<NotebookCategoriesScr
             children: [
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Text("أضف تصنيفًا أولًا لتنظيم الدخل والمصروف.", style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          l10n.notebookGuideCategories,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -79,20 +100,38 @@ class _NotebookCategoriesScreenState extends ConsumerState<NotebookCategoriesScr
                       itemCount: cats.length,
                       itemBuilder: (context, index) {
                         final cat = cats[index];
+                        final isArchived = cat.isArchived ?? false;
                         return ListTile(
-                          title: Text(cat.name),
-                          subtitle: Text(cat.type == 'income' ? (l10n.income) : (l10n.expense)),
+                          enabled: !isArchived,
+                          title: Text(
+                            isArchived ? '${cat.name} (${l10n.notebookArchived})' : cat.name,
+                            style: TextStyle(
+                              decoration: isArchived ? TextDecoration.lineThrough : null,
+                              color: isArchived ? Colors.grey : null,
+                            ),
+                          ),
+                          subtitle: Text(
+                            cat.type == 'income' ? (l10n.income) : (l10n.expense),
+                            style: TextStyle(color: isArchived ? Colors.grey : null),
+                          ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () => _showEditCategoryDialog(context, ref, cat.id, cat.name),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.archive, color: Colors.red),
-                                onPressed: () => _showArchiveDialog(context, ref, cat.id),
-                              ),
+                              if (!isArchived)
+                                IconButton(
+                                  icon: const Icon(Icons.edit, color: Colors.blue),
+                                  onPressed: () => _showEditCategoryDialog(context, ref, cat.id, cat.name),
+                                ),
+                              if (!isArchived)
+                                IconButton(
+                                  icon: const Icon(Icons.archive, color: Colors.red),
+                                  onPressed: () => _showArchiveDialog(context, ref, cat.id),
+                                )
+                              else
+                                IconButton(
+                                  icon: const Icon(Icons.restore, color: Colors.green),
+                                  onPressed: () => _showRestoreDialog(context, ref, cat.id),
+                                ),
                             ],
                           ),
                         );

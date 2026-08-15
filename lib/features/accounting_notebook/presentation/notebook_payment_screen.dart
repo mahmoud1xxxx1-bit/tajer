@@ -57,7 +57,7 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
             data: (allAccounts) {
-              final accounts = allAccounts.where((a) => a.bookId == bookId).toList();
+              final accounts = allAccounts.where((a) => a.bookId == bookId && !(a.isArchived ?? false)).toList();
               if (accounts.isEmpty) {
                 return Center(
                   child: Column(
@@ -152,7 +152,15 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
                               );
                               if (mounted) context.pop();
                             } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l10n.genericErrorPrefix}: $e')));
+                              if (e.toString().contains('insufficient_balance')) {
+                                final selectedAccount = accounts.firstWhere((a) => a.id == _selectedAccountId);
+                                final msg = l10n.notebookInsufficientBalance
+                                    .replaceAll('{balance}', selectedAccount.balance.toStringAsFixed(2))
+                                    .replaceAll('{amount}', amt.toStringAsFixed(2));
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.red));
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l10n.genericErrorPrefix}: $e')));
+                              }
                             }
                           }
                         },

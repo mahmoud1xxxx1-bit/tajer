@@ -1921,22 +1921,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notebookGuideAccounts =>
-      '💡 دليل الحسابات: أضف صناديق الكاش أو الحسابات البنكية لهذا الدفتر لضبط الأرصدة.';
+      'الحساب هو المكان الذي تحتفظ فيه بالمال، مثل: الصندوق أو البنك.';
 
   @override
   String get notebookGuidePeople =>
-      '💡 دليل الأشخاص: أضف العملاء أو الموردين أو الموظفين لتسجيل ديونهم أو ما لهم.';
+      'الأشخاص هم العملاء أو الموردون الذين تتعامل معهم بالآجل (دين).';
 
   @override
   String get notebookGuideCategories =>
-      '💡 دليل التصنيفات: أضف بنود المصروفات أو الإيرادات (مثال: رواتب، مشتريات) لتنظيم التقارير.';
+      'التصنيفات تساعدك في ترتيب وتنظيم حركاتك المالية مثل (رواتب، إيجار، مبيعات).';
 
   @override
   String get notebookGuideTransactions =>
       '💡 سجل الحركات: يعرض جميع عمليات الدفتر الحالي بالتاريخ والمبلغ والحساب.';
 
   @override
-  String get notebookInsufficientBalance => 'الرصيد غير كافٍ.';
+  String notebookInsufficientBalance(Object amount, Object balance) {
+    return 'الرصيد غير كافٍ. الرصيد الحالي: $balance والمطلوب: $amount';
+  }
 
   @override
   String get notebookArchived => 'مؤرشف';
@@ -1950,4 +1952,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notebookOpeningBalanceTitle => 'رصيد افتتاحي';
+
+  @override
+  String get notebookGuideIncomeExpense =>
+      'الدخل هو أي مبلغ يدخل لحسابك. المصروف هو أي مبلغ يخرج من حسابك.';
+
+  @override
+  String get notebookGuideReceivablePayable =>
+      'لي: مبالغ تطالب بها الآخرين. عليّ: مبالغ يطالبك بها الآخرون.';
+
+  @override
+  String get notebookGuideTransferPayment =>
+      'التحويل لنقل المال بين حساباتك. السداد لتسديد الديون للأشخاص.';
 }

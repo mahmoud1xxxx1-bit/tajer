@@ -774,13 +774,16 @@
   "notebookPartialPaymentHint": "Amount to pay",
   "notebookNoCategoriesFound": "No categories found",
   "notebookGuideBooks": "💡 Books Guide: Create a book for each branch or activity (e.g. Branch A, Delivery).",
-  "notebookGuideAccounts": "💡 Accounts Guide: Add cash boxes or bank accounts to track your balances.",
-  "notebookGuidePeople": "💡 People Guide: Add customers, suppliers, or employees to track debts.",
-  "notebookGuideCategories": "💡 Categories Guide: Add expense or income categories (e.g. Salaries, Utilities) for reports.",
+  "notebookGuideAccounts": "An account is where you keep money, like: Cash or Bank.",
+  "notebookGuidePeople": "People are customers or suppliers you deal with on credit.",
+  "notebookGuideCategories": "Categories help you organize your financial transactions like (Salaries, Rent, Sales).",
   "notebookGuideTransactions": "💡 Transactions Guide: View all operations for the selected book with date and amount.",
-  "notebookInsufficientBalance": "Insufficient balance.",
+  "notebookInsufficientBalance": "Insufficient balance. Current balance: {balance}, Required: {amount}",
   "notebookArchived": "Archived",
   "notebookRestore": "Restore",
   "notebookArchiveWarning": "Are you sure you want to archive this item? You won't be able to use it in new operations. Requires security PIN.",
-  "notebookOpeningBalanceTitle": "Opening Balance"
+  "notebookOpeningBalanceTitle": "Opening Balance",
+  "notebookGuideIncomeExpense": "Income is any money entering your account. Expense is any money leaving.",
+  "notebookGuideReceivablePayable": "Owed to me: Money you claim from others. I owe: Money others claim from you.",
+  "notebookGuideTransferPayment": "Transfer moves money between your accounts. Payment settles debts with people."
 }

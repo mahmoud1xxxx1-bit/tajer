@@ -55,7 +55,28 @@ class _NotebookPeopleScreenState extends ConsumerState<NotebookPeopleScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Text("أضف العملاء أو الموردين أو أي شخص لك أو عليك مبالغ.", style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          l10n.notebookGuidePeople,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -82,10 +103,23 @@ class _NotebookPeopleScreenState extends ConsumerState<NotebookPeopleScreen> {
                       itemBuilder: (context, index) {
                         final p = people[index];
                         final net = p.amountOwedToMe - p.amountIOwe;
+                        final isArchived = p.isArchived ?? false;
                         return ListTile(
-                          leading: const Icon(Icons.person),
-                          title: Text(p.name),
-                          subtitle: (p.phone != null && p.phone!.isNotEmpty) ? Text(p.phone!) : null,
+                          enabled: !isArchived,
+                          leading: Icon(
+                            Icons.person,
+                            color: isArchived ? Colors.grey : null,
+                          ),
+                          title: Text(
+                            isArchived ? '${p.name} (${l10n.notebookArchived})' : p.name,
+                            style: TextStyle(
+                              decoration: isArchived ? TextDecoration.lineThrough : null,
+                              color: isArchived ? Colors.grey : null,
+                            ),
+                          ),
+                          subtitle: (p.phone != null && p.phone!.isNotEmpty) 
+                            ? Text(p.phone!, style: TextStyle(color: isArchived ? Colors.grey : null)) 
+                            : null,
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -93,20 +127,27 @@ class _NotebookPeopleScreenState extends ConsumerState<NotebookPeopleScreen> {
                                 net.toStringAsFixed(2),
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  color: net >= 0 ? Colors.green : Colors.red,
+                                  color: isArchived ? Colors.grey : (net >= 0 ? Colors.green : Colors.red),
                                 ),
                               ),
                               const SizedBox(width: 8),
+                              if (!isArchived)
+                                IconButton(
+                                  icon: const Icon(Icons.edit, color: Colors.blue),
+                                  onPressed: () => _showEditPersonDialog(context, ref, p.id, p.name, p.phone),
+                                ),
+                              if (!isArchived)
+                                IconButton(
+                                  icon: const Icon(Icons.archive, color: Colors.red),
+                                  onPressed: () => _showArchiveDialog(context, ref, p.id),
+                                )
+                              else
+                                IconButton(
+                                  icon: const Icon(Icons.restore, color: Colors.green),
+                                  onPressed: () => _showRestoreDialog(context, ref, p.id),
+                                ),
                               IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.blue),
-                                onPressed: () => _showEditPersonDialog(context, ref, p.id, p.name, p.phone),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.archive, color: Colors.red),
-                                onPressed: () => _showArchiveDialog(context, ref, p.id),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.assignment, color: Colors.teal),
+                                icon: Icon(Icons.assignment, color: isArchived ? Colors.grey : Colors.teal),
                                 onPressed: () => context.push('/notebook/people/${p.id}'), // Statement
                               ),
                             ],
@@ -303,6 +344,7 @@ class _AddPersonDialogState extends ConsumerState<_AddPersonDialog> {
               ref.read(accountingNotebookProvider).createPerson(
                 name: nameCtrl.text.trim(),
                 phone: phoneCtrl.text.trim(),
+                notes: noteCtrl.text.trim().isNotEmpty ? noteCtrl.text.trim() : null,
                 bookId: bookId!,
               );
               Navigator.pop(context);

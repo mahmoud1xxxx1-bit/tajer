@@ -28,35 +28,53 @@ class _DebtScreenState extends ConsumerState<DebtScreen> {
 
     return Scaffold(
       appBar: AppBar(title: Text(title)),
-      body: peopleAsync.when(
+      body: booksAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
-        data: (people) {
-          if (people.isEmpty) {
-            return Center(child: Text(l10n.notebookPeopleCreateFirst));
+        data: (books) {
+          if (books.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(l10n.notebookEmptyBooks, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.push('/notebook/books'),
+                    child: Text(l10n.notebookCreateBookCTA),
+                  )
+                ],
+              ),
+            );
           }
-          if (_selectedPersonId == null) _selectedPersonId = people.first.id;
+          if (_selectedBookId == null || !books.any((b) => b.id == _selectedBookId)) {
+            _selectedBookId = books.first.id;
+          }
 
-          return booksAsync.when(
+          return peopleAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
-            data: (books) {
-              if (books.isEmpty) {
+            data: (allPeople) {
+              final people = allPeople.where((p) => p.bookId == _selectedBookId && !(p.isArchived ?? false)).toList();
+              if (people.isEmpty) {
                 return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(l10n.notebookEmptyBooks, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+                      Text(l10n.notebookPeopleCreateFirst, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
                       const SizedBox(height: 16),
                       ElevatedButton(
-                        onPressed: () => context.push('/notebook/books'),
-                        child: Text(l10n.notebookCreateBookCTA),
+                        onPressed: () => context.push('/notebook/people'),
+                        child: Text(l10n.add),
                       )
                     ],
                   ),
                 );
               }
-              if (_selectedBookId == null) _selectedBookId = books.first.id;
+
+              if (_selectedPersonId == null || !people.any((p) => p.id == _selectedPersonId)) {
+                _selectedPersonId = people.first.id;
+              }
 
               return Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -64,13 +82,38 @@ class _DebtScreenState extends ConsumerState<DebtScreen> {
                   key: _formKey,
                   child: Column(
                     children: [
-                      DropdownButtonFormField<String>(initialValue: _selectedBookId,
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                l10n.notebookGuideDebt,
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      DropdownButtonFormField<String>(
+                        value: _selectedBookId,
                         decoration: InputDecoration(labelText: l10n.notebookBooks),
                         items: books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
                         onChanged: (val) => setState(() => _selectedBookId = val),
                       ),
                       const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(initialValue: _selectedPersonId,
+                      DropdownButtonFormField<String>(
+                        value: _selectedPersonId,
                         decoration: InputDecoration(labelText: l10n.person),
                         items: people.map((p) => DropdownMenuItem(value: p.id, child: Text(p.name))).toList(),
                         onChanged: (val) => setState(() => _selectedPersonId = val),
@@ -106,7 +149,6 @@ class _DebtScreenState extends ConsumerState<DebtScreen> {
                                   personId: _selectedPersonId!, 
                                   amount: amt, 
                                   isOwedToMe: widget.isOwedToMe, 
-                                   
                                   note: _noteController.text
                                 );
                                 if (mounted) context.pop();

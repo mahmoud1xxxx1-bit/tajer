@@ -3749,19 +3749,19 @@ abstract class AppLocalizations {
   /// No description provided for @notebookGuideAccounts.
   ///
   /// In ar, this message translates to:
-  /// **'💡 دليل الحسابات: أضف صناديق الكاش أو الحسابات البنكية لهذا الدفتر لضبط الأرصدة.'**
+  /// **'الحساب هو المكان الذي تحتفظ فيه بالمال، مثل: الصندوق أو البنك.'**
   String get notebookGuideAccounts;
 
   /// No description provided for @notebookGuidePeople.
   ///
   /// In ar, this message translates to:
-  /// **'💡 دليل الأشخاص: أضف العملاء أو الموردين أو الموظفين لتسجيل ديونهم أو ما لهم.'**
+  /// **'الأشخاص هم العملاء أو الموردون الذين تتعامل معهم بالآجل (دين).'**
   String get notebookGuidePeople;
 
   /// No description provided for @notebookGuideCategories.
   ///
   /// In ar, this message translates to:
-  /// **'💡 دليل التصنيفات: أضف بنود المصروفات أو الإيرادات (مثال: رواتب، مشتريات) لتنظيم التقارير.'**
+  /// **'التصنيفات تساعدك في ترتيب وتنظيم حركاتك المالية مثل (رواتب، إيجار، مبيعات).'**
   String get notebookGuideCategories;
 
   /// No description provided for @notebookGuideTransactions.
@@ -3773,8 +3773,8 @@ abstract class AppLocalizations {
   /// No description provided for @notebookInsufficientBalance.
   ///
   /// In ar, this message translates to:
-  /// **'الرصيد غير كافٍ.'**
-  String get notebookInsufficientBalance;
+  /// **'الرصيد غير كافٍ. الرصيد الحالي: {balance} والمطلوب: {amount}'**
+  String notebookInsufficientBalance(Object amount, Object balance);
 
   /// No description provided for @notebookArchived.
   ///
@@ -3799,6 +3799,24 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'رصيد افتتاحي'**
   String get notebookOpeningBalanceTitle;
+
+  /// No description provided for @notebookGuideIncomeExpense.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدخل هو أي مبلغ يدخل لحسابك. المصروف هو أي مبلغ يخرج من حسابك.'**
+  String get notebookGuideIncomeExpense;
+
+  /// No description provided for @notebookGuideReceivablePayable.
+  ///
+  /// In ar, this message translates to:
+  /// **'لي: مبالغ تطالب بها الآخرين. عليّ: مبالغ يطالبك بها الآخرون.'**
+  String get notebookGuideReceivablePayable;
+
+  /// No description provided for @notebookGuideTransferPayment.
+  ///
+  /// In ar, this message translates to:
+  /// **'التحويل لنقل المال بين حساباتك. السداد لتسديد الديون للأشخاص.'**
+  String get notebookGuideTransferPayment;
 }
 
 class _AppLocalizationsDelegate

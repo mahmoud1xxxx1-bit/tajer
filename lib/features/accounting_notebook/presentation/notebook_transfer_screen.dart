@@ -63,7 +63,7 @@ class _NotebookTransferScreenState extends ConsumerState<NotebookTransferScreen>
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
             data: (allAccounts) {
-              final accounts = allAccounts.where((a) => a.bookId == _selectedBookId).toList();
+              final accounts = allAccounts.where((a) => a.bookId == _selectedBookId && !(a.isArchived ?? false)).toList();
               
               if (accounts.length < 2) {
                 return Center(
@@ -94,6 +94,29 @@ class _NotebookTransferScreenState extends ConsumerState<NotebookTransferScreen>
                   key: _formKey,
                   child: Column(
                     children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                l10n.notebookGuideTransferPayment,
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
                         value: _selectedBookId,
                         decoration: InputDecoration(labelText: l10n.notebookBooks),
@@ -149,7 +172,15 @@ class _NotebookTransferScreenState extends ConsumerState<NotebookTransferScreen>
                                 );
                                 if (mounted) context.pop();
                               } catch (e) {
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l10n.genericErrorPrefix}: $e')));
+                                if (e.toString().contains('insufficient_balance')) {
+                                  final selectedAccount = accounts.firstWhere((a) => a.id == _sourceAccountId);
+                                  final msg = l10n.notebookInsufficientBalance
+                                      .replaceAll('{balance}', selectedAccount.balance.toStringAsFixed(2))
+                                      .replaceAll('{amount}', amt.toStringAsFixed(2));
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.red));
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l10n.genericErrorPrefix}: $e')));
+                                }
                               }
                             }
                           },
