@@ -8,19 +8,20 @@ class NotebookLocalizationHelper {
 
   static String getNotebookLocalizedTypeCustom(
       String type, AppLocalizations l10n) {
+    final isAr = l10n.localeName.toLowerCase().startsWith('ar');
     switch (type) {
       case 'income':
         return l10n.income;
       case 'expense':
         return l10n.expense;
       case 'receivable':
-        return l10n.notebookReceivable;
+        return isAr ? 'الذمم المدينة (لي)' : 'Accounts Receivable';
       case 'payable':
-        return l10n.notebookPayable;
+        return isAr ? 'الذمم الدائنة (عليّ)' : 'Accounts Payable';
       case 'receivable_payment':
-        return l10n.notebookPayment;
+        return isAr ? 'تحصيل' : 'Receive Payment';
       case 'payable_payment':
-        return l10n.notebookPaymentOfDebt;
+        return isAr ? 'سداد' : 'Make Payment';
       case 'account_transfer':
         return l10n.notebookTransfer;
       case 'opening_balance':
