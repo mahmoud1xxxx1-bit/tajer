@@ -753,5 +753,7 @@
   "notebookPayment": "Receivable Payment",
   "notebookPaymentOfDebt": "Payable Payment"
   ,"notebookExportPdf": "Export PDF",
-  "notebookExportCsv": "Export CSV"
+  "notebookExportCsv": "Export CSV",
+  "notebookNetIncome": "Net Income",
+  "notebookDebtAndAccounts": "Debt & Accounts"
 }

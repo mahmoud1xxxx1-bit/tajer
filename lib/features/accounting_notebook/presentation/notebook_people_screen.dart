@@ -25,7 +25,7 @@ class NotebookPeopleScreen extends ConsumerWidget {
               return ListTile(
                 leading: const Icon(Icons.person),
                 title: Text(p.name),
-                subtitle: Text(p.phone ),
+                subtitle: (p.phone != null && p.phone!.isNotEmpty) ? Text(p.phone!) : null,
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

@@ -73,7 +73,7 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        Text('Net Income', style: Theme.of(context).textTheme.titleLarge),
+                        Text(l10n.notebookNetIncome, style: Theme.of(context).textTheme.titleLarge),
                         Text(
                           NumberFormat.currency(symbol: 'SAR ').format(netIncome),
                           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
@@ -106,7 +106,7 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                     padding: const EdgeInsets.all(16),
                     child: Column(
                       children: [
-                        Text('Debt & Accounts', style: Theme.of(context).textTheme.titleLarge),
+                        Text(l10n.notebookDebtAndAccounts, style: Theme.of(context).textTheme.titleLarge),
                         const SizedBox(height: 8),
                         peopleAsync.when(
                           data: (people) {
