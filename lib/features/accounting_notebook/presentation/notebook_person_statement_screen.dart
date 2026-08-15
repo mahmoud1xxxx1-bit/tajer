@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:firebase_ui_firestore/firebase_ui_firestore.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../domain/notebook_transaction.dart';
+import '../data/accounting_notebook_repository.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
 import '../../../../core/services/guest_limit_service.dart';
@@ -18,7 +19,7 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final peopleAsync = ref.watch(notebookPeopleProvider);
-    final txsAsync = ref.watch(notebookTransactionsProvider);
+
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notebookStatement )),
@@ -124,7 +125,6 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                   }
                 ),
               ),
-
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
