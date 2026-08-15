@@ -192,6 +192,17 @@ class DashboardHome extends ConsumerWidget {
               ),
               child: Row(
                 children: [
+                  if (appUser?.role != 'employee')
+                    Card(
+                      color: Theme.of(context).primaryColor.withOpacity(0.1),
+                      margin: const EdgeInsets.only(bottom: 16.0),
+                      child: ListTile(
+                        leading: const Icon(Icons.book, size: 32),
+                        title: Text(l10n.notebookTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        trailing: const Icon(Icons.arrow_forward_ios),
+                        onTap: () => context.go('/notebook'),
+                      ),
+                    ),
                   Icon(Icons.error_outline, color: Colors.red),
                   SizedBox(width: 8),
                   Expanded(

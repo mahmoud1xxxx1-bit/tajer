@@ -93,7 +93,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get barcode => 'الباركود';
 
   @override
-  String get category => 'التصنيف';
+  String get category => 'الفئة';
 
   @override
   String get phone => 'رقم الهاتف';
@@ -1265,7 +1265,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get scheduledOrders => 'طلبات مجدولة 🗓';
 
   @override
-  String get totalIncome => 'إجمالي الدخل: ';
+  String get totalIncome => 'إجمالي الدخل';
 
   @override
   String get monthPrefix => 'شهر ';
@@ -1521,4 +1521,73 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get taxModeExempt => 'معفى من الضريبة';
+
+  @override
+  String get notebookTitle => 'دفتر المحاسبة';
+
+  @override
+  String get notebookHome => 'الرئيسية';
+
+  @override
+  String get currentBalance => 'الرصيد الحالي';
+
+  @override
+  String get income => 'دخل';
+
+  @override
+  String get expense => 'مصروف';
+
+  @override
+  String get moneyOwedToMe => 'لي';
+
+  @override
+  String get moneyIOwe => 'عليّ';
+
+  @override
+  String get totalExpenses => 'إجمالي المصروفات';
+
+  @override
+  String get receivables => 'الديون المستحقة لي';
+
+  @override
+  String get payables => 'الديون المستحقة عليّ';
+
+  @override
+  String get netBalance => 'صافي الرصيد';
+
+  @override
+  String get recentTransactions => 'آخر الحركات';
+
+  @override
+  String get notebookAccounts => 'الحسابات المالية';
+
+  @override
+  String get notebookBooks => 'الدفاتر';
+
+  @override
+  String get notebookPeople => 'الأشخاص';
+
+  @override
+  String get notebookReports => 'تقارير الدفتر';
+
+  @override
+  String get backToTajer => 'العودة إلى تاجر';
+
+  @override
+  String get accountTransfer => 'تحويل مالي';
+
+  @override
+  String get amount => 'المبلغ';
+
+  @override
+  String get note => 'ملاحظة';
+
+  @override
+  String get person => 'الشخص';
+
+  @override
+  String get account => 'الحساب';
+
+  @override
+  String get book => 'الدفتر';
 }

@@ -269,7 +269,7 @@ abstract class AppLocalizations {
   /// No description provided for @category.
   ///
   /// In ar, this message translates to:
-  /// **'التصنيف'**
+  /// **'الفئة'**
   String get category;
 
   /// No description provided for @phone.
@@ -2501,7 +2501,7 @@ abstract class AppLocalizations {
   /// No description provided for @totalIncome.
   ///
   /// In ar, this message translates to:
-  /// **'إجمالي الدخل: '**
+  /// **'إجمالي الدخل'**
   String get totalIncome;
 
   /// No description provided for @monthPrefix.
@@ -2971,6 +2971,144 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'معفى من الضريبة'**
   String get taxModeExempt;
+
+  /// No description provided for @notebookTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'دفتر المحاسبة'**
+  String get notebookTitle;
+
+  /// No description provided for @notebookHome.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرئيسية'**
+  String get notebookHome;
+
+  /// No description provided for @currentBalance.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرصيد الحالي'**
+  String get currentBalance;
+
+  /// No description provided for @income.
+  ///
+  /// In ar, this message translates to:
+  /// **'دخل'**
+  String get income;
+
+  /// No description provided for @expense.
+  ///
+  /// In ar, this message translates to:
+  /// **'مصروف'**
+  String get expense;
+
+  /// No description provided for @moneyOwedToMe.
+  ///
+  /// In ar, this message translates to:
+  /// **'لي'**
+  String get moneyOwedToMe;
+
+  /// No description provided for @moneyIOwe.
+  ///
+  /// In ar, this message translates to:
+  /// **'عليّ'**
+  String get moneyIOwe;
+
+  /// No description provided for @totalExpenses.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي المصروفات'**
+  String get totalExpenses;
+
+  /// No description provided for @receivables.
+  ///
+  /// In ar, this message translates to:
+  /// **'الديون المستحقة لي'**
+  String get receivables;
+
+  /// No description provided for @payables.
+  ///
+  /// In ar, this message translates to:
+  /// **'الديون المستحقة عليّ'**
+  String get payables;
+
+  /// No description provided for @netBalance.
+  ///
+  /// In ar, this message translates to:
+  /// **'صافي الرصيد'**
+  String get netBalance;
+
+  /// No description provided for @recentTransactions.
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر الحركات'**
+  String get recentTransactions;
+
+  /// No description provided for @notebookAccounts.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحسابات المالية'**
+  String get notebookAccounts;
+
+  /// No description provided for @notebookBooks.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدفاتر'**
+  String get notebookBooks;
+
+  /// No description provided for @notebookPeople.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأشخاص'**
+  String get notebookPeople;
+
+  /// No description provided for @notebookReports.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقارير الدفتر'**
+  String get notebookReports;
+
+  /// No description provided for @backToTajer.
+  ///
+  /// In ar, this message translates to:
+  /// **'العودة إلى تاجر'**
+  String get backToTajer;
+
+  /// No description provided for @accountTransfer.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحويل مالي'**
+  String get accountTransfer;
+
+  /// No description provided for @amount.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ'**
+  String get amount;
+
+  /// No description provided for @note.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملاحظة'**
+  String get note;
+
+  /// No description provided for @person.
+  ///
+  /// In ar, this message translates to:
+  /// **'الشخص'**
+  String get person;
+
+  /// No description provided for @account.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحساب'**
+  String get account;
+
+  /// No description provided for @book.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدفتر'**
+  String get book;
 }
 
 class _AppLocalizationsDelegate

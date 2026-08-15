@@ -21,6 +21,12 @@ import '../features/settings/presentation/audit_log_screen.dart';
 import '../features/settings/presentation/user_guide_screen.dart';
 import '../features/shifts/presentation/end_shift_screen.dart';
 import '../features/shifts/presentation/shifts_archive_screen.dart';
+import '../features/accounting_notebook/presentation/notebook_home_screen.dart';
+import '../features/accounting_notebook/presentation/income_expense_screen.dart';
+import '../features/accounting_notebook/presentation/debt_screen.dart';
+import '../features/accounting_notebook/presentation/notebook_accounts_screen.dart';
+import '../features/accounting_notebook/presentation/notebook_people_screen.dart';
+import '../features/accounting_notebook/presentation/notebook_reports_screen.dart';
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateChangesProvider);
@@ -122,6 +128,40 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/audit_log',
         builder: (context, state) => const AuditLogScreen(),
+      ),
+    
+      GoRoute(
+        path: '/notebook',
+        builder: (context, state) => const NotebookHomeScreen(),
+      ),
+    
+      GoRoute(
+        path: '/notebook/income',
+        builder: (context, state) => const IncomeExpenseScreen(isIncome: true),
+      ),
+      GoRoute(
+        path: '/notebook/expense',
+        builder: (context, state) => const IncomeExpenseScreen(isIncome: false),
+      ),
+      GoRoute(
+        path: '/notebook/debt/me',
+        builder: (context, state) => const DebtScreen(isOwedToMe: true),
+      ),
+      GoRoute(
+        path: '/notebook/debt/owe',
+        builder: (context, state) => const DebtScreen(isOwedToMe: false),
+      ),
+      GoRoute(
+        path: '/notebook/accounts',
+        builder: (context, state) => const NotebookAccountsScreen(),
+      ),
+      GoRoute(
+        path: '/notebook/people',
+        builder: (context, state) => const NotebookPeopleScreen(),
+      ),
+      GoRoute(
+        path: '/notebook/reports',
+        builder: (context, state) => const NotebookReportsScreen(),
       ),
     ],
   );

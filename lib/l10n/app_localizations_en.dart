@@ -1266,7 +1266,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scheduledOrders => 'Scheduled Orders 🗓';
 
   @override
-  String get totalIncome => 'Total Income: ';
+  String get totalIncome => 'Total Income';
 
   @override
   String get monthPrefix => 'Month ';
@@ -1522,4 +1522,73 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get taxModeExempt => 'Tax exempt';
+
+  @override
+  String get notebookTitle => 'Accounting Notebook';
+
+  @override
+  String get notebookHome => 'Home';
+
+  @override
+  String get currentBalance => 'Current Balance';
+
+  @override
+  String get income => 'Income';
+
+  @override
+  String get expense => 'Expense';
+
+  @override
+  String get moneyOwedToMe => 'Owed to Me';
+
+  @override
+  String get moneyIOwe => 'I Owe';
+
+  @override
+  String get totalExpenses => 'Total Expenses';
+
+  @override
+  String get receivables => 'Receivables';
+
+  @override
+  String get payables => 'Payables';
+
+  @override
+  String get netBalance => 'Net Balance';
+
+  @override
+  String get recentTransactions => 'Recent Transactions';
+
+  @override
+  String get notebookAccounts => 'Accounts';
+
+  @override
+  String get notebookBooks => 'Books';
+
+  @override
+  String get notebookPeople => 'People';
+
+  @override
+  String get notebookReports => 'Reports';
+
+  @override
+  String get backToTajer => 'Back to Tajer';
+
+  @override
+  String get accountTransfer => 'Account Transfer';
+
+  @override
+  String get amount => 'Amount';
+
+  @override
+  String get note => 'Note';
+
+  @override
+  String get person => 'Person';
+
+  @override
+  String get account => 'Account';
+
+  @override
+  String get book => 'Book';
 }

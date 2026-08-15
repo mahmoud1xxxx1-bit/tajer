@@ -185,6 +185,23 @@ service cloud.firestore {
 
     // --- MERCHANT SUB-COLLECTIONS ---
     match /merchants/{merchantId} {
+      // --- NOTEBOOK COLLECTIONS (OWNER ONLY) ---
+      match /notebook_books/{document=**} {
+        allow read, write: if isOwner(merchantId);
+      }
+      match /notebook_accounts/{document=**} {
+        allow read, write: if isOwner(merchantId);
+      }
+      match /notebook_categories/{document=**} {
+        allow read, write: if isOwner(merchantId);
+      }
+      match /notebook_people/{document=**} {
+        allow read, write: if isOwner(merchantId);
+      }
+      match /notebook_transactions/{document=**} {
+        allow read, write: if isOwner(merchantId);
+      }
+
       match /categories/{categoryId} {
         allow read: if hasAccess(merchantId);
         allow create, update, delete: if hasPermission(merchantId, 'can_manage_products');
