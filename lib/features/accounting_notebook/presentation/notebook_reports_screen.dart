@@ -8,6 +8,7 @@ import '../data/notebook_pdf_service.dart';
 import '../data/accounting_notebook_provider.dart';
 import '../data/notebook_csv_service.dart';
 import '../utils/notebook_terminology.dart';
+import '../../../core/providers/settings_provider.dart';
 
 class NotebookReportsScreen extends ConsumerStatefulWidget {
   const NotebookReportsScreen({super.key});
@@ -92,6 +93,8 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
     final peopleAsync = ref.watch(notebookPeopleProvider);
     final accountsAsync = ref.watch(notebookAccountsProvider);
     final sharedBookId = ref.watch(notebookCurrentBookIdProvider);
+    final currentCurrency = ref.watch(currencyProvider);
+    final currencyCode = currentCurrency.code;
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notebookReports)),
@@ -212,7 +215,7 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                             Text(l10n.notebookNetIncome,
                                 style: Theme.of(context).textTheme.titleLarge),
                             Text(
-                              NumberFormat.currency(symbol: 'SAR ')
+                              NumberFormat.currency(symbol: '$currencyCode ')
                                   .format(netIncome),
                               style: Theme.of(context)
                                   .textTheme
@@ -325,7 +328,7 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                                             ),
                                             trailing: Text(
                                               NumberFormat.currency(
-                                                      symbol: 'SAR ')
+                                                      symbol: '$currencyCode ')
                                                   .format(a.balance),
                                             ),
                                             dense: true,
@@ -352,7 +355,7 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                                 .generateNotebookReportPdf(
                               transactions,
                               l10n.notebookReports,
-                              'SAR',
+                              currencyCode,
                               l10n,
                               Localizations.localeOf(context).languageCode ==
                                   'ar',
