@@ -47,4 +47,8 @@ class NotebookTerminology {
       _isArabic(context)
           ? 'الذمم والحسابات'
           : 'Receivables, Payables & Accounts';
+
+  static String booksGuide(BuildContext context) => _isArabic(context)
+      ? 'أنشئ دفترًا مستقلًا لكل نشاط تريد متابعة أمواله بشكل منفصل، مثل البوفيه أو المصروفات الشخصية.'
+      : 'Create a separate book for each activity you want to track independently, such as your store or personal expenses.';
 }
