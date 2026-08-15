@@ -23,7 +23,7 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final title = widget.isReceivablePayment ? (l10n.notebookPaymentOfDebt ) : (l10n.notebookPaymentOfDebt );
+    final title = widget.isReceivablePayment ? l10n.notebookPayment : l10n.notebookPaymentOfDebt;
     final accountsAsync = ref.watch(notebookAccountsProvider);
     final booksAsync = ref.watch(notebookBooksProvider);
     
