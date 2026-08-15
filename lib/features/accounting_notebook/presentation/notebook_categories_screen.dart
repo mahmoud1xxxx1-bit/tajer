@@ -12,7 +12,7 @@ class NotebookCategoriesScreen extends ConsumerWidget {
     final catsAsync = ref.watch(notebookCategoriesProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.notebookCategories ?? 'التصنيفات')),
+      appBar: AppBar(title: Text(l10n.notebookCategories)),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showAddCategoryDialog(context, ref),
         child: const Icon(Icons.add),
@@ -20,7 +20,7 @@ class NotebookCategoriesScreen extends ConsumerWidget {
       body: catsAsync.when(
         data: (cats) {
           if (cats.isEmpty) {
-            return Center(child: Text(l10n.notebookNoData ?? 'لا توجد بيانات'));
+            return Center(child: Text(l10n.notebookNoData));
           }
           return ListView.builder(
             itemCount: cats.length,
@@ -64,23 +64,22 @@ class NotebookCategoriesScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text(l10n.notebookAddCategory ?? 'إضافة تصنيف'),
+          title: Text(l10n.notebookAddCategory),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: ctrl,
-                decoration: InputDecoration(labelText: l10n.notebookCategoryName ?? 'اسم التصنيف'),
+                decoration: InputDecoration(labelText: l10n.notebookCategoryName),
               ),
               const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: type,
+              DropdownButtonFormField<String>(initialValue: type,
                 items: [
                   DropdownMenuItem(value: 'income', child: Text(l10n.income)),
                   DropdownMenuItem(value: 'expense', child: Text(l10n.expense)),
                 ],
                 onChanged: (v) => setState(() => type = v!),
-                decoration: InputDecoration(labelText: l10n.notebookCategoryName ?? 'النوع'),
+                decoration: InputDecoration(labelText: l10n.notebookCategoryName),
               ),
             ],
           ),
@@ -89,7 +88,7 @@ class NotebookCategoriesScreen extends ConsumerWidget {
             ElevatedButton(
               onPressed: () {
                 if (ctrl.text.trim().isNotEmpty) {
-                  if (bookId == null) { ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.notebookCreateBookFirst ?? 'Please create a book first.'))); return; }
+                  if (bookId == null) { ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.notebookCreateBookFirst))); return; }
                 ref.read(accountingNotebookProvider).createCategory(bookId: bookId, name: ctrl.text.trim(), type: type);
                   Navigator.pop(ctx);
                 }
@@ -108,10 +107,10 @@ class NotebookCategoriesScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.notebookEditCategory ?? 'تعديل التصنيف'),
+        title: Text(l10n.notebookEditCategory),
         content: TextField(
           controller: ctrl,
-          decoration: InputDecoration(labelText: l10n.notebookCategoryName ?? 'اسم التصنيف'),
+          decoration: InputDecoration(labelText: l10n.notebookCategoryName),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
@@ -134,8 +133,8 @@ class NotebookCategoriesScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.notebookArchiveCategory ?? 'أرشفة التصنيف'),
-        content: Text(l10n.notebookArchiveConfirm ?? 'هل أنت متأكد من أرشفة التصنيف؟'),
+        title: Text(l10n.notebookArchiveCategory),
+        content: Text(l10n.notebookArchiveConfirm),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
           ElevatedButton(
@@ -144,7 +143,7 @@ class NotebookCategoriesScreen extends ConsumerWidget {
               ref.read(accountingNotebookProvider).archiveCategory(id);
               Navigator.pop(ctx);
             },
-            child: Text(l10n.archive ?? 'أرشفة', style: const TextStyle(color: Colors.white)),
+            child: Text(l10n.archive, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),

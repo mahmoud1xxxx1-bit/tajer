@@ -66,7 +66,7 @@ class NotebookHomeScreen extends ConsumerWidget {
                 const SizedBox(width: 16),
                 Expanded(child: _buildActionCard(context, Icons.arrow_upward, l10n.expense, Colors.red, () => context.push('/notebook/expense'))),
                 const SizedBox(width: 16),
-                Expanded(child: _buildActionCard(context, Icons.swap_horiz, l10n.notebookTransfer ?? 'Transfer', Colors.blueGrey, () => context.push('/notebook/transfer'))),
+                Expanded(child: _buildActionCard(context, Icons.swap_horiz, l10n.notebookTransfer, Colors.blueGrey, () => context.push('/notebook/transfer'))),
               ],
             ),
             const SizedBox(height: 16),
@@ -91,11 +91,11 @@ class NotebookHomeScreen extends ConsumerWidget {
 
             Row(
               children: [
-                Expanded(child: _buildActionCard(context, Icons.book, l10n.notebookBooks ?? 'الدفاتر', Colors.indigo, () => context.push('/notebook/books'))),
+                Expanded(child: _buildActionCard(context, Icons.book, l10n.notebookBooks, Colors.indigo, () => context.push('/notebook/books'))),
                 const SizedBox(width: 16),
-                Expanded(child: _buildActionCard(context, Icons.category, l10n.notebookCategories ?? 'التصنيفات', Colors.cyan, () => context.push('/notebook/categories'))),
+                Expanded(child: _buildActionCard(context, Icons.category, l10n.notebookCategories, Colors.cyan, () => context.push('/notebook/categories'))),
                 const SizedBox(width: 16),
-                Expanded(child: _buildActionCard(context, Icons.list_alt, l10n.notebookTransactions ?? 'الحركات', Colors.grey, () => context.push('/notebook/transactions'))),
+                Expanded(child: _buildActionCard(context, Icons.list_alt, l10n.notebookTransactions, Colors.grey, () => context.push('/notebook/transactions'))),
               ],
             ),
             const SizedBox(height: 32),

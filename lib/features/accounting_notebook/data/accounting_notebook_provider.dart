@@ -21,35 +21,35 @@ final notebookBooksProvider = StreamProvider.autoDispose<List<NotebookBook>>((re
   final repo = ref.watch(accountingNotebookRepositoryProvider);
   if (repo == null) return const Stream.empty();
   return repo.booksRef.snapshots().map((snap) => 
-    snap.docs.map((d) => NotebookBook.fromMap(d.data() as Map<String, dynamic>, d.id)).toList());
+    snap.docs.map((d) => NotebookBook.fromMap(d.data(), d.id)).toList());
 });
 
 final notebookAccountsProvider = StreamProvider.autoDispose<List<NotebookAccount>>((ref) {
   final repo = ref.watch(accountingNotebookRepositoryProvider);
   if (repo == null) return const Stream.empty();
   return repo.accountsRef.snapshots().map((snap) => 
-    snap.docs.map((d) => NotebookAccount.fromMap(d.data() as Map<String, dynamic>, d.id)).toList());
+    snap.docs.map((d) => NotebookAccount.fromMap(d.data(), d.id)).toList());
 });
 
 final notebookCategoriesProvider = StreamProvider.autoDispose<List<NotebookCategory>>((ref) {
   final repo = ref.watch(accountingNotebookRepositoryProvider);
   if (repo == null) return const Stream.empty();
   return repo.categoriesRef.snapshots().map((snap) => 
-    snap.docs.map((d) => NotebookCategory.fromMap(d.data() as Map<String, dynamic>, d.id)).toList());
+    snap.docs.map((d) => NotebookCategory.fromMap(d.data(), d.id)).toList());
 });
 
 final notebookPeopleProvider = StreamProvider.autoDispose<List<NotebookPerson>>((ref) {
   final repo = ref.watch(accountingNotebookRepositoryProvider);
   if (repo == null) return const Stream.empty();
   return repo.peopleRef.snapshots().map((snap) => 
-    snap.docs.map((d) => NotebookPerson.fromMap(d.data() as Map<String, dynamic>, d.id)).toList());
+    snap.docs.map((d) => NotebookPerson.fromMap(d.data(), d.id)).toList());
 });
 
 final notebookTransactionsProvider = StreamProvider.autoDispose<List<NotebookTransaction>>((ref) {
   final repo = ref.watch(accountingNotebookRepositoryProvider);
   if (repo == null) return const Stream.empty();
   return repo.transactionsRef.orderBy('date', descending: true).snapshots().map((snap) => 
-    snap.docs.map((d) => NotebookTransaction.fromMap(d.data() as Map<String, dynamic>, d.id)).toList());
+    snap.docs.map((d) => NotebookTransaction.fromMap(d.data(), d.id)).toList());
 });
 
 class AccountingNotebookService {
@@ -63,18 +63,18 @@ class AccountingNotebookService {
     if (_repository == null) return;
     final id = _uuid.v4();
     final book = NotebookBook(id: id, name: name, createdAt: DateTime.now());
-    await _repository!.createBook(book);
+    await _repository.createBook(book);
   }
   
   Future<void> updateBook(String id, String name) async {
     if (_repository == null) return;
-    await _repository!.booksRef.doc(id).update({'name': name});
+    await _repository.booksRef.doc(id).update({'name': name});
   }
 
   Future<void> archiveBook(String id) async {
     if (_repository == null) return;
     // Just a basic implementation, can add 'isArchived' later
-    await _repository!.booksRef.doc(id).delete();
+    await _repository.booksRef.doc(id).delete();
   }
 
   // Categories
@@ -82,17 +82,17 @@ class AccountingNotebookService {
     if (_repository == null) return;
     final id = _uuid.v4();
     final cat = NotebookCategory(id: id, name: name, type: type, bookId: bookId, createdAt: DateTime.now());
-    await _repository!.createCategory(cat);
+    await _repository.createCategory(cat);
   }
 
   Future<void> updateCategory(String id, String name) async {
     if (_repository == null) return;
-    await _repository!.categoriesRef.doc(id).update({'name': name});
+    await _repository.categoriesRef.doc(id).update({'name': name});
   }
 
   Future<void> archiveCategory(String id) async {
     if (_repository == null) return;
-    await _repository!.categoriesRef.doc(id).delete();
+    await _repository.categoriesRef.doc(id).delete();
   }
 
 
@@ -124,13 +124,13 @@ class AccountingNotebookService {
 
     // In a real app, this should use a transaction/batch to update account balance
     // For V1 baseline, we will do it sequentially or via batch
-    final batch = _repository!.accountsRef.firestore.batch();
+    final batch = _repository.accountsRef.firestore.batch();
     
     // 1. Add transaction
-    batch.set(_repository!.transactionsRef.doc(txId), tx.toMap());
+    batch.set(_repository.transactionsRef.doc(txId), tx.toMap());
     
     // 2. Update account balance
-    final accountRef = _repository!.accountsRef.doc(accountId);
+    final accountRef = _repository.accountsRef.doc(accountId);
     batch.update(accountRef, {
       'balance': FieldValue.increment(amount)
     });
@@ -163,13 +163,13 @@ class AccountingNotebookService {
       createdAt: now,
     );
 
-    final batch = _repository!.accountsRef.firestore.batch();
+    final batch = _repository.accountsRef.firestore.batch();
     
     // 1. Add transaction
-    batch.set(_repository!.transactionsRef.doc(txId), tx.toMap());
+    batch.set(_repository.transactionsRef.doc(txId), tx.toMap());
     
     // 2. Update account balance (decrease)
-    final accountRef = _repository!.accountsRef.doc(accountId);
+    final accountRef = _repository.accountsRef.doc(accountId);
     batch.update(accountRef, {
       'balance': FieldValue.increment(-amount)
     });
@@ -202,10 +202,10 @@ class AccountingNotebookService {
       createdAt: now,
     );
 
-    final batch = _repository!.accountsRef.firestore.batch();
-    batch.set(_repository!.transactionsRef.doc(txId), tx.toMap());
+    final batch = _repository.accountsRef.firestore.batch();
+    batch.set(_repository.transactionsRef.doc(txId), tx.toMap());
     
-    final personRef = _repository!.peopleRef.doc(personId);
+    final personRef = _repository.peopleRef.doc(personId);
     if (isOwedToMe) {
       batch.update(personRef, {'amountOwedToMe': FieldValue.increment(amount)});
     } else {
@@ -242,11 +242,11 @@ class AccountingNotebookService {
       createdAt: now,
     );
 
-    final batch = _repository!.accountsRef.firestore.batch();
-    batch.set(_repository!.transactionsRef.doc(txId), tx.toMap());
+    final batch = _repository.accountsRef.firestore.batch();
+    batch.set(_repository.transactionsRef.doc(txId), tx.toMap());
     
-    final personRef = _repository!.peopleRef.doc(personId);
-    final accountRef = _repository!.accountsRef.doc(accountId);
+    final personRef = _repository.peopleRef.doc(personId);
+    final accountRef = _repository.accountsRef.doc(accountId);
     
     if (isReceivablePayment) {
       // Receiving money: decrease debt, increase account
@@ -287,11 +287,11 @@ class AccountingNotebookService {
       createdAt: now,
     );
 
-    final batch = _repository!.accountsRef.firestore.batch();
-    batch.set(_repository!.transactionsRef.doc(txId), tx.toMap());
+    final batch = _repository.accountsRef.firestore.batch();
+    batch.set(_repository.transactionsRef.doc(txId), tx.toMap());
     
-    final fromRef = _repository!.accountsRef.doc(fromAccountId);
-    final toRef = _repository!.accountsRef.doc(toAccountId);
+    final fromRef = _repository.accountsRef.doc(fromAccountId);
+    final toRef = _repository.accountsRef.doc(toAccountId);
     
     batch.update(fromRef, {'balance': FieldValue.increment(-amount)});
     batch.update(toRef, {'balance': FieldValue.increment(amount)});
@@ -304,17 +304,17 @@ class AccountingNotebookService {
     if (_repository == null) return;
     final id = _uuid.v4();
     final acc = NotebookAccount(id: id, bookId: bookId, name: name, type: type, balance: openingBalance, createdAt: DateTime.now());
-    await _repository!.createAccount(acc);
+    await _repository.createAccount(acc);
   }
 
   Future<void> updateAccount(String id, {required String name, required String type}) async {
     if (_repository == null) return;
-    await _repository!.accountsRef.doc(id).update({'name': name, 'type': type});
+    await _repository.accountsRef.doc(id).update({'name': name, 'type': type});
   }
 
   Future<void> archiveAccount(String id) async {
     if (_repository == null) return;
-    await _repository!.accountsRef.doc(id).delete();
+    await _repository.accountsRef.doc(id).delete();
   }
 
   // People
@@ -322,16 +322,16 @@ class AccountingNotebookService {
     if (_repository == null) return;
     final id = _uuid.v4();
     final p = NotebookPerson(id: id, bookId: bookId, name: name, phone: phone, amountOwedToMe: 0, amountIOwe: 0, createdAt: DateTime.now());
-    await _repository!.createPerson(p);
+    await _repository.createPerson(p);
   }
 
   Future<void> updatePerson(String id, {required String name, String? phone}) async {
     if (_repository == null) return;
-    await _repository!.peopleRef.doc(id).update({'name': name, 'phone': phone});
+    await _repository.peopleRef.doc(id).update({'name': name, 'phone': phone});
   }
 
   Future<void> archivePerson(String id) async {
     if (_repository == null) return;
-    await _repository!.peopleRef.doc(id).delete();
+    await _repository.peopleRef.doc(id).delete();
   }
 }

@@ -20,7 +20,7 @@ class NotebookBooksScreen extends ConsumerWidget {
       body: booksAsync.when(
         data: (books) {
           if (books.isEmpty) {
-            return Center(child: Text(l10n.notebookNoData ?? 'لا توجد بيانات'));
+            return Center(child: Text(l10n.notebookNoData));
           }
           return ListView.builder(
             itemCount: books.length,
@@ -57,10 +57,10 @@ class NotebookBooksScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.notebookAddBook ?? 'إضافة دفتر'),
+        title: Text(l10n.notebookAddBook),
         content: TextField(
           controller: ctrl,
-          decoration: InputDecoration(labelText: l10n.notebookBookName ?? 'اسم الدفتر'),
+          decoration: InputDecoration(labelText: l10n.notebookBookName),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
@@ -84,10 +84,10 @@ class NotebookBooksScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.notebookEditBook ?? 'تعديل الدفتر'),
+        title: Text(l10n.notebookEditBook),
         content: TextField(
           controller: ctrl,
-          decoration: InputDecoration(labelText: l10n.notebookBookName ?? 'اسم الدفتر'),
+          decoration: InputDecoration(labelText: l10n.notebookBookName),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
@@ -110,8 +110,8 @@ class NotebookBooksScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.notebookArchiveBook ?? 'أرشفة الدفتر'),
-        content: Text(l10n.notebookArchiveConfirm ?? 'هل أنت متأكد من أرشفة الدفتر؟'),
+        title: Text(l10n.notebookArchiveBook),
+        content: Text(l10n.notebookArchiveConfirm),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
           ElevatedButton(
@@ -120,7 +120,7 @@ class NotebookBooksScreen extends ConsumerWidget {
               ref.read(accountingNotebookProvider).archiveBook(id);
               Navigator.pop(ctx);
             },
-            child: Text(l10n.archive ?? 'أرشفة', style: const TextStyle(color: Colors.white)),
+            child: Text(l10n.archive, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),

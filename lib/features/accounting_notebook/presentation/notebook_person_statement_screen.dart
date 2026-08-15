@@ -16,7 +16,7 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
     final txsAsync = ref.watch(notebookTransactionsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.notebookStatement ?? l10n.notebookStatement)),
+      appBar: AppBar(title: Text(l10n.notebookStatement )),
       body: peopleAsync.when(
         data: (people) {
           final person = people.firstWhere((p) => p.id == personId);
@@ -35,14 +35,14 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(l10n.notebookTotalOwedToMe ?? 'Owed to Me'),
+                          Text(l10n.notebookTotalOwedToMe),
                           Text(person.amountOwedToMe.toStringAsFixed(2), style: const TextStyle(color: Colors.green)),
                         ],
                       ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(l10n.notebookTotalIOwe ?? 'I Owe'),
+                          Text(l10n.notebookTotalIOwe),
                           Text(person.amountIOwe.toStringAsFixed(2), style: const TextStyle(color: Colors.red)),
                         ],
                       ),
@@ -50,7 +50,7 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(l10n.notebookNetBalance ?? 'Net Balance'),
+                          Text(l10n.notebookNetBalance),
                           Text(
                             netBalance.toStringAsFixed(2), 
                             style: TextStyle(fontWeight: FontWeight.bold, color: netBalance >= 0 ? Colors.green : Colors.red),
@@ -98,7 +98,7 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                         onPressed: person.amountOwedToMe > 0 
                           ? () => context.push('/notebook/payment/$personId/true') // Receive payment
                           : null,
-                        child: Text(l10n.notebookPayment ?? 'Payment (Receive)'),
+                        child: Text(l10n.notebookPayment),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -107,7 +107,7 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                         onPressed: person.amountIOwe > 0 
                           ? () => context.push('/notebook/payment/$personId/false') // Make payment
                           : null,
-                        child: Text(l10n.notebookPayment ?? 'Payment (Pay)'),
+                        child: Text(l10n.notebookPayment),
                       ),
                     ),
                   ],

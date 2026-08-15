@@ -23,7 +23,7 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final title = widget.isReceivablePayment ? (l10n.notebookPaymentOfDebt ?? l10n.notebookPayment) : (l10n.notebookPaymentOfDebt ?? l10n.notebookPayment);
+    final title = widget.isReceivablePayment ? (l10n.notebookPaymentOfDebt ) : (l10n.notebookPaymentOfDebt );
     final accountsAsync = ref.watch(notebookAccountsProvider);
     final booksAsync = ref.watch(notebookBooksProvider);
     
@@ -37,7 +37,7 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
         error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
         data: (accounts) {
           if (accounts.isEmpty) {
-            return Center(child: Text(l10n.notebookAccountsCreateFirst ?? 'Create an account first.'));
+            return Center(child: Text(l10n.notebookAccountsCreateFirst));
           }
           if (_selectedAccountId == null) _selectedAccountId = accounts.first.id;
 
@@ -46,7 +46,7 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
             error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
             data: (books) {
               if (books.isEmpty) {
-                return Center(child: Text(l10n.notebookCreateBookFirst ?? 'Create a book first.'));
+                return Center(child: Text(l10n.notebookCreateBookFirst));
               }
               if (_selectedBookId == null) _selectedBookId = books.first.id;
 
@@ -64,19 +64,17 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Text('${l10n.notebookPersonName ?? 'Person'}: ${person.name}', style: Theme.of(context).textTheme.titleMedium),
+                          Text('${l10n.notebookPersonName}: ${person.name}', style: Theme.of(context).textTheme.titleMedium),
                           const SizedBox(height: 8),
-                          Text('${l10n.amount ?? 'Debt Amount'}: ${maxAmount.toStringAsFixed(2)}', style: Theme.of(context).textTheme.titleMedium),
+                          Text('${l10n.amount}: ${maxAmount.toStringAsFixed(2)}', style: Theme.of(context).textTheme.titleMedium),
                           const SizedBox(height: 16),
-                          DropdownButtonFormField<String>(
-                            value: _selectedBookId,
-                            decoration: InputDecoration(labelText: l10n.notebookBooks ?? 'Book'),
+                          DropdownButtonFormField<String>(initialValue: _selectedBookId,
+                            decoration: InputDecoration(labelText: l10n.notebookBooks),
                             items: books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
                             onChanged: (val) => setState(() => _selectedBookId = val),
                           ),
                           const SizedBox(height: 16),
-                          DropdownButtonFormField<String>(
-                            value: _selectedAccountId,
+                          DropdownButtonFormField<String>(initialValue: _selectedAccountId,
                             decoration: InputDecoration(labelText: l10n.account),
                             items: accounts.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name))).toList(),
                             onChanged: (val) => setState(() => _selectedAccountId = val),
@@ -89,7 +87,7 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
                                   onPressed: () {
                                     _amountController.text = (maxAmount / 2).toStringAsFixed(2);
                                   },
-                                  child: Text(l10n.notebookPartialPayment ?? l10n.notebookPartialPayment),
+                                  child: Text(l10n.notebookPartialPayment ),
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -98,7 +96,7 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
                                   onPressed: () {
                                     _amountController.text = maxAmount.toStringAsFixed(2);
                                   },
-                                  child: Text(l10n.notebookFullPayment ?? l10n.notebookFullPayment),
+                                  child: Text(l10n.notebookFullPayment ),
                                 ),
                               ),
                             ],
@@ -118,7 +116,7 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
                           const SizedBox(height: 16),
                           TextFormField(
                             controller: _noteController,
-                            decoration: InputDecoration(labelText: l10n.notebookNote ?? 'Note'),
+                            decoration: InputDecoration(labelText: l10n.notebookNote),
                           ),
                           const Spacer(),
                           ElevatedButton(

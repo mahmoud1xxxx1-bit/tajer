@@ -42,8 +42,7 @@ class _NotebookTransactionsScreenState extends ConsumerState<NotebookTransaction
                   // TYPE FILTER
                   SizedBox(
                     width: 150,
-                    child: DropdownButtonFormField<String?>(
-                      value: _selectedType,
+                    child: DropdownButtonFormField<String?>(initialValue: _selectedType,
                       decoration: InputDecoration(labelText: l10n.notebookTransactionType, isDense: true),
                       items: [
                         DropdownMenuItem(value: null, child: Text(l10n.notebookAll)),
@@ -62,8 +61,7 @@ class _NotebookTransactionsScreenState extends ConsumerState<NotebookTransaction
                   // BOOK FILTER
                   SizedBox(
                     width: 150,
-                    child: DropdownButtonFormField<String?>(
-                      value: _selectedBookId,
+                    child: DropdownButtonFormField<String?>(initialValue: _selectedBookId,
                       decoration: InputDecoration(labelText: l10n.notebookBook, isDense: true),
                       items: [
                         DropdownMenuItem(value: null, child: Text(l10n.notebookAll)),
@@ -80,8 +78,7 @@ class _NotebookTransactionsScreenState extends ConsumerState<NotebookTransaction
                   // ACCOUNT FILTER
                   SizedBox(
                     width: 150,
-                    child: DropdownButtonFormField<String?>(
-                      value: _selectedAccountId,
+                    child: DropdownButtonFormField<String?>(initialValue: _selectedAccountId,
                       decoration: InputDecoration(labelText: l10n.notebookAccount, isDense: true),
                       items: [
                         DropdownMenuItem(value: null, child: Text(l10n.notebookAll)),
@@ -98,8 +95,7 @@ class _NotebookTransactionsScreenState extends ConsumerState<NotebookTransaction
                   // PERSON FILTER
                   SizedBox(
                     width: 150,
-                    child: DropdownButtonFormField<String?>(
-                      value: _selectedPersonId,
+                    child: DropdownButtonFormField<String?>(initialValue: _selectedPersonId,
                       decoration: InputDecoration(labelText: l10n.notebookPerson, isDense: true),
                       items: [
                         DropdownMenuItem(value: null, child: Text(l10n.notebookAll)),
@@ -116,8 +112,7 @@ class _NotebookTransactionsScreenState extends ConsumerState<NotebookTransaction
                   // CATEGORY FILTER
                   SizedBox(
                     width: 150,
-                    child: DropdownButtonFormField<String?>(
-                      value: _selectedCategoryId,
+                    child: DropdownButtonFormField<String?>(initialValue: _selectedCategoryId,
                       decoration: InputDecoration(labelText: l10n.notebookCategory, isDense: true),
                       items: [
                         DropdownMenuItem(value: null, child: Text(l10n.notebookAll)),

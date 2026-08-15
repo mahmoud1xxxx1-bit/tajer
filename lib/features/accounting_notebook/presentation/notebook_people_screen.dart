@@ -70,48 +70,63 @@ class NotebookPeopleScreen extends ConsumerWidget {
     final phoneCtrl = TextEditingController();
     final noteCtrl = TextEditingController();
     final l10n = AppLocalizations.of(context)!;
+    String? bookId;
+    final books = ref.read(notebookBooksProvider).value ?? [];
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.notebookAddPerson ?? 'Add Person'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameCtrl,
-                decoration: InputDecoration(labelText: l10n.notebookPersonName ?? 'Name'),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: phoneCtrl,
-                decoration: InputDecoration(labelText: l10n.notebookPersonPhone ?? 'Phone'),
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: noteCtrl,
-                decoration: InputDecoration(labelText: l10n.notebookNote ?? 'Note'),
-              ),
-            ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(l10n.notebookAddPerson),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String?>(initialValue: bookId,
+                  decoration: InputDecoration(labelText: l10n.notebookBook),
+                  items: books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
+                  onChanged: (val) => setState(() => bookId = val),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameCtrl,
+                  decoration: InputDecoration(labelText: l10n.notebookPersonName),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: phoneCtrl,
+                  decoration: InputDecoration(labelText: l10n.notebookPersonPhone),
+                  keyboardType: TextInputType.phone,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: noteCtrl,
+                  decoration: InputDecoration(labelText: l10n.notebookNote),
+                ),
+              ],
+            ),
           ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+            ElevatedButton(
+              onPressed: () {
+                if (nameCtrl.text.trim().isNotEmpty) {
+                  if (bookId == null) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.notebookCreateBookFirst)));
+                    return;
+                  }
+                  ref.read(accountingNotebookProvider).createPerson(
+                    name: nameCtrl.text.trim(),
+                    phone: phoneCtrl.text.trim(),
+                    bookId: bookId!,
+                  );
+                  Navigator.pop(ctx);
+                }
+              },
+              child: Text(l10n.save),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
-          ElevatedButton(
-            onPressed: () {
-              if (nameCtrl.text.trim().isNotEmpty) {
-                ref.read(accountingNotebookProvider).createPerson(
-                  name: nameCtrl.text.trim(),
-                  phone: phoneCtrl.text.trim()
-                );
-                Navigator.pop(ctx);
-              }
-            },
-            child: Text(l10n.save),
-          ),
-        ],
       ),
     );
   }
@@ -124,19 +139,19 @@ class NotebookPeopleScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.notebookEditPerson ?? 'Edit Person'),
+        title: Text(l10n.notebookEditPerson),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: nameCtrl,
-                decoration: InputDecoration(labelText: l10n.notebookPersonName ?? 'Name'),
+                decoration: InputDecoration(labelText: l10n.notebookPersonName),
               ),
               const SizedBox(height: 16),
               TextField(
                 controller: phoneCtrl,
-                decoration: InputDecoration(labelText: l10n.notebookPersonPhone ?? 'Phone'),
+                decoration: InputDecoration(labelText: l10n.notebookPersonPhone),
                 keyboardType: TextInputType.phone,
               ),
             ],
@@ -167,8 +182,8 @@ class NotebookPeopleScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.notebookArchivePerson ?? 'Archive Person'),
-        content: Text(l10n.notebookArchiveConfirm ?? 'Are you sure?'),
+        title: Text(l10n.notebookArchivePerson),
+        content: Text(l10n.notebookArchiveConfirm),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
           ElevatedButton(
@@ -177,7 +192,7 @@ class NotebookPeopleScreen extends ConsumerWidget {
               ref.read(accountingNotebookProvider).archivePerson(id);
               Navigator.pop(ctx);
             },
-            child: Text(l10n.archive ?? 'Archive', style: const TextStyle(color: Colors.white)),
+            child: Text(l10n.archive, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),

@@ -35,7 +35,7 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
         error: (err, stack) => Center(child: Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $err')),
         data: (accounts) {
           if (accounts.isEmpty) {
-            return Center(child: Text(l10n.notebookAccountsCreateFirst ?? 'Please create an account first.'));
+            return Center(child: Text(l10n.notebookAccountsCreateFirst));
           }
           if (_selectedAccountId == null) _selectedAccountId = accounts.first.id;
 
@@ -44,7 +44,7 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
             error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
             data: (books) {
               if (books.isEmpty) {
-                return Center(child: Text(l10n.notebookNoData ?? 'Please create a book first.'));
+                return Center(child: Text(l10n.notebookNoData));
               }
               if (_selectedBookId == null) _selectedBookId = books.first.id;
 
@@ -54,7 +54,7 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
                 data: (allCats) {
                   final cats = allCats.where((c) => c.type == (widget.isIncome ? 'income' : 'expense')).toList();
                   if (cats.isEmpty) {
-                    return Center(child: Text(l10n.notebookNoData ?? 'Please create a category first.'));
+                    return Center(child: Text(l10n.notebookNoData));
                   }
                   if (_selectedCategoryId == null || !cats.any((c) => c.id == _selectedCategoryId)) {
                     _selectedCategoryId = cats.first.id;
@@ -66,23 +66,20 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
                       key: _formKey,
                       child: Column(
                         children: [
-                          DropdownButtonFormField<String>(
-                            value: _selectedBookId,
-                            decoration: InputDecoration(labelText: l10n.notebookBooks ?? 'Book'),
+                          DropdownButtonFormField<String>(initialValue: _selectedBookId,
+                            decoration: InputDecoration(labelText: l10n.notebookBooks),
                             items: books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
                             onChanged: (val) => setState(() => _selectedBookId = val),
                           ),
                           const SizedBox(height: 16),
-                          DropdownButtonFormField<String>(
-                            value: _selectedAccountId,
+                          DropdownButtonFormField<String>(initialValue: _selectedAccountId,
                             decoration: InputDecoration(labelText: l10n.account),
                             items: accounts.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name))).toList(),
                             onChanged: (val) => setState(() => _selectedAccountId = val),
                           ),
                           const SizedBox(height: 16),
-                          DropdownButtonFormField<String>(
-                            value: _selectedCategoryId,
-                            decoration: InputDecoration(labelText: l10n.notebookCategories ?? 'Category'),
+                          DropdownButtonFormField<String>(initialValue: _selectedCategoryId,
+                            decoration: InputDecoration(labelText: l10n.notebookCategories),
                             items: cats.map((c) => DropdownMenuItem(value: c.id, child: Text(c.name))).toList(),
                             onChanged: (val) => setState(() => _selectedCategoryId = val),
                           ),

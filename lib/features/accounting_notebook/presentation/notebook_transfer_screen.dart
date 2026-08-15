@@ -26,13 +26,13 @@ class _NotebookTransferScreenState extends ConsumerState<NotebookTransferScreen>
     final booksAsync = ref.watch(notebookBooksProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.notebookTransfer ?? l10n.notebookTransfer)),
+      appBar: AppBar(title: Text(l10n.notebookTransfer )),
       body: accountsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
         data: (accounts) {
           if (accounts.length < 2) {
-            return Center(child: Text(l10n.notebookAccountsCreateFirst ?? 'Create at least 2 accounts first.'));
+            return Center(child: Text(l10n.notebookAccountsCreateFirst));
           }
           if (_sourceAccountId == null) _sourceAccountId = accounts[0].id;
           if (_destAccountId == null) _destAccountId = accounts[1].id;
@@ -42,7 +42,7 @@ class _NotebookTransferScreenState extends ConsumerState<NotebookTransferScreen>
             error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
             data: (books) {
               if (books.isEmpty) {
-                return Center(child: Text(l10n.notebookCreateBookFirst ?? 'Create a book first.'));
+                return Center(child: Text(l10n.notebookCreateBookFirst));
               }
               if (_selectedBookId == null) _selectedBookId = books.first.id;
 
@@ -52,23 +52,20 @@ class _NotebookTransferScreenState extends ConsumerState<NotebookTransferScreen>
                   key: _formKey,
                   child: Column(
                     children: [
-                      DropdownButtonFormField<String>(
-                        value: _selectedBookId,
-                        decoration: InputDecoration(labelText: l10n.notebookBooks ?? 'Book'),
+                      DropdownButtonFormField<String>(initialValue: _selectedBookId,
+                        decoration: InputDecoration(labelText: l10n.notebookBooks),
                         items: books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
                         onChanged: (val) => setState(() => _selectedBookId = val),
                       ),
                       const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        value: _sourceAccountId,
-                        decoration: InputDecoration(labelText: l10n.notebookSourceAccount ?? l10n.notebookSourceAccount),
+                      DropdownButtonFormField<String>(initialValue: _sourceAccountId,
+                        decoration: InputDecoration(labelText: l10n.notebookSourceAccount ),
                         items: accounts.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name))).toList(),
                         onChanged: (val) => setState(() => _sourceAccountId = val),
                       ),
                       const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        value: _destAccountId,
-                        decoration: InputDecoration(labelText: l10n.notebookDestinationAccount ?? l10n.notebookDestinationAccount),
+                      DropdownButtonFormField<String>(initialValue: _destAccountId,
+                        decoration: InputDecoration(labelText: l10n.notebookDestinationAccount ),
                         items: accounts.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name))).toList(),
                         onChanged: (val) => setState(() => _destAccountId = val),
                       ),
@@ -87,7 +84,7 @@ class _NotebookTransferScreenState extends ConsumerState<NotebookTransferScreen>
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: _noteController,
-                        decoration: InputDecoration(labelText: l10n.notebookNote ?? 'Note'),
+                        decoration: InputDecoration(labelText: l10n.notebookNote),
                       ),
                       const Spacer(),
                       SizedBox(

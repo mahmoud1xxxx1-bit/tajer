@@ -33,7 +33,7 @@ class _DebtScreenState extends ConsumerState<DebtScreen> {
         error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
         data: (people) {
           if (people.isEmpty) {
-            return Center(child: Text(l10n.notebookPeopleCreateFirst ?? 'Create person first.'));
+            return Center(child: Text(l10n.notebookPeopleCreateFirst));
           }
           if (_selectedPersonId == null) _selectedPersonId = people.first.id;
 
@@ -42,7 +42,7 @@ class _DebtScreenState extends ConsumerState<DebtScreen> {
             error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
             data: (books) {
               if (books.isEmpty) {
-                return Center(child: Text(l10n.notebookNoData ?? 'Create book first.'));
+                return Center(child: Text(l10n.notebookNoData));
               }
               if (_selectedBookId == null) _selectedBookId = books.first.id;
 
@@ -52,15 +52,13 @@ class _DebtScreenState extends ConsumerState<DebtScreen> {
                   key: _formKey,
                   child: Column(
                     children: [
-                      DropdownButtonFormField<String>(
-                        value: _selectedBookId,
-                        decoration: InputDecoration(labelText: l10n.notebookBooks ?? 'Book'),
+                      DropdownButtonFormField<String>(initialValue: _selectedBookId,
+                        decoration: InputDecoration(labelText: l10n.notebookBooks),
                         items: books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
                         onChanged: (val) => setState(() => _selectedBookId = val),
                       ),
                       const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        value: _selectedPersonId,
+                      DropdownButtonFormField<String>(initialValue: _selectedPersonId,
                         decoration: InputDecoration(labelText: l10n.person),
                         items: people.map((p) => DropdownMenuItem(value: p.id, child: Text(p.name))).toList(),
                         onChanged: (val) => setState(() => _selectedPersonId = val),

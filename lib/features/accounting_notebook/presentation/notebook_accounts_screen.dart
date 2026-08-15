@@ -63,54 +63,49 @@ class NotebookAccountsScreen extends ConsumerWidget {
     String type = 'Cash';
     String? bookId;
     final l10n = AppLocalizations.of(context)!;
-    final booksAsync = ref.watch(notebookBooksProvider);
+    final books = ref.read(notebookBooksProvider).value ?? [];
 
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text(l10n.notebookAddAccount ?? 'Add Account'),
+          title: Text(l10n.notebookAddAccount),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                DropdownButtonFormField<String?>(
-                  value: bookId,
+                DropdownButtonFormField<String?>(initialValue: bookId,
                   decoration: InputDecoration(labelText: l10n.notebookBook),
-                  items: booksAsync.maybeWhen(
-                    data: (books) => books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
-                    orElse: () => [],
-                  ),
+                  items: books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
                   onChanged: (val) => setState(() => bookId = val),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: nameCtrl,
-                  decoration: InputDecoration(labelText: l10n.notebookAccountName ?? 'Account Name'),
+                  decoration: InputDecoration(labelText: l10n.notebookAccountName),
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: type,
+                DropdownButtonFormField<String>(initialValue: type,
                   items: [
-                    DropdownMenuItem(value: 'Cash', child: Text(l10n.notebookTypeCash ?? 'Cash')),
-                    DropdownMenuItem(value: 'Bank', child: Text(l10n.notebookTypeBank ?? 'Bank')),
-                    DropdownMenuItem(value: 'Card', child: Text(l10n.notebookTypeCard ?? 'Card')),
-                    DropdownMenuItem(value: 'Wallet', child: Text(l10n.notebookTypeWallet ?? 'Wallet')),
-                    DropdownMenuItem(value: 'Other', child: Text(l10n.notebookTypeOther ?? 'Other')),
+                    DropdownMenuItem(value: 'Cash', child: Text(l10n.notebookTypeCash)),
+                    DropdownMenuItem(value: 'Bank', child: Text(l10n.notebookTypeBank)),
+                    DropdownMenuItem(value: 'Card', child: Text(l10n.notebookTypeCard)),
+                    DropdownMenuItem(value: 'Wallet', child: Text(l10n.notebookTypeWallet)),
+                    DropdownMenuItem(value: 'Other', child: Text(l10n.notebookTypeOther)),
                   ],
                   onChanged: (v) => setState(() => type = v!),
-                  decoration: InputDecoration(labelText: l10n.notebookAccountType ?? 'Account Type'),
+                  decoration: InputDecoration(labelText: l10n.notebookAccountType),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: balanceCtrl,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(labelText: l10n.notebookOpeningBalance ?? 'Opening Balance'),
+                  decoration: InputDecoration(labelText: l10n.notebookOpeningBalance),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: noteCtrl,
-                  decoration: InputDecoration(labelText: l10n.notebookNote ?? 'Note'),
+                  decoration: InputDecoration(labelText: l10n.notebookNote),
                 ),
               ],
             ),
@@ -120,6 +115,10 @@ class NotebookAccountsScreen extends ConsumerWidget {
             ElevatedButton(
               onPressed: () {
                 if (nameCtrl.text.trim().isNotEmpty) {
+                  if (bookId == null) {
+                    ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.notebookCreateBookFirst)));
+                    return;
+                  }
                   final bal = double.tryParse(balanceCtrl.text) ?? 0.0;
                   ref.read(accountingNotebookProvider).createAccount(
                     name: nameCtrl.text.trim(),
@@ -147,27 +146,26 @@ class NotebookAccountsScreen extends ConsumerWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text(l10n.notebookEditAccount ?? 'Edit Account'),
+          title: Text(l10n.notebookEditAccount),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nameCtrl,
-                  decoration: InputDecoration(labelText: l10n.notebookAccountName ?? 'Account Name'),
+                  decoration: InputDecoration(labelText: l10n.notebookAccountName),
                 ),
                 const SizedBox(height: 16),
-                DropdownButtonFormField<String>(
-                  value: type,
+                DropdownButtonFormField<String>(initialValue: type,
                   items: [
-                    DropdownMenuItem(value: 'Cash', child: Text(l10n.notebookTypeCash ?? 'Cash')),
-                    DropdownMenuItem(value: 'Bank', child: Text(l10n.notebookTypeBank ?? 'Bank')),
-                    DropdownMenuItem(value: 'Card', child: Text(l10n.notebookTypeCard ?? 'Card')),
-                    DropdownMenuItem(value: 'Wallet', child: Text(l10n.notebookTypeWallet ?? 'Wallet')),
-                    DropdownMenuItem(value: 'Other', child: Text(l10n.notebookTypeOther ?? 'Other')),
+                    DropdownMenuItem(value: 'Cash', child: Text(l10n.notebookTypeCash)),
+                    DropdownMenuItem(value: 'Bank', child: Text(l10n.notebookTypeBank)),
+                    DropdownMenuItem(value: 'Card', child: Text(l10n.notebookTypeCard)),
+                    DropdownMenuItem(value: 'Wallet', child: Text(l10n.notebookTypeWallet)),
+                    DropdownMenuItem(value: 'Other', child: Text(l10n.notebookTypeOther)),
                   ],
                   onChanged: (v) => setState(() => type = v!),
-                  decoration: InputDecoration(labelText: l10n.notebookAccountType ?? 'Account Type'),
+                  decoration: InputDecoration(labelText: l10n.notebookAccountType),
                 ),
               ],
             ),
@@ -198,8 +196,8 @@ class NotebookAccountsScreen extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.notebookArchiveAccount ?? 'Archive Account'),
-        content: Text(l10n.notebookArchiveConfirm ?? 'Are you sure?'),
+        title: Text(l10n.notebookArchiveAccount),
+        content: Text(l10n.notebookArchiveConfirm),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
           ElevatedButton(
@@ -208,7 +206,7 @@ class NotebookAccountsScreen extends ConsumerWidget {
               ref.read(accountingNotebookProvider).archiveAccount(id);
               Navigator.pop(ctx);
             },
-            child: Text(l10n.archive ?? 'Archive', style: const TextStyle(color: Colors.white)),
+            child: Text(l10n.archive, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
