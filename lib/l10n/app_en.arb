@@ -744,4 +744,14 @@
   "notebookArchive": "Archive",
   "notebookEdit": "Edit",
   "notebookDelete": "Delete"
+  ,"notebookPayable": "Payable",
+  "notebookReceivable": "Receivable",
+  "notebookToday": "Today",
+  "notebookWeek": "Week",
+  "notebookMonth": "Month",
+  "notebookAll": "All",
+  "notebookPayment": "Receivable Payment",
+  "notebookPaymentOfDebt": "Payable Payment"
+  ,"notebookExportPdf": "Export PDF",
+  "notebookExportCsv": "Export CSV"
 }

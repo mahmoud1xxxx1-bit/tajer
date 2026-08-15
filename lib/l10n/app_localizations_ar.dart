@@ -1609,10 +1609,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notebookNoTransactionsYet => 'لا توجد حركات بعد';
 
   @override
-  String get notebookExportPdf => 'تصدير PDF';
+  String get notebookExportPdf => '????? PDF';
 
   @override
-  String get notebookExportCsv => 'تصدير Excel (CSV)';
+  String get notebookExportCsv => '????? CSV';
 
   @override
   String get accountingReport => 'تقرير دفتر المحاسبة';
@@ -1705,7 +1705,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notebookDestinationAccount => 'حساب الوجهة';
 
   @override
-  String get notebookPayment => 'سداد';
+  String get notebookPayment => '???? ??? ??';
 
   @override
   String get notebookPartialPayment => 'سداد جزئي';
@@ -1750,7 +1750,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notebookTransactionType => 'نوع الحركة';
 
   @override
-  String get notebookPaymentOfDebt => 'سداد دين';
+  String get notebookPaymentOfDebt => '???? ??? ????';
 
   @override
   String get notebookCreateBookFirst => 'يرجى إنشاء دفتر أولاً.';
@@ -1759,7 +1759,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notebookCreateCategoryFirst => 'يرجى إنشاء تصنيف أولاً.';
 
   @override
-  String get notebookAll => 'الكل';
+  String get notebookAll => '????';
 
   @override
   String get notebookStartDate => 'تاريخ البداية';
@@ -1821,4 +1821,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notebookDelete => 'حذف';
+
+  @override
+  String get notebookPayable => '????';
+
+  @override
+  String get notebookReceivable => '??';
+
+  @override
+  String get notebookToday => '?????';
+
+  @override
+  String get notebookWeek => '???????';
+
+  @override
+  String get notebookMonth => '?????';
 }

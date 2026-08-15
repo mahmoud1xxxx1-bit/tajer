@@ -86,8 +86,8 @@ class NotebookHomeScreen extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildSummaryItem(context, l10n.notebookReceivable ?? 'Owed to Me', totalOwedToMe, Colors.blue),
-                        _buildSummaryItem(context, l10n.notebookPayable ?? 'I Owe', totalIOwe, Colors.orange),
+                        _buildSummaryItem(context, l10n.notebookReceivable , totalOwedToMe, Colors.blue),
+                        _buildSummaryItem(context, l10n.notebookPayable , totalIOwe, Colors.orange),
                       ],
                     ),
                   ],

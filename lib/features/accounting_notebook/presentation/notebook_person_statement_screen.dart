@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
+import '../utils/notebook_localization_helper.dart';
 
 class NotebookPersonStatementScreen extends ConsumerWidget {
   final String personId;
@@ -72,8 +73,8 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                         final tx = personTxs[index];
                         final isPositive = tx.type == 'receivable' || tx.type == 'payable_payment';
                         return ListTile(
-                          title: Text(_getLocalizedType(context, tx.type)),
-                          subtitle: Text('${DateFormat.yMMMd().format(tx.date)} - ${tx.note ?? ''}'),
+                          title: Text(getLocalizedTransactionType(context, tx.type)),
+                          subtitle: Text('${DateFormat.yMMMd().format(tx.date)} - ${tx.note }'),
                           trailing: Text(
                             '${isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',
                             style: TextStyle(

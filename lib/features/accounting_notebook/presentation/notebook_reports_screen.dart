@@ -58,10 +58,10 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
               children: [
                 SegmentedButton<String>(
                   segments: [
-                    ButtonSegment(value: 'all', label: Text(l10n.notebookAll ?? 'All')),
-                    ButtonSegment(value: 'today', label: Text(l10n.notebookToday ?? 'Today')),
-                    ButtonSegment(value: 'week', label: Text(l10n.notebookWeek ?? 'Week')),
-                    ButtonSegment(value: 'month', label: Text(l10n.notebookMonth ?? 'Month')),
+                    ButtonSegment(value: 'all', label: Text(l10n.notebookAll)),
+                    ButtonSegment(value: 'today', label: Text(l10n.notebookToday)),
+                    ButtonSegment(value: 'week', label: Text(l10n.notebookWeek)),
+                    ButtonSegment(value: 'month', label: Text(l10n.notebookMonth)),
                   ],
                   selected: {_period},
                   onSelectionChanged: (set) => setState(() => _period = set.first),
@@ -120,11 +120,11 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
                                 Column(children: [
-                                  Text(l10n.notebookReceivable ?? 'Owed to Me', style: const TextStyle(color: Colors.blue)),
+                                  Text(l10n.notebookReceivable, style: const TextStyle(color: Colors.blue)),
                                   Text(NumberFormat.currency(symbol: '').format(owed)),
                                 ]),
                                 Column(children: [
-                                  Text(l10n.notebookPayable ?? 'I Owe', style: const TextStyle(color: Colors.orange)),
+                                  Text(l10n.notebookPayable, style: const TextStyle(color: Colors.orange)),
                                   Text(NumberFormat.currency(symbol: '').format(iOwe)),
                                 ]),
                               ],
@@ -158,7 +158,7 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                   children: [
                     ElevatedButton.icon(
                       icon: const Icon(Icons.picture_as_pdf),
-                      label: Text(l10n.notebookExportPdf ?? 'PDF'),
+                      label: Text(l10n.notebookExportPdf),
                       onPressed: () async {
                         final pdfData = await NotebookPdfService.generateNotebookReportPdf(
                           transactions,
@@ -171,7 +171,7 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                     ),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.table_chart),
-                      label: Text(l10n.notebookExportCsv ?? 'CSV'),
+                      label: Text(l10n.notebookExportCsv),
                       onPressed: () async {
                         final csvData = NotebookCsvService.generateCsv(
                           transactions,

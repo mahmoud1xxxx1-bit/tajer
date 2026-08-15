@@ -1613,7 +1613,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notebookExportPdf => 'Export PDF';
 
   @override
-  String get notebookExportCsv => 'Export Excel (CSV)';
+  String get notebookExportCsv => 'Export CSV';
 
   @override
   String get accountingReport => 'Accounting Report';
@@ -1706,7 +1706,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notebookDestinationAccount => 'Destination Account';
 
   @override
-  String get notebookPayment => 'Payment';
+  String get notebookPayment => 'Receivable Payment';
 
   @override
   String get notebookPartialPayment => 'Partial Payment';
@@ -1751,7 +1751,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notebookTransactionType => 'Transaction Type';
 
   @override
-  String get notebookPaymentOfDebt => 'Payment of Debt';
+  String get notebookPaymentOfDebt => 'Payable Payment';
 
   @override
   String get notebookCreateBookFirst => 'Please create a Book first.';
@@ -1822,4 +1822,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notebookDelete => 'Delete';
+
+  @override
+  String get notebookPayable => 'Payable';
+
+  @override
+  String get notebookReceivable => 'Receivable';
+
+  @override
+  String get notebookToday => 'Today';
+
+  @override
+  String get notebookWeek => 'Week';
+
+  @override
+  String get notebookMonth => 'Month';
 }

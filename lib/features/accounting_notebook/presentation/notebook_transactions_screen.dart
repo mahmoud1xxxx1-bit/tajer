@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
+import '../utils/notebook_localization_helper.dart';
 
 class NotebookTransactionsScreen extends ConsumerStatefulWidget {
   const NotebookTransactionsScreen({super.key});
@@ -26,11 +27,11 @@ class _NotebookTransactionsScreenState extends ConsumerState<NotebookTransaction
     switch (type) {
       case 'income': return l10n.income;
       case 'expense': return l10n.expense;
-      case 'receivable': return l10n.notebookReceivable ?? 'Receivable';
-      case 'payable': return l10n.notebookPayable ?? 'Payable';
-      case 'receivable_payment': return l10n.notebookPayment ?? 'Receivable Payment';
-      case 'payable_payment': return l10n.notebookPaymentOfDebt ?? 'Payable Payment';
-      case 'account_transfer': return l10n.notebookTransfer ?? 'Transfer';
+      case 'receivable': return l10n.notebookReceivable ;
+      case 'payable': return l10n.notebookPayable ;
+      case 'receivable_payment': return l10n.notebookPayment ;
+      case 'payable_payment': return l10n.notebookPaymentOfDebt ;
+      case 'account_transfer': return l10n.notebookTransfer ;
       default: return type;
     }
   }
@@ -214,7 +215,7 @@ class _NotebookTransactionsScreenState extends ConsumerState<NotebookTransaction
                     return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: ListTile(
-                        title: Text(tx.note ?? _getLocalizedType(context, tx.type)),
+                        title: Text(tx.note ?? getLocalizedTransactionType(context, tx.type)),
                         subtitle: Text(DateFormat.yMMMd().format(tx.date)),
                         trailing: Text(
                           '${isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',

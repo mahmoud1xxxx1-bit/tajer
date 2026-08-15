@@ -3143,13 +3143,13 @@ abstract class AppLocalizations {
   /// No description provided for @notebookExportPdf.
   ///
   /// In ar, this message translates to:
-  /// **'تصدير PDF'**
+  /// **'????? PDF'**
   String get notebookExportPdf;
 
   /// No description provided for @notebookExportCsv.
   ///
   /// In ar, this message translates to:
-  /// **'تصدير Excel (CSV)'**
+  /// **'????? CSV'**
   String get notebookExportCsv;
 
   /// No description provided for @accountingReport.
@@ -3335,7 +3335,7 @@ abstract class AppLocalizations {
   /// No description provided for @notebookPayment.
   ///
   /// In ar, this message translates to:
-  /// **'سداد'**
+  /// **'???? ??? ??'**
   String get notebookPayment;
 
   /// No description provided for @notebookPartialPayment.
@@ -3425,7 +3425,7 @@ abstract class AppLocalizations {
   /// No description provided for @notebookPaymentOfDebt.
   ///
   /// In ar, this message translates to:
-  /// **'سداد دين'**
+  /// **'???? ??? ????'**
   String get notebookPaymentOfDebt;
 
   /// No description provided for @notebookCreateBookFirst.
@@ -3443,7 +3443,7 @@ abstract class AppLocalizations {
   /// No description provided for @notebookAll.
   ///
   /// In ar, this message translates to:
-  /// **'الكل'**
+  /// **'????'**
   String get notebookAll;
 
   /// No description provided for @notebookStartDate.
@@ -3565,6 +3565,36 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'حذف'**
   String get notebookDelete;
+
+  /// No description provided for @notebookPayable.
+  ///
+  /// In ar, this message translates to:
+  /// **'????'**
+  String get notebookPayable;
+
+  /// No description provided for @notebookReceivable.
+  ///
+  /// In ar, this message translates to:
+  /// **'??'**
+  String get notebookReceivable;
+
+  /// No description provided for @notebookToday.
+  ///
+  /// In ar, this message translates to:
+  /// **'?????'**
+  String get notebookToday;
+
+  /// No description provided for @notebookWeek.
+  ///
+  /// In ar, this message translates to:
+  /// **'???????'**
+  String get notebookWeek;
+
+  /// No description provided for @notebookMonth.
+  ///
+  /// In ar, this message translates to:
+  /// **'?????'**
+  String get notebookMonth;
 }
 
 class _AppLocalizationsDelegate

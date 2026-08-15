@@ -25,7 +25,7 @@ class NotebookPeopleScreen extends ConsumerWidget {
               return ListTile(
                 leading: const Icon(Icons.person),
                 title: Text(p.name),
-                subtitle: Text(p.phone ?? ''),
+                subtitle: Text(p.phone ),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -133,7 +133,7 @@ class NotebookPeopleScreen extends ConsumerWidget {
 
   void _showEditPersonDialog(BuildContext context, WidgetRef ref, String id, String oldName, String? oldPhone) {
     final nameCtrl = TextEditingController(text: oldName);
-    final phoneCtrl = TextEditingController(text: oldPhone ?? '');
+    final phoneCtrl = TextEditingController(text: oldPhone );
     final l10n = AppLocalizations.of(context)!;
 
     showDialog(
