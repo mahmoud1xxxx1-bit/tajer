@@ -7,7 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../data/notebook_pdf_service.dart';
 import '../data/accounting_notebook_provider.dart';
 import '../data/notebook_csv_service.dart';
-import '../domain/notebook_transaction.dart';
+
 
 class NotebookReportsScreen extends ConsumerStatefulWidget {
   const NotebookReportsScreen({super.key});

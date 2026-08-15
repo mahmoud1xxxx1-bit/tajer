@@ -6,7 +6,7 @@ import '../data/accounting_notebook_provider.dart';
 import '../../../core/services/guest_limit_service.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
 import '../../authentication/data/auth_repository.dart';
-
+import '../domain/notebook_person.dart';
 
 class NotebookPeopleScreen extends ConsumerStatefulWidget {
   const NotebookPeopleScreen({super.key});
