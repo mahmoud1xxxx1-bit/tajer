@@ -192,17 +192,7 @@ class DashboardHome extends ConsumerWidget {
               ),
               child: Row(
                 children: [
-                  if (appUser?.role != 'employee')
-                    Card(
-                      color: Theme.of(context).primaryColor.withOpacity(0.1),
-                      margin: const EdgeInsets.only(bottom: 16.0),
-                      child: ListTile(
-                        leading: const Icon(Icons.book, size: 32),
-                        title: Text(l10n.notebookTitle, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        trailing: const Icon(Icons.arrow_forward_ios),
-                        onTap: () => context.go('/notebook'),
-                      ),
-                    ),
+
                   Icon(Icons.error_outline, color: Colors.red),
                   SizedBox(width: 8),
                   Expanded(
@@ -249,6 +239,28 @@ class DashboardHome extends ConsumerWidget {
             padding: EdgeInsets.all(16.0),
             child: ListView(
               children: [
+                if (appUser?.role == 'merchant')
+                  Card(
+                    color: Theme.of(context).primaryColor.withOpacity(0.1),
+                    margin: const EdgeInsets.only(bottom: 16.0),
+                    child: ListTile(
+                      leading: const Icon(Icons.book, size: 32),
+                      title: Text(
+                        Localizations.localeOf(context).languageCode == 'ar' 
+                            ? '📒 دفتر المحاسبة' 
+                            : '📒 Accounting Notebook',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                      ),
+                      subtitle: Text(
+                        Localizations.localeOf(context).languageCode == 'ar'
+                            ? 'إدارة الدخل والمصروف والديون والحسابات'
+                            : 'Manage income, expenses, debts and accounts',
+                        style: const TextStyle(fontFamily: 'Tajawal'),
+                      ),
+                      trailing: const Icon(Icons.arrow_forward_ios),
+                      onTap: () => context.go('/notebook'),
+                    ),
+                  ),
                 if (storeProfile?.storeName.isEmpty ?? true) ...[
                   Container(
                     margin: EdgeInsets.only(bottom: 16),
