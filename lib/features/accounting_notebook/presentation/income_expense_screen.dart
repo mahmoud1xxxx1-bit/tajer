@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
+import '../data/notebook_flow_context.dart';
 
 class IncomeExpenseScreen extends ConsumerStatefulWidget {
   final bool isIncome;
@@ -126,8 +127,6 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // The book selector is always visible before any dependency check.
               DropdownButtonFormField<String>(
                 value: selectedBookId,
                 isExpanded: true,
@@ -143,7 +142,6 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
                 },
               ),
               const SizedBox(height: 16),
-
               accountsAsync.when(
                 loading: () =>
                     const Center(child: CircularProgressIndicator()),
@@ -196,6 +194,9 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
                             ref
                                 .read(notebookCurrentBookIdProvider.notifier)
                                 .state = selectedBookId;
+                            ref
+                                .read(notebookPendingCategoryTypeProvider.notifier)
+                                .state = expectedType;
                             context.push('/notebook/categories');
                           },
                         );
@@ -313,7 +314,6 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
                                         ),
                                       );
                                     } else {
-                                      // Never expose Firebase/technical errors to users.
                                       ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
                                             content:
