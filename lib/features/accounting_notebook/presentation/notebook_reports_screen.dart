@@ -7,6 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../data/notebook_pdf_service.dart';
 import '../data/accounting_notebook_provider.dart';
 import '../data/notebook_csv_service.dart';
+import '../utils/notebook_terminology.dart';
 
 class NotebookReportsScreen extends ConsumerStatefulWidget {
   const NotebookReportsScreen({super.key});
@@ -28,9 +29,10 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
           date.day == now.day;
     }
     if (_period == 'week') {
-      final start = DateTime(now.year, now.month, now.day)
-          .subtract(const Duration(days: 6));
-      return !date.isBefore(start);
+      final today = DateTime(now.year, now.month, now.day);
+      final weekStart =
+          today.subtract(Duration(days: today.weekday - DateTime.monday));
+      return !date.isBefore(weekStart);
     }
     if (_period == 'month') {
       return date.year == now.year && date.month == now.month;
@@ -251,8 +253,12 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           children: [
-                            Text(l10n.notebookDebtAndAccounts,
-                                style: Theme.of(context).textTheme.titleLarge),
+                            Text(
+                              NotebookTerminology.receivablesPayablesSection(
+                                  context),
+                              style: Theme.of(context).textTheme.titleLarge,
+                              textAlign: TextAlign.center,
+                            ),
                             const SizedBox(height: 8),
                             peopleAsync.when(
                               loading: () =>
@@ -270,20 +276,32 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceAround,
                                   children: [
-                                    Column(children: [
-                                      Text(l10n.notebookReceivable,
+                                    Flexible(
+                                      child: Column(children: [
+                                        Text(
+                                          NotebookTerminology
+                                              .accountsReceivable(context),
+                                          textAlign: TextAlign.center,
                                           style: const TextStyle(
-                                              color: Colors.blue)),
-                                      Text(NumberFormat.currency(symbol: '')
-                                          .format(owed)),
-                                    ]),
-                                    Column(children: [
-                                      Text(l10n.notebookPayable,
+                                              color: Colors.blue),
+                                        ),
+                                        Text(NumberFormat.currency(symbol: '')
+                                            .format(owed)),
+                                      ]),
+                                    ),
+                                    Flexible(
+                                      child: Column(children: [
+                                        Text(
+                                          NotebookTerminology.accountsPayable(
+                                              context),
+                                          textAlign: TextAlign.center,
                                           style: const TextStyle(
-                                              color: Colors.orange)),
-                                      Text(NumberFormat.currency(symbol: '')
-                                          .format(iOwe)),
-                                    ]),
+                                              color: Colors.orange),
+                                        ),
+                                        Text(NumberFormat.currency(symbol: '')
+                                            .format(iOwe)),
+                                      ]),
+                                    ),
                                   ],
                                 );
                               },
