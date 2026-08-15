@@ -38,6 +38,50 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
     return true;
   }
 
+  Widget _buildPeriodSelector(BuildContext context, AppLocalizations l10n) {
+    final options = <(String, String)>[
+      ('all', l10n.notebookAll),
+      ('today', l10n.notebookToday),
+      ('week', l10n.notebookWeek),
+      ('month', l10n.notebookMonth),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = 8.0;
+        final columns = constraints.maxWidth < 430 ? 2 : 4;
+        final itemWidth =
+            (constraints.maxWidth - (spacing * (columns - 1))) / columns;
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: options.map((option) {
+            final selected = _period == option.$1;
+            return SizedBox(
+              width: itemWidth,
+              child: ChoiceChip(
+                selected: selected,
+                showCheckmark: selected,
+                labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+                label: SizedBox(
+                  width: double.infinity,
+                  child: Text(
+                    option.$2,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                onSelected: (_) => setState(() => _period = option.$1),
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -156,24 +200,7 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                       },
                     ),
                     const SizedBox(height: 16),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: SegmentedButton<String>(
-                        segments: [
-                          ButtonSegment(
-                              value: 'all', label: Text(l10n.notebookAll)),
-                          ButtonSegment(
-                              value: 'today', label: Text(l10n.notebookToday)),
-                          ButtonSegment(
-                              value: 'week', label: Text(l10n.notebookWeek)),
-                          ButtonSegment(
-                              value: 'month', label: Text(l10n.notebookMonth)),
-                        ],
-                        selected: {_period},
-                        onSelectionChanged: (set) =>
-                            setState(() => _period = set.first),
-                      ),
-                    ),
+                    _buildPeriodSelector(context, l10n),
                     const SizedBox(height: 16),
                     Card(
                       child: Padding(
