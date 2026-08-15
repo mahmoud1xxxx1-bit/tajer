@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/glass_card.dart';
 import '../../../l10n/app_localizations.dart';
+import '../utils/notebook_terminology.dart';
 
 class NotebookGuideScreen extends StatelessWidget {
   const NotebookGuideScreen({super.key});
@@ -87,11 +88,15 @@ class NotebookGuideScreen extends StatelessWidget {
               icon: Icons.people,
               content: l10n.notebookGuideSec8Desc),
           _buildGuideStep(context, isAr,
-              title: l10n.notebookGuideSec9Title,
+              title: isAr
+                  ? '٩. ${NotebookTerminology.accountsReceivable(context)}'
+                  : '9. ${NotebookTerminology.accountsReceivable(context)}',
               icon: Icons.person_add,
               content: l10n.notebookReceivableHint),
           _buildGuideStep(context, isAr,
-              title: l10n.notebookGuideSec10Title,
+              title: isAr
+                  ? '١٠. ${NotebookTerminology.accountsPayable(context)}'
+                  : '10. ${NotebookTerminology.accountsPayable(context)}',
               icon: Icons.person_remove,
               content: l10n.notebookPayableHint),
           _buildGuideStep(context, isAr,
