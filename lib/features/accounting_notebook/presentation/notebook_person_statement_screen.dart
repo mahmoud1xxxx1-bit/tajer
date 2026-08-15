@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_ui_firestore/firebase_ui_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../domain/notebook_transaction.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
 import '../../../../core/services/guest_limit_service.dart';
@@ -83,18 +86,31 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                 ),
               ),
               Expanded(
-                child: txsAsync.when(
-                  data: (txs) {
-                    final personTxs = txs.where((t) => t.personId == personId).toList();
-                    if (personTxs.isEmpty) return Center(child: Text(l10n.notebookNoTransactionsYet));
-                    return ListView.builder(
-                      itemCount: personTxs.length,
-                      itemBuilder: (context, index) {
-                        final tx = personTxs[index];
+                child: Builder(
+                  builder: (context) {
+                    final repo = ref.watch(accountingNotebookRepositoryProvider);
+                    if (repo == null) return const Center(child: CircularProgressIndicator());
+                    
+                    final query = repo.transactionsRef
+                        .where('personId', isEqualTo: personId)
+                        .orderBy('date', descending: true)
+                        .withConverter<NotebookTransaction>(
+                          fromFirestore: (snapshot, _) => NotebookTransaction.fromMap(snapshot.data()!, snapshot.id),
+                          toFirestore: (tx, _) => tx.toMap(),
+                        );
+                        
+                    return FirestoreListView<NotebookTransaction>(
+                      query: query,
+                      pageSize: 50,
+                      emptyBuilder: (context) => Center(child: Text(l10n.notebookNoTransactionsYet)),
+                      loadingBuilder: (context) => const Center(child: CircularProgressIndicator()),
+                      errorBuilder: (context, error, stackTrace) => Center(child: Text('${l10n.genericErrorPrefix}: $error')),
+                      itemBuilder: (context, doc) {
+                        final tx = doc.data();
                         final isPositive = tx.type == 'receivable' || tx.type == 'payable_payment';
                         return ListTile(
-                          title: Text(NotebookLocalizationHelper.getNotebookLocalizedType(context, tx.type)),
-                          subtitle: Text('${DateFormat.yMMMd(Localizations.localeOf(context).languageCode).format(tx.date)} - ${tx.note ?? ''}'),
+                          title: Text(NotebookLocalizationHelper.getNotebookLocalizedTypeCustom(tx.type, l10n)),
+                          subtitle: Text('${DateFormat.yMMMd(Localizations.localeOf(context).languageCode).format(tx.date)}${tx.note != null && tx.note!.isNotEmpty ? ' - ${tx.note}' : ''}'),
                           trailing: Text(
                             '${isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',
                             style: TextStyle(
@@ -105,11 +121,10 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                         );
                       },
                     );
-                  },
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (e, st) => Center(child: Text('${l10n.genericErrorPrefix}: $e')),
+                  }
                 ),
               ),
+
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Row(

@@ -84,7 +84,7 @@ class _NotebookAccountsScreenState extends ConsumerState<NotebookAccountsScreen>
                 child: DropdownButtonFormField<String>(
                   value: _selectedBookId,
                   decoration: InputDecoration(labelText: l10n.notebookBook),
-                  items: books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
+                  items: books.where((b) => !b.isArchived).map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
                   onChanged: (val) => setState(() => _selectedBookId = val),
                 ),
               ),
@@ -127,7 +127,7 @@ class _NotebookAccountsScreenState extends ConsumerState<NotebookAccountsScreen>
                               if (!isArchived)
                                 IconButton(
                                   icon: const Icon(Icons.edit, color: Colors.blue),
-                                  onPressed: () => _showEditAccountDialog(context, ref, a.id, a.name, a.type),
+                                  onPressed: () => _showEditAccountDialog(context, ref, a),
                                 ),
                               if (!isArchived)
                                 IconButton(
@@ -169,9 +169,10 @@ class _NotebookAccountsScreenState extends ConsumerState<NotebookAccountsScreen>
     );
   }
 
-  void _showEditAccountDialog(BuildContext context, WidgetRef ref, String id, String oldName, String oldType) {
-    final nameCtrl = TextEditingController(text: oldName);
-    String type = oldType.isNotEmpty ? oldType : 'Cash';
+  void _showEditAccountDialog(BuildContext context, WidgetRef ref, NotebookAccount account) {
+    final nameCtrl = TextEditingController(text: account.name);
+    final noteCtrl = TextEditingController(text: account.notes ?? '');
+    String type = account.type.isNotEmpty ? account.type : 'Cash';
     final l10n = AppLocalizations.of(context)!;
 
     showDialog(
@@ -200,6 +201,11 @@ class _NotebookAccountsScreenState extends ConsumerState<NotebookAccountsScreen>
                   onChanged: (v) => setState(() => type = v!),
                   decoration: InputDecoration(labelText: l10n.notebookAccountType),
                 ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: noteCtrl,
+                  decoration: InputDecoration(labelText: l10n.notebookNote),
+                ),
               ],
             ),
           ),
@@ -209,9 +215,10 @@ class _NotebookAccountsScreenState extends ConsumerState<NotebookAccountsScreen>
               onPressed: () {
                 if (nameCtrl.text.trim().isNotEmpty) {
                   ref.read(accountingNotebookProvider).updateAccount(
-                    id,
+                    account.id,
                     name: nameCtrl.text.trim(),
                     type: type,
+                    notes: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
                   );
                   Navigator.pop(ctx);
                 }
@@ -311,7 +318,7 @@ class _AddAccountDialogState extends ConsumerState<_AddAccountDialog> {
                 DropdownButtonFormField<String?>(
                   value: bookId,
                   decoration: InputDecoration(labelText: l10n.notebookBook),
-                  items: books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
+                  items: books.where((b) => !b.isArchived).map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
                   onChanged: (val) => setState(() => bookId = val),
                 ),
                 const SizedBox(height: 16),
@@ -359,6 +366,7 @@ class _AddAccountDialogState extends ConsumerState<_AddAccountDialog> {
                 type: type,
                 openingBalance: bal,
                 bookId: bookId!,
+                notes: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
               );
               Navigator.pop(context);
             }

@@ -351,10 +351,10 @@ class AccountingNotebookService {
   }
 
   // Accounts
-  Future<void> createAccount({required String bookId, required String name, required String type, required double openingBalance}) async {
+  Future<void> createAccount({required String bookId, required String name, required String type, required double openingBalance, String? notes}) async {
     if (_repository == null) return;
     final id = _uuid.v4();
-    final acc = NotebookAccount(id: id, bookId: bookId, name: name, type: type, balance: openingBalance, createdAt: DateTime.now());
+    final acc = NotebookAccount(id: id, bookId: bookId, name: name, type: type, balance: openingBalance, notes: notes, createdAt: DateTime.now());
     await _repository.createAccount(acc);
     
     if (openingBalance > 0) {
@@ -373,9 +373,9 @@ class AccountingNotebookService {
     }
   }
 
-  Future<void> updateAccount(String id, {required String name, required String type}) async {
+  Future<void> updateAccount(String id, {required String name, required String type, String? notes}) async {
     if (_repository == null) return;
-    await _repository.accountsRef.doc(id).update({'name': name, 'type': type});
+    await _repository.accountsRef.doc(id).update({'name': name, 'type': type, 'notes': notes});
   }
 
   Future<void> archiveAccount(String id) async {

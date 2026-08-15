@@ -83,7 +83,7 @@ class _NotebookPeopleScreenState extends ConsumerState<NotebookPeopleScreen> {
                 child: DropdownButtonFormField<String>(
                   value: _selectedBookId,
                   decoration: InputDecoration(labelText: l10n.notebookBook),
-                  items: books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
+                  items: books.where((b) => !b.isArchived).map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
                   onChanged: (val) => setState(() => _selectedBookId = val),
                 ),
               ),
@@ -134,7 +134,7 @@ class _NotebookPeopleScreenState extends ConsumerState<NotebookPeopleScreen> {
                               if (!isArchived)
                                 IconButton(
                                   icon: const Icon(Icons.edit, color: Colors.blue),
-                                  onPressed: () => _showEditPersonDialog(context, ref, p.id, p.name, p.phone),
+                                  onPressed: () => _showEditPersonDialog(context, ref, p),
                                 ),
                               if (!isArchived)
                                 IconButton(
@@ -180,9 +180,10 @@ class _NotebookPeopleScreenState extends ConsumerState<NotebookPeopleScreen> {
     );
   }
 
-  void _showEditPersonDialog(BuildContext context, WidgetRef ref, String id, String oldName, String? oldPhone) {
-    final nameCtrl = TextEditingController(text: oldName);
-    final phoneCtrl = TextEditingController(text: oldPhone ?? '');
+  void _showEditPersonDialog(BuildContext context, WidgetRef ref, NotebookPerson person) {
+    final nameCtrl = TextEditingController(text: person.name);
+    final phoneCtrl = TextEditingController(text: person.phone ?? '');
+    final noteCtrl = TextEditingController(text: person.notes ?? '');
     final l10n = AppLocalizations.of(context)!;
 
     showDialog(
@@ -203,6 +204,11 @@ class _NotebookPeopleScreenState extends ConsumerState<NotebookPeopleScreen> {
                 decoration: InputDecoration(labelText: l10n.notebookPersonPhone),
                 keyboardType: TextInputType.phone,
               ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: noteCtrl,
+                decoration: InputDecoration(labelText: l10n.notebookNote),
+              ),
             ],
           ),
         ),
@@ -212,9 +218,10 @@ class _NotebookPeopleScreenState extends ConsumerState<NotebookPeopleScreen> {
             onPressed: () {
               if (nameCtrl.text.trim().isNotEmpty) {
                 ref.read(accountingNotebookProvider).updatePerson(
-                  id,
+                  person.id,
                   name: nameCtrl.text.trim(),
                   phone: phoneCtrl.text.trim(),
+                  notes: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
                 );
                 Navigator.pop(ctx);
               }
@@ -312,7 +319,7 @@ class _AddPersonDialogState extends ConsumerState<_AddPersonDialog> {
                 DropdownButtonFormField<String?>(
                   value: bookId,
                   decoration: InputDecoration(labelText: l10n.notebookBook),
-                  items: books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
+                  items: books.where((b) => !b.isArchived).map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
                   onChanged: (val) => setState(() => bookId = val),
                 ),
                 const SizedBox(height: 16),

@@ -7,6 +7,7 @@ class NotebookAccount {
   final String type; // cash, bank, card, wallet
   final double balance;
   final String bookId;
+  final String? notes;
   final DateTime createdAt;
   final bool isArchived;
 
@@ -16,6 +17,7 @@ class NotebookAccount {
     required this.type,
     required this.balance,
     required this.bookId,
+    this.notes,
     required this.createdAt,
     this.isArchived = false,
   });
@@ -27,6 +29,7 @@ class NotebookAccount {
       type: data['type']?.toString() ?? 'cash',
       balance: (data['balance'] as num?)?.toDouble() ?? 0.0,
       bookId: data['bookId']?.toString() ?? '',
+      notes: data['notes']?.toString(),
       createdAt: safeParseDate(data['createdAt']),
       isArchived: data['isArchived'] ?? false,
     );
@@ -38,6 +41,7 @@ class NotebookAccount {
       'type': type,
       'balance': balance,
       'bookId': bookId,
+      'notes': notes,
       'createdAt': Timestamp.fromDate(createdAt),
       'isArchived': isArchived,
     };

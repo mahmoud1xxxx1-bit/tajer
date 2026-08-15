@@ -9,8 +9,11 @@ import '../../authentication/data/auth_repository.dart';
 
 final accountingNotebookRepositoryProvider = Provider<AccountingNotebookRepository?>((ref) {
   final appUser = ref.watch(appUserProvider).value;
-  if (appUser == null || appUser.role == 'employee') return null; // strictly owner only
-  final merchantId = appUser.id;
+  if (appUser == null) return null;
+  if (appUser.role == 'employee' && !appUser.hasPermission('can_access_accounting_notebook')) {
+    return null;
+  }
+  final merchantId = appUser.role == 'employee' ? (appUser.merchantId ?? appUser.id) : appUser.id;
   return AccountingNotebookRepository(FirebaseFirestore.instance, merchantId);
 });
 
@@ -93,6 +96,27 @@ class AccountingNotebookRepository {
         .map((snapshot) {
       return snapshot.docs.map((doc) => NotebookTransaction.fromMap(doc.data(), doc.id)).toList();
     });
+  }
+
+  Query<NotebookTransaction> queryTransactions(String bookId) {
+    return transactionsRef
+        .where('bookId', isEqualTo: bookId)
+        .orderBy('date', descending: true)
+        .withConverter<NotebookTransaction>(
+          fromFirestore: (snapshot, _) => NotebookTransaction.fromMap(snapshot.data()!, snapshot.id),
+          toFirestore: (tx, _) => tx.toMap(),
+        );
+  }
+
+  Query<NotebookTransaction> queryPersonTransactions(String bookId, String personId) {
+    return transactionsRef
+        .where('bookId', isEqualTo: bookId)
+        .where('personId', isEqualTo: personId)
+        .orderBy('date', descending: true)
+        .withConverter<NotebookTransaction>(
+          fromFirestore: (snapshot, _) => NotebookTransaction.fromMap(snapshot.data()!, snapshot.id),
+          toFirestore: (tx, _) => tx.toMap(),
+        );
   }
   
   // Transaction processing logic will go here (batch writes for balance updates)

@@ -81,7 +81,7 @@ class _NotebookCategoriesScreenState extends ConsumerState<NotebookCategoriesScr
                 child: DropdownButtonFormField<String>(
                   value: _selectedBookId,
                   decoration: InputDecoration(labelText: l10n.notebookBook),
-                  items: books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
+                  items: books.where((b) => !b.isArchived).map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
                   onChanged: (val) => setState(() => _selectedBookId = val),
                 ),
               ),
@@ -270,7 +270,7 @@ class _AddCategoryDialogState extends ConsumerState<_AddCategoryDialog> {
                 DropdownButtonFormField<String?>(
                   value: bookId,
                   decoration: InputDecoration(labelText: l10n.notebookBook),
-                  items: books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
+                  items: books.where((b) => !b.isArchived).map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
                   onChanged: (val) => setState(() => bookId = val),
                 ),
                 const SizedBox(height: 16),
