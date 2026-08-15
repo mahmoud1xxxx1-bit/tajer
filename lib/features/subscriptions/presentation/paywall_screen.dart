@@ -11,7 +11,8 @@ class PaywallScreen extends ConsumerStatefulWidget {
   ConsumerState<PaywallScreen> createState() => _PaywallScreenState();
 }
 
-class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTickerProviderStateMixin {
+class _PaywallScreenState extends ConsumerState<PaywallScreen>
+    with SingleTickerProviderStateMixin {
   bool _isLoading = false;
   List<Package> _packages = [];
   late AnimationController _animationController;
@@ -36,44 +37,64 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
     setState(() => _isLoading = true);
     try {
       final offerings = await Purchases.getOfferings();
-      if (offerings.current != null && offerings.current!.availablePackages.isNotEmpty) {
+      if (offerings.current != null &&
+          offerings.current!.availablePackages.isNotEmpty) {
         setState(() {
-          // Only show the monthly package, exactly as the user requested.
-          _packages = offerings.current!.availablePackages.where((pkg) => pkg.packageType == PackageType.monthly).toList();
+          _packages = offerings.current!.availablePackages
+              .where((pkg) => pkg.packageType == PackageType.monthly)
+              .toList();
           if (_packages.isEmpty) {
-             // Fallback if no explicit "monthly" package type is found, show the first package.
-             _packages = [offerings.current!.availablePackages.first];
+            _packages = [offerings.current!.availablePackages.first];
           }
         });
       }
     } catch (e) {
-      debugPrint("Error fetching offerings: $e");
+      debugPrint('Error fetching offerings: $e');
     }
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
+    if (mounted) setState(() => _isLoading = false);
   }
 
   Future<void> _purchasePackage(Package package) async {
     final l10n = AppLocalizations.of(context)!;
     setState(() => _isLoading = true);
     try {
-      final isSuccess = await ref.read(subscriptionServiceProvider).purchasePackage(package);
-      if (isSuccess && mounted) {
+      final isSuccess = await ref
+          .read(subscriptionServiceProvider)
+          .purchasePackage(package);
+      if (!mounted) return;
+      if (isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text(l10n.purchaseSuccess, style: const TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(
+            content: Text(
+              l10n.purchaseSuccess,
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
         );
         Navigator.pop(context);
-      }
-    } catch (e) {
-      if (mounted) {
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.purchaseError}: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(
+            content: Text(
+              l10n.purchaseError,
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
         );
       }
-    }
-    if (mounted) {
-      setState(() => _isLoading = false);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              l10n.purchaseError,
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -81,39 +102,60 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
     final l10n = AppLocalizations.of(context)!;
     setState(() => _isLoading = true);
     try {
-      final isSuccess = await ref.read(subscriptionServiceProvider).restorePurchases();
-      if (isSuccess && mounted) {
+      final isSuccess =
+          await ref.read(subscriptionServiceProvider).restorePurchases();
+      if (!mounted) return;
+      if (isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text(l10n.restoreSuccess, style: const TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(
+            content: Text(
+              l10n.restoreSuccess,
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
         );
         Navigator.pop(context);
-      } else if (mounted) {
+      } else {
         ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text(l10n.restoreNoActive, style: const TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(
+            content: Text(
+              l10n.restoreNoActive,
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
         );
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.restoreError}: $e', style: const TextStyle(fontFamily: 'Tajawal'))),
+          SnackBar(
+            content: Text(
+              l10n.restoreError,
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
         );
       }
-    }
-    if (mounted) {
-      setState(() => _isLoading = false);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final l10n = AppLocalizations.of(context)!;
-    
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+
+    final title = isAr ? 'تاجر برو' : 'Tajer Pro';
+    final subtitle = isAr
+        ? 'وسّع نشاطك واعمل بدون حدود الباقة المجانية.'
+        : 'Grow your business without the free-plan limits.';
+
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF8FAFC),
+      backgroundColor:
+          isDark ? const Color(0xFF1A1A1A) : const Color(0xFFF8FAFC),
       body: Stack(
         children: [
-          // Background Animation
           Positioned(
             top: -100,
             right: -100,
@@ -140,24 +182,26 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
               ),
             ),
           ),
-          
           SafeArea(
             child: Column(
               children: [
-                // Header
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       IconButton(
-                        icon: Icon(Icons.close_rounded, color: isDark ? Colors.white : Colors.black87),
+                        icon: Icon(
+                          Icons.close_rounded,
+                          color: isDark ? Colors.white : Colors.black87,
+                        ),
                         onPressed: () => Navigator.pop(context),
                       ),
                       TextButton(
                         onPressed: _isLoading ? null : _restorePurchases,
                         child: Text(
-                          'استعادة المشتريات',
+                          isAr ? 'استعادة المشتريات' : 'Restore purchases',
                           style: TextStyle(
                             fontFamily: 'Tajawal',
                             color: isDark ? Colors.white70 : Colors.black54,
@@ -168,8 +212,6 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
                     ],
                   ),
                 ),
-                
-                // Content
                 Expanded(
                   child: CustomScrollView(
                     physics: const BouncingScrollPhysics(),
@@ -185,74 +227,81 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
                                   color: Colors.amber.withValues(alpha: 0.15),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.workspace_premium_rounded, size: 64, color: Colors.amber),
+                                child: const Icon(
+                                  Icons.workspace_premium_rounded,
+                                  size: 64,
+                                  color: Colors.amber,
+                                ),
                               ),
                               const SizedBox(height: 24),
                               Text(
-                                'انضم إلى تاجر برو',
+                                title,
                                 style: TextStyle(
                                   fontFamily: 'Tajawal',
                                   fontSize: 28,
                                   fontWeight: FontWeight.w900,
-                                  color: isDark ? Colors.white : Colors.black87,
+                                  color:
+                                      isDark ? Colors.white : Colors.black87,
                                 ),
                               ),
                               const SizedBox(height: 12),
                               Text(
-                                'أطلق العنان لكامل إمكانيات متجرك وتحكم بكل شيء بسهولة واحترافية!',
+                                subtitle,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   fontFamily: 'Tajawal',
                                   fontSize: 15,
                                   height: 1.5,
-                                  color: isDark ? Colors.white70 : Colors.black54,
+                                  color:
+                                      isDark ? Colors.white70 : Colors.black54,
                                 ),
                               ),
-                              const SizedBox(height: 40),
-                              
-                              // Features List
+                              const SizedBox(height: 32),
                               _buildFeatureTile(
                                 context: context,
                                 icon: Icons.storefront_rounded,
                                 color: Colors.blueAccent,
-                                title: 'منتجات وطلبات بلا حدود',
-                                subtitle: 'أضف ما تشاء من المنتجات واستقبل طلبات غير محدودة.',
+                                title: isAr
+                                    ? 'منتجات وطلبات وعملاء بلا حدود'
+                                    : 'Unlimited products, orders & customers',
+                                subtitle: isAr
+                                    ? 'أزل حدود الباقة المجانية عن المنتجات والطلبات والعملاء.'
+                                    : 'Remove free-plan limits for products, orders and customers.',
                               ),
                               _buildFeatureTile(
                                 context: context,
                                 icon: Icons.group_add_rounded,
                                 color: Colors.purpleAccent,
-                                title: 'إدارة الموظفين والصلاحيات',
-                                subtitle: 'أضف الكاشير والمحاسبين وحدد صلاحياتهم بدقة، وراقب سجل حركاتهم بالكامل.',
+                                title: isAr
+                                    ? 'حتى 3 موظفين مع صلاحيات دقيقة'
+                                    : 'Up to 3 employees with permissions',
+                                subtitle: isAr
+                                    ? 'أضف موظفيك وحدد لكل موظف ما يستطيع الوصول إليه، بما في ذلك دفتر المحاسبة.'
+                                    : 'Add employees and control exactly what each employee can access, including the Accounting Notebook.',
+                              ),
+                              _buildFeatureTile(
+                                context: context,
+                                icon: Icons.menu_book_rounded,
+                                color: Colors.tealAccent.shade400,
+                                title: isAr
+                                    ? 'دفتر المحاسبة بلا حدود'
+                                    : 'Unlimited Accounting Notebook',
+                                subtitle: isAr
+                                    ? 'دفاتر وحسابات وأشخاص وحركات محاسبية بلا حدود الباقة المجانية.'
+                                    : 'Unlimited books, accounts, people and accounting transactions beyond free-plan limits.',
                               ),
                               _buildFeatureTile(
                                 context: context,
                                 icon: Icons.inventory_2_rounded,
                                 color: Colors.orangeAccent,
-                                title: 'إدارة مخزون ومواد خام ذكية',
-                                subtitle: 'تتبع كميات المواد الخام، وتلقَ تنبيهات النقص، واصنع وصفات دقيقة لمنتجاتك.',
+                                title: isAr
+                                    ? 'إدارة النشاط بدون حدود الباقة المجانية'
+                                    : 'Business management without free-plan limits',
+                                subtitle: isAr
+                                    ? 'استمر في استخدام المصروفات والتصنيفات والموردين مع مزايا الحساب الاحترافي.'
+                                    : 'Keep using expenses, categories and suppliers with Pro account capacity.',
                               ),
-                              _buildFeatureTile(
-                                context: context,
-                                icon: Icons.wifi_off_rounded,
-                                color: Colors.greenAccent.shade400,
-                                title: 'يعمل بدون إنترنت (Offline)',
-                                subtitle: 'لا تدع انقطاع الإنترنت يوقف مبيعاتك. اعمل بكفاءة وستتم المزامنة لاحقاً.',
-                              ),
-                              _buildFeatureTile(
-                                context: context,
-                                icon: Icons.receipt_long_rounded,
-                                color: Colors.indigoAccent,
-                                title: 'الفواتير الضريبية المبسطة (ZATCA)',
-                                subtitle: 'اطبع فواتير رسمية للعملاء متوافقة مع هيئة الزكاة مزودة بـ QR Code متوافق.',
-                              ),
-                              _buildFeatureTile(
-                                context: context,
-                                icon: Icons.support_agent_rounded,
-                                color: Colors.tealAccent.shade400,
-                                title: 'أولوية القصوى في الدعم الفني',
-                                subtitle: 'احصل على مساعدة فورية وتحديثات مستمرة لضمان عمل متجرك دون توقف.',
-                              ),
+                              const SizedBox(height: 8),
                             ],
                           ),
                         ),
@@ -260,47 +309,81 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
                     ],
                   ),
                 ),
-                
-                // Packages Area
                 Container(
                   padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.6),
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                    color: isDark
+                        ? Colors.black.withValues(alpha: 0.3)
+                        : Colors.white.withValues(alpha: 0.6),
+                    borderRadius:
+                        const BorderRadius.vertical(top: Radius.circular(32)),
                     boxShadow: [
-                      BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20, offset: const Offset(0, -5)),
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 20,
+                        offset: const Offset(0, -5),
+                      ),
                     ],
                   ),
                   child: _packages.isEmpty
-                      ? Center(child: Text('جاري تحميل الباقات...', style: TextStyle(fontFamily: 'Tajawal', color: isDark ? Colors.white54 : Colors.black54)))
+                      ? Center(
+                          child: Text(
+                            isAr ? 'جاري تحميل الباقات...' : 'Loading plans...',
+                            style: TextStyle(
+                              fontFamily: 'Tajawal',
+                              color:
+                                  isDark ? Colors.white54 : Colors.black54,
+                            ),
+                          ),
+                        )
                       : Column(
                           mainAxisSize: MainAxisSize.min,
                           children: _packages.map((pkg) {
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 12),
                               child: ElevatedButton(
-                                onPressed: () => _purchasePackage(pkg),
+                                onPressed: _isLoading
+                                    ? null
+                                    : () => _purchasePackage(pkg),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: isDark ? const Color(0xFFFDE047) : const Color(0xFFFACC15),
+                                  backgroundColor: isDark
+                                      ? const Color(0xFFFDE047)
+                                      : const Color(0xFFFACC15),
                                   foregroundColor: Colors.black87,
                                   elevation: 8,
-                                  shadowColor: Colors.amber.withValues(alpha: 0.5),
-                                  padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 20),
+                                  shadowColor:
+                                      Colors.amber.withValues(alpha: 0.5),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 18, horizontal: 20),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(16),
-                                    side: const BorderSide(color: Colors.amber, width: 2),
+                                    side: const BorderSide(
+                                        color: Colors.amber, width: 2),
                                   ),
                                 ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                                child: Wrap(
+                                  alignment: WrapAlignment.center,
+                                  crossAxisAlignment: WrapCrossAlignment.center,
+                                  spacing: 4,
                                   children: [
-                                    const Text(
-                                      'الاشتراك في تاجر برو - ',
-                                      style: TextStyle(fontFamily: 'Tajawal', fontSize: 16, fontWeight: FontWeight.bold),
+                                    Text(
+                                      isAr
+                                          ? 'اشترك في تاجر برو -'
+                                          : 'Subscribe to Tajer Pro -',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontFamily: 'Tajawal',
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                     Text(
                                       pkg.storeProduct.priceString,
-                                      style: const TextStyle(fontFamily: 'Tajawal', fontSize: 18, fontWeight: FontWeight.w900),
+                                      style: const TextStyle(
+                                        fontFamily: 'Tajawal',
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w900,
+                                      ),
                                     ),
                                   ],
                                 ),
@@ -312,11 +395,12 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
               ],
             ),
           ),
-          
           if (_isLoading)
             Container(
               color: Colors.black.withValues(alpha: 0.3),
-              child: const Center(child: CircularProgressIndicator(color: Colors.amber)),
+              child: const Center(
+                child: CircularProgressIndicator(color: Colors.amber),
+              ),
             ),
         ],
       ),
@@ -342,7 +426,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen> with SingleTicker
               color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(icon, color: isDark ? color : color.withValues(alpha: 0.9), size: 24),
+            child: Icon(
+              icon,
+              color: isDark ? color : color.withValues(alpha: 0.9),
+              size: 24,
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
