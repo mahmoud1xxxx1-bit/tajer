@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
 import '../domain/notebook_account.dart';
+import '../domain/notebook_book.dart';
 import '../domain/notebook_category.dart';
 import '../domain/notebook_person.dart';
 import '../utils/notebook_localization_helper.dart';
@@ -244,17 +245,48 @@ class _NotebookTransactionsScreenState extends ConsumerState<NotebookTransaction
                   itemBuilder: (context, index) {
                     final tx = filtered[index];
                     final isPositive = tx.type == 'income' || tx.type == 'receivable_payment';
+                    final isNeutral = tx.type == 'opening_balance' || tx.type == 'account_transfer';
+                    
+                    final typeStr = NotebookLocalizationHelper.getNotebookLocalizedTypeCustom(tx.type, l10n);
+                    final bookStr = booksAsync.value?.where((b) => b.id == tx.bookId).firstOrNull?.name ?? '...';
+                    final accStr = getAccountName(tx.accountId);
+                    final personStr = tx.personId != null ? getPersonName(tx.personId) : null;
+                    final catStr = tx.categoryId != null ? getCategoryName(tx.categoryId) : null;
+                    final targetStr = personStr ?? catStr;
+                    
+                    // Date Format using locale
+                    final dateStr = DateFormat.yMMMd(Localizations.localeOf(context).languageCode).format(tx.date);
+
                     return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: ListTile(
-                        title: Text(tx.note ?? getNotebookLocalizedType(context, tx.type)),
-                        subtitle: Text(DateFormat.yMMMd().format(tx.date)),
-                        trailing: Text(
-                          '${isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            color: isPositive ? Colors.green : Colors.red,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(typeStr, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                Text(
+                                  '${isNeutral ? '' : isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',
+                                  style: TextStyle(
+                                    color: isNeutral ? Colors.blue : isPositive ? Colors.green : Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text('${l10n.notebookFilterBook}: $bookStr | ${l10n.notebookFilterAccount}: $accStr', style: const TextStyle(fontSize: 13)),
+                            if (targetStr != null) 
+                              Text('${tx.personId != null ? l10n.notebookPerson : l10n.notebookCategory}: $targetStr', style: const TextStyle(fontSize: 13)),
+                            if (tx.note != null && tx.note!.isNotEmpty)
+                              Text('${l10n.note}: ${tx.note}', style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic)),
+                            const SizedBox(height: 8),
+                            Text(dateStr, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                          ],
                         ),
                       ),
                     );

@@ -1628,7 +1628,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notebookTransactions => 'Transactions';
 
   @override
-  String get notebookNoData => 'No data found.';
+  String get notebookNoData => 'No data';
 
   @override
   String get notebookAddBook => 'Add Book';
@@ -1967,4 +1967,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notebookGuideTransferPayment =>
       'Transfer moves money between your accounts. Payment settles debts with people.';
+
+  @override
+  String get notebookRestoreWarning =>
+      'Restoring this item will make it available for new operations.';
+
+  @override
+  String get notebookReportTitle => 'Accounting Report';
+
+  @override
+  String get notebookDate => 'Date';
+
+  @override
+  String get notebookType => 'Type';
+
+  @override
+  String get notebookTotalIncome => 'Total Income';
+
+  @override
+  String get notebookTotalExpenses => 'Total Expenses';
+
+  @override
+  String get notebookTransactionsHeader => 'Transactions:';
 }

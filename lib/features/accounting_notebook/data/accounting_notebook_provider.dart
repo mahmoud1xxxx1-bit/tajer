@@ -356,6 +356,20 @@ class AccountingNotebookService {
     final id = _uuid.v4();
     final acc = NotebookAccount(id: id, bookId: bookId, name: name, type: type, balance: openingBalance, createdAt: DateTime.now());
     await _repository.createAccount(acc);
+    
+    if (openingBalance > 0) {
+      final txId = _uuid.v4();
+      final tx = NotebookTransaction(
+        id: txId,
+        bookId: bookId,
+        accountId: id,
+        amount: openingBalance,
+        type: 'opening_balance',
+        date: DateTime.now(),
+        note: 'Opening Balance', // Fallback, will be translated in UI
+      );
+      await _repository.createTransaction(tx);
+    }
   }
 
   Future<void> updateAccount(String id, {required String name, required String type}) async {

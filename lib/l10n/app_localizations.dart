@@ -3179,7 +3179,7 @@ abstract class AppLocalizations {
   /// No description provided for @notebookNoData.
   ///
   /// In ar, this message translates to:
-  /// **'لا توجد بيانات.'**
+  /// **'لا توجد بيانات'**
   String get notebookNoData;
 
   /// No description provided for @notebookAddBook.
@@ -3275,7 +3275,7 @@ abstract class AppLocalizations {
   /// No description provided for @notebookOpeningBalance.
   ///
   /// In ar, this message translates to:
-  /// **'الرصيد الافتتاحي'**
+  /// **'رصيد افتتاحي'**
   String get notebookOpeningBalance;
 
   /// No description provided for @notebookAddPerson.
@@ -3817,6 +3817,48 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'التحويل لنقل المال بين حساباتك. السداد لتسديد الديون للأشخاص.'**
   String get notebookGuideTransferPayment;
+
+  /// No description provided for @notebookRestoreWarning.
+  ///
+  /// In ar, this message translates to:
+  /// **'استرجاع هذا العنصر سيجعله متاحًا في العمليات الجديدة.'**
+  String get notebookRestoreWarning;
+
+  /// No description provided for @notebookReportTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقرير دفتر المحاسبة'**
+  String get notebookReportTitle;
+
+  /// No description provided for @notebookDate.
+  ///
+  /// In ar, this message translates to:
+  /// **'التاريخ'**
+  String get notebookDate;
+
+  /// No description provided for @notebookType.
+  ///
+  /// In ar, this message translates to:
+  /// **'النوع'**
+  String get notebookType;
+
+  /// No description provided for @notebookTotalIncome.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي الدخل'**
+  String get notebookTotalIncome;
+
+  /// No description provided for @notebookTotalExpenses.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي المصروفات'**
+  String get notebookTotalExpenses;
+
+  /// No description provided for @notebookTransactionsHeader.
+  ///
+  /// In ar, this message translates to:
+  /// **'المعاملات:'**
+  String get notebookTransactionsHeader;
 }
 
 class _AppLocalizationsDelegate

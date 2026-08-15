@@ -222,7 +222,7 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                               transactions,
                               l10n.notebookReports,
                               'SAR',
-                              isAr: Localizations.localeOf(context).languageCode == 'ar'
+                              l10n, Localizations.localeOf(context).languageCode == 'ar'
                             );
                             await Printing.sharePdf(bytes: pdfData, filename: 'accounting_report.pdf');
                           },
@@ -233,12 +233,12 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                           onPressed: () async {
                             final csvData = NotebookCsvService.generateCsv(
                               transactions,
-                              isAr: Localizations.localeOf(context).languageCode == 'ar'
+                              l10n, Localizations.localeOf(context).languageCode == 'ar'
                             );
                             await NotebookCsvService.shareCsv(
                               csvData, 
                               'accounting_report.csv',
-                              isAr: Localizations.localeOf(context).languageCode == 'ar'
+                              l10n, Localizations.localeOf(context).languageCode == 'ar'
                             );
                           },
                         ),

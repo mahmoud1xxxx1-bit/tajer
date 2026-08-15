@@ -679,7 +679,7 @@
   "genericErrorPrefix": "خطأ",
   "notebookCategories": "التصنيفات",
   "notebookTransactions": "الحركات",
-  "notebookNoData": "لا توجد بيانات.",
+  "notebookNoData": "لا توجد بيانات",
   "notebookAddBook": "إضافة دفتر",
   "notebookBookName": "اسم الدفتر",
   "notebookEditBook": "تعديل الدفتر",
@@ -695,7 +695,7 @@
   "notebookArchiveAccount": "أرشفة حساب",
   "notebookAccountName": "اسم الحساب",
   "notebookAccountType": "نوع الحساب",
-  "notebookOpeningBalance": "الرصيد الافتتاحي",
+  "notebookOpeningBalance": "رصيد افتتاحي",
   "notebookAddPerson": "إضافة شخص",
   "notebookEditPerson": "تعديل شخص",
   "notebookArchivePerson": "أرشفة شخص",
@@ -785,5 +785,12 @@
   "notebookOpeningBalanceTitle": "رصيد افتتاحي",
   "notebookGuideIncomeExpense": "الدخل هو أي مبلغ يدخل لحسابك. المصروف هو أي مبلغ يخرج من حسابك.",
   "notebookGuideReceivablePayable": "لي: مبالغ تطالب بها الآخرين. عليّ: مبالغ يطالبك بها الآخرون.",
-  "notebookGuideTransferPayment": "التحويل لنقل المال بين حساباتك. السداد لتسديد الديون للأشخاص."
+  "notebookGuideTransferPayment": "التحويل لنقل المال بين حساباتك. السداد لتسديد الديون للأشخاص.",
+  "notebookRestoreWarning": "استرجاع هذا العنصر سيجعله متاحًا في العمليات الجديدة.",
+  "notebookReportTitle": "تقرير دفتر المحاسبة",
+  "notebookDate": "التاريخ",
+  "notebookType": "النوع",
+  "notebookTotalIncome": "إجمالي الدخل",
+  "notebookTotalExpenses": "إجمالي المصروفات",
+  "notebookTransactionsHeader": "المعاملات:"
 }

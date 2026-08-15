@@ -679,7 +679,7 @@
   "genericErrorPrefix": "Error",
   "notebookCategories": "Categories",
   "notebookTransactions": "Transactions",
-  "notebookNoData": "No data found.",
+  "notebookNoData": "No data",
   "notebookAddBook": "Add Book",
   "notebookBookName": "Book Name",
   "notebookEditBook": "Edit Book",
@@ -785,5 +785,12 @@
   "notebookOpeningBalanceTitle": "Opening Balance",
   "notebookGuideIncomeExpense": "Income is any money entering your account. Expense is any money leaving.",
   "notebookGuideReceivablePayable": "Owed to me: Money you claim from others. I owe: Money others claim from you.",
-  "notebookGuideTransferPayment": "Transfer moves money between your accounts. Payment settles debts with people."
+  "notebookGuideTransferPayment": "Transfer moves money between your accounts. Payment settles debts with people.",
+  "notebookRestoreWarning": "Restoring this item will make it available for new operations.",
+  "notebookReportTitle": "Accounting Report",
+  "notebookDate": "Date",
+  "notebookType": "Type",
+  "notebookTotalIncome": "Total Income",
+  "notebookTotalExpenses": "Total Expenses",
+  "notebookTransactionsHeader": "Transactions:"
 }

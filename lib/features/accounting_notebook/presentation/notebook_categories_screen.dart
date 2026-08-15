@@ -211,7 +211,7 @@ class _NotebookCategoriesScreenState extends ConsumerState<NotebookCategoriesScr
       context, 
       appUser,
       title: l10n.notebookRestore,
-      warning: l10n.localeName == 'ar' ? 'استرجاع هذا العنصر سيجعله متاحًا في العمليات الجديدة.' : 'Restoring this item will make it available for new operations.',
+      warning: l10n.notebookRestoreWarning,
     );
     
     if (proceed && context.mounted) {

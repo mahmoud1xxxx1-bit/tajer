@@ -1626,7 +1626,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notebookTransactions => 'الحركات';
 
   @override
-  String get notebookNoData => 'لا توجد بيانات.';
+  String get notebookNoData => 'لا توجد بيانات';
 
   @override
   String get notebookAddBook => 'إضافة دفتر';
@@ -1674,7 +1674,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notebookAccountType => 'نوع الحساب';
 
   @override
-  String get notebookOpeningBalance => 'الرصيد الافتتاحي';
+  String get notebookOpeningBalance => 'رصيد افتتاحي';
 
   @override
   String get notebookAddPerson => 'إضافة شخص';
@@ -1964,4 +1964,26 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get notebookGuideTransferPayment =>
       'التحويل لنقل المال بين حساباتك. السداد لتسديد الديون للأشخاص.';
+
+  @override
+  String get notebookRestoreWarning =>
+      'استرجاع هذا العنصر سيجعله متاحًا في العمليات الجديدة.';
+
+  @override
+  String get notebookReportTitle => 'تقرير دفتر المحاسبة';
+
+  @override
+  String get notebookDate => 'التاريخ';
+
+  @override
+  String get notebookType => 'النوع';
+
+  @override
+  String get notebookTotalIncome => 'إجمالي الدخل';
+
+  @override
+  String get notebookTotalExpenses => 'إجمالي المصروفات';
+
+  @override
+  String get notebookTransactionsHeader => 'المعاملات:';
 }

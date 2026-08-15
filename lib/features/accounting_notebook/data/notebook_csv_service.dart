@@ -3,21 +3,18 @@ import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/foundation.dart';
 import '../domain/notebook_transaction.dart';
-// Note: for Web, downloading CSV requires html package, but share_plus handles mobile.
+import '../../../l10n/app_localizations.dart';
+import '../utils/notebook_localization_helper.dart';
 
 class NotebookCsvService {
-  static String generateCsv(List<NotebookTransaction> transactions, {bool isAr = true}) {
+  static String generateCsv(List<NotebookTransaction> transactions, AppLocalizations l10n, bool isAr) {
     final buffer = StringBuffer();
     // Headers
-    if (isAr) {
-      buffer.writeln('التاريخ,النوع,المبلغ,ملاحظة');
-    } else {
-      buffer.writeln('Date,Type,Amount,Note');
-    }
+    buffer.writeln('${l10n.notebookDate},${l10n.notebookType},${l10n.amount},${l10n.note}');
     
     for (var t in transactions) {
-      final dateStr = DateFormat('yyyy/MM/dd').format(t.date);
-      final typeStr = _getTypeName(t.type, isAr);
+      final dateStr = DateFormat('yyyy/MM/dd', isAr ? 'ar' : 'en').format(t.date);
+      final typeStr = NotebookLocalizationHelper.getNotebookLocalizedTypeCustom(t.type, l10n);
       final amt = t.amount.toStringAsFixed(2);
       final note = (t.note ?? '').replaceAll(',', ' '); // prevent csv breaking
       buffer.writeln('$dateStr,$typeStr,$amt,$note');
@@ -26,22 +23,9 @@ class NotebookCsvService {
     return buffer.toString();
   }
 
-  static Future<void> shareCsv(String csvData, String filename, {bool isAr = true}) async {
+  static Future<void> shareCsv(String csvData, String filename, AppLocalizations l10n) async {
     final bytes = utf8.encode(csvData);
     final xfile = XFile.fromData(Uint8List.fromList(bytes), mimeType: 'text/csv', name: filename);
-    await Share.shareXFiles([xfile], text: isAr ? 'تقرير دفتر المحاسبة' : 'Accounting Report');
-  }
-
-  static String _getTypeName(String type, bool isAr) {
-    switch(type) {
-      case 'income': return isAr ? 'دخل' : 'Income';
-      case 'expense': return isAr ? 'مصروف' : 'Expense';
-      case 'receivable': return isAr ? 'دين لنا' : 'Receivable';
-      case 'payable': return isAr ? 'دين علينا' : 'Payable';
-      case 'receivable_payment': return isAr ? 'سداد دين لنا' : 'Receivable Payment';
-      case 'payable_payment': return isAr ? 'سداد دين علينا' : 'Payable Payment';
-      case 'account_transfer': return isAr ? 'تحويل حساب' : 'Transfer';
-      default: return type;
-    }
+    await Share.shareXFiles([xfile], text: l10n.notebookReportTitle);
   }
 }

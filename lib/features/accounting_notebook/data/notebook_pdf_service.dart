@@ -4,12 +4,12 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:intl/intl.dart' as intl;
 import '../domain/notebook_transaction.dart';
+import '../../../l10n/app_localizations.dart';
+import '../utils/notebook_localization_helper.dart';
 
 class NotebookPdfService {
   static Future<Uint8List> generateNotebookReportPdf(
-      List<NotebookTransaction> transactions, String title, String currency, {
-        bool isAr = true,
-      }) async {
+      List<NotebookTransaction> transactions, String title, String currency, AppLocalizations l10n, bool isAr) async {
     final pdf = pw.Document();
     
     // Load Arabic Font
@@ -47,17 +47,17 @@ class NotebookPdfService {
                   pw.Text(title,
                       style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
                   pw.Text(
-                      intl.DateFormat('yyyy/MM/dd HH:mm').format(DateTime.now()),
+                      intl.DateFormat('yyyy/MM/dd HH:mm', isAr ? 'ar' : 'en').format(DateTime.now()),
                       style: const pw.TextStyle(fontSize: 12)),
                 ],
               ),
             ),
             pw.SizedBox(height: 20),
-            _buildSummaryRow(currency, totalIncome, totalExpense, netBalance, isAr),
+            _buildSummaryRow(currency, totalIncome, totalExpense, netBalance, l10n),
             pw.SizedBox(height: 20),
-            pw.Text(isAr ? 'المعاملات:' : 'Transactions:', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+            pw.Text(l10n.notebookTransactionsHeader, style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
             pw.SizedBox(height: 10),
-            _buildTransactionsTable(transactions, currency, isAr),
+            _buildTransactionsTable(transactions, currency, l10n, isAr),
           ];
         },
       ),
@@ -66,7 +66,7 @@ class NotebookPdfService {
     return pdf.save();
   }
 
-  static pw.Widget _buildSummaryRow(String currency, double totalIncome, double totalExpense, double netBalance, bool isAr) {
+  static pw.Widget _buildSummaryRow(String currency, double totalIncome, double totalExpense, double netBalance, AppLocalizations l10n) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
@@ -76,9 +76,9 @@ class NotebookPdfService {
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceEvenly,
         children: [
-          _summaryBox(isAr ? 'إجمالي الدخل' : 'Total Income', '${totalIncome.toStringAsFixed(2)} $currency', PdfColors.green900),
-          _summaryBox(isAr ? 'إجمالي المصروفات' : 'Total Expenses', '${totalExpense.toStringAsFixed(2)} $currency', PdfColors.red900),
-          _summaryBox(isAr ? 'صافي الرصيد' : 'Net Balance', '${netBalance.toStringAsFixed(2)} $currency', netBalance >= 0 ? PdfColors.blue900 : PdfColors.red900),
+          _summaryBox(l10n.notebookTotalIncome, '${totalIncome.toStringAsFixed(2)} $currency', PdfColors.green900),
+          _summaryBox(l10n.notebookTotalExpenses, '${totalExpense.toStringAsFixed(2)} $currency', PdfColors.red900),
+          _summaryBox(l10n.notebookNetBalance, '${netBalance.toStringAsFixed(2)} $currency', netBalance >= 0 ? PdfColors.blue900 : PdfColors.red900),
         ],
       ),
     );
@@ -97,35 +97,22 @@ class NotebookPdfService {
     );
   }
 
-  static String _getTypeName(String type, bool isAr) {
-    switch(type) {
-      case 'income': return isAr ? 'دخل' : 'Income';
-      case 'expense': return isAr ? 'مصروف' : 'Expense';
-      case 'receivable': return isAr ? 'دين لنا' : 'Receivable';
-      case 'payable': return isAr ? 'دين علينا' : 'Payable';
-      case 'receivable_payment': return isAr ? 'سداد دين لنا' : 'Receivable Payment';
-      case 'payable_payment': return isAr ? 'سداد دين علينا' : 'Payable Payment';
-      case 'account_transfer': return isAr ? 'تحويل حساب' : 'Transfer';
-      default: return type;
-    }
-  }
-
-  static pw.Widget _buildTransactionsTable(List<NotebookTransaction> transactions, String currency, bool isAr) {
+  static pw.Widget _buildTransactionsTable(List<NotebookTransaction> transactions, String currency, AppLocalizations l10n, bool isAr) {
     if (transactions.isEmpty) {
-      return pw.Text(isAr ? 'لا توجد بيانات' : 'No data', style: const pw.TextStyle(color: PdfColors.grey));
+      return pw.Text(l10n.notebookNoData, style: const pw.TextStyle(color: PdfColors.grey));
     }
 
     return pw.TableHelper.fromTextArray(
       headers: [
-        isAr ? 'التاريخ' : 'Date',
-        isAr ? 'النوع' : 'Type',
-        isAr ? 'المبلغ' : 'Amount',
-        isAr ? 'ملاحظة' : 'Note',
+        l10n.notebookDate,
+        l10n.notebookType,
+        l10n.amount,
+        l10n.note,
       ],
       data: transactions.map((t) {
         return [
-          intl.DateFormat('yyyy/MM/dd').format(t.date),
-          _getTypeName(t.type, isAr),
+          intl.DateFormat('yyyy/MM/dd', isAr ? 'ar' : 'en').format(t.date),
+          NotebookLocalizationHelper.getNotebookLocalizedTypeCustom(t.type, l10n),
           '$currency ${t.amount.toStringAsFixed(2)}',
           t.note ?? '',
         ];
