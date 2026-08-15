@@ -11,6 +11,12 @@ class NotebookGuideScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final overview = isAr
+        ? 'دفتر المحاسبة يساعدك على تسجيل الدخل والمصروف والذمم والحسابات في مكان واحد، لتعرف صافي الدخل وتتابع وضع أموالك بوضوح.'
+        : 'The Accounting Notebook keeps income, expenses, receivables, payables and account balances in one place so you can track net income and your financial position clearly.';
+    final reportsGuide = isAr
+        ? 'تجمع التقارير دخل ومصروف الفترة المختارة وتحسب صافي الدخل، وتعرض أيضًا الذمم وأرصدة الحسابات الحالية لتعرف وضع الدفتر بوضوح.'
+        : 'Reports summarize income and expenses for the selected period and calculate net income. They also show current receivables, payables and account balances.';
 
     return Scaffold(
       appBar: AppBar(
@@ -58,7 +64,7 @@ class NotebookGuideScreen extends StatelessWidget {
           _buildGuideStep(context, isAr,
               title: l10n.notebookGuideSec1Title,
               icon: Icons.account_balance_wallet,
-              content: l10n.notebookGuideSec1Desc),
+              content: overview),
           _buildGuideStep(context, isAr,
               title: l10n.notebookGuideSec2Title,
               icon: Icons.book,
@@ -106,7 +112,7 @@ class NotebookGuideScreen extends StatelessWidget {
           _buildGuideStep(context, isAr,
               title: l10n.notebookGuideSec12Title,
               icon: Icons.bar_chart,
-              content: l10n.notebookGuideSec12Desc),
+              content: reportsGuide),
           _buildGuideStep(context, isAr,
               title: l10n.notebookGuideSec13Title,
               icon: Icons.archive,
