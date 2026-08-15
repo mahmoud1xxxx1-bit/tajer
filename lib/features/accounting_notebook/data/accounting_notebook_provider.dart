@@ -366,7 +366,8 @@ class AccountingNotebookService {
         amount: openingBalance,
         type: 'opening_balance',
         date: DateTime.now(),
-        note: 'Opening Balance', // Fallback, will be translated in UI
+        createdAt: DateTime.now(),
+        note: null, // UI will display translated type
       );
       await _repository.createTransaction(tx);
     }
