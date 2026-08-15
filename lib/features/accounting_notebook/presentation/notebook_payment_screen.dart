@@ -36,187 +36,201 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final title = widget.isReceivablePayment
-        ? l10n.notebookPayment
-        : l10n.notebookPaymentOfDebt;
-
+        ? l10n.notebookReceivePayment
+        : l10n.notebookPayPayment;
     final peopleAsync = ref.watch(notebookPeopleProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(title)),
       body: peopleAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) =>
-              Center(child: Text('${l10n.genericErrorPrefix}: $err')),
-          data: (people) {
-            final personOpt =
-                people.where((p) => p.id == widget.personId).toList();
-            if (personOpt.isEmpty) {
-              return Center(child: Text(l10n.notebookNoData));
-            }
-            final person = personOpt.first;
-            final bookId = person.bookId;
-            final double maxAmount = widget.isReceivablePayment
-                ? person.amountOwedToMe
-                : person.amountIOwe;
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, __) => Center(child: Text(l10n.genericErrorPrefix)),
+        data: (people) {
+          final matches =
+              people.where((p) => p.id == widget.personId).toList();
+          if (matches.isEmpty) {
+            return Center(child: Text(l10n.notebookNoData));
+          }
+          final person = matches.first;
+          final bookId = person.bookId;
+          final maxAmount = widget.isReceivablePayment
+              ? person.amountOwedToMe
+              : person.amountIOwe;
 
-            final accountsAsync = ref.watch(notebookAccountsProvider);
-            return accountsAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, stack) =>
-                    Center(child: Text('${l10n.genericErrorPrefix}: $err')),
-                data: (allAccounts) {
-                  final accounts = allAccounts
-                      .where(
-                          (a) => a.bookId == bookId && !(a.isArchived))
-                      .toList();
-                  if (accounts.isEmpty) {
-                    return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(l10n.notebookEmptyAccounts,
-                              textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.bodyLarge),
-                          const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: () => context.push('/notebook/accounts'),
-                            child: Text(l10n.notebookCreateAccountCTA),
-                          )
-                        ],
+          if (maxAmount <= 0) {
+            return Center(child: Text(l10n.notebookNoData));
+          }
+
+          final accountsAsync = ref.watch(notebookAccountsProvider);
+          return accountsAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (_, __) => Center(child: Text(l10n.genericErrorPrefix)),
+            data: (allAccounts) {
+              final accounts = allAccounts
+                  .where((a) => a.bookId == bookId && !a.isArchived)
+                  .toList();
+              if (accounts.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(l10n.notebookEmptyAccounts,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyLarge),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () {
+                          ref
+                              .read(notebookCurrentBookIdProvider.notifier)
+                              .state = bookId;
+                          context.push('/notebook/accounts');
+                        },
+                        child: Text(l10n.notebookCreateAccountCTA),
                       ),
-                    );
-                  }
+                    ],
+                  ),
+                );
+              }
 
-                  if (_selectedAccountId == null ||
-                      !accounts.any((a) => a.id == _selectedAccountId)) {
-                    _selectedAccountId = accounts.first.id;
-                  }
+              if (_selectedAccountId == null ||
+                  !accounts.any((a) => a.id == _selectedAccountId)) {
+                _selectedAccountId = accounts.first.id;
+              }
 
-                  return Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text('${l10n.notebookPersonName}: ${person.name}',
-                              style: Theme.of(context).textTheme.titleMedium),
-                          const SizedBox(height: 8),
-                          Text(
-                              '${l10n.amount}: ${maxAmount.toStringAsFixed(2)}',
-                              style: Theme.of(context).textTheme.titleMedium),
-                          const SizedBox(height: 16),
-                          DropdownButtonFormField<String>(
-                            value: _selectedAccountId,
-                            decoration:
-                                InputDecoration(labelText: l10n.account),
-                            items: accounts
-                                .map((a) => DropdownMenuItem(
-                                    value: a.id, child: Text(a.name)))
-                                .toList(),
-                            onChanged: (val) =>
-                                setState(() => _selectedAccountId = val),
-                          ),
-                          const SizedBox(height: 16),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    _amountController.clear();
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                            content: Text(l10n
-                                                .notebookPartialPaymentHint)));
-                                  },
-                                  child: Text(l10n.notebookPartialPayment),
-                                ),
+              return ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  Text('${l10n.notebookPersonName}: ${person.name}',
+                      style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 8),
+                  Text('${l10n.amount}: ${maxAmount.toStringAsFixed(2)}',
+                      style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 16),
+                  Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        DropdownButtonFormField<String>(
+                          value: _selectedAccountId,
+                          isExpanded: true,
+                          decoration: InputDecoration(labelText: l10n.account),
+                          items: accounts
+                              .map((a) => DropdownMenuItem(
+                                    value: a.id,
+                                    child: Text(a.name,
+                                        overflow: TextOverflow.ellipsis),
+                                  ))
+                              .toList(),
+                          onChanged: (value) =>
+                              setState(() => _selectedAccountId = value),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: OutlinedButton(
+                                onPressed: () => _amountController.clear(),
+                                child: Text(l10n.notebookPartialPayment),
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () {
-                                    _amountController.text =
-                                        maxAmount.toStringAsFixed(2);
-                                  },
-                                  child: Text(l10n.notebookFullPayment),
-                                ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () => _amountController.text =
+                                    maxAmount.toStringAsFixed(2),
+                                child: Text(l10n.notebookFullPayment),
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _amountController,
-                            decoration: InputDecoration(labelText: l10n.amount),
-                            keyboardType: TextInputType.number,
-                            validator: (val) {
-                              if (val == null || val.isEmpty)
-                                return l10n.notebookRequired;
-                              if (double.tryParse(val) == null ||
-                                  double.parse(val) <= 0)
-                                return l10n.notebookInvalidAmount;
-                              if (double.parse(val) > maxAmount)
-                                return l10n.notebookOverpaymentError;
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _noteController,
-                            decoration:
-                                InputDecoration(labelText: l10n.notebookNote),
-                          ),
-                          const Spacer(),
-                          ElevatedButton(
-                            onPressed: () async {
-                              if (_formKey.currentState!.validate()) {
-                                final amt =
-                                    double.parse(_amountController.text);
-                                final svc =
-                                    ref.read(accountingNotebookProvider);
-                                try {
-                                  await svc.recordDebtPayment(
-                                      bookId: bookId,
-                                      personId: widget.personId,
-                                      accountId: _selectedAccountId!,
-                                      amount: amt,
-                                      isReceivablePayment:
-                                          widget.isReceivablePayment,
-                                      note: _noteController.text);
-                                  if (mounted) context.pop();
-                                } catch (e) {
-                                  if (e
-                                      .toString()
-                                      .contains('insufficient_balance')) {
-                                    final selectedAccount = accounts.firstWhere(
-                                        (a) => a.id == _selectedAccountId);
-                                    final msg =
-                                        l10n.notebookInsufficientBalance(
-                                      amt.toStringAsFixed(2),
-                                      selectedAccount.balance
-                                          .toStringAsFixed(2),
-                                    );
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                            content: Text(msg),
-                                            backgroundColor: Colors.red));
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                            content: Text(
-                                                '${l10n.genericErrorPrefix}: $e')));
-                                  }
-                                }
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _amountController,
+                          decoration: InputDecoration(labelText: l10n.amount),
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          validator: (value) {
+                            final amount = double.tryParse(value ?? '');
+                            if (value == null || value.trim().isEmpty) {
+                              return l10n.notebookRequired;
+                            }
+                            if (amount == null || amount <= 0) {
+                              return l10n.notebookInvalidAmount;
+                            }
+                            if (amount > maxAmount) {
+                              return l10n.notebookOverpaymentError;
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: _noteController,
+                          decoration: InputDecoration(labelText: l10n.notebookNote),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: () async {
+                            if (!_formKey.currentState!.validate()) return;
+                            final amount = double.parse(_amountController.text);
+                            try {
+                              await ref
+                                  .read(accountingNotebookProvider)
+                                  .recordDebtPayment(
+                                    bookId: bookId,
+                                    personId: widget.personId,
+                                    accountId: _selectedAccountId!,
+                                    amount: amount,
+                                    isReceivablePayment:
+                                        widget.isReceivablePayment,
+                                    note: _noteController.text.trim(),
+                                  );
+                              if (mounted) context.pop();
+                            } catch (error) {
+                              if (!mounted) return;
+                              if (error
+                                  .toString()
+                                  .contains('insufficient_balance')) {
+                                final account = accounts.firstWhere(
+                                    (a) => a.id == _selectedAccountId);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      l10n.notebookInsufficientBalance(
+                                        amount.toStringAsFixed(2),
+                                        account.balance.toStringAsFixed(2),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              } else if (error
+                                  .toString()
+                                  .contains('overpayment')) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content:
+                                          Text(l10n.notebookOverpaymentError)),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(l10n.genericErrorPrefix)),
+                                );
                               }
-                            },
-                            child: Text(l10n.save),
-                          )
-                        ],
-                      ),
+                            }
+                          },
+                          child: Text(title),
+                        ),
+                      ],
                     ),
-                  );
-                });
-          }),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
