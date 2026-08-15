@@ -30,7 +30,8 @@ class _NotebookAccountsScreenState extends ConsumerState<NotebookAccountsScreen>
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $err')),
         data: (books) {
-          if (books.isEmpty) {
+          final activeBooks = books.where((b) => !(b.isArchived ?? false)).toList();
+          if (activeBooks.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -46,8 +47,8 @@ class _NotebookAccountsScreenState extends ConsumerState<NotebookAccountsScreen>
             );
           }
 
-          if (_selectedBookId == null || !books.any((b) => b.id == _selectedBookId)) {
-            _selectedBookId = books.first.id;
+          if (_selectedBookId == null || !activeBooks.any((b) => b.id == _selectedBookId)) {
+            _selectedBookId = activeBooks.first.id;
           }
 
           final accountsAsync = ref.watch(notebookAccountsProvider);
@@ -84,7 +85,7 @@ class _NotebookAccountsScreenState extends ConsumerState<NotebookAccountsScreen>
                 child: DropdownButtonFormField<String>(
                   value: _selectedBookId,
                   decoration: InputDecoration(labelText: l10n.notebookBook),
-                  items: books.where((b) => !b.isArchived).map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
+                  items: activeBooks.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
                   onChanged: (val) => setState(() => _selectedBookId = val),
                 ),
               ),
@@ -290,7 +291,8 @@ class _AddAccountDialogState extends ConsumerState<_AddAccountDialog> {
         loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
         error: (err, stack) => Text('${l10n.genericErrorPrefix}: $err'),
         data: (books) {
-          if (books.isEmpty) {
+          final activeBooks = books.where((b) => !(b.isArchived ?? false)).toList();
+          if (activeBooks.isEmpty) {
             return Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -307,8 +309,8 @@ class _AddAccountDialogState extends ConsumerState<_AddAccountDialog> {
             );
           }
 
-          if (bookId == null || !books.any((b) => b.id == bookId)) {
-            bookId = books.first.id;
+          if (bookId == null || !activeBooks.any((b) => b.id == bookId)) {
+            bookId = activeBooks.first.id;
           }
 
           return SingleChildScrollView(
@@ -318,7 +320,7 @@ class _AddAccountDialogState extends ConsumerState<_AddAccountDialog> {
                 DropdownButtonFormField<String?>(
                   value: bookId,
                   decoration: InputDecoration(labelText: l10n.notebookBook),
-                  items: books.where((b) => !b.isArchived).map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
+                  items: activeBooks.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
                   onChanged: (val) => setState(() => bookId = val),
                 ),
                 const SizedBox(height: 16),

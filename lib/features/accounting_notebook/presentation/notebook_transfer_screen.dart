@@ -38,7 +38,8 @@ class _NotebookTransferScreenState extends ConsumerState<NotebookTransferScreen>
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
         data: (books) {
-          if (books.isEmpty) {
+          final activeBooks = books.where((b) => !(b.isArchived ?? false)).toList();
+          if (activeBooks.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -54,8 +55,8 @@ class _NotebookTransferScreenState extends ConsumerState<NotebookTransferScreen>
             );
           }
 
-          if (_selectedBookId == null || !books.any((b) => b.id == _selectedBookId)) {
-            _selectedBookId = books.first.id;
+          if (_selectedBookId == null || !activeBooks.any((b) => b.id == _selectedBookId)) {
+            _selectedBookId = activeBooks.first.id;
           }
 
           final accountsAsync = ref.watch(notebookAccountsProvider);
