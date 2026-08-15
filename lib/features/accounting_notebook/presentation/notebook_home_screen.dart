@@ -22,6 +22,8 @@ class NotebookHomeScreen extends ConsumerWidget {
     final peopleAsync = ref.watch(notebookPeopleProvider);
     final booksAsync = ref.watch(notebookBooksProvider);
     final currentBookId = ref.watch(notebookCurrentBookIdProvider);
+    final currentCurrency = ref.watch(currencyProvider);
+    final currencyCode = currentCurrency.code;
     final prefs = ref.watch(sharedPreferencesProvider);
     final localDismissed = ref.watch(_welcomeDismissedProvider);
     final hasDismissedWelcome = localDismissed ??
@@ -192,7 +194,7 @@ class NotebookHomeScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      NumberFormat.currency(symbol: 'SAR ')
+                      NumberFormat.currency(symbol: '$currencyCode ')
                           .format(totalAccountBalance),
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
@@ -205,10 +207,10 @@ class NotebookHomeScreen extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildSummaryItem(
-                            context, l10n.income, totalIncome, Colors.green),
-                        _buildSummaryItem(
-                            context, l10n.expense, totalExpense, Colors.red),
+                        _buildSummaryItem(context, l10n.income, totalIncome,
+                            Colors.green, currencyCode),
+                        _buildSummaryItem(context, l10n.expense, totalExpense,
+                            Colors.red, currencyCode),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -220,12 +222,14 @@ class NotebookHomeScreen extends ConsumerWidget {
                           NotebookTerminology.accountsReceivable(context),
                           totalOwedToMe,
                           Colors.blue,
+                          currencyCode,
                         ),
                         _buildSummaryItem(
                           context,
                           NotebookTerminology.accountsPayable(context),
                           totalIOwe,
                           Colors.orange,
+                          currencyCode,
                         ),
                       ],
                     ),
@@ -430,8 +434,8 @@ class NotebookHomeScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSummaryItem(
-      BuildContext context, String label, double amount, Color color) {
+  Widget _buildSummaryItem(BuildContext context, String label, double amount,
+      Color color, String currencyCode) {
     return Flexible(
       child: Column(
         children: [
@@ -441,7 +445,7 @@ class NotebookHomeScreen extends ConsumerWidget {
                   fontWeight: FontWeight.w600, color: Colors.grey)),
           const SizedBox(height: 4),
           Text(
-            NumberFormat.currency(symbol: 'SAR ').format(amount),
+            NumberFormat.currency(symbol: '$currencyCode ').format(amount),
             textAlign: TextAlign.center,
             style: TextStyle(
                 fontWeight: FontWeight.bold, color: color, fontSize: 16),
