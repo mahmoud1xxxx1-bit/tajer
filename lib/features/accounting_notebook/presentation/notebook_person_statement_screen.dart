@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:firebase_ui_firestore/firebase_ui_firestore.dart';
-
-import '../domain/notebook_transaction.dart';
-import '../data/accounting_notebook_repository.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
 import '../../../../core/services/guest_limit_service.dart';
@@ -19,12 +15,19 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final peopleAsync = ref.watch(notebookPeopleProvider);
+    final transactionsAsync = ref.watch(notebookTransactionsProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notebookStatement)),
       body: peopleAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, __) => Center(child: Text(l10n.genericErrorPrefix)),
         data: (people) {
-          final person = people.firstWhere((p) => p.id == personId);
+          final matches = people.where((p) => p.id == personId).toList();
+          if (matches.isEmpty) {
+            return Center(child: Text(l10n.notebookNoData));
+          }
+          final person = matches.first;
           final netBalance = person.amountOwedToMe - person.amountIOwe;
 
           return Column(
@@ -32,21 +35,19 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
               Card(
                 margin: const EdgeInsets.all(16),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
                       Text(person.name,
                           style: Theme.of(context).textTheme.headlineSmall),
                       if (person.notes != null && person.notes!.isNotEmpty) ...[
                         const SizedBox(height: 4),
-                        Text(
-                          person.notes!,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(color: Colors.grey),
-                          textAlign: TextAlign.center,
-                        ),
+                        Text(person.notes!,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(color: Colors.grey)),
                       ],
                       const SizedBox(height: 16),
                       Row(
@@ -81,112 +82,119 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                       const SizedBox(height: 12),
                       const Divider(),
                       const SizedBox(height: 8),
-                      Column(
-                        children: [
-                          Text(l10n.notebookNetBalance,
-                              style: Theme.of(context).textTheme.titleMedium),
-                          const SizedBox(height: 4),
-                          Text(
-                            netBalance.toStringAsFixed(2),
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                              color: netBalance > 0
-                                  ? Colors.green
-                                  : (netBalance < 0 ? Colors.red : Colors.grey),
-                            ),
-                          ),
-                        ],
+                      Text(l10n.notebookNetBalance,
+                          style: Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height: 4),
+                      Text(
+                        netBalance.toStringAsFixed(2),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: netBalance > 0
+                              ? Colors.green
+                              : (netBalance < 0 ? Colors.red : Colors.grey),
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
               Expanded(
-                child: Builder(builder: (context) {
-                  final repo = ref.watch(accountingNotebookRepositoryProvider);
-                  if (repo == null)
-                    return const Center(child: CircularProgressIndicator());
+                child: transactionsAsync.when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (_, __) =>
+                      Center(child: Text(l10n.genericErrorPrefix)),
+                  data: (allTransactions) {
+                    // Client-side filtering intentionally avoids dynamic
+                    // composite-index failures and preserves book isolation.
+                    final transactions = allTransactions
+                        .where((tx) =>
+                            tx.personId == personId && tx.bookId == person.bookId)
+                        .toList()
+                      ..sort((a, b) => b.date.compareTo(a.date));
 
-                  final query = repo.transactionsRef
-                      .where('personId', isEqualTo: personId)
-                      .orderBy('date', descending: true)
-                      .withConverter<NotebookTransaction>(
-                        fromFirestore: (snapshot, _) =>
-                            NotebookTransaction.fromMap(
-                                snapshot.data()!, snapshot.id),
-                        toFirestore: (tx, _) => tx.toMap(),
-                      );
+                    if (transactions.isEmpty) {
+                      return Center(
+                          child: Text(l10n.notebookNoTransactionsYet));
+                    }
 
-                  return FirestoreListView<NotebookTransaction>(
-                    query: query,
-                    pageSize: 50,
-                    emptyBuilder: (context) =>
-                        Center(child: Text(l10n.notebookNoTransactionsYet)),
-                    loadingBuilder: (context) =>
-                        const Center(child: CircularProgressIndicator()),
-                    errorBuilder: (context, error, stackTrace) => Center(
-                        child: Text('${l10n.genericErrorPrefix}: $error')),
-                    itemBuilder: (context, doc) {
-                      final tx = doc.data();
-                      final isPositive = tx.type == 'receivable' ||
-                          tx.type == 'payable_payment';
-                      return ListTile(
-                        title: Text(NotebookLocalizationHelper
-                            .getNotebookLocalizedTypeCustom(tx.type, l10n)),
-                        subtitle: Text(
-                            '${DateFormat.yMMMd(Localizations.localeOf(context).languageCode).format(tx.date)}${tx.note != null && tx.note!.isNotEmpty ? ' - ${tx.note}' : ''}'),
-                        trailing: Text(
-                          '${isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            color: isPositive ? Colors.green : Colors.red,
-                            fontWeight: FontWeight.bold,
+                    return ListView.builder(
+                      itemCount: transactions.length,
+                      itemBuilder: (context, index) {
+                        final tx = transactions[index];
+                        final isPositive = tx.type == 'receivable' ||
+                            tx.type == 'payable_payment';
+                        return ListTile(
+                          title: Text(NotebookLocalizationHelper
+                              .getNotebookLocalizedTypeCustom(tx.type, l10n)),
+                          subtitle: Text(
+                            '${DateFormat.yMMMd(Localizations.localeOf(context).languageCode).format(tx.date)}${tx.note != null && tx.note!.isNotEmpty ? ' - ${tx.note}' : ''}',
                           ),
-                        ),
-                      );
-                    },
-                  );
-                }),
+                          trailing: Text(
+                            '${isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              color: isPositive ? Colors.green : Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: Row(
                   children: [
                     Expanded(
-                      child: ElevatedButton(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.call_received),
                         onPressed: person.amountOwedToMe > 0
                             ? () async {
                                 if (await GuestLimitService
-                                    .canAddNotebookTransaction(context, ref))
-                                  context
-                                      .push('/notebook/payment/$personId/true');
+                                    .canAddNotebookTransaction(context, ref)) {
+                                  ref
+                                      .read(notebookCurrentBookIdProvider.notifier)
+                                      .state = person.bookId;
+                                  if (context.mounted) {
+                                    context.push(
+                                        '/notebook/payment/$personId/true');
+                                  }
+                                }
                               }
                             : null,
-                        child: Text(l10n.notebookPayment),
+                        child: Text(l10n.notebookReceivePayment),
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      child: ElevatedButton(
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.call_made),
                         onPressed: person.amountIOwe > 0
                             ? () async {
                                 if (await GuestLimitService
-                                    .canAddNotebookTransaction(context, ref))
-                                  context.push(
-                                      '/notebook/payment/$personId/false');
+                                    .canAddNotebookTransaction(context, ref)) {
+                                  ref
+                                      .read(notebookCurrentBookIdProvider.notifier)
+                                      .state = person.bookId;
+                                  if (context.mounted) {
+                                    context.push(
+                                        '/notebook/payment/$personId/false');
+                                  }
+                                }
                               }
                             : null,
-                        child: Text(l10n.notebookPayment),
+                        child: Text(l10n.notebookPayPayment),
                       ),
                     ),
                   ],
                 ),
-              )
+              ),
             ],
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(child: Text('${l10n.genericErrorPrefix}: $e')),
       ),
     );
   }
