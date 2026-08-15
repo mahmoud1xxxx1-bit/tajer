@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
+import '../utils/notebook_terminology.dart';
 
 class DebtScreen extends ConsumerStatefulWidget {
   final bool isOwedToMe;
@@ -37,7 +38,9 @@ class _DebtScreenState extends ConsumerState<DebtScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final title = widget.isOwedToMe ? l10n.moneyOwedToMe : l10n.moneyIOwe;
+    final title = widget.isOwedToMe
+        ? NotebookTerminology.accountsReceivable(context)
+        : NotebookTerminology.accountsPayable(context);
     final booksAsync = ref.watch(notebookBooksProvider);
     final peopleAsync = ref.watch(notebookPeopleProvider);
     final sharedBookId = ref.watch(notebookCurrentBookIdProvider);
@@ -98,7 +101,9 @@ class _DebtScreenState extends ConsumerState<DebtScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        l10n.notebookGuideDebt,
+                        widget.isOwedToMe
+                            ? l10n.notebookReceivableHint
+                            : l10n.notebookPayableHint,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                               color: Theme.of(context).colorScheme.primary,
                             ),
@@ -207,7 +212,9 @@ class _DebtScreenState extends ConsumerState<DebtScreen> {
                             onPressed: () async {
                               if (!_formKey.currentState!.validate()) return;
                               try {
-                                await ref.read(accountingNotebookProvider).createDebt(
+                                await ref
+                                    .read(accountingNotebookProvider)
+                                    .createDebt(
                                       bookId: selectedBookId,
                                       personId: _selectedPersonId!,
                                       amount:
