@@ -37,7 +37,19 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
         error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
         data: (accounts) {
           if (accounts.isEmpty) {
-            return Center(child: Text(l10n.notebookAccountsCreateFirst));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(l10n.notebookEmptyAccounts, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.push('/notebook/accounts'),
+                    child: Text(l10n.notebookCreateAccountCTA),
+                  )
+                ],
+              ),
+            );
           }
           if (_selectedAccountId == null) _selectedAccountId = accounts.first.id;
 
@@ -46,7 +58,19 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
             error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
             data: (books) {
               if (books.isEmpty) {
-                return Center(child: Text(l10n.notebookCreateBookFirst));
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(l10n.notebookEmptyBooks, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => context.push('/notebook/books'),
+                        child: Text(l10n.notebookCreateBookCTA),
+                      )
+                    ],
+                  ),
+                );
               }
               if (_selectedBookId == null) _selectedBookId = books.first.id;
 
@@ -86,6 +110,7 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
                                 child: ElevatedButton(
                                   onPressed: () {
                                     _amountController.clear();
+                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.notebookPartialPaymentHint)));
                                   },
                                   child: Text(l10n.notebookPartialPayment ),
                                 ),
@@ -109,7 +134,7 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
                             validator: (val) {
                               if (val == null || val.isEmpty) return l10n.notebookRequired;
                               if (double.tryParse(val) == null || double.parse(val) <= 0) return l10n.notebookInvalidAmount;
-                              if (double.parse(val) > maxAmount) return l10n.notebookAmountExceedsDebt;
+                              if (double.parse(val) > maxAmount) return l10n.notebookOverpaymentError;
                               return null;
                             },
                           ),

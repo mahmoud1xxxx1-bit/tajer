@@ -752,8 +752,24 @@
   "notebookNetIncome": "Net Income",
   "notebookDebtAndAccounts": "Debt & Accounts",
   "permCanAccessAccountingNotebook": "Accounting Notebook",
-  "permCanAccessAccountingNotebookDesc": "Allow employee to access and manage accounting notebook data"
-,
+  "permCanAccessAccountingNotebookDesc": "Allow employee to access and manage accounting notebook data",
   "notebookBalance": "Balance",
-  "notebookAccountType": "Account Type"
+  "notebookEmptyBooks": "Start by creating a book to organize your accounts.",
+  "notebookEmptyAccounts": "Please create a financial account first to record transactions.",
+  "notebookEmptyPeople": "Add a person first (customer or supplier) to record amounts.",
+  "notebookCreateBookCTA": "Create Book",
+  "notebookCreateAccountCTA": "Create Account",
+  "notebookAddPersonCTA": "Add Person",
+  "notebookIncomeHint": "Record money entering your accounts. (e.g., cash sales, deposit)",
+  "notebookExpenseHint": "Record money leaving your accounts. (e.g., rent, purchases, maintenance)",
+  "notebookReceivableHint": "Use (Receivable) when someone owes you money.",
+  "notebookPayableHint": "Use (Payable) when you owe someone money.",
+  "notebookFilterType": "Transaction Type",
+  "notebookFilterBook": "Book",
+  "notebookFilterAccount": "Account",
+  "notebookReceivePayment": "Receive Payment",
+  "notebookPayPayment": "Pay Amount",
+  "notebookOverpaymentError": "Amount entered exceeds the remaining balance",
+  "notebookSameAccountError": "Cannot transfer to the same account",
+  "notebookPartialPaymentHint": "Amount to pay"
 }

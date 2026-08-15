@@ -35,7 +35,19 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
         error: (err, stack) => Center(child: Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $err')),
         data: (accounts) {
           if (accounts.isEmpty) {
-            return Center(child: Text(l10n.notebookAccountsCreateFirst));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(l10n.notebookEmptyAccounts, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => context.push('/notebook/accounts'),
+                    child: Text(l10n.notebookCreateAccountCTA),
+                  )
+                ],
+              ),
+            );
           }
           if (_selectedAccountId == null) _selectedAccountId = accounts.first.id;
 
@@ -44,7 +56,19 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
             error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
             data: (books) {
               if (books.isEmpty) {
-                return Center(child: Text(l10n.notebookNoData));
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(l10n.notebookEmptyBooks, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => context.push('/notebook/books'),
+                        child: Text(l10n.notebookCreateBookCTA),
+                      )
+                    ],
+                  ),
+                );
               }
               if (_selectedBookId == null) _selectedBookId = books.first.id;
 
@@ -54,7 +78,19 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
                 data: (allCats) {
                   final cats = allCats.where((c) => c.type == (widget.isIncome ? 'income' : 'expense')).toList();
                   if (cats.isEmpty) {
-                    return Center(child: Text(l10n.notebookNoData));
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(l10n.notebookNoCategoriesFound, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () => context.push('/notebook/categories'),
+                            child: Text(l10n.add),
+                          )
+                        ],
+                      ),
+                    );
                   }
                   if (_selectedCategoryId == null || !cats.any((c) => c.id == _selectedCategoryId)) {
                     _selectedCategoryId = cats.first.id;
@@ -66,6 +102,8 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
                       key: _formKey,
                       child: Column(
                         children: [
+                          Text(widget.isIncome ? l10n.notebookIncomeHint : l10n.notebookExpenseHint, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+                          const SizedBox(height: 16),
                           DropdownButtonFormField<String>(initialValue: _selectedBookId,
                             decoration: InputDecoration(labelText: l10n.notebookBooks),
                             items: books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),

@@ -1,43 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
-import '../../../l10n/app_localizations.dart';
-import '../data/accounting_notebook_provider.dart';
-import '../utils/notebook_localization_helper.dart';
+import os
 
-class NotebookTransactionsScreen extends ConsumerStatefulWidget {
-  const NotebookTransactionsScreen({super.key});
+tx_path = 'lib/features/accounting_notebook/presentation/notebook_transactions_screen.dart'
 
-  @override
-  ConsumerState<NotebookTransactionsScreen> createState() => _NotebookTransactionsScreenState();
-}
-
-class _NotebookTransactionsScreenState extends ConsumerState<NotebookTransactionsScreen> {
-  String? _selectedType;
-  DateTime? _startDate;
-  DateTime? _endDate;
-  String? _selectedPersonId;
-  String? _selectedAccountId;
-  String? _selectedBookId;
-  String? _selectedCategoryId;
-
-  @override
-  
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final txAsync = ref.watch(notebookTransactionsProvider);
-    final peopleAsync = ref.watch(notebookPeopleProvider);
-    final accountsAsync = ref.watch(notebookAccountsProvider);
-    final booksAsync = ref.watch(notebookBooksProvider);
-    final categoriesAsync = ref.watch(notebookCategoriesProvider);
-
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.notebookTransactions)),
-      body: Column(
-        children: [
-          Theme(
+new_filters = '''          Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
               title: Text(l10n.notebookFilterType, style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -185,61 +150,18 @@ class _NotebookTransactionsScreenState extends ConsumerState<NotebookTransaction
                 ),
               ],
             ),
-          ),          const Divider(),
-          Expanded(
-            child: txAsync.when(
-              data: (transactions) {
-                var filtered = transactions;
-                if (_selectedType != null) {
-                  filtered = filtered.where((t) => t.type == _selectedType).toList();
-                }
-                if (_startDate != null && _endDate != null) {
-                  filtered = filtered.where((t) => t.date.isAfter(_startDate!) && t.date.isBefore(_endDate!)).toList();
-                }
-                if (_selectedPersonId != null) {
-                  filtered = filtered.where((t) => t.personId == _selectedPersonId).toList();
-                }
-                if (_selectedAccountId != null) {
-                  filtered = filtered.where((t) => t.accountId == _selectedAccountId).toList();
-                }
-                if (_selectedBookId != null) {
-                  filtered = filtered.where((t) => t.bookId == _selectedBookId).toList();
-                }
-                if (_selectedCategoryId != null) {
-                  filtered = filtered.where((t) => t.categoryId == _selectedCategoryId).toList();
-                }
+          ),'''
 
-                if (filtered.isEmpty) {
-                  return Center(child: Text(l10n.notebookNoTransactionsYet));
-                }
-                return ListView.builder(
-                  itemCount: filtered.length,
-                  itemBuilder: (context, index) {
-                    final tx = filtered[index];
-                    final isPositive = tx.type == 'income' || tx.type == 'receivable_payment';
-                    return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      child: ListTile(
-                        title: Text(tx.note ?? getNotebookLocalizedType(context, tx.type)),
-                        subtitle: Text(DateFormat.yMMMd().format(tx.date)),
-                        trailing: Text(
-                          '${isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            color: isPositive ? Colors.green : Colors.red,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, st) => Center(child: Text('${l10n.genericErrorPrefix}: $e')),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
+with open(tx_path, 'r', encoding='utf-8') as f:
+    content = f.read()
+
+# Replace the exact block
+idx_start = content.find('          Padding(')
+idx_end = content.find('            ),\n          ),')
+if idx_start != -1 and idx_end != -1:
+    idx_end += len('            ),\\n          ),')
+    new_content = content[:idx_start] + new_filters + content[idx_end:]
+    with open(tx_path, 'w', encoding='utf-8') as f:
+        f.write(new_content)
+else:
+    print("Could not find the block to replace")

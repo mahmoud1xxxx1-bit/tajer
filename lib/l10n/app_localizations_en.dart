@@ -1853,4 +1853,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notebookBalance => 'Balance';
+
+  @override
+  String get notebookEmptyBooks =>
+      'Start by creating a book to organize your accounts.';
+
+  @override
+  String get notebookEmptyAccounts =>
+      'Please create a financial account first to record transactions.';
+
+  @override
+  String get notebookEmptyPeople =>
+      'Add a person first (customer or supplier) to record amounts.';
+
+  @override
+  String get notebookCreateBookCTA => 'Create Book';
+
+  @override
+  String get notebookCreateAccountCTA => 'Create Account';
+
+  @override
+  String get notebookAddPersonCTA => 'Add Person';
+
+  @override
+  String get notebookIncomeHint =>
+      'Record money entering your accounts. (e.g., cash sales, deposit)';
+
+  @override
+  String get notebookExpenseHint =>
+      'Record money leaving your accounts. (e.g., rent, purchases, maintenance)';
+
+  @override
+  String get notebookReceivableHint =>
+      'Use (Receivable) when someone owes you money.';
+
+  @override
+  String get notebookPayableHint => 'Use (Payable) when you owe someone money.';
+
+  @override
+  String get notebookFilterType => 'Transaction Type';
+
+  @override
+  String get notebookFilterBook => 'Book';
+
+  @override
+  String get notebookFilterAccount => 'Account';
+
+  @override
+  String get notebookReceivePayment => 'Receive Payment';
+
+  @override
+  String get notebookPayPayment => 'Pay Amount';
+
+  @override
+  String get notebookOverpaymentError =>
+      'Amount entered exceeds the remaining balance';
+
+  @override
+  String get notebookSameAccountError => 'Cannot transfer to the same account';
+
+  @override
+  String get notebookPartialPaymentHint => 'Amount to pay';
 }

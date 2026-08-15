@@ -1592,18 +1592,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get book => 'الدفتر';
 
   @override
-  String get notebookAccountsCreateFirst =>
-      'يرجى إنشاء حساب مالي أولاً من قسم الحسابات المالية';
+  String get notebookAccountsCreateFirst => 'الرجاء إنشاء حساب مالي أولاً';
 
   @override
   String get notebookPeopleCreateFirst =>
       'يرجى إنشاء جهة اتصال أولاً من قسم الأشخاص';
 
   @override
-  String get notebookNoAccountsFound => 'لا توجد حسابات.';
+  String get notebookNoAccountsFound => 'لا توجد حسابات';
 
   @override
-  String get notebookNoPeopleFound => 'لا يوجد أشخاص.';
+  String get notebookNoPeopleFound => 'لا يوجد أشخاص';
 
   @override
   String get notebookNoTransactionsYet => 'لا توجد حركات بعد';
@@ -1852,4 +1851,64 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notebookBalance => 'الرصيد';
+
+  @override
+  String get notebookEmptyBooks => 'ابدأ بإنشاء دفتر لتنظيم حسابات نشاطك.';
+
+  @override
+  String get notebookEmptyAccounts =>
+      'يرجى إنشاء حساب مالي أولاً لتسجيل العمليات.';
+
+  @override
+  String get notebookEmptyPeople =>
+      'أضف شخصًا أولاً (عميل أو مورد) لتسجيل المبالغ.';
+
+  @override
+  String get notebookCreateBookCTA => 'إنشاء دفتر';
+
+  @override
+  String get notebookCreateAccountCTA => 'إنشاء حساب مالي';
+
+  @override
+  String get notebookAddPersonCTA => 'إضافة شخص';
+
+  @override
+  String get notebookIncomeHint =>
+      'سجل هنا الأموال التي دخلت إلى أحد حساباتك. (مثال: مبيعات نقدية، دخل إضافي، إيداع)';
+
+  @override
+  String get notebookExpenseHint =>
+      'سجل هنا الأموال التي خرجت من أحد حساباتك. (مثال: إيجار، مشتريات، صيانة)';
+
+  @override
+  String get notebookReceivableHint =>
+      'استخدم (لي) عندما يكون لك مبلغ عند عميل أو شخص آخر.';
+
+  @override
+  String get notebookPayableHint =>
+      'استخدم (علي) عندما يكون عليك مبلغ لمورد أو شخص آخر.';
+
+  @override
+  String get notebookFilterType => 'نوع الحركة';
+
+  @override
+  String get notebookFilterBook => 'الدفتر';
+
+  @override
+  String get notebookFilterAccount => 'الحساب';
+
+  @override
+  String get notebookReceivePayment => 'استلام دفعة';
+
+  @override
+  String get notebookPayPayment => 'دفع مبلغ';
+
+  @override
+  String get notebookOverpaymentError => 'المبلغ المدخل أكبر من الرصيد المتبقي';
+
+  @override
+  String get notebookSameAccountError => 'لا يمكن التحويل لنفس الحساب';
+
+  @override
+  String get notebookPartialPaymentHint => 'المبلغ المراد سداده';
 }

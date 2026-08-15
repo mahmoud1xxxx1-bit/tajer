@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
 import '../../../../core/services/guest_limit_service.dart';
@@ -17,7 +18,31 @@ class NotebookPeopleScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.notebookPeople)),
       body: peopleAsync.when(
         data: (people) {
-          if (people.isEmpty) return Center(child: Text(AppLocalizations.of(context)!.notebookNoPeopleFound));
+              final booksAsync = ref.watch(notebookBooksProvider);
+          if (people.isEmpty) {
+            return booksAsync.maybeWhen(
+              data: (books) {
+                if (books.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(l10n.notebookEmptyBooks, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: () => context.push('/notebook/books'),
+                          child: Text(l10n.notebookCreateBookCTA),
+                        )
+                      ],
+                    ),
+                  );
+                }
+                return Center(child: Text(l10n.notebookNoPeopleFound));
+              },
+              orElse: () => Center(child: Text(l10n.notebookNoPeopleFound)),
+            );
+          }
+    
           return ListView.builder(
             itemCount: people.length,
             itemBuilder: (context, index) {

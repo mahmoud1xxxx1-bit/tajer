@@ -42,7 +42,19 @@ class _DebtScreenState extends ConsumerState<DebtScreen> {
             error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
             data: (books) {
               if (books.isEmpty) {
-                return Center(child: Text(l10n.notebookNoData));
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(l10n.notebookEmptyBooks, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () => context.push('/notebook/books'),
+                        child: Text(l10n.notebookCreateBookCTA),
+                      )
+                    ],
+                  ),
+                );
               }
               if (_selectedBookId == null) _selectedBookId = books.first.id;
 

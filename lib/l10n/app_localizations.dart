@@ -3113,7 +3113,7 @@ abstract class AppLocalizations {
   /// No description provided for @notebookAccountsCreateFirst.
   ///
   /// In ar, this message translates to:
-  /// **'يرجى إنشاء حساب مالي أولاً من قسم الحسابات المالية'**
+  /// **'الرجاء إنشاء حساب مالي أولاً'**
   String get notebookAccountsCreateFirst;
 
   /// No description provided for @notebookPeopleCreateFirst.
@@ -3125,13 +3125,13 @@ abstract class AppLocalizations {
   /// No description provided for @notebookNoAccountsFound.
   ///
   /// In ar, this message translates to:
-  /// **'لا توجد حسابات.'**
+  /// **'لا توجد حسابات'**
   String get notebookNoAccountsFound;
 
   /// No description provided for @notebookNoPeopleFound.
   ///
   /// In ar, this message translates to:
-  /// **'لا يوجد أشخاص.'**
+  /// **'لا يوجد أشخاص'**
   String get notebookNoPeopleFound;
 
   /// No description provided for @notebookNoTransactionsYet.
@@ -3625,6 +3625,114 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'الرصيد'**
   String get notebookBalance;
+
+  /// No description provided for @notebookEmptyBooks.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ بإنشاء دفتر لتنظيم حسابات نشاطك.'**
+  String get notebookEmptyBooks;
+
+  /// No description provided for @notebookEmptyAccounts.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجى إنشاء حساب مالي أولاً لتسجيل العمليات.'**
+  String get notebookEmptyAccounts;
+
+  /// No description provided for @notebookEmptyPeople.
+  ///
+  /// In ar, this message translates to:
+  /// **'أضف شخصًا أولاً (عميل أو مورد) لتسجيل المبالغ.'**
+  String get notebookEmptyPeople;
+
+  /// No description provided for @notebookCreateBookCTA.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء دفتر'**
+  String get notebookCreateBookCTA;
+
+  /// No description provided for @notebookCreateAccountCTA.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء حساب مالي'**
+  String get notebookCreateAccountCTA;
+
+  /// No description provided for @notebookAddPersonCTA.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة شخص'**
+  String get notebookAddPersonCTA;
+
+  /// No description provided for @notebookIncomeHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجل هنا الأموال التي دخلت إلى أحد حساباتك. (مثال: مبيعات نقدية، دخل إضافي، إيداع)'**
+  String get notebookIncomeHint;
+
+  /// No description provided for @notebookExpenseHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجل هنا الأموال التي خرجت من أحد حساباتك. (مثال: إيجار، مشتريات، صيانة)'**
+  String get notebookExpenseHint;
+
+  /// No description provided for @notebookReceivableHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'استخدم (لي) عندما يكون لك مبلغ عند عميل أو شخص آخر.'**
+  String get notebookReceivableHint;
+
+  /// No description provided for @notebookPayableHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'استخدم (علي) عندما يكون عليك مبلغ لمورد أو شخص آخر.'**
+  String get notebookPayableHint;
+
+  /// No description provided for @notebookFilterType.
+  ///
+  /// In ar, this message translates to:
+  /// **'نوع الحركة'**
+  String get notebookFilterType;
+
+  /// No description provided for @notebookFilterBook.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدفتر'**
+  String get notebookFilterBook;
+
+  /// No description provided for @notebookFilterAccount.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحساب'**
+  String get notebookFilterAccount;
+
+  /// No description provided for @notebookReceivePayment.
+  ///
+  /// In ar, this message translates to:
+  /// **'استلام دفعة'**
+  String get notebookReceivePayment;
+
+  /// No description provided for @notebookPayPayment.
+  ///
+  /// In ar, this message translates to:
+  /// **'دفع مبلغ'**
+  String get notebookPayPayment;
+
+  /// No description provided for @notebookOverpaymentError.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ المدخل أكبر من الرصيد المتبقي'**
+  String get notebookOverpaymentError;
+
+  /// No description provided for @notebookSameAccountError.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يمكن التحويل لنفس الحساب'**
+  String get notebookSameAccountError;
+
+  /// No description provided for @notebookPartialPaymentHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ المراد سداده'**
+  String get notebookPartialPaymentHint;
 }
 
 class _AppLocalizationsDelegate
