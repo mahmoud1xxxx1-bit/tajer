@@ -109,6 +109,20 @@ void main() {
       }
     });
 
+    test('Premium: Unlimited Accounts', () async {
+      for (int i = 0; i < 10; i++) {
+        expect(await limitsService.canAddNotebookAccount(premiumUser), isTrue);
+        await fakeFirestore.collection('merchants').doc('pro1').collection('notebook_accounts').add({'name': 'Account $i'});
+      }
+    });
+
+    test('Premium: Unlimited People', () async {
+      for (int i = 0; i < 20; i++) {
+        expect(await limitsService.canAddNotebookPerson(premiumUser), isTrue);
+        await fakeFirestore.collection('merchants').doc('pro1').collection('notebook_people').add({'name': 'Person $i'});
+      }
+    });
+
     test('Premium: Unlimited Transactions', () async {
       for (int i = 0; i < 50; i++) {
         expect(await limitsService.canAddNotebookTransaction(premiumUser), isTrue);
@@ -128,21 +142,54 @@ void main() {
     );
 
     test('Employee inherits free merchant limits', () async {
-      // Create merchant doc
       await fakeFirestore.collection('users').doc('free_merchant').set({
         'plan': 'free',
         'isAnonymous': false,
         'email': 'merchant@test.com',
       });
 
-      // Allowed initially
       expect(await limitsService.canAddNotebookBook(employeeUser), isTrue);
       await fakeFirestore.collection('merchants').doc('free_merchant').collection('notebook_books').add({'name': 'Book 1'});
       expect(await limitsService.canAddNotebookBook(employeeUser), isTrue);
       await fakeFirestore.collection('merchants').doc('free_merchant').collection('notebook_books').add({'name': 'Book 2'});
-      
-      // Limit reached
       expect(await limitsService.canAddNotebookBook(employeeUser), isFalse);
+    });
+
+    test('Employee inherits premium merchant unlimited notebook access', () async {
+      final premiumEmployee = AppUser(
+        id: 'emp_pro',
+        merchantId: 'premium_merchant',
+        plan: 'employee',
+        isAnonymous: false,
+        role: 'employee',
+        createdAt: DateTime.now(),
+      );
+
+      await fakeFirestore.collection('users').doc('premium_merchant').set({
+        'plan': 'premium',
+        'isAnonymous': false,
+        'email': 'premium@test.com',
+      });
+
+      for (int i = 0; i < 5; i++) {
+        expect(await limitsService.canAddNotebookBook(premiumEmployee), isTrue);
+        await fakeFirestore.collection('merchants').doc('premium_merchant').collection('notebook_books').add({'name': 'Book $i'});
+      }
+
+      for (int i = 0; i < 5; i++) {
+        expect(await limitsService.canAddNotebookAccount(premiumEmployee), isTrue);
+        await fakeFirestore.collection('merchants').doc('premium_merchant').collection('notebook_accounts').add({'name': 'Account $i'});
+      }
+
+      for (int i = 0; i < 10; i++) {
+        expect(await limitsService.canAddNotebookPerson(premiumEmployee), isTrue);
+        await fakeFirestore.collection('merchants').doc('premium_merchant').collection('notebook_people').add({'name': 'Person $i'});
+      }
+
+      for (int i = 0; i < 30; i++) {
+        expect(await limitsService.canAddNotebookTransaction(premiumEmployee), isTrue);
+        await fakeFirestore.collection('merchants').doc('premium_merchant').collection('notebook_transactions').add({'amount': 10});
+      }
     });
   });
 }
