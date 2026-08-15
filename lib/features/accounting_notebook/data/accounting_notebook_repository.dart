@@ -96,4 +96,7 @@ class AccountingNotebookRepository {
   }
   
   // Transaction processing logic will go here (batch writes for balance updates)
+  Future<void> createTransaction(NotebookTransaction transaction) async {
+    await transactionsRef.doc(transaction.id).set(transaction.toMap());
+  }
 }
