@@ -16,7 +16,6 @@ class NotebookPdfService {
       bool isAr) async {
     final pdf = pw.Document();
 
-    // Load Arabic Font
     final arabicFont = await PdfGoogleFonts.cairoRegular();
     final arabicFontBold = await PdfGoogleFonts.cairoBold();
 
@@ -34,7 +33,7 @@ class NotebookPdfService {
         totalExpense += t.amount;
       }
     }
-    double netBalance = totalIncome - totalExpense;
+    final netIncome = totalIncome - totalExpense;
 
     pdf.addPage(
       pw.MultiPage(
@@ -60,7 +59,7 @@ class NotebookPdfService {
             ),
             pw.SizedBox(height: 20),
             _buildSummaryRow(
-                currency, totalIncome, totalExpense, netBalance, l10n),
+                currency, totalIncome, totalExpense, netIncome, l10n),
             pw.SizedBox(height: 20),
             pw.Text(l10n.notebookTransactionsHeader,
                 style:
@@ -76,7 +75,7 @@ class NotebookPdfService {
   }
 
   static pw.Widget _buildSummaryRow(String currency, double totalIncome,
-      double totalExpense, double netBalance, AppLocalizations l10n) {
+      double totalExpense, double netIncome, AppLocalizations l10n) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(12),
       decoration: pw.BoxDecoration(
@@ -93,9 +92,9 @@ class NotebookPdfService {
           _summaryBox(l10n.notebookTotalExpenses,
               '${totalExpense.toStringAsFixed(2)} $currency', PdfColors.red900),
           _summaryBox(
-              l10n.notebookNetBalance,
-              '${netBalance.toStringAsFixed(2)} $currency',
-              netBalance >= 0 ? PdfColors.blue900 : PdfColors.red900),
+              l10n.notebookNetIncome,
+              '${netIncome.toStringAsFixed(2)} $currency',
+              netIncome >= 0 ? PdfColors.blue900 : PdfColors.red900),
         ],
       ),
     );
