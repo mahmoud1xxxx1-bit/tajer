@@ -58,6 +58,44 @@ class AccountingNotebookService {
 
   AccountingNotebookService(this._repository);
 
+  // Books
+  Future<void> createBook(String name) async {
+    if (_repository == null) return;
+    final id = _uuid.v4();
+    final book = NotebookBook(id: id, name: name, createdAt: DateTime.now());
+    await _repository!.createBook(book);
+  }
+  
+  Future<void> updateBook(String id, String name) async {
+    if (_repository == null) return;
+    await _repository!.booksRef.doc(id).update({'name': name});
+  }
+
+  Future<void> archiveBook(String id) async {
+    if (_repository == null) return;
+    // Just a basic implementation, can add 'isArchived' later
+    await _repository!.booksRef.doc(id).delete();
+  }
+
+  // Categories
+  Future<void> createCategory({required String bookId, required String name, required String type}) async {
+    if (_repository == null) return;
+    final id = _uuid.v4();
+    final cat = NotebookCategory(id: id, name: name, type: type, bookId: bookId, createdAt: DateTime.now());
+    await _repository!.createCategory(cat);
+  }
+
+  Future<void> updateCategory(String id, String name) async {
+    if (_repository == null) return;
+    await _repository!.categoriesRef.doc(id).update({'name': name});
+  }
+
+  Future<void> archiveCategory(String id) async {
+    if (_repository == null) return;
+    await _repository!.categoriesRef.doc(id).delete();
+  }
+
+
   // Example: Income creation
   Future<void> createIncome({
     required String bookId,

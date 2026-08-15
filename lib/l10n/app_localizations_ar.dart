@@ -1619,4 +1619,43 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get genericErrorPrefix => 'خطأ';
+
+  @override
+  String get notebookCategories => 'التصنيفات';
+
+  @override
+  String get notebookTransactions => 'الحركات';
+
+  @override
+  String get notebookNoData => 'لا توجد بيانات.';
+
+  @override
+  String get notebookAddBook => 'إضافة دفتر';
+
+  @override
+  String get notebookBookName => 'اسم الدفتر';
+
+  @override
+  String get notebookEditBook => 'تعديل الدفتر';
+
+  @override
+  String get notebookArchiveBook => 'أرشفة الدفتر';
+
+  @override
+  String get notebookArchiveConfirm => 'هل أنت متأكد من الأرشفة؟';
+
+  @override
+  String get archive => 'أرشفة';
+
+  @override
+  String get notebookAddCategory => 'إضافة تصنيف';
+
+  @override
+  String get notebookCategoryName => 'اسم التصنيف';
+
+  @override
+  String get notebookEditCategory => 'تعديل التصنيف';
+
+  @override
+  String get notebookArchiveCategory => 'أرشفة التصنيف';
 }

@@ -27,6 +27,10 @@ import '../features/accounting_notebook/presentation/debt_screen.dart';
 import '../features/accounting_notebook/presentation/notebook_accounts_screen.dart';
 import '../features/accounting_notebook/presentation/notebook_people_screen.dart';
 import '../features/accounting_notebook/presentation/notebook_reports_screen.dart';
+import '../features/accounting_notebook/presentation/notebook_books_screen.dart';
+import '../features/accounting_notebook/presentation/notebook_categories_screen.dart';
+import '../features/accounting_notebook/presentation/notebook_transactions_screen.dart';
+
 
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateChangesProvider);
@@ -163,6 +167,19 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/notebook/reports',
         builder: (context, state) => const NotebookReportsScreen(),
       ),
+      GoRoute(
+        path: '/notebook/books',
+        builder: (context, state) => const NotebookBooksScreen(),
+      ),
+      GoRoute(
+        path: '/notebook/categories',
+        builder: (context, state) => const NotebookCategoriesScreen(),
+      ),
+      GoRoute(
+        path: '/notebook/transactions',
+        builder: (context, state) => const NotebookTransactionsScreen(),
+      ),
+
     ],
   );
 });

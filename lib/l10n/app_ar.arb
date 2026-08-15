@@ -676,5 +676,18 @@
   "notebookExportPdf": "تصدير PDF",
   "notebookExportCsv": "تصدير Excel (CSV)",
   "accountingReport": "تقرير دفتر المحاسبة",
-  "genericErrorPrefix": "خطأ"
+  "genericErrorPrefix": "خطأ",
+  "notebookCategories": "التصنيفات",
+  "notebookTransactions": "الحركات",
+  "notebookNoData": "لا توجد بيانات.",
+  "notebookAddBook": "إضافة دفتر",
+  "notebookBookName": "اسم الدفتر",
+  "notebookEditBook": "تعديل الدفتر",
+  "notebookArchiveBook": "أرشفة الدفتر",
+  "notebookArchiveConfirm": "هل أنت متأكد من الأرشفة؟",
+  "archive": "أرشفة",
+  "notebookAddCategory": "إضافة تصنيف",
+  "notebookCategoryName": "اسم التصنيف",
+  "notebookEditCategory": "تعديل التصنيف",
+  "notebookArchiveCategory": "أرشفة التصنيف"
 }

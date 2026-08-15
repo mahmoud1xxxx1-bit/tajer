@@ -1620,4 +1620,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get genericErrorPrefix => 'Error';
+
+  @override
+  String get notebookCategories => 'Categories';
+
+  @override
+  String get notebookTransactions => 'Transactions';
+
+  @override
+  String get notebookNoData => 'No data found.';
+
+  @override
+  String get notebookAddBook => 'Add Book';
+
+  @override
+  String get notebookBookName => 'Book Name';
+
+  @override
+  String get notebookEditBook => 'Edit Book';
+
+  @override
+  String get notebookArchiveBook => 'Archive Book';
+
+  @override
+  String get notebookArchiveConfirm => 'Are you sure you want to archive this?';
+
+  @override
+  String get archive => 'Archive';
+
+  @override
+  String get notebookAddCategory => 'Add Category';
+
+  @override
+  String get notebookCategoryName => 'Category Name';
+
+  @override
+  String get notebookEditCategory => 'Edit Category';
+
+  @override
+  String get notebookArchiveCategory => 'Archive Category';
 }

@@ -3163,6 +3163,84 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'خطأ'**
   String get genericErrorPrefix;
+
+  /// No description provided for @notebookCategories.
+  ///
+  /// In ar, this message translates to:
+  /// **'التصنيفات'**
+  String get notebookCategories;
+
+  /// No description provided for @notebookTransactions.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحركات'**
+  String get notebookTransactions;
+
+  /// No description provided for @notebookNoData.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد بيانات.'**
+  String get notebookNoData;
+
+  /// No description provided for @notebookAddBook.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة دفتر'**
+  String get notebookAddBook;
+
+  /// No description provided for @notebookBookName.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم الدفتر'**
+  String get notebookBookName;
+
+  /// No description provided for @notebookEditBook.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل الدفتر'**
+  String get notebookEditBook;
+
+  /// No description provided for @notebookArchiveBook.
+  ///
+  /// In ar, this message translates to:
+  /// **'أرشفة الدفتر'**
+  String get notebookArchiveBook;
+
+  /// No description provided for @notebookArchiveConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل أنت متأكد من الأرشفة؟'**
+  String get notebookArchiveConfirm;
+
+  /// No description provided for @archive.
+  ///
+  /// In ar, this message translates to:
+  /// **'أرشفة'**
+  String get archive;
+
+  /// No description provided for @notebookAddCategory.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة تصنيف'**
+  String get notebookAddCategory;
+
+  /// No description provided for @notebookCategoryName.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم التصنيف'**
+  String get notebookCategoryName;
+
+  /// No description provided for @notebookEditCategory.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل التصنيف'**
+  String get notebookEditCategory;
+
+  /// No description provided for @notebookArchiveCategory.
+  ///
+  /// In ar, this message translates to:
+  /// **'أرشفة التصنيف'**
+  String get notebookArchiveCategory;
 }
 
 class _AppLocalizationsDelegate

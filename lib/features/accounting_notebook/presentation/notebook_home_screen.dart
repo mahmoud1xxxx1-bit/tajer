@@ -85,7 +85,19 @@ class NotebookHomeScreen extends ConsumerWidget {
                 Expanded(child: _buildActionCard(context, Icons.bar_chart, l10n.notebookReports, Colors.brown, () => context.push('/notebook/reports'))),
               ],
             ),
+            const SizedBox(height: 16),
+
+            Row(
+              children: [
+                Expanded(child: _buildActionCard(context, Icons.book, l10n.notebookBooks ?? 'الدفاتر', Colors.indigo, () => context.push('/notebook/books'))),
+                const SizedBox(width: 16),
+                Expanded(child: _buildActionCard(context, Icons.category, l10n.notebookCategories ?? 'التصنيفات', Colors.cyan, () => context.push('/notebook/categories'))),
+                const SizedBox(width: 16),
+                Expanded(child: _buildActionCard(context, Icons.list_alt, l10n.notebookTransactions ?? 'الحركات', Colors.grey, () => context.push('/notebook/transactions'))),
+              ],
+            ),
             const SizedBox(height: 32),
+
             Text(l10n.recentTransactions, style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 16),
             transactionsAsync.when(

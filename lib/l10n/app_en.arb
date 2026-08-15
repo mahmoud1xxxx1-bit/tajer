@@ -676,5 +676,18 @@
   "notebookExportPdf": "Export PDF",
   "notebookExportCsv": "Export Excel (CSV)",
   "accountingReport": "Accounting Report",
-  "genericErrorPrefix": "Error"
+  "genericErrorPrefix": "Error",
+  "notebookCategories": "Categories",
+  "notebookTransactions": "Transactions",
+  "notebookNoData": "No data found.",
+  "notebookAddBook": "Add Book",
+  "notebookBookName": "Book Name",
+  "notebookEditBook": "Edit Book",
+  "notebookArchiveBook": "Archive Book",
+  "notebookArchiveConfirm": "Are you sure you want to archive this?",
+  "archive": "Archive",
+  "notebookAddCategory": "Add Category",
+  "notebookCategoryName": "Category Name",
+  "notebookEditCategory": "Edit Category",
+  "notebookArchiveCategory": "Archive Category"
 }
