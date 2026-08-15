@@ -7,12 +7,15 @@ import '../../../l10n/app_localizations.dart';
 import '../utils/notebook_localization_helper.dart';
 
 class NotebookCsvService {
-  static String generateCsv(List<NotebookTransaction> transactions,
-      AppLocalizations l10n, bool isAr) {
+  static String generateCsv(
+    List<NotebookTransaction> transactions,
+    AppLocalizations l10n,
+    bool isAr,
+    String currency,
+  ) {
     final buffer = StringBuffer();
-    // Headers
     buffer.writeln(
-        '${l10n.notebookDate},${l10n.notebookType},${l10n.amount},${l10n.note}');
+        '${l10n.notebookDate},${l10n.notebookType},${l10n.amount} ($currency),${l10n.note}');
 
     for (var t in transactions) {
       final dateStr =
@@ -20,7 +23,7 @@ class NotebookCsvService {
       final typeStr = NotebookLocalizationHelper.getNotebookLocalizedTypeCustom(
           t.type, l10n);
       final amt = t.amount.toStringAsFixed(2);
-      final note = (t.note ?? '').replaceAll(',', ' '); // prevent csv breaking
+      final note = (t.note ?? '').replaceAll(',', ' ');
       buffer.writeln('$dateStr,$typeStr,$amt,$note');
     }
 
