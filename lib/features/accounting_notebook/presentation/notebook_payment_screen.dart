@@ -205,8 +205,8 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
                                   SnackBar(
                                     content: Text(
                                       l10n.notebookInsufficientBalance(
-                                        amount.toStringAsFixed(2),
                                         account.balance.toStringAsFixed(2),
+                                        amount.toStringAsFixed(2),
                                       ),
                                     ),
                                   ),
