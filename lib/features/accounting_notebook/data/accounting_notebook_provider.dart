@@ -300,10 +300,10 @@ class AccountingNotebookService {
   }
 
   // Accounts
-  Future<void> createAccount({required String name, required String type, required double openingBalance}) async {
+  Future<void> createAccount({required String bookId, required String name, required String type, required double openingBalance}) async {
     if (_repository == null) return;
     final id = _uuid.v4();
-    final acc = NotebookAccount(id: id, name: name, type: type, balance: openingBalance, createdAt: DateTime.now());
+    final acc = NotebookAccount(id: id, bookId: bookId, name: name, type: type, balance: openingBalance, createdAt: DateTime.now());
     await _repository!.createAccount(acc);
   }
 
@@ -318,10 +318,10 @@ class AccountingNotebookService {
   }
 
   // People
-  Future<void> createPerson({required String name, String? phone}) async {
+  Future<void> createPerson({required String bookId, required String name, String? phone}) async {
     if (_repository == null) return;
     final id = _uuid.v4();
-    final p = NotebookPerson(id: id, name: name, phone: phone, amountOwedToMe: 0, amountIOwe: 0, createdAt: DateTime.now());
+    final p = NotebookPerson(id: id, bookId: bookId, name: name, phone: phone, amountOwedToMe: 0, amountIOwe: 0, createdAt: DateTime.now());
     await _repository!.createPerson(p);
   }
 

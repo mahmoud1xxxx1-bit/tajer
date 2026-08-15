@@ -23,7 +23,7 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final title = widget.isReceivablePayment ? (l10n.notebookPaymentOfDebt ?? 'Payment') : (l10n.notebookPaymentOfDebt ?? 'Payment');
+    final title = widget.isReceivablePayment ? (l10n.notebookPaymentOfDebt ?? l10n.notebookPayment) : (l10n.notebookPaymentOfDebt ?? l10n.notebookPayment);
     final accountsAsync = ref.watch(notebookAccountsProvider);
     final booksAsync = ref.watch(notebookBooksProvider);
     
@@ -89,7 +89,7 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
                                   onPressed: () {
                                     _amountController.text = (maxAmount / 2).toStringAsFixed(2);
                                   },
-                                  child: Text(l10n.notebookPartialPayment ?? 'Partial Payment'),
+                                  child: Text(l10n.notebookPartialPayment ?? l10n.notebookPartialPayment),
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -98,7 +98,7 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
                                   onPressed: () {
                                     _amountController.text = maxAmount.toStringAsFixed(2);
                                   },
-                                  child: Text(l10n.notebookFullPayment ?? 'Full Payment'),
+                                  child: Text(l10n.notebookFullPayment ?? l10n.notebookFullPayment),
                                 ),
                               ),
                             ],
@@ -109,9 +109,9 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
                             decoration: InputDecoration(labelText: l10n.amount),
                             keyboardType: TextInputType.number,
                             validator: (val) {
-                              if (val == null || val.isEmpty) return 'Required';
-                              if (double.tryParse(val) == null || double.parse(val) <= 0) return 'Invalid amount';
-                              if (double.parse(val) > maxAmount) return 'Amount exceeds debt';
+                              if (val == null || val.isEmpty) return l10n.notebookRequired;
+                              if (double.tryParse(val) == null || double.parse(val) <= 0) return l10n.notebookInvalidAmount;
+                              if (double.parse(val) > maxAmount) return l10n.notebookAmountExceedsDebt;
                               return null;
                             },
                           ),

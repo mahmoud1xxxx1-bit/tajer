@@ -1773,4 +1773,53 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notebookClearFilters => 'Clear Filters';
+
+  @override
+  String get notebookRequired => 'Required';
+
+  @override
+  String get notebookInvalidAmount => 'Invalid amount';
+
+  @override
+  String get notebookAmountExceedsDebt => 'Amount exceeds debt';
+
+  @override
+  String get notebookSourceDestSame =>
+      'Source and destination cannot be the same';
+
+  @override
+  String get notebookCreateAccountFirst => 'Please create an account first';
+
+  @override
+  String get notebookCreatePersonFirst => 'Please create a person first';
+
+  @override
+  String get notebookPerson => 'Person';
+
+  @override
+  String get notebookAccount => 'Account';
+
+  @override
+  String get notebookBook => 'Book';
+
+  @override
+  String get notebookCategory => 'Category';
+
+  @override
+  String get notebookAmount => 'Amount';
+
+  @override
+  String get notebookCancel => 'Cancel';
+
+  @override
+  String get notebookSave => 'Save';
+
+  @override
+  String get notebookArchive => 'Archive';
+
+  @override
+  String get notebookEdit => 'Edit';
+
+  @override
+  String get notebookDelete => 'Delete';
 }

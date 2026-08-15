@@ -26,7 +26,7 @@ class _NotebookTransferScreenState extends ConsumerState<NotebookTransferScreen>
     final booksAsync = ref.watch(notebookBooksProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.notebookTransfer ?? 'Transfer')),
+      appBar: AppBar(title: Text(l10n.notebookTransfer ?? l10n.notebookTransfer)),
       body: accountsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('${l10n.genericErrorPrefix}: $err')),
@@ -61,14 +61,14 @@ class _NotebookTransferScreenState extends ConsumerState<NotebookTransferScreen>
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
                         value: _sourceAccountId,
-                        decoration: InputDecoration(labelText: l10n.notebookSourceAccount ?? 'Source Account'),
+                        decoration: InputDecoration(labelText: l10n.notebookSourceAccount ?? l10n.notebookSourceAccount),
                         items: accounts.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name))).toList(),
                         onChanged: (val) => setState(() => _sourceAccountId = val),
                       ),
                       const SizedBox(height: 16),
                       DropdownButtonFormField<String>(
                         value: _destAccountId,
-                        decoration: InputDecoration(labelText: l10n.notebookDestinationAccount ?? 'Destination Account'),
+                        decoration: InputDecoration(labelText: l10n.notebookDestinationAccount ?? l10n.notebookDestinationAccount),
                         items: accounts.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name))).toList(),
                         onChanged: (val) => setState(() => _destAccountId = val),
                       ),
@@ -78,9 +78,9 @@ class _NotebookTransferScreenState extends ConsumerState<NotebookTransferScreen>
                         decoration: InputDecoration(labelText: l10n.amount),
                         keyboardType: TextInputType.number,
                         validator: (val) {
-                          if (val == null || val.isEmpty) return 'Required';
-                          if (double.tryParse(val) == null || double.parse(val) <= 0) return 'Invalid amount';
-                          if (_sourceAccountId == _destAccountId) return 'Source and destination cannot be the same';
+                          if (val == null || val.isEmpty) return l10n.notebookRequired;
+                          if (double.tryParse(val) == null || double.parse(val) <= 0) return l10n.notebookInvalidAmount;
+                          if (_sourceAccountId == _destAccountId) return l10n.notebookSourceDestSame;
                           return null;
                         },
                       ),

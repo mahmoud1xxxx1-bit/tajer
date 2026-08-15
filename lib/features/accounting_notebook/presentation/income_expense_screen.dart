@@ -92,8 +92,8 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
                             decoration: InputDecoration(labelText: l10n.amount),
                             keyboardType: TextInputType.number,
                             validator: (val) {
-                              if (val == null || val.isEmpty) return 'Required';
-                              if (double.tryParse(val) == null || double.parse(val) <= 0) return 'Invalid amount';
+                              if (val == null || val.isEmpty) return l10n.notebookRequired;
+                              if (double.tryParse(val) == null || double.parse(val) <= 0) return l10n.notebookInvalidAmount;
                               return null;
                             },
                           ),

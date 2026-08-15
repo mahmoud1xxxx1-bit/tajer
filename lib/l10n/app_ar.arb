@@ -727,5 +727,21 @@
   "notebookStartDate": "تاريخ البداية",
   "notebookEndDate": "تاريخ النهاية",
   "notebookApplyFilters": "تطبيق التصفية",
-  "notebookClearFilters": "مسح التصفية"
+  "notebookClearFilters": "مسح التصفية",
+  "notebookRequired": "مطلوب",
+  "notebookInvalidAmount": "مبلغ غير صحيح",
+  "notebookAmountExceedsDebt": "المبلغ يتجاوز قيمة الدين",
+  "notebookSourceDestSame": "لا يمكن أن يكون المصدر والوجهة متطابقين",
+  "notebookCreateAccountFirst": "الرجاء إنشاء حساب أولاً",
+  "notebookCreatePersonFirst": "الرجاء إنشاء شخص أولاً",
+  "notebookPerson": "الشخص",
+  "notebookAccount": "الحساب",
+  "notebookBook": "الدفتر",
+  "notebookCategory": "التصنيف",
+  "notebookAmount": "المبلغ",
+  "notebookCancel": "إلغاء",
+  "notebookSave": "حفظ",
+  "notebookArchive": "أرشفة",
+  "notebookEdit": "تعديل",
+  "notebookDelete": "حذف"
 }

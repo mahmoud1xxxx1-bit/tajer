@@ -61,7 +61,9 @@ class NotebookAccountsScreen extends ConsumerWidget {
     final balanceCtrl = TextEditingController();
     final noteCtrl = TextEditingController();
     String type = 'Cash';
+    String? bookId;
     final l10n = AppLocalizations.of(context)!;
+    final booksAsync = ref.watch(notebookBooksProvider);
 
     showDialog(
       context: context,
@@ -72,6 +74,16 @@ class NotebookAccountsScreen extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                DropdownButtonFormField<String?>(
+                  value: bookId,
+                  decoration: InputDecoration(labelText: l10n.notebookBook),
+                  items: booksAsync.maybeWhen(
+                    data: (books) => books.map((b) => DropdownMenuItem(value: b.id, child: Text(b.name))).toList(),
+                    orElse: () => [],
+                  ),
+                  onChanged: (val) => setState(() => bookId = val),
+                ),
+                const SizedBox(height: 16),
                 TextField(
                   controller: nameCtrl,
                   decoration: InputDecoration(labelText: l10n.notebookAccountName ?? 'Account Name'),
@@ -112,7 +124,8 @@ class NotebookAccountsScreen extends ConsumerWidget {
                   ref.read(accountingNotebookProvider).createAccount(
                     name: nameCtrl.text.trim(),
                     type: type,
-                    openingBalance: bal
+                    openingBalance: bal,
+                    bookId: bookId!,
                   );
                   Navigator.pop(ctx);
                 }

@@ -3469,6 +3469,102 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'مسح التصفية'**
   String get notebookClearFilters;
+
+  /// No description provided for @notebookRequired.
+  ///
+  /// In ar, this message translates to:
+  /// **'مطلوب'**
+  String get notebookRequired;
+
+  /// No description provided for @notebookInvalidAmount.
+  ///
+  /// In ar, this message translates to:
+  /// **'مبلغ غير صحيح'**
+  String get notebookInvalidAmount;
+
+  /// No description provided for @notebookAmountExceedsDebt.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ يتجاوز قيمة الدين'**
+  String get notebookAmountExceedsDebt;
+
+  /// No description provided for @notebookSourceDestSame.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يمكن أن يكون المصدر والوجهة متطابقين'**
+  String get notebookSourceDestSame;
+
+  /// No description provided for @notebookCreateAccountFirst.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرجاء إنشاء حساب أولاً'**
+  String get notebookCreateAccountFirst;
+
+  /// No description provided for @notebookCreatePersonFirst.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرجاء إنشاء شخص أولاً'**
+  String get notebookCreatePersonFirst;
+
+  /// No description provided for @notebookPerson.
+  ///
+  /// In ar, this message translates to:
+  /// **'الشخص'**
+  String get notebookPerson;
+
+  /// No description provided for @notebookAccount.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحساب'**
+  String get notebookAccount;
+
+  /// No description provided for @notebookBook.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدفتر'**
+  String get notebookBook;
+
+  /// No description provided for @notebookCategory.
+  ///
+  /// In ar, this message translates to:
+  /// **'التصنيف'**
+  String get notebookCategory;
+
+  /// No description provided for @notebookAmount.
+  ///
+  /// In ar, this message translates to:
+  /// **'المبلغ'**
+  String get notebookAmount;
+
+  /// No description provided for @notebookCancel.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء'**
+  String get notebookCancel;
+
+  /// No description provided for @notebookSave.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ'**
+  String get notebookSave;
+
+  /// No description provided for @notebookArchive.
+  ///
+  /// In ar, this message translates to:
+  /// **'أرشفة'**
+  String get notebookArchive;
+
+  /// No description provided for @notebookEdit.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل'**
+  String get notebookEdit;
+
+  /// No description provided for @notebookDelete.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف'**
+  String get notebookDelete;
 }
 
 class _AppLocalizationsDelegate

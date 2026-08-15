@@ -16,7 +16,7 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
     final txsAsync = ref.watch(notebookTransactionsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.notebookStatement ?? 'Statement')),
+      appBar: AppBar(title: Text(l10n.notebookStatement ?? l10n.notebookStatement)),
       body: peopleAsync.when(
         data: (people) {
           final person = people.firstWhere((p) => p.id == personId);

@@ -1772,4 +1772,53 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notebookClearFilters => 'مسح التصفية';
+
+  @override
+  String get notebookRequired => 'مطلوب';
+
+  @override
+  String get notebookInvalidAmount => 'مبلغ غير صحيح';
+
+  @override
+  String get notebookAmountExceedsDebt => 'المبلغ يتجاوز قيمة الدين';
+
+  @override
+  String get notebookSourceDestSame =>
+      'لا يمكن أن يكون المصدر والوجهة متطابقين';
+
+  @override
+  String get notebookCreateAccountFirst => 'الرجاء إنشاء حساب أولاً';
+
+  @override
+  String get notebookCreatePersonFirst => 'الرجاء إنشاء شخص أولاً';
+
+  @override
+  String get notebookPerson => 'الشخص';
+
+  @override
+  String get notebookAccount => 'الحساب';
+
+  @override
+  String get notebookBook => 'الدفتر';
+
+  @override
+  String get notebookCategory => 'التصنيف';
+
+  @override
+  String get notebookAmount => 'المبلغ';
+
+  @override
+  String get notebookCancel => 'إلغاء';
+
+  @override
+  String get notebookSave => 'حفظ';
+
+  @override
+  String get notebookArchive => 'أرشفة';
+
+  @override
+  String get notebookEdit => 'تعديل';
+
+  @override
+  String get notebookDelete => 'حذف';
 }

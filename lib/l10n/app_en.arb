@@ -727,5 +727,21 @@
   "notebookStartDate": "Start Date",
   "notebookEndDate": "End Date",
   "notebookApplyFilters": "Apply Filters",
-  "notebookClearFilters": "Clear Filters"
+  "notebookClearFilters": "Clear Filters",
+  "notebookRequired": "Required",
+  "notebookInvalidAmount": "Invalid amount",
+  "notebookAmountExceedsDebt": "Amount exceeds debt",
+  "notebookSourceDestSame": "Source and destination cannot be the same",
+  "notebookCreateAccountFirst": "Please create an account first",
+  "notebookCreatePersonFirst": "Please create a person first",
+  "notebookPerson": "Person",
+  "notebookAccount": "Account",
+  "notebookBook": "Book",
+  "notebookCategory": "Category",
+  "notebookAmount": "Amount",
+  "notebookCancel": "Cancel",
+  "notebookSave": "Save",
+  "notebookArchive": "Archive",
+  "notebookEdit": "Edit",
+  "notebookDelete": "Delete"
 }
