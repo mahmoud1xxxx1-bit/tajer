@@ -38,8 +38,12 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     children: [
-                      Text(person.name,
-                          style: Theme.of(context).textTheme.headlineSmall),
+                      Text(
+                        person.isArchived
+                            ? '${person.name} (${l10n.notebookArchived})'
+                            : person.name,
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
                       if (person.notes != null && person.notes!.isNotEmpty) ...[
                         const SizedBox(height: 4),
                         Text(person.notes!,
@@ -106,8 +110,6 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                   error: (_, __) =>
                       Center(child: Text(l10n.genericErrorPrefix)),
                   data: (allTransactions) {
-                    // Client-side filtering intentionally avoids dynamic
-                    // composite-index failures and preserves book isolation.
                     final transactions = allTransactions
                         .where((tx) =>
                             tx.personId == personId && tx.bookId == person.bookId)
@@ -151,7 +153,7 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                     Expanded(
                       child: ElevatedButton.icon(
                         icon: const Icon(Icons.call_received),
-                        onPressed: person.amountOwedToMe > 0
+                        onPressed: !person.isArchived && person.amountOwedToMe > 0
                             ? () async {
                                 if (await GuestLimitService
                                     .canAddNotebookTransaction(context, ref)) {
@@ -172,7 +174,7 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                     Expanded(
                       child: ElevatedButton.icon(
                         icon: const Icon(Icons.call_made),
-                        onPressed: person.amountIOwe > 0
+                        onPressed: !person.isArchived && person.amountIOwe > 0
                             ? () async {
                                 if (await GuestLimitService
                                     .canAddNotebookTransaction(context, ref)) {
