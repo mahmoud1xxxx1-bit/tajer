@@ -15,7 +15,7 @@ class NotebookPeopleScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.notebookPeople)),
       body: peopleAsync.when(
         data: (people) {
-          if (people.isEmpty) return const Center(child: Text('No people found.'));
+          if (people.isEmpty) return Center(child: Text(AppLocalizations.of(context)!.notebookNoPeopleFound));
           return ListView.builder(
             itemCount: people.length,
             itemBuilder: (context, index) {
@@ -37,7 +37,7 @@ class NotebookPeopleScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        error: (err, stack) => Center(child: Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $err')),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

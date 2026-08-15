@@ -26,10 +26,10 @@ class NotebookCsvService {
     return buffer.toString();
   }
 
-  static Future<void> shareCsv(String csvData, String filename) async {
+  static Future<void> shareCsv(String csvData, String filename, {bool isAr = true}) async {
     final bytes = utf8.encode(csvData);
     final xfile = XFile.fromData(Uint8List.fromList(bytes), mimeType: 'text/csv', name: filename);
-    await Share.shareXFiles([xfile], text: 'Accounting Report');
+    await Share.shareXFiles([xfile], text: isAr ? 'تقرير دفتر المحاسبة' : 'Accounting Report');
   }
 
   static String _getTypeName(String type, bool isAr) {

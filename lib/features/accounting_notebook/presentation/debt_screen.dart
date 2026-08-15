@@ -28,10 +28,10 @@ class _DebtScreenState extends ConsumerState<DebtScreen> {
       appBar: AppBar(title: Text(title)),
       body: peopleAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        error: (err, stack) => Center(child: Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $err')),
         data: (people) {
           if (people.isEmpty) {
-            return const Center(child: Text('Please create a person first in Notebook People'));
+            return Center(child: Text(AppLocalizations.of(context)!.notebookPeopleCreateFirst));
           }
           if (_selectedPersonId == null) _selectedPersonId = people.first.id;
 
@@ -82,7 +82,7 @@ class _DebtScreenState extends ConsumerState<DebtScreen> {
                             );
                             if (mounted) context.pop();
                           } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $e')));
                           }
                         }
                       },

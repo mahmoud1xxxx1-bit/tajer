@@ -667,5 +667,14 @@
   "note": "ملاحظة",
   "person": "الشخص",
   "account": "الحساب",
-  "book": "الدفتر"
+  "book": "الدفتر",
+  "notebookAccountsCreateFirst": "يرجى إنشاء حساب مالي أولاً من قسم الحسابات المالية",
+  "notebookPeopleCreateFirst": "يرجى إنشاء جهة اتصال أولاً من قسم الأشخاص",
+  "notebookNoAccountsFound": "لا توجد حسابات.",
+  "notebookNoPeopleFound": "لا يوجد أشخاص.",
+  "notebookNoTransactionsYet": "لا توجد حركات بعد",
+  "notebookExportPdf": "تصدير PDF",
+  "notebookExportCsv": "تصدير Excel (CSV)",
+  "accountingReport": "تقرير دفتر المحاسبة",
+  "genericErrorPrefix": "خطأ"
 }

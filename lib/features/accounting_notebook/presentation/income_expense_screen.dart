@@ -31,10 +31,10 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
       appBar: AppBar(title: Text(title)),
       body: accountsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        error: (err, stack) => Center(child: Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $err')),
         data: (accounts) {
           if (accounts.isEmpty) {
-            return Center(child: Text('Please create an account first in Notebook Accounts'));
+            return Center(child: Text(AppLocalizations.of(context)!.notebookAccountsCreateFirst));
           }
           if (_selectedAccountId == null) _selectedAccountId = accounts.first.id;
 
@@ -87,7 +87,7 @@ class _IncomeExpenseScreenState extends ConsumerState<IncomeExpenseScreen> {
                             }
                             if (mounted) context.pop();
                           } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $e')));
                           }
                         }
                       },

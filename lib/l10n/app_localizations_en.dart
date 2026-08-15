@@ -1591,4 +1591,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get book => 'Book';
+
+  @override
+  String get notebookAccountsCreateFirst =>
+      'Please create an account first in Notebook Accounts';
+
+  @override
+  String get notebookPeopleCreateFirst =>
+      'Please create a person first in Notebook People';
+
+  @override
+  String get notebookNoAccountsFound => 'No accounts found.';
+
+  @override
+  String get notebookNoPeopleFound => 'No people found.';
+
+  @override
+  String get notebookNoTransactionsYet => 'No transactions yet';
+
+  @override
+  String get notebookExportPdf => 'Export PDF';
+
+  @override
+  String get notebookExportCsv => 'Export Excel (CSV)';
+
+  @override
+  String get accountingReport => 'Accounting Report';
+
+  @override
+  String get genericErrorPrefix => 'Error';
 }

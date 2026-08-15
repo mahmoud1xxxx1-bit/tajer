@@ -1590,4 +1590,33 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get book => 'الدفتر';
+
+  @override
+  String get notebookAccountsCreateFirst =>
+      'يرجى إنشاء حساب مالي أولاً من قسم الحسابات المالية';
+
+  @override
+  String get notebookPeopleCreateFirst =>
+      'يرجى إنشاء جهة اتصال أولاً من قسم الأشخاص';
+
+  @override
+  String get notebookNoAccountsFound => 'لا توجد حسابات.';
+
+  @override
+  String get notebookNoPeopleFound => 'لا يوجد أشخاص.';
+
+  @override
+  String get notebookNoTransactionsYet => 'لا توجد حركات بعد';
+
+  @override
+  String get notebookExportPdf => 'تصدير PDF';
+
+  @override
+  String get notebookExportCsv => 'تصدير Excel (CSV)';
+
+  @override
+  String get accountingReport => 'تقرير دفتر المحاسبة';
+
+  @override
+  String get genericErrorPrefix => 'خطأ';
 }

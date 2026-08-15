@@ -667,5 +667,14 @@
   "note": "Note",
   "person": "Person",
   "account": "Account",
-  "book": "Book"
+  "book": "Book",
+  "notebookAccountsCreateFirst": "Please create an account first in Notebook Accounts",
+  "notebookPeopleCreateFirst": "Please create a person first in Notebook People",
+  "notebookNoAccountsFound": "No accounts found.",
+  "notebookNoPeopleFound": "No people found.",
+  "notebookNoTransactionsYet": "No transactions yet",
+  "notebookExportPdf": "Export PDF",
+  "notebookExportCsv": "Export Excel (CSV)",
+  "accountingReport": "Accounting Report",
+  "genericErrorPrefix": "Error"
 }

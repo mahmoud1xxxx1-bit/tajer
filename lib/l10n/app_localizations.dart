@@ -3109,6 +3109,60 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'الدفتر'**
   String get book;
+
+  /// No description provided for @notebookAccountsCreateFirst.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجى إنشاء حساب مالي أولاً من قسم الحسابات المالية'**
+  String get notebookAccountsCreateFirst;
+
+  /// No description provided for @notebookPeopleCreateFirst.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجى إنشاء جهة اتصال أولاً من قسم الأشخاص'**
+  String get notebookPeopleCreateFirst;
+
+  /// No description provided for @notebookNoAccountsFound.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد حسابات.'**
+  String get notebookNoAccountsFound;
+
+  /// No description provided for @notebookNoPeopleFound.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد أشخاص.'**
+  String get notebookNoPeopleFound;
+
+  /// No description provided for @notebookNoTransactionsYet.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد حركات بعد'**
+  String get notebookNoTransactionsYet;
+
+  /// No description provided for @notebookExportPdf.
+  ///
+  /// In ar, this message translates to:
+  /// **'تصدير PDF'**
+  String get notebookExportPdf;
+
+  /// No description provided for @notebookExportCsv.
+  ///
+  /// In ar, this message translates to:
+  /// **'تصدير Excel (CSV)'**
+  String get notebookExportCsv;
+
+  /// No description provided for @accountingReport.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقرير دفتر المحاسبة'**
+  String get accountingReport;
+
+  /// No description provided for @genericErrorPrefix.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطأ'**
+  String get genericErrorPrefix;
 }
 
 class _AppLocalizationsDelegate

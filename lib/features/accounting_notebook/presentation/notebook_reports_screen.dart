@@ -24,7 +24,7 @@ class NotebookReportsScreen extends ConsumerWidget {
               children: [
                 ElevatedButton.icon(
                   icon: const Icon(Icons.picture_as_pdf),
-                  label: const Text('Export PDF'),
+                  label: Text(AppLocalizations.of(context)!.notebookExportPdf),
                   onPressed: () async {
                     final pdfData = await NotebookPdfService.generateNotebookReportPdf(
                       transactions,
@@ -38,13 +38,17 @@ class NotebookReportsScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 ElevatedButton.icon(
                   icon: const Icon(Icons.table_chart),
-                  label: const Text('Export Excel (CSV)'),
+                  label: Text(AppLocalizations.of(context)!.notebookExportCsv),
                   onPressed: () async {
                     final csvData = NotebookCsvService.generateCsv(
                       transactions,
                       isAr: Localizations.localeOf(context).languageCode == 'ar'
                     );
-                    await NotebookCsvService.shareCsv(csvData, 'accounting_report.csv');
+                    await NotebookCsvService.shareCsv(
+                      csvData, 
+                      'accounting_report.csv',
+                      isAr: Localizations.localeOf(context).languageCode == 'ar'
+                    );
                   },
                 ),
               ],
@@ -52,7 +56,7 @@ class NotebookReportsScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        error: (err, stack) => Center(child: Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $err')),
       ),
     );
   }

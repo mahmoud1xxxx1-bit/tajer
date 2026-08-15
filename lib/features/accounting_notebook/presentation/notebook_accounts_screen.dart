@@ -15,7 +15,7 @@ class NotebookAccountsScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(l10n.notebookAccounts)),
       body: accountsAsync.when(
         data: (accounts) {
-          if (accounts.isEmpty) return const Center(child: Text('No accounts found.'));
+          if (accounts.isEmpty) return Center(child: Text(AppLocalizations.of(context)!.notebookNoAccountsFound));
           return ListView.builder(
             itemCount: accounts.length,
             itemBuilder: (context, index) {
@@ -32,7 +32,7 @@ class NotebookAccountsScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error: $err')),
+        error: (err, stack) => Center(child: Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $err')),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

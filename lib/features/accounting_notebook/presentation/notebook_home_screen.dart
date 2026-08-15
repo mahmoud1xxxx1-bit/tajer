@@ -53,7 +53,7 @@ class NotebookHomeScreen extends ConsumerWidget {
                         ),
                       ),
                       loading: () => const CircularProgressIndicator(),
-                      error: (err, stack) => Text('Error: $err'),
+                      error: (err, stack) => Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $err'),
                     ),
                   ],
                 ),
@@ -90,7 +90,7 @@ class NotebookHomeScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             transactionsAsync.when(
               data: (transactions) {
-                if (transactions.isEmpty) return const Center(child: Text('No transactions yet'));
+                if (transactions.isEmpty) return Center(child: Text(AppLocalizations.of(context)!.notebookNoTransactionsYet));
                 return ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -113,7 +113,7 @@ class NotebookHomeScreen extends ConsumerWidget {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Text('Error: $err'),
+              error: (err, stack) => Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $err'),
             ),
           ],
         ),
