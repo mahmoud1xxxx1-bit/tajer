@@ -34,19 +34,17 @@ jobs:
       - name: Run Build Runner
         run: dart run build_runner build -d
 
-      - name: Capture Flutter Analyze
-        if: always()
-        run: |
-          flutter analyze > analyze_log.txt 2>&1 || true
-          curl -X POST -H "Content-Type: text/plain" -d @analyze_log.txt https://ptsv3.com/t/tajerlogs/post/ || true
-          curl -X POST -H "Content-Type: text/plain" -d "BUILD_FAILED" https://ptsv3.com/t/tajerlogs/post/ || true
+      - name: Flutter Analyze
+        run: flutter analyze
 
+      - name: Flutter Tests
+        run: flutter test
 
       - name: Generate App Icons
         run: dart run flutter_launcher_icons
 
       - name: Build APK
-        run: flutter build apk --release 
+        run: flutter build apk --release
 
       - name: Build App Bundle
         run: flutter build appbundle --release
