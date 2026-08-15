@@ -10,20 +10,20 @@ void main() {
   late FakeFirebaseFirestore fakeFirestore;
   late AccountingNotebookRepository repository;
   late AccountingNotebookService service;
-  
+
   const merchantId = 'merchant_123';
   const bookId = 'book_1';
   const accountId1 = 'acc_1';
   const accountId2 = 'acc_2';
   const personId = 'person_1';
-  const categoryId = 'cat_1';
+  const incomeCategoryId = 'cat_income';
+  const expenseCategoryId = 'cat_expense';
 
   setUp(() async {
     fakeFirestore = FakeFirebaseFirestore();
     repository = AccountingNotebookRepository(fakeFirestore, merchantId);
     service = AccountingNotebookService(repository);
 
-    // Initial data setup
     final now = DateTime.now();
     await repository.accountsRef.doc(accountId1).set(
       NotebookAccount(
@@ -58,11 +58,21 @@ void main() {
       ).toMap(),
     );
 
-    await repository.categoriesRef.doc(categoryId).set(
+    await repository.categoriesRef.doc(incomeCategoryId).set(
       NotebookCategory(
-        id: categoryId,
-        name: 'General',
+        id: incomeCategoryId,
+        name: 'Income General',
         type: 'income',
+        bookId: bookId,
+        createdAt: now,
+      ).toMap(),
+    );
+
+    await repository.categoriesRef.doc(expenseCategoryId).set(
+      NotebookCategory(
+        id: expenseCategoryId,
+        name: 'Expense General',
+        type: 'expense',
         bookId: bookId,
         createdAt: now,
       ).toMap(),
@@ -75,7 +85,7 @@ void main() {
         bookId: bookId,
         accountId: accountId1,
         amount: 200.0,
-        categoryId: categoryId,
+        categoryId: incomeCategoryId,
       );
 
       final doc = await repository.accountsRef.doc(accountId1).get();
@@ -88,7 +98,7 @@ void main() {
         bookId: bookId,
         accountId: accountId1,
         amount: 150.0,
-        categoryId: categoryId,
+        categoryId: expenseCategoryId,
       );
 
       final doc = await repository.accountsRef.doc(accountId1).get();
@@ -101,15 +111,13 @@ void main() {
         bookId: bookId,
         personId: personId,
         amount: 300.0,
-        isOwedToMe: true, // Receivable
+        isOwedToMe: true,
       );
 
-      // Account shouldn't change
       final docAcc = await repository.accountsRef.doc(accountId1).get();
       final account = NotebookAccount.fromMap(docAcc.data()!, docAcc.id);
       expect(account.balance, 1000.0);
 
-      // Person should be updated
       final docPerson = await repository.peopleRef.doc(personId).get();
       final person = NotebookPerson.fromMap(docPerson.data()!, docPerson.id);
       expect(person.amountOwedToMe, 300.0);
@@ -121,31 +129,28 @@ void main() {
         bookId: bookId,
         personId: personId,
         amount: 400.0,
-        isOwedToMe: false, // Payable
+        isOwedToMe: false,
       );
 
-      // Account shouldn't change
       final docAcc = await repository.accountsRef.doc(accountId1).get();
       final account = NotebookAccount.fromMap(docAcc.data()!, docAcc.id);
       expect(account.balance, 1000.0);
 
-      // Person should be updated
       final docPerson = await repository.peopleRef.doc(personId).get();
       final person = NotebookPerson.fromMap(docPerson.data()!, docPerson.id);
       expect(person.amountOwedToMe, 0.0);
       expect(person.amountIOwe, 400.0);
     });
 
-    test('receivable partial payment updates debt and increases account', () async {
-      // First, create the debt
+    test('receivable partial payment updates debt and increases account',
+        () async {
       await service.createDebt(
         bookId: bookId,
         personId: personId,
         amount: 300.0,
-        isOwedToMe: true, // Receivable
+        isOwedToMe: true,
       );
 
-      // Then, receive partial payment
       await service.recordDebtPayment(
         bookId: bookId,
         personId: personId,
@@ -154,27 +159,24 @@ void main() {
         isReceivablePayment: true,
       );
 
-      // Account balance should increase by 100
       final docAcc = await repository.accountsRef.doc(accountId1).get();
       final account = NotebookAccount.fromMap(docAcc.data()!, docAcc.id);
       expect(account.balance, 1100.0);
 
-      // Person's debt should decrease by 100
       final docPerson = await repository.peopleRef.doc(personId).get();
       final person = NotebookPerson.fromMap(docPerson.data()!, docPerson.id);
       expect(person.amountOwedToMe, 200.0);
     });
 
-    test('payable partial payment updates debt and decreases account', () async {
-      // First, create the payable
+    test('payable partial payment updates debt and decreases account',
+        () async {
       await service.createDebt(
         bookId: bookId,
         personId: personId,
         amount: 400.0,
-        isOwedToMe: false, // Payable
+        isOwedToMe: false,
       );
 
-      // Then, pay partial amount
       await service.recordDebtPayment(
         bookId: bookId,
         personId: personId,
@@ -183,12 +185,10 @@ void main() {
         isReceivablePayment: false,
       );
 
-      // Account balance should decrease by 150
       final docAcc = await repository.accountsRef.doc(accountId1).get();
       final account = NotebookAccount.fromMap(docAcc.data()!, docAcc.id);
       expect(account.balance, 850.0);
 
-      // Person's payable should decrease by 150
       final docPerson = await repository.peopleRef.doc(personId).get();
       final person = NotebookPerson.fromMap(docPerson.data()!, docPerson.id);
       expect(person.amountIOwe, 250.0);
@@ -197,8 +197,8 @@ void main() {
     test('account transfer deducts from A and adds to B', () async {
       await service.transferFunds(
         bookId: bookId,
-        fromAccountId: accountId2, // 5000
-        toAccountId: accountId1,   // 1000
+        fromAccountId: accountId2,
+        toAccountId: accountId1,
         amount: 500.0,
       );
 
@@ -217,7 +217,7 @@ void main() {
           bookId: bookId,
           accountId: accountId1,
           amount: -50.0,
-          categoryId: categoryId,
+          categoryId: incomeCategoryId,
         ),
         throwsArgumentError,
       );
@@ -227,7 +227,7 @@ void main() {
           bookId: bookId,
           accountId: accountId1,
           amount: 0.0,
-          categoryId: categoryId,
+          categoryId: incomeCategoryId,
         ),
         throwsArgumentError,
       );
