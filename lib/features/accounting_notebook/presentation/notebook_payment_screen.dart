@@ -85,7 +85,7 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
                               Expanded(
                                 child: ElevatedButton(
                                   onPressed: () {
-                                    _amountController.text = (maxAmount / 2).toStringAsFixed(2);
+                                    _amountController.clear();
                                   },
                                   child: Text(l10n.notebookPartialPayment ),
                                 ),

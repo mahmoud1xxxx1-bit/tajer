@@ -21,28 +21,28 @@ final notebookBooksProvider = StreamProvider.autoDispose<List<NotebookBook>>((re
   final repo = ref.watch(accountingNotebookRepositoryProvider);
   if (repo == null) return const Stream.empty();
   return repo.booksRef.snapshots().map((snap) => 
-    snap.docs.map((d) => NotebookBook.fromMap(d.data(), d.id)).toList());
+    snap.docs.map((d) => NotebookBook.fromMap(d.data(), d.id)).where((x) => !x.isArchived).toList());
 });
 
 final notebookAccountsProvider = StreamProvider.autoDispose<List<NotebookAccount>>((ref) {
   final repo = ref.watch(accountingNotebookRepositoryProvider);
   if (repo == null) return const Stream.empty();
   return repo.accountsRef.snapshots().map((snap) => 
-    snap.docs.map((d) => NotebookAccount.fromMap(d.data(), d.id)).toList());
+    snap.docs.map((d) => NotebookAccount.fromMap(d.data(), d.id)).where((x) => !x.isArchived).toList());
 });
 
 final notebookCategoriesProvider = StreamProvider.autoDispose<List<NotebookCategory>>((ref) {
   final repo = ref.watch(accountingNotebookRepositoryProvider);
   if (repo == null) return const Stream.empty();
   return repo.categoriesRef.snapshots().map((snap) => 
-    snap.docs.map((d) => NotebookCategory.fromMap(d.data(), d.id)).toList());
+    snap.docs.map((d) => NotebookCategory.fromMap(d.data(), d.id)).where((x) => !x.isArchived).toList());
 });
 
 final notebookPeopleProvider = StreamProvider.autoDispose<List<NotebookPerson>>((ref) {
   final repo = ref.watch(accountingNotebookRepositoryProvider);
   if (repo == null) return const Stream.empty();
   return repo.peopleRef.snapshots().map((snap) => 
-    snap.docs.map((d) => NotebookPerson.fromMap(d.data(), d.id)).toList());
+    snap.docs.map((d) => NotebookPerson.fromMap(d.data(), d.id)).where((x) => !x.isArchived).toList());
 });
 
 final notebookTransactionsProvider = StreamProvider.autoDispose<List<NotebookTransaction>>((ref) {
@@ -73,8 +73,7 @@ class AccountingNotebookService {
 
   Future<void> archiveBook(String id) async {
     if (_repository == null) return;
-    // Just a basic implementation, can add 'isArchived' later
-    await _repository.booksRef.doc(id).delete();
+    await _repository.booksRef.doc(id).update({'isArchived': true});
   }
 
   // Categories
@@ -92,7 +91,7 @@ class AccountingNotebookService {
 
   Future<void> archiveCategory(String id) async {
     if (_repository == null) return;
-    await _repository.categoriesRef.doc(id).delete();
+    await _repository.categoriesRef.doc(id).update({'isArchived': true});
   }
 
 
@@ -163,18 +162,21 @@ class AccountingNotebookService {
       createdAt: now,
     );
 
-    final batch = _repository.accountsRef.firestore.batch();
-    
-    // 1. Add transaction
-    batch.set(_repository.transactionsRef.doc(txId), tx.toMap());
-    
-    // 2. Update account balance (decrease)
     final accountRef = _repository.accountsRef.doc(accountId);
-    batch.update(accountRef, {
-      'balance': FieldValue.increment(-amount)
-    });
+    final txRef = _repository.transactionsRef.doc(txId);
     
-    await batch.commit();
+    await _repository.accountsRef.firestore.runTransaction((transaction) async {
+      final accountSnap = await transaction.get(accountRef);
+      if (!accountSnap.exists) throw Exception('Account not found');
+      
+      final currentBalance = accountSnap.data()?['balance'] as double? ?? 0.0;
+      if (currentBalance < amount) {
+        throw Exception('insufficient_balance');
+      }
+      
+      transaction.set(txRef, tx.toMap());
+      transaction.update(accountRef, {'balance': currentBalance - amount});
+    });
   }
   
   // Debts (Receivable)
@@ -242,23 +244,34 @@ class AccountingNotebookService {
       createdAt: now,
     );
 
-    final batch = _repository.accountsRef.firestore.batch();
-    batch.set(_repository.transactionsRef.doc(txId), tx.toMap());
-    
     final personRef = _repository.peopleRef.doc(personId);
     final accountRef = _repository.accountsRef.doc(accountId);
-    
-    if (isReceivablePayment) {
-      // Receiving money: decrease debt, increase account
-      batch.update(personRef, {'amountOwedToMe': FieldValue.increment(-amount)});
-      batch.update(accountRef, {'balance': FieldValue.increment(amount)});
-    } else {
-      // Paying money: decrease payable, decrease account
-      batch.update(personRef, {'amountIOwe': FieldValue.increment(-amount)});
-      batch.update(accountRef, {'balance': FieldValue.increment(-amount)});
-    }
-    
-    await batch.commit();
+    final txRef = _repository.transactionsRef.doc(txId);
+
+    await _repository.accountsRef.firestore.runTransaction((transaction) async {
+      final personSnap = await transaction.get(personRef);
+      final accountSnap = await transaction.get(accountRef);
+      
+      if (!personSnap.exists) throw Exception('Person not found');
+      if (!accountSnap.exists) throw Exception('Account not found');
+      
+      final accountBalance = accountSnap.data()?['balance'] as double? ?? 0.0;
+      final owedToMe = personSnap.data()?['amountOwedToMe'] as double? ?? 0.0;
+      final iOwe = personSnap.data()?['amountIOwe'] as double? ?? 0.0;
+      
+      if (isReceivablePayment) {
+        if (amount > owedToMe) throw Exception('overpayment');
+        transaction.update(personRef, {'amountOwedToMe': owedToMe - amount});
+        transaction.update(accountRef, {'balance': accountBalance + amount});
+      } else {
+        if (amount > iOwe) throw Exception('overpayment');
+        if (accountBalance < amount) throw Exception('insufficient_balance');
+        transaction.update(personRef, {'amountIOwe': iOwe - amount});
+        transaction.update(accountRef, {'balance': accountBalance - amount});
+      }
+      
+      transaction.set(txRef, tx.toMap());
+    });
   }
   
   // Transfer
@@ -270,6 +283,7 @@ class AccountingNotebookService {
     String? note,
   }) async {
     if (amount <= 0) throw ArgumentError('Amount must be positive');
+    if (fromAccountId == toAccountId) throw ArgumentError('Cannot transfer to same account');
     if (_repository == null) return;
     
     final txId = _uuid.v4();
@@ -287,16 +301,32 @@ class AccountingNotebookService {
       createdAt: now,
     );
 
-    final batch = _repository.accountsRef.firestore.batch();
-    batch.set(_repository.transactionsRef.doc(txId), tx.toMap());
-    
     final fromRef = _repository.accountsRef.doc(fromAccountId);
     final toRef = _repository.accountsRef.doc(toAccountId);
-    
-    batch.update(fromRef, {'balance': FieldValue.increment(-amount)});
-    batch.update(toRef, {'balance': FieldValue.increment(amount)});
-    
-    await batch.commit();
+    final txRef = _repository.transactionsRef.doc(txId);
+
+    await _repository.accountsRef.firestore.runTransaction((transaction) async {
+      final fromSnap = await transaction.get(fromRef);
+      final toSnap = await transaction.get(toRef);
+      
+      if (!fromSnap.exists || !toSnap.exists) throw Exception('Account not found');
+      
+      final fromBookId = fromSnap.data()?['bookId'] as String?;
+      final toBookId = toSnap.data()?['bookId'] as String?;
+      
+      if (fromBookId != bookId || toBookId != bookId) {
+        throw Exception('cross_book_transfer_not_allowed');
+      }
+      
+      final fromBalance = fromSnap.data()?['balance'] as double? ?? 0.0;
+      final toBalance = toSnap.data()?['balance'] as double? ?? 0.0;
+      
+      if (fromBalance < amount) throw Exception('insufficient_balance');
+      
+      transaction.update(fromRef, {'balance': fromBalance - amount});
+      transaction.update(toRef, {'balance': toBalance + amount});
+      transaction.set(txRef, tx.toMap());
+    });
   }
 
   // Accounts
@@ -314,7 +344,7 @@ class AccountingNotebookService {
 
   Future<void> archiveAccount(String id) async {
     if (_repository == null) return;
-    await _repository.accountsRef.doc(id).delete();
+    await _repository.accountsRef.doc(id).update({'isArchived': true});
   }
 
   // People
@@ -332,6 +362,6 @@ class AccountingNotebookService {
 
   Future<void> archivePerson(String id) async {
     if (_repository == null) return;
-    await _repository.peopleRef.doc(id).delete();
+    await _repository.peopleRef.doc(id).update({'isArchived': true});
   }
 }

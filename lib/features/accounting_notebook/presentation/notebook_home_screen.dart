@@ -13,11 +13,30 @@ class NotebookHomeScreen extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final accountsAsync = ref.watch(notebookAccountsProvider);
     final transactionsAsync = ref.watch(notebookTransactionsProvider);
+    final peopleAsync = ref.watch(notebookPeopleProvider);
     
     double netBalance = 0.0;
     accountsAsync.whenData((accounts) {
       for (var acc in accounts) {
         netBalance += acc.balance;
+      }
+    });
+    
+    double totalIncome = 0.0;
+    double totalExpense = 0.0;
+    transactionsAsync.whenData((transactions) {
+      for (var tx in transactions) {
+        if (tx.type == 'income') totalIncome += tx.amount;
+        if (tx.type == 'expense') totalExpense += tx.amount;
+      }
+    });
+
+    double totalOwedToMe = 0.0;
+    double totalIOwe = 0.0;
+    peopleAsync.whenData((people) {
+      for (var p in people) {
+        totalOwedToMe += p.amountOwedToMe;
+        totalIOwe += p.amountIOwe;
       }
     });
 
@@ -39,7 +58,7 @@ class NotebookHomeScreen extends ConsumerWidget {
               elevation: 2,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
                     Text(l10n.netBalance, style: Theme.of(context).textTheme.titleLarge),
@@ -54,6 +73,22 @@ class NotebookHomeScreen extends ConsumerWidget {
                       ),
                       loading: () => const CircularProgressIndicator(),
                       error: (err, stack) => Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $err'),
+                    ),
+                    const Divider(height: 32),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildSummaryItem(context, l10n.income, totalIncome, Colors.green),
+                        _buildSummaryItem(context, l10n.expense, totalExpense, Colors.red),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildSummaryItem(context, l10n.notebookReceivable ?? 'Owed to Me', totalOwedToMe, Colors.blue),
+                        _buildSummaryItem(context, l10n.notebookPayable ?? 'I Owe', totalIOwe, Colors.orange),
+                      ],
                     ),
                   ],
                 ),
@@ -113,7 +148,7 @@ class NotebookHomeScreen extends ConsumerWidget {
                     final tx = transactions[index];
                     final isPositive = tx.type == 'income' || tx.type == 'receivable_payment';
                     return ListTile(
-                      title: Text(tx.note ?? tx.type),
+                      title: Text(tx.note ?? _getLocalizedType(context, tx.type)),
                       subtitle: Text(DateFormat.yMMMd().format(tx.date)),
                       trailing: Text(
                         '${isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',
@@ -154,6 +189,18 @@ class NotebookHomeScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+  Widget _buildSummaryItem(BuildContext context, String label, double amount, Color color) {
+    return Column(
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.grey)),
+        const SizedBox(height: 4),
+        Text(
+          NumberFormat.currency(symbol: 'SAR ').format(amount),
+          style: TextStyle(fontWeight: FontWeight.bold, color: color, fontSize: 16),
+        ),
+      ],
     );
   }
 }

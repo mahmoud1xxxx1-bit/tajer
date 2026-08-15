@@ -10,6 +10,7 @@ class NotebookPerson {
   final double amountIOwe; // payables
   final String bookId;
   final DateTime createdAt;
+  final bool isArchived;
 
   const NotebookPerson({
     required this.id,
@@ -20,6 +21,7 @@ class NotebookPerson {
     required this.amountIOwe,
     required this.bookId,
     required this.createdAt,
+    this.isArchived = false,
   });
 
   double get netBalance => amountOwedToMe - amountIOwe;

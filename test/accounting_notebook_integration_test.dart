@@ -67,7 +67,7 @@ void main() {
     });
 
     test('Atomicity: Debt partial payment updates both Person and Account simultaneously', () async {
-      await repository.accountsRef.doc('acc1').set({'id': 'acc1', 'name': 'Cash', 'balance': 1000.0});
+      await repository.accountsRef.doc('acc1').set({'id': 'acc1', 'name': 'Cash', 'balance': 1000.0, 'bookId': 'b1'});
       await repository.peopleRef.doc('p1').set({'id': 'p1', 'name': 'John', 'amountOwedToMe': 500.0, 'amountIOwe': 0.0});
 
       await service.recordDebtPayment(
@@ -88,8 +88,8 @@ void main() {
     });
     
     test('Atomicity: Transfer funds between accounts updates both correctly', () async {
-      await repository.accountsRef.doc('acc1').set({'id': 'acc1', 'name': 'Cash', 'balance': 1000.0});
-      await repository.accountsRef.doc('acc2').set({'id': 'acc2', 'name': 'Bank', 'balance': 500.0});
+      await repository.accountsRef.doc('acc1').set({'id': 'acc1', 'name': 'Cash', 'balance': 1000.0, 'bookId': 'b1'});
+      await repository.accountsRef.doc('acc2').set({'id': 'acc2', 'name': 'Bank', 'balance': 500.0, 'bookId': 'b1'});
 
       await service.transferFunds(
         bookId: 'b1',

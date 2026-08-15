@@ -72,7 +72,7 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                         final tx = personTxs[index];
                         final isPositive = tx.type == 'receivable' || tx.type == 'payable_payment';
                         return ListTile(
-                          title: Text(tx.type),
+                          title: Text(_getLocalizedType(context, tx.type)),
                           subtitle: Text('${DateFormat.yMMMd().format(tx.date)} - ${tx.note ?? ''}'),
                           trailing: Text(
                             '${isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',

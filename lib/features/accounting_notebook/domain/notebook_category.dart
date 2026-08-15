@@ -7,6 +7,7 @@ class NotebookCategory {
   final String type; // income, expense
   final String bookId;
   final DateTime createdAt;
+  final bool isArchived;
 
   const NotebookCategory({
     required this.id,
@@ -14,6 +15,7 @@ class NotebookCategory {
     required this.type,
     required this.bookId,
     required this.createdAt,
+    this.isArchived = false,
   });
 
   factory NotebookCategory.fromMap(Map<String, dynamic> data, String documentId) {

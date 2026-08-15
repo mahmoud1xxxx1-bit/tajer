@@ -8,6 +8,7 @@ class NotebookAccount {
   final double balance;
   final String bookId;
   final DateTime createdAt;
+  final bool isArchived;
 
   const NotebookAccount({
     required this.id,
@@ -16,6 +17,7 @@ class NotebookAccount {
     required this.balance,
     required this.bookId,
     required this.createdAt,
+    this.isArchived = false,
   });
 
   factory NotebookAccount.fromMap(Map<String, dynamic> data, String documentId) {
