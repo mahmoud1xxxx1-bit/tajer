@@ -28,6 +28,18 @@ class NotebookTerminology {
   static String makePayment(BuildContext context) =>
       _isArabic(context) ? 'سداد' : 'Make Payment';
 
+  static String partialReceivePayment(BuildContext context) =>
+      _isArabic(context) ? 'تحصيل جزئي' : 'Partial Collection';
+
+  static String fullReceivePayment(BuildContext context) =>
+      _isArabic(context) ? 'تحصيل كامل' : 'Full Collection';
+
+  static String partialMakePayment(BuildContext context) =>
+      _isArabic(context) ? 'سداد جزئي' : 'Partial Payment';
+
+  static String fullMakePayment(BuildContext context) =>
+      _isArabic(context) ? 'سداد كامل' : 'Full Payment';
+
   static String totalAccountBalance(BuildContext context) =>
       _isArabic(context) ? 'إجمالي أرصدة الحسابات' : 'Total Account Balance';
 
