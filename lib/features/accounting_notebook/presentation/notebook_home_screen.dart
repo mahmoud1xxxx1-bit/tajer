@@ -8,6 +8,8 @@ import '../utils/notebook_localization_helper.dart';
 import '../../../../core/services/guest_limit_service.dart';
 import '../../../../core/providers/settings_provider.dart';
 
+final _welcomeDismissedProvider = StateProvider<bool?>((ref) => null);
+
 class NotebookHomeScreen extends ConsumerWidget {
   const NotebookHomeScreen({super.key});
 
@@ -19,8 +21,9 @@ class NotebookHomeScreen extends ConsumerWidget {
     final peopleAsync = ref.watch(notebookPeopleProvider);
     final booksAsync = ref.watch(notebookBooksProvider);
     final prefs = ref.watch(sharedPreferencesProvider);
-    final hasDismissedWelcome =
-        prefs.getBool('notebook_welcome_dismissed') ?? false;
+    final localDismissed = ref.watch(_welcomeDismissedProvider);
+    final hasDismissedWelcome = localDismissed ??
+        (prefs.getBool('notebook_welcome_dismissed') ?? false);
 
     double netBalance = 0.0;
     accountsAsync.whenData((accounts) {
@@ -115,6 +118,9 @@ class NotebookHomeScreen extends ConsumerWidget {
                                 onPressed: () {
                                   ref.read(sharedPreferencesProvider).setBool(
                                       'notebook_welcome_dismissed', true);
+                                  ref
+                                      .read(_welcomeDismissedProvider.notifier)
+                                      .state = true;
                                 },
                                 child: Text(l10n.notebookLater),
                               ),
@@ -362,42 +368,19 @@ class NotebookHomeScreen extends ConsumerWidget {
   }) async {
     final l10n = AppLocalizations.of(context)!;
     final booksAsync = ref.read(notebookBooksProvider);
-    final hasBooks = booksAsync.valueOrNull?.isNotEmpty ?? false;
+    final hasBooks = booksAsync.valueOrNull?.any((b) => !b.isArchived) ?? false;
 
     if (!hasBooks) {
-      _showPrereqDialog(context, l10n.notebookNeedBookFirst,
-          l10n.notebookCreateBook, () => context.push('/notebook/books'));
+      _showPrereqDialog(
+          context,
+          l10n.notebookNeedBookFirst,
+          l10n.notebookCreateBookCTA ?? l10n.notebookCreateBook,
+          () => context.push('/notebook/books'));
       return false;
     }
 
-    if (needAccount || needTwoAccounts) {
-      final accountsAsync = ref.read(notebookAccountsProvider);
-      final count = accountsAsync.valueOrNull?.length ?? 0;
-      if (needTwoAccounts && count < 2) {
-        _showPrereqDialog(context, l10n.notebookNeedTwoAccountsFirst,
-            l10n.notebookAddAccount, () => context.push('/notebook/accounts'));
-        return false;
-      }
-      if (needAccount && count < 1) {
-        _showPrereqDialog(context, l10n.notebookNeedAccountFirst,
-            l10n.notebookAddAccount, () => context.push('/notebook/accounts'));
-        return false;
-      }
-    }
-
-    if (needCategory) {
-      final categoriesAsync = ref.read(notebookCategoriesProvider);
-      final hasCategories = categoriesAsync.valueOrNull?.isNotEmpty ?? false;
-      if (!hasCategories) {
-        _showPrereqDialog(
-            context,
-            l10n.notebookNeedCategoryFirst,
-            l10n.notebookAddCategory,
-            () => context.push('/notebook/categories'));
-        return false;
-      }
-    }
-
+    // Validation for Account, Category, and Person presence is now handled
+    // progressively inside their respective screens after a book is selected.
     return true;
   }
 

@@ -31,8 +31,7 @@ class _NotebookCategoriesScreenState
             child: Text(
                 '${AppLocalizations.of(context)!.genericErrorPrefix}: $err')),
         data: (books) {
-          final activeBooks =
-              books.where((b) => !(b.isArchived)).toList();
+          final activeBooks = books.where((b) => !(b.isArchived)).toList();
           if (activeBooks.isEmpty) {
             return Center(
               child: Column(
@@ -65,8 +64,10 @@ class _NotebookCategoriesScreenState
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                         color: Theme.of(context)
@@ -288,8 +289,7 @@ class _AddCategoryDialogState extends ConsumerState<_AddCategoryDialog> {
               height: 100, child: Center(child: CircularProgressIndicator())),
           error: (err, stack) => Text('${l10n.genericErrorPrefix}: $err'),
           data: (books) {
-            final activeBooks =
-                books.where((b) => !(b.isArchived)).toList();
+            final activeBooks = books.where((b) => !(b.isArchived)).toList();
             if (activeBooks.isEmpty) {
               return Column(
                 mainAxisSize: MainAxisSize.min,
@@ -340,8 +340,7 @@ class _AddCategoryDialogState extends ConsumerState<_AddCategoryDialog> {
                           value: 'expense', child: Text(l10n.expense)),
                     ],
                     onChanged: (v) => setState(() => type = v!),
-                    decoration:
-                        InputDecoration(labelText: l10n.notebookCategoryName),
+                    decoration: InputDecoration(labelText: l10n.notebookType),
                   ),
                 ],
               ),
