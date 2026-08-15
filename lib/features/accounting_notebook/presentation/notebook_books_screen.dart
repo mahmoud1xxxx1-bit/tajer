@@ -30,26 +30,21 @@ class NotebookBooksScreen extends ConsumerWidget {
             margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.indigo.withValues(alpha: 0.15),
+              color: Theme.of(context)
+                  .colorScheme
+                  .primaryContainer
+                  .withValues(alpha: 0.45),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.indigo.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.lightbulb_outline,
-                    color: Colors.amber, size: 26),
+                Icon(Icons.lightbulb_outline,
+                    color: Theme.of(context).colorScheme.primary, size: 26),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     l10n.notebookGuideBooks,
-                    style: TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontSize: 13,
-                        height: 1.4,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.7)),
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ),
               ],
@@ -65,15 +60,13 @@ class NotebookBooksScreen extends ConsumerWidget {
                       children: [
                         Icon(Icons.library_books,
                             size: 80,
-                            color: Colors.indigo.withValues(alpha: 0.3)),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withValues(alpha: 0.3)),
                         const SizedBox(height: 16),
-                        Text(
-                          l10n.notebookNoData,
-                          style: TextStyle(
-                              fontFamily: 'Tajawal',
-                              fontSize: 20,
-                              color: Colors.indigo.shade900),
-                        ),
+                        Text(l10n.notebookNoData,
+                            style: Theme.of(context).textTheme.titleLarge),
                         const SizedBox(height: 16),
                         ElevatedButton(
                           onPressed: () async {
@@ -83,13 +76,12 @@ class NotebookBooksScreen extends ConsumerWidget {
                             }
                           },
                           child: Text(l10n.notebookAddBook),
-                        )
+                        ),
                       ],
                     ),
                   );
                 }
 
-                // Sort: active first, archived last
                 final sortedBooks = List.of(books)
                   ..sort((a, b) {
                     if (a.isArchived && !b.isArchived) return 1;
@@ -120,26 +112,23 @@ class NotebookBooksScreen extends ConsumerWidget {
                         children: [
                           if (!book.isArchived)
                             IconButton(
-                              icon: const Icon(Icons.edit, color: Colors.blue),
+                              icon: const Icon(Icons.edit),
                               onPressed: () => _showEditBookDialog(
                                   context, ref, book.id, book.name),
                             ),
                           if (!book.isArchived)
                             IconButton(
-                              icon:
-                                  const Icon(Icons.archive, color: Colors.red),
+                              icon: const Icon(Icons.archive),
                               onPressed: () =>
                                   _showArchiveDialog(context, ref, book.id),
                             )
                           else
                             TextButton.icon(
-                              icon: const Icon(Icons.restore,
-                                  color: Colors.green, size: 20),
-                              label: Text(l10n.notebookRestore,
-                                  style: const TextStyle(color: Colors.green)),
+                              icon: const Icon(Icons.restore, size: 20),
+                              label: Text(l10n.notebookRestore),
                               onPressed: () =>
                                   _showRestoreDialog(context, ref, book.id),
-                            )
+                            ),
                         ],
                       ),
                     );
@@ -147,8 +136,7 @@ class NotebookBooksScreen extends ConsumerWidget {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, st) =>
-                  Center(child: Text('${l10n.genericErrorPrefix}: $e')),
+              error: (_, __) => Center(child: Text(l10n.genericErrorPrefix)),
             ),
           ),
         ],
@@ -159,29 +147,44 @@ class NotebookBooksScreen extends ConsumerWidget {
   void _showAddBookDialog(BuildContext context, WidgetRef ref) {
     final ctrl = TextEditingController();
     final l10n = AppLocalizations.of(context)!;
+    bool saving = false;
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(l10n.notebookAddBook),
-        content: TextField(
-          controller: ctrl,
-          decoration: InputDecoration(labelText: l10n.notebookBookName),
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
-          ElevatedButton(
-            onPressed: () {
-              if (ctrl.text.trim().isNotEmpty) {
-                ref
-                    .read(accountingNotebookProvider)
-                    .createBook(ctrl.text.trim());
-                Navigator.pop(ctx);
-              }
-            },
-            child: Text(l10n.save),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text(l10n.notebookAddBook),
+          content: TextField(
+            controller: ctrl,
+            decoration: InputDecoration(labelText: l10n.notebookBookName),
           ),
-        ],
+          actions: [
+            TextButton(
+              onPressed: saving ? null : () => Navigator.pop(ctx),
+              child: Text(l10n.cancel),
+            ),
+            ElevatedButton(
+              onPressed: saving
+                  ? null
+                  : () async {
+                      if (ctrl.text.trim().isEmpty) return;
+                      setDialogState(() => saving = true);
+                      try {
+                        await ref
+                            .read(accountingNotebookProvider)
+                            .createBook(ctrl.text.trim());
+                        if (ctx.mounted) Navigator.pop(ctx);
+                      } catch (_) {
+                        if (!ctx.mounted) return;
+                        setDialogState(() => saving = false);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.genericErrorPrefix)),
+                        );
+                      }
+                    },
+              child: Text(l10n.save),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -202,12 +205,18 @@ class NotebookBooksScreen extends ConsumerWidget {
           TextButton(
               onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
           ElevatedButton(
-            onPressed: () {
-              if (ctrl.text.trim().isNotEmpty) {
-                ref
+            onPressed: () async {
+              if (ctrl.text.trim().isEmpty) return;
+              try {
+                await ref
                     .read(accountingNotebookProvider)
                     .updateBook(id, ctrl.text.trim());
-                Navigator.pop(ctx);
+                if (ctx.mounted) Navigator.pop(ctx);
+              } catch (_) {
+                if (!ctx.mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.genericErrorPrefix)),
+                );
               }
             },
             child: Text(l10n.save),
@@ -217,7 +226,7 @@ class NotebookBooksScreen extends ConsumerWidget {
     );
   }
 
-  void _showArchiveDialog(
+  Future<void> _showArchiveDialog(
       BuildContext context, WidgetRef ref, String id) async {
     final l10n = AppLocalizations.of(context)!;
     final appUser = ref.read(appUserProvider).value;
@@ -229,13 +238,23 @@ class NotebookBooksScreen extends ConsumerWidget {
       title: l10n.notebookArchiveBook,
       warning: l10n.notebookArchiveWarning,
     );
-
     if (proceed && context.mounted) {
-      ref.read(accountingNotebookProvider).archiveBook(id);
+      try {
+        await ref.read(accountingNotebookProvider).archiveBook(id);
+        if (ref.read(notebookCurrentBookIdProvider) == id) {
+          ref.read(notebookCurrentBookIdProvider.notifier).state = null;
+        }
+      } catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.genericErrorPrefix)),
+          );
+        }
+      }
     }
   }
 
-  void _showRestoreDialog(
+  Future<void> _showRestoreDialog(
       BuildContext context, WidgetRef ref, String id) async {
     final l10n = AppLocalizations.of(context)!;
     final appUser = ref.read(appUserProvider).value;
@@ -247,9 +266,16 @@ class NotebookBooksScreen extends ConsumerWidget {
       title: l10n.notebookRestore,
       warning: l10n.notebookRestoreWarning,
     );
-
     if (proceed && context.mounted) {
-      ref.read(accountingNotebookProvider).restoreBook(id);
+      try {
+        await ref.read(accountingNotebookProvider).restoreBook(id);
+      } catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.genericErrorPrefix)),
+          );
+        }
+      }
     }
   }
 }
