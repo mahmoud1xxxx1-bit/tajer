@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
+import '../data/notebook_flow_context.dart';
 import '../../authentication/data/auth_repository.dart';
 import '../../../core/widgets/pin_confirmation_dialog.dart';
 
@@ -17,6 +18,12 @@ class NotebookCategoriesScreen extends ConsumerStatefulWidget {
 class _NotebookCategoriesScreenState
     extends ConsumerState<NotebookCategoriesScreen> {
   String? _selectedBookId;
+
+  @override
+  void dispose() {
+    ref.read(notebookPendingCategoryTypeProvider.notifier).state = null;
+    super.dispose();
+  }
 
   void _selectBook(String id) {
     ref.read(notebookCurrentBookIdProvider.notifier).state = id;
@@ -269,6 +276,7 @@ class _AddCategoryDialogState extends ConsumerState<_AddCategoryDialog> {
   String type = 'income';
   String? bookId;
   bool saving = false;
+  bool _intentApplied = false;
 
   @override
   void dispose() {
@@ -281,6 +289,14 @@ class _AddCategoryDialogState extends ConsumerState<_AddCategoryDialog> {
     final l10n = AppLocalizations.of(context)!;
     final booksAsync = ref.watch(notebookBooksProvider);
     final preferredBookId = ref.watch(notebookCurrentBookIdProvider);
+    final pendingType = ref.watch(notebookPendingCategoryTypeProvider);
+
+    if (!_intentApplied) {
+      _intentApplied = true;
+      if (pendingType == 'income' || pendingType == 'expense') {
+        type = pendingType!;
+      }
+    }
 
     return AlertDialog(
       title: Text(l10n.notebookAddCategory),
@@ -345,7 +361,13 @@ class _AddCategoryDialogState extends ConsumerState<_AddCategoryDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: saving ? null : () => Navigator.pop(context),
+          onPressed: saving
+              ? null
+              : () {
+                  ref.read(notebookPendingCategoryTypeProvider.notifier).state =
+                      null;
+                  Navigator.pop(context);
+                },
           child: Text(l10n.cancel),
         ),
         ElevatedButton(
@@ -362,6 +384,8 @@ class _AddCategoryDialogState extends ConsumerState<_AddCategoryDialog> {
                         );
                     ref.read(notebookCurrentBookIdProvider.notifier).state =
                         bookId;
+                    ref.read(notebookPendingCategoryTypeProvider.notifier).state =
+                        null;
                     if (mounted) Navigator.pop(context);
                   } catch (_) {
                     if (!mounted) return;
