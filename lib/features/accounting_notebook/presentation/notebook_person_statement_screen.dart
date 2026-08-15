@@ -167,7 +167,7 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                                 }
                               }
                             : null,
-                        child: Text(l10n.notebookReceivePayment),
+                        label: Text(l10n.notebookReceivePayment),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -188,7 +188,7 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                                 }
                               }
                             : null,
-                        child: Text(l10n.notebookPayPayment),
+                        label: Text(l10n.notebookPayPayment),
                       ),
                     ),
                   ],
