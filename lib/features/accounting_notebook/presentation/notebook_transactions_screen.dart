@@ -22,19 +22,7 @@ class _NotebookTransactionsScreenState extends ConsumerState<NotebookTransaction
   String? _selectedCategoryId;
 
   @override
-    String _getLocalizedType(BuildContext context, String type) {
-    final l10n = AppLocalizations.of(context)!;
-    switch (type) {
-      case 'income': return l10n.income;
-      case 'expense': return l10n.expense;
-      case 'receivable': return l10n.notebookReceivable ;
-      case 'payable': return l10n.notebookPayable ;
-      case 'receivable_payment': return l10n.notebookPayment ;
-      case 'payable_payment': return l10n.notebookPaymentOfDebt ;
-      case 'account_transfer': return l10n.notebookTransfer ;
-      default: return type;
-    }
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -215,7 +203,7 @@ class _NotebookTransactionsScreenState extends ConsumerState<NotebookTransaction
                     return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: ListTile(
-                        title: Text(tx.note ?? getLocalizedTransactionType(context, tx.type)),
+                        title: Text(tx.note ?? getNotebookLocalizedType(context, tx.type)),
                         subtitle: Text(DateFormat.yMMMd().format(tx.date)),
                         trailing: Text(
                           '${isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',

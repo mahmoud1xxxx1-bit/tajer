@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../l10n/app_localizations.dart';
 
-String getLocalizedTransactionType(BuildContext context, String type) {
+String getNotebookLocalizedType(BuildContext context, String type) {
   final l10n = AppLocalizations.of(context)!;
   switch (type) {
     case 'income': return l10n.income;
