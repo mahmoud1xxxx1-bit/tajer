@@ -21,21 +21,25 @@ class _NotebookAccountsScreenState
     extends ConsumerState<NotebookAccountsScreen> {
   String? _selectedBookId;
 
+  void _selectBook(String id) {
+    ref.read(notebookCurrentBookIdProvider.notifier).state = id;
+    setState(() => _selectedBookId = id);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final booksAsync = ref.watch(notebookBooksProvider);
+    final accountsAsync = ref.watch(notebookAccountsProvider);
+    final sharedBookId = ref.watch(notebookCurrentBookIdProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notebookAccounts)),
       body: booksAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(
-            child: Text(
-                '${AppLocalizations.of(context)!.genericErrorPrefix}: $err')),
+        error: (_, __) => Center(child: Text(l10n.genericErrorPrefix)),
         data: (books) {
-          final activeBooks =
-              books.where((b) => !(b.isArchived)).toList();
+          final activeBooks = books.where((b) => !b.isArchived).toList();
           if (activeBooks.isEmpty) {
             return Center(
               child: Column(
@@ -48,65 +52,56 @@ class _NotebookAccountsScreenState
                   ElevatedButton(
                     onPressed: () => context.push('/notebook/books'),
                     child: Text(l10n.notebookCreateBookCTA),
-                  )
+                  ),
                 ],
               ),
             );
           }
 
-          if (_selectedBookId == null ||
-              !activeBooks.any((b) => b.id == _selectedBookId)) {
-            _selectedBookId = activeBooks.first.id;
-          }
-
-          final accountsAsync = ref.watch(notebookAccountsProvider);
+          final candidate = _selectedBookId ?? sharedBookId;
+          final selectedBookId = activeBooks.any((b) => b.id == candidate)
+              ? candidate!
+              : activeBooks.first.id;
+          _selectedBookId = selectedBookId;
 
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16),
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color:
-                        Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .primary
+                        .withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
                       Icon(Icons.info_outline,
                           color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          l10n.notebookGuideAccounts,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                        ),
-                      ),
+                      Expanded(child: Text(l10n.notebookGuideAccounts)),
                     ],
                   ),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: DropdownButtonFormField<String>(
-                  value: _selectedBookId,
+                  value: selectedBookId,
+                  isExpanded: true,
                   decoration: InputDecoration(labelText: l10n.notebookBook),
                   items: activeBooks
-                      .map((b) =>
-                          DropdownMenuItem(value: b.id, child: Text(b.name)))
+                      .map((b) => DropdownMenuItem(
+                            value: b.id,
+                            child: Text(b.name, overflow: TextOverflow.ellipsis),
+                          ))
                       .toList(),
-                  onChanged: (val) => setState(() => _selectedBookId = val),
+                  onChanged: (value) {
+                    if (value != null) _selectBook(value);
+                  },
                 ),
               ),
               const SizedBox(height: 16),
@@ -114,67 +109,57 @@ class _NotebookAccountsScreenState
                 child: accountsAsync.when(
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (err, stack) =>
-                      Center(child: Text('${l10n.genericErrorPrefix}: $err')),
+                  error: (_, __) =>
+                      Center(child: Text(l10n.genericErrorPrefix)),
                   data: (allAccounts) {
                     final accounts = allAccounts
-                        .where((a) => a.bookId == _selectedBookId)
+                        .where((a) => a.bookId == selectedBookId)
                         .toList();
                     if (accounts.isEmpty) {
                       return Center(child: Text(l10n.notebookEmptyAccounts));
                     }
-
                     return ListView.builder(
                       itemCount: accounts.length,
-                      itemBuilder: (ctx, i) {
-                        final a = accounts[i];
-                        final isArchived = a.isArchived;
+                      itemBuilder: (context, index) {
+                        final account = accounts[index];
+                        final archived = account.isArchived;
                         return ListTile(
-                          enabled: !isArchived,
-                          leading: Icon(
-                            Icons.account_balance_wallet,
-                            color: isArchived ? Colors.grey : null,
-                          ),
+                          enabled: !archived,
+                          leading: Icon(Icons.account_balance_wallet,
+                              color: archived ? Colors.grey : null),
                           title: Text(
-                            isArchived
-                                ? '${a.name} (${l10n.notebookArchived})'
-                                : a.name,
+                            archived
+                                ? '${account.name} (${l10n.notebookArchived})'
+                                : account.name,
                             style: TextStyle(
-                              decoration: isArchived
+                              decoration: archived
                                   ? TextDecoration.lineThrough
                                   : null,
-                              color: isArchived ? Colors.grey : null,
+                              color: archived ? Colors.grey : null,
                             ),
                           ),
                           subtitle: Text(
-                            '${l10n.notebookBalance}: ${a.balance.toStringAsFixed(2)} | ${l10n.notebookAccountType}: ${NotebookLocalizationHelper.getAccountTypeName(context, a.type)}',
-                            style: TextStyle(
-                                color: isArchived ? Colors.grey : null),
+                            '${l10n.notebookBalance}: ${account.balance.toStringAsFixed(2)} | ${l10n.notebookAccountType}: ${NotebookLocalizationHelper.getAccountTypeName(context, account.type)}',
                           ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (!isArchived)
+                              if (!archived)
                                 IconButton(
-                                  icon: const Icon(Icons.edit,
-                                      color: Colors.blue),
-                                  onPressed: () =>
-                                      _showEditAccountDialog(context, ref, a),
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () => _showEditAccountDialog(
+                                      context, ref, account),
                                 ),
-                              if (!isArchived)
-                                IconButton(
-                                  icon: const Icon(Icons.archive,
-                                      color: Colors.red),
-                                  onPressed: () =>
-                                      _showArchiveDialog(context, ref, a.id),
-                                )
-                              else
-                                IconButton(
-                                  icon: const Icon(Icons.restore,
-                                      color: Colors.green),
-                                  onPressed: () =>
-                                      _showRestoreDialog(context, ref, a.id),
-                                ),
+                              IconButton(
+                                icon: Icon(archived
+                                    ? Icons.restore
+                                    : Icons.archive),
+                                onPressed: () => archived
+                                    ? _showRestoreDialog(
+                                        context, ref, account.id)
+                                    : _showArchiveDialog(
+                                        context, ref, account.id),
+                              ),
                             ],
                           ),
                         );
@@ -190,18 +175,21 @@ class _NotebookAccountsScreenState
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           if (await GuestLimitService.canAddNotebookAccount(context, ref)) {
-            _showAddAccountDialog(context, ref);
+            final id = _selectedBookId ??
+                ref.read(notebookCurrentBookIdProvider);
+            if (id != null) {
+              ref.read(notebookCurrentBookIdProvider.notifier).state = id;
+            }
+            if (context.mounted) {
+              showDialog(
+                context: context,
+                builder: (_) => const _AddAccountDialog(),
+              );
+            }
           }
         },
         child: const Icon(Icons.add),
       ),
-    );
-  }
-
-  void _showAddAccountDialog(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (ctx) => const _AddAccountDialog(),
     );
   }
 
@@ -215,7 +203,7 @@ class _NotebookAccountsScreenState
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
+        builder: (context, setDialogState) => AlertDialog(
           title: Text(l10n.notebookEditAccount),
           content: SingleChildScrollView(
             child: Column(
@@ -241,7 +229,9 @@ class _NotebookAccountsScreenState
                     DropdownMenuItem(
                         value: 'Other', child: Text(l10n.notebookTypeOther)),
                   ],
-                  onChanged: (v) => setState(() => type = v!),
+                  onChanged: (value) {
+                    if (value != null) setDialogState(() => type = value);
+                  },
                   decoration:
                       InputDecoration(labelText: l10n.notebookAccountType),
                 ),
@@ -257,18 +247,17 @@ class _NotebookAccountsScreenState
             TextButton(
                 onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
             ElevatedButton(
-              onPressed: () {
-                if (nameCtrl.text.trim().isNotEmpty) {
-                  ref.read(accountingNotebookProvider).updateAccount(
-                        account.id,
-                        name: nameCtrl.text.trim(),
-                        type: type,
-                        notes: noteCtrl.text.trim().isEmpty
-                            ? null
-                            : noteCtrl.text.trim(),
-                      );
-                  Navigator.pop(ctx);
-                }
+              onPressed: () async {
+                if (nameCtrl.text.trim().isEmpty) return;
+                await ref.read(accountingNotebookProvider).updateAccount(
+                      account.id,
+                      name: nameCtrl.text.trim(),
+                      type: type,
+                      notes: noteCtrl.text.trim().isEmpty
+                          ? null
+                          : noteCtrl.text.trim(),
+                    );
+                if (ctx.mounted) Navigator.pop(ctx);
               },
               child: Text(l10n.save),
             ),
@@ -278,45 +267,42 @@ class _NotebookAccountsScreenState
     );
   }
 
-  void _showArchiveDialog(
+  Future<void> _showArchiveDialog(
       BuildContext context, WidgetRef ref, String id) async {
     final l10n = AppLocalizations.of(context)!;
     final appUser = ref.read(appUserProvider).value;
     if (appUser == null) return;
-
     final proceed = await PinConfirmationDialog.requirePinOrSetup(
       context,
       appUser,
       title: l10n.notebookArchiveAccount,
       warning: l10n.notebookArchiveWarning,
     );
-
     if (proceed && context.mounted) {
-      ref.read(accountingNotebookProvider).archiveAccount(id);
+      await ref.read(accountingNotebookProvider).archiveAccount(id);
     }
   }
 
-  void _showRestoreDialog(
+  Future<void> _showRestoreDialog(
       BuildContext context, WidgetRef ref, String id) async {
     final l10n = AppLocalizations.of(context)!;
     final appUser = ref.read(appUserProvider).value;
     if (appUser == null) return;
-
     final proceed = await PinConfirmationDialog.requirePinOrSetup(
       context,
       appUser,
       title: l10n.notebookRestore,
       warning: l10n.notebookRestoreWarning,
     );
-
     if (proceed && context.mounted) {
-      ref.read(accountingNotebookProvider).restoreAccount(id);
+      await ref.read(accountingNotebookProvider).restoreAccount(id);
     }
   }
 }
 
 class _AddAccountDialog extends ConsumerStatefulWidget {
   const _AddAccountDialog();
+
   @override
   ConsumerState<_AddAccountDialog> createState() => _AddAccountDialogState();
 }
@@ -327,116 +313,145 @@ class _AddAccountDialogState extends ConsumerState<_AddAccountDialog> {
   final noteCtrl = TextEditingController();
   String type = 'Cash';
   String? bookId;
+  bool saving = false;
+
+  @override
+  void dispose() {
+    nameCtrl.dispose();
+    balanceCtrl.dispose();
+    noteCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final booksAsync = ref.watch(notebookBooksProvider);
+    final preferredBookId = ref.watch(notebookCurrentBookIdProvider);
 
     return AlertDialog(
       title: Text(l10n.notebookAddAccount),
       content: booksAsync.when(
-          loading: () => const SizedBox(
-              height: 100, child: Center(child: CircularProgressIndicator())),
-          error: (err, stack) => Text('${l10n.genericErrorPrefix}: $err'),
-          data: (books) {
-            final activeBooks =
-                books.where((b) => !(b.isArchived)).toList();
-            if (activeBooks.isEmpty) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(l10n.notebookEmptyBooks),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      context.push('/notebook/books');
-                    },
-                    child: Text(l10n.notebookCreateBookCTA),
-                  )
-                ],
-              );
-            }
-
-            if (bookId == null || !activeBooks.any((b) => b.id == bookId)) {
-              bookId = activeBooks.first.id;
-            }
-
-            return SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  DropdownButtonFormField<String?>(
-                    value: bookId,
-                    decoration: InputDecoration(labelText: l10n.notebookBook),
-                    items: activeBooks
-                        .map((b) =>
-                            DropdownMenuItem(value: b.id, child: Text(b.name)))
-                        .toList(),
-                    onChanged: (val) => setState(() => bookId = val),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: nameCtrl,
-                    decoration:
-                        InputDecoration(labelText: l10n.notebookAccountName),
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: type,
-                    items: [
-                      DropdownMenuItem(
-                          value: 'Cash', child: Text(l10n.notebookTypeCash)),
-                      DropdownMenuItem(
-                          value: 'Bank', child: Text(l10n.notebookTypeBank)),
-                      DropdownMenuItem(
-                          value: 'Card', child: Text(l10n.notebookTypeCard)),
-                      DropdownMenuItem(
-                          value: 'Wallet',
-                          child: Text(l10n.notebookTypeWallet)),
-                      DropdownMenuItem(
-                          value: 'Other', child: Text(l10n.notebookTypeOther)),
-                    ],
-                    onChanged: (v) => setState(() => type = v!),
-                    decoration:
-                        InputDecoration(labelText: l10n.notebookAccountType),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: balanceCtrl,
-                    keyboardType: TextInputType.number,
-                    decoration:
-                        InputDecoration(labelText: l10n.notebookOpeningBalance),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: noteCtrl,
-                    decoration: InputDecoration(labelText: l10n.notebookNote),
-                  ),
-                ],
-              ),
-            );
-          }),
+        loading: () => const SizedBox(
+            height: 100, child: Center(child: CircularProgressIndicator())),
+        error: (_, __) => Text(l10n.genericErrorPrefix),
+        data: (books) {
+          final activeBooks = books.where((b) => !b.isArchived).toList();
+          if (activeBooks.isEmpty) return Text(l10n.notebookEmptyBooks);
+          if (bookId == null || !activeBooks.any((b) => b.id == bookId)) {
+            bookId = activeBooks.any((b) => b.id == preferredBookId)
+                ? preferredBookId
+                : activeBooks.first.id;
+          }
+          return SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField<String>(
+                  value: bookId,
+                  isExpanded: true,
+                  decoration: InputDecoration(labelText: l10n.notebookBook),
+                  items: activeBooks
+                      .map((b) => DropdownMenuItem(
+                            value: b.id,
+                            child: Text(b.name, overflow: TextOverflow.ellipsis),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    setState(() => bookId = value);
+                    if (value != null) {
+                      ref.read(notebookCurrentBookIdProvider.notifier).state =
+                          value;
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: nameCtrl,
+                  decoration:
+                      InputDecoration(labelText: l10n.notebookAccountName),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: type,
+                  items: [
+                    DropdownMenuItem(
+                        value: 'Cash', child: Text(l10n.notebookTypeCash)),
+                    DropdownMenuItem(
+                        value: 'Bank', child: Text(l10n.notebookTypeBank)),
+                    DropdownMenuItem(
+                        value: 'Card', child: Text(l10n.notebookTypeCard)),
+                    DropdownMenuItem(
+                        value: 'Wallet', child: Text(l10n.notebookTypeWallet)),
+                    DropdownMenuItem(
+                        value: 'Other', child: Text(l10n.notebookTypeOther)),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) setState(() => type = value);
+                  },
+                  decoration:
+                      InputDecoration(labelText: l10n.notebookAccountType),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: balanceCtrl,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
+                  decoration:
+                      InputDecoration(labelText: l10n.notebookOpeningBalance),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: noteCtrl,
+                  decoration: InputDecoration(labelText: l10n.notebookNote),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
       actions: [
         TextButton(
-            onPressed: () => Navigator.pop(context), child: Text(l10n.cancel)),
+            onPressed: saving ? null : () => Navigator.pop(context),
+            child: Text(l10n.cancel)),
         ElevatedButton(
-          onPressed: () {
-            if (nameCtrl.text.trim().isNotEmpty && bookId != null) {
-              final bal = double.tryParse(balanceCtrl.text) ?? 0.0;
-              ref.read(accountingNotebookProvider).createAccount(
-                    name: nameCtrl.text.trim(),
-                    type: type,
-                    openingBalance: bal,
-                    bookId: bookId!,
-                    notes: noteCtrl.text.trim().isEmpty
-                        ? null
-                        : noteCtrl.text.trim(),
-                  );
-              Navigator.pop(context);
-            }
-          },
+          onPressed: saving
+              ? null
+              : () async {
+                  if (nameCtrl.text.trim().isEmpty || bookId == null) return;
+                  final balance =
+                      double.tryParse(balanceCtrl.text.trim().isEmpty
+                              ? '0'
+                              : balanceCtrl.text.trim()) ??
+                          -1;
+                  if (balance < 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.notebookInvalidAmount)),
+                    );
+                    return;
+                  }
+                  setState(() => saving = true);
+                  try {
+                    await ref.read(accountingNotebookProvider).createAccount(
+                          name: nameCtrl.text.trim(),
+                          type: type,
+                          openingBalance: balance,
+                          bookId: bookId!,
+                          notes: noteCtrl.text.trim().isEmpty
+                              ? null
+                              : noteCtrl.text.trim(),
+                        );
+                    ref.read(notebookCurrentBookIdProvider.notifier).state =
+                        bookId;
+                    if (mounted) Navigator.pop(context);
+                  } catch (_) {
+                    if (!mounted) return;
+                    setState(() => saving = false);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(l10n.genericErrorPrefix)),
+                    );
+                  }
+                },
           child: Text(l10n.save),
         ),
       ],
