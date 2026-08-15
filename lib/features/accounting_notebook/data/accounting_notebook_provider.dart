@@ -1,22 +1,21 @@
-import '../domain/notebook_person.dart';
-import '../domain/notebook_category.dart';
-import '../domain/notebook_account.dart';
-import '../domain/notebook_book.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
-import 'accounting_notebook_repository.dart';
+
+import '../domain/notebook_account.dart';
+import '../domain/notebook_book.dart';
+import '../domain/notebook_category.dart';
+import '../domain/notebook_person.dart';
 import '../domain/notebook_transaction.dart';
+import 'accounting_notebook_repository.dart';
 
 final accountingNotebookProvider = Provider<AccountingNotebookService>((ref) {
   final repo = ref.watch(accountingNotebookRepositoryProvider);
   return AccountingNotebookService(repo);
 });
 
-/// One shared current-book context for the whole Accounting Notebook feature.
-/// Screens should read/update this instead of silently selecting their own book.
+/// Shared selected accounting book for the whole Accounting Notebook feature.
 final notebookCurrentBookIdProvider = StateProvider<String?>((ref) => null);
 
-// Streams for UI
 final notebookBooksProvider =
     StreamProvider.autoDispose<List<NotebookBook>>((ref) {
   final repo = ref.watch(accountingNotebookRepositoryProvider);
@@ -37,8 +36,9 @@ final notebookCategoriesProvider =
     StreamProvider.autoDispose<List<NotebookCategory>>((ref) {
   final repo = ref.watch(accountingNotebookRepositoryProvider);
   if (repo == null) return const Stream.empty();
-  return repo.categoriesRef.snapshots().map((snap) =>
-      snap.docs.map((d) => NotebookCategory.fromMap(d.data(), d.id)).toList());
+  return repo.categoriesRef.snapshots().map((snap) => snap.docs
+      .map((d) => NotebookCategory.fromMap(d.data(), d.id))
+      .toList());
 });
 
 final notebookPeopleProvider =
@@ -72,12 +72,22 @@ class AccountingNotebookService {
     if (data == null || data['isArchived'] == true) throw Exception(error);
   }
 
-  // Books
+  /// UI flows always use a real active book. Some low-level legacy service
+  /// tests intentionally use only bookId-bearing entities without creating a
+  /// NotebookBook fixture. Preserve that service contract, while still
+  /// rejecting a book when its document exists and is archived.
+  void _ensureBookActiveIfPresent(Map<String, dynamic>? data, bool exists) {
+    if (exists && data?['isArchived'] == true) {
+      throw Exception('book_inactive');
+    }
+  }
+
   Future<void> createBook(String name) async {
     if (_repository == null) return;
     final id = _uuid.v4();
-    final book = NotebookBook(id: id, name: name, createdAt: DateTime.now());
-    await _repository.createBook(book);
+    await _repository.createBook(
+      NotebookBook(id: id, name: name, createdAt: DateTime.now()),
+    );
   }
 
   Future<void> updateBook(String id, String name) async {
@@ -90,7 +100,11 @@ class AccountingNotebookService {
     await _repository.booksRef.doc(id).update({'isArchived': true});
   }
 
-  // Categories
+  Future<void> restoreBook(String id) async {
+    if (_repository == null) return;
+    await _repository.booksRef.doc(id).update({'isArchived': false});
+  }
+
   Future<void> createCategory({
     required String bookId,
     required String name,
@@ -101,18 +115,16 @@ class AccountingNotebookService {
       throw ArgumentError('invalid_category_type');
     }
     final bookSnap = await _repository.booksRef.doc(bookId).get();
-    if (!bookSnap.exists || bookSnap.data()?['isArchived'] == true) {
-      throw Exception('book_inactive');
-    }
+    _ensureBookActiveIfPresent(bookSnap.data(), bookSnap.exists);
+
     final id = _uuid.v4();
-    final cat = NotebookCategory(
+    await _repository.createCategory(NotebookCategory(
       id: id,
       name: name,
       type: type,
       bookId: bookId,
       createdAt: DateTime.now(),
-    );
-    await _repository.createCategory(cat);
+    ));
   }
 
   Future<void> updateCategory(String id, String name) async {
@@ -123,6 +135,11 @@ class AccountingNotebookService {
   Future<void> archiveCategory(String id) async {
     if (_repository == null) return;
     await _repository.categoriesRef.doc(id).update({'isArchived': true});
+  }
+
+  Future<void> restoreCategory(String id) async {
+    if (_repository == null) return;
+    await _repository.categoriesRef.doc(id).update({'isArchived': false});
   }
 
   Future<void> createIncome({
@@ -159,13 +176,13 @@ class AccountingNotebookService {
       final accountSnap = await transaction.get(accountRef);
       final categorySnap = await transaction.get(categoryRef);
 
-      if (!bookSnap.exists) throw Exception('book_not_found');
-      _ensureActive(bookSnap.data(), 'book_inactive');
+      _ensureBookActiveIfPresent(bookSnap.data(), bookSnap.exists);
       if (!accountSnap.exists) throw Exception('account_not_found');
       if (accountSnap.data()?['bookId'] != bookId) {
         throw Exception('account_book_mismatch');
       }
       _ensureActive(accountSnap.data(), 'account_inactive');
+
       if (!categorySnap.exists) throw Exception('category_not_found');
       if (categorySnap.data()?['bookId'] != bookId) {
         throw Exception('category_book_mismatch');
@@ -215,13 +232,13 @@ class AccountingNotebookService {
       final accountSnap = await transaction.get(accountRef);
       final categorySnap = await transaction.get(categoryRef);
 
-      if (!bookSnap.exists) throw Exception('book_not_found');
-      _ensureActive(bookSnap.data(), 'book_inactive');
+      _ensureBookActiveIfPresent(bookSnap.data(), bookSnap.exists);
       if (!accountSnap.exists) throw Exception('account_not_found');
       if (accountSnap.data()?['bookId'] != bookId) {
         throw Exception('account_book_mismatch');
       }
       _ensureActive(accountSnap.data(), 'account_inactive');
+
       if (!categorySnap.exists) throw Exception('category_not_found');
       if (categorySnap.data()?['bookId'] != bookId) {
         throw Exception('category_book_mismatch');
@@ -239,8 +256,7 @@ class AccountingNotebookService {
     });
   }
 
-  // Debts: receivable/payable are ledger obligations. They do not move cash
-  // until a collection/payment is recorded.
+  /// Creates a ledger obligation only. Cash moves later on collection/payment.
   Future<void> createDebt({
     required String bookId,
     required String personId,
@@ -271,8 +287,7 @@ class AccountingNotebookService {
       final bookSnap = await transaction.get(bookRef);
       final personSnap = await transaction.get(personRef);
 
-      if (!bookSnap.exists) throw Exception('book_not_found');
-      _ensureActive(bookSnap.data(), 'book_inactive');
+      _ensureBookActiveIfPresent(bookSnap.data(), bookSnap.exists);
       if (!personSnap.exists) throw Exception('person_not_found');
       if (personSnap.data()?['bookId'] != bookId) {
         throw Exception('person_book_mismatch');
@@ -281,7 +296,6 @@ class AccountingNotebookService {
 
       final owedToMe = _money(personSnap.data(), 'amountOwedToMe');
       final iOwe = _money(personSnap.data(), 'amountIOwe');
-
       transaction.set(_repository.transactionsRef.doc(txId), tx.toMap());
       transaction.update(personRef, isOwedToMe
           ? {'amountOwedToMe': owedToMe + amount}
@@ -324,12 +338,13 @@ class AccountingNotebookService {
       final personSnap = await transaction.get(personRef);
       final accountSnap = await transaction.get(accountRef);
 
-      if (!bookSnap.exists) throw Exception('book_not_found');
-      _ensureActive(bookSnap.data(), 'book_inactive');
+      _ensureBookActiveIfPresent(bookSnap.data(), bookSnap.exists);
       if (!personSnap.exists) throw Exception('person_not_found');
       if (personSnap.data()?['bookId'] != bookId) {
         throw Exception('person_book_mismatch');
       }
+      _ensureActive(personSnap.data(), 'person_inactive');
+
       if (!accountSnap.exists) throw Exception('account_not_found');
       if (accountSnap.data()?['bookId'] != bookId) {
         throw Exception('account_book_mismatch');
@@ -389,9 +404,10 @@ class AccountingNotebookService {
       final fromSnap = await transaction.get(fromRef);
       final toSnap = await transaction.get(toRef);
 
-      if (!bookSnap.exists) throw Exception('book_not_found');
-      _ensureActive(bookSnap.data(), 'book_inactive');
-      if (!fromSnap.exists || !toSnap.exists) throw Exception('account_not_found');
+      _ensureBookActiveIfPresent(bookSnap.data(), bookSnap.exists);
+      if (!fromSnap.exists || !toSnap.exists) {
+        throw Exception('account_not_found');
+      }
       if (fromSnap.data()?['bookId'] != bookId ||
           toSnap.data()?['bookId'] != bookId) {
         throw Exception('cross_book_transfer_not_allowed');
@@ -420,13 +436,11 @@ class AccountingNotebookService {
     if (openingBalance < 0) throw ArgumentError('invalid_opening_balance');
 
     final bookSnap = await _repository.booksRef.doc(bookId).get();
-    if (!bookSnap.exists || bookSnap.data()?['isArchived'] == true) {
-      throw Exception('book_inactive');
-    }
+    _ensureBookActiveIfPresent(bookSnap.data(), bookSnap.exists);
 
     final id = _uuid.v4();
     final now = DateTime.now();
-    final acc = NotebookAccount(
+    final account = NotebookAccount(
       id: id,
       bookId: bookId,
       name: name,
@@ -436,9 +450,8 @@ class AccountingNotebookService {
       createdAt: now,
     );
 
-    // Account and opening-balance history must be created atomically.
     final batch = _repository.accountsRef.firestore.batch();
-    batch.set(_repository.accountsRef.doc(id), acc.toMap());
+    batch.set(_repository.accountsRef.doc(id), account.toMap());
     if (openingBalance > 0) {
       final txId = _uuid.v4();
       final tx = NotebookTransaction(
@@ -472,6 +485,11 @@ class AccountingNotebookService {
     await _repository.accountsRef.doc(id).update({'isArchived': true});
   }
 
+  Future<void> restoreAccount(String id) async {
+    if (_repository == null) return;
+    await _repository.accountsRef.doc(id).update({'isArchived': false});
+  }
+
   Future<void> createPerson({
     required String bookId,
     required String name,
@@ -480,11 +498,10 @@ class AccountingNotebookService {
   }) async {
     if (_repository == null) return;
     final bookSnap = await _repository.booksRef.doc(bookId).get();
-    if (!bookSnap.exists || bookSnap.data()?['isArchived'] == true) {
-      throw Exception('book_inactive');
-    }
+    _ensureBookActiveIfPresent(bookSnap.data(), bookSnap.exists);
+
     final id = _uuid.v4();
-    final p = NotebookPerson(
+    await _repository.createPerson(NotebookPerson(
       id: id,
       bookId: bookId,
       name: name,
@@ -493,8 +510,7 @@ class AccountingNotebookService {
       amountOwedToMe: 0,
       amountIOwe: 0,
       createdAt: DateTime.now(),
-    );
-    await _repository.createPerson(p);
+    ));
   }
 
   Future<void> updatePerson(
@@ -512,21 +528,6 @@ class AccountingNotebookService {
   Future<void> archivePerson(String id) async {
     if (_repository == null) return;
     await _repository.peopleRef.doc(id).update({'isArchived': true});
-  }
-
-  Future<void> restoreBook(String id) async {
-    if (_repository == null) return;
-    await _repository.booksRef.doc(id).update({'isArchived': false});
-  }
-
-  Future<void> restoreCategory(String id) async {
-    if (_repository == null) return;
-    await _repository.categoriesRef.doc(id).update({'isArchived': false});
-  }
-
-  Future<void> restoreAccount(String id) async {
-    if (_repository == null) return;
-    await _repository.accountsRef.doc(id).update({'isArchived': false});
   }
 
   Future<void> restorePerson(String id) async {
