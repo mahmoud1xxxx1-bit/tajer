@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
+import '../../authentication/data/auth_repository.dart';
+import '../../../core/widgets/pin_confirmation_dialog.dart';
 
 class NotebookCategoriesScreen extends ConsumerStatefulWidget {
   const NotebookCategoriesScreen({super.key});

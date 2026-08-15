@@ -4,9 +4,9 @@ import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
 import '../utils/notebook_localization_helper.dart';
-import '../../../../core/services/guest_limit_service.dart';
-import '../../../../core/widgets/pin_confirmation_dialog.dart';
-import '../../../authentication/data/auth_repository.dart';
+import '../../../core/services/guest_limit_service.dart';
+import '../../../core/widgets/pin_confirmation_dialog.dart';
+import '../../authentication/data/auth_repository.dart';
 
 
 class NotebookAccountsScreen extends ConsumerStatefulWidget {

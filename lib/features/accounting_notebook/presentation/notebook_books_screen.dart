@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
-import '../../../../core/services/guest_limit_service.dart';
-import '../../../../core/widgets/pin_confirmation_dialog.dart';
-import '../../../authentication/data/auth_repository.dart';
+import '../../../core/services/guest_limit_service.dart';
+import '../../../core/widgets/pin_confirmation_dialog.dart';
+import '../../authentication/data/auth_repository.dart';
 
 class NotebookBooksScreen extends ConsumerWidget {
   const NotebookBooksScreen({super.key});

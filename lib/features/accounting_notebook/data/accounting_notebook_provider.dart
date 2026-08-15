@@ -385,4 +385,24 @@ class AccountingNotebookService {
     if (_repository == null) return;
     await _repository.peopleRef.doc(id).update({'isArchived': true});
   }
+
+  Future<void> restoreBook(String id) async {
+    if (_repository == null) return;
+    await _repository.booksRef.doc(id).update({'isArchived': false});
+  }
+
+  Future<void> restoreCategory(String id) async {
+    if (_repository == null) return;
+    await _repository.categoriesRef.doc(id).update({'isArchived': false});
+  }
+
+  Future<void> restoreAccount(String id) async {
+    if (_repository == null) return;
+    await _repository.accountsRef.doc(id).update({'isArchived': false});
+  }
+
+  Future<void> restorePerson(String id) async {
+    if (_repository == null) return;
+    await _repository.peopleRef.doc(id).update({'isArchived': false});
+  }
 }
