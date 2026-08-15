@@ -4,6 +4,7 @@ import 'package:tajer/features/accounting_notebook/data/accounting_notebook_prov
 import 'package:tajer/features/accounting_notebook/data/accounting_notebook_repository.dart';
 import 'package:tajer/features/accounting_notebook/domain/notebook_account.dart';
 import 'package:tajer/features/accounting_notebook/domain/notebook_person.dart';
+import 'package:tajer/features/accounting_notebook/domain/notebook_category.dart';
 
 void main() {
   late FakeFirebaseFirestore fakeFirestore;
@@ -52,6 +53,16 @@ void main() {
         name: 'John Doe',
         amountOwedToMe: 0.0,
         amountIOwe: 0.0,
+        bookId: bookId,
+        createdAt: now,
+      ).toMap(),
+    );
+
+    await repository.categoriesRef.doc(categoryId).set(
+      NotebookCategory(
+        id: categoryId,
+        name: 'General',
+        type: 'income',
         bookId: bookId,
         createdAt: now,
       ).toMap(),

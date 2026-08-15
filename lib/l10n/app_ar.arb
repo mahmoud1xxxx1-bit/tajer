@@ -771,5 +771,6 @@
   "notebookPayPayment": "دفع مبلغ",
   "notebookOverpaymentError": "المبلغ المدخل أكبر من الرصيد المتبقي",
   "notebookSameAccountError": "لا يمكن التحويل لنفس الحساب",
-  "notebookPartialPaymentHint": "المبلغ المراد سداده"
+  "notebookPartialPaymentHint": "المبلغ المراد سداده",
+  "notebookNoCategoriesFound": "لا توجد فئات"
 }
