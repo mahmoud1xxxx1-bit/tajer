@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
 import '../utils/notebook_localization_helper.dart';
+import '../utils/notebook_terminology.dart';
 
 class NotebookTransactionsScreen extends ConsumerStatefulWidget {
   const NotebookTransactionsScreen({super.key});
@@ -53,24 +54,24 @@ class _NotebookTransactionsScreenState
         .toList();
 
     String accountName(String? id) => (accountsAsync.value ?? [])
-        .where((a) => a.id == id)
-        .map((a) => a.name)
-        .firstOrNull ??
+            .where((a) => a.id == id)
+            .map((a) => a.name)
+            .firstOrNull ??
         '...';
     String categoryName(String? id) => (categoriesAsync.value ?? [])
-        .where((c) => c.id == id)
-        .map((c) => c.name)
-        .firstOrNull ??
+            .where((c) => c.id == id)
+            .map((c) => c.name)
+            .firstOrNull ??
         '...';
     String personName(String? id) => (peopleAsync.value ?? [])
-        .where((p) => p.id == id)
-        .map((p) => p.name)
-        .firstOrNull ??
+            .where((p) => p.id == id)
+            .map((p) => p.name)
+            .firstOrNull ??
         '...';
     String bookName(String id) => books
-        .where((b) => b.id == id)
-        .map((b) => b.name)
-        .firstOrNull ??
+            .where((b) => b.id == id)
+            .map((b) => b.name)
+            .firstOrNull ??
         '...';
 
     return Scaffold(
@@ -158,15 +159,23 @@ class _NotebookTransactionsScreenState
                                 value: 'expense', child: Text(l10n.expense)),
                             DropdownMenuItem(
                                 value: 'receivable',
-                                child: Text(l10n.moneyOwedToMe)),
+                                child: Text(
+                                    NotebookTerminology.accountsReceivable(
+                                        context))),
                             DropdownMenuItem(
-                                value: 'payable', child: Text(l10n.moneyIOwe)),
+                                value: 'payable',
+                                child: Text(
+                                    NotebookTerminology.accountsPayable(
+                                        context))),
                             DropdownMenuItem(
                                 value: 'receivable_payment',
-                                child: Text(l10n.notebookReceivePayment)),
+                                child: Text(
+                                    NotebookTerminology.receivePayment(
+                                        context))),
                             DropdownMenuItem(
                                 value: 'payable_payment',
-                                child: Text(l10n.notebookPayPayment)),
+                                child: Text(NotebookTerminology.makePayment(
+                                    context))),
                             DropdownMenuItem(
                                 value: 'account_transfer',
                                 child: Text(l10n.notebookTransfer)),
@@ -294,9 +303,6 @@ class _NotebookTransactionsScreenState
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (_, __) => Center(child: Text(l10n.genericErrorPrefix)),
               data: (allTransactions) {
-                // Keep the Firestore query stable and apply user-selected filters
-                // locally. This prevents composite-index explosions when several
-                // filters are combined while preserving correct merchant data.
                 final filtered = allTransactions.where((tx) {
                   if (_selectedBookId != null &&
                       tx.bookId != _selectedBookId) return false;
@@ -331,9 +337,20 @@ class _NotebookTransactionsScreenState
                     final isPositive = tx.type == 'income' ||
                         tx.type == 'receivable_payment';
                     final isNeutral = tx.type == 'opening_balance' ||
-                        tx.type == 'account_transfer';
-                    final typeText = NotebookLocalizationHelper
-                        .getNotebookLocalizedTypeCustom(tx.type, l10n);
+                        tx.type == 'account_transfer' ||
+                        tx.type == 'receivable' ||
+                        tx.type == 'payable';
+                    final typeText = tx.type == 'receivable'
+                        ? NotebookTerminology.accountsReceivable(context)
+                        : tx.type == 'payable'
+                            ? NotebookTerminology.accountsPayable(context)
+                            : tx.type == 'receivable_payment'
+                                ? NotebookTerminology.receivePayment(context)
+                                : tx.type == 'payable_payment'
+                                    ? NotebookTerminology.makePayment(context)
+                                    : NotebookLocalizationHelper
+                                        .getNotebookLocalizedTypeCustom(
+                                            tx.type, l10n);
                     final dateText = DateFormat.yMMMd(
                             Localizations.localeOf(context).languageCode)
                         .format(tx.date);
