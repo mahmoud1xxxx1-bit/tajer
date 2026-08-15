@@ -1,16 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:firebase_ui_firestore/firebase_ui_firestore.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import '../domain/notebook_transaction.dart';
-import '../data/accounting_notebook_repository.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
-import '../domain/notebook_account.dart';
-
-import '../domain/notebook_category.dart';
-import '../domain/notebook_person.dart';
 import '../utils/notebook_localization_helper.dart';
 
 class NotebookTransactionsScreen extends ConsumerStatefulWidget {
@@ -30,69 +22,56 @@ class _NotebookTransactionsScreenState
   String? _selectedAccountId;
   String? _selectedBookId;
   String? _selectedCategoryId;
+  bool _initializedBook = false;
 
-  @override
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-
-    final allAccounts = ref.watch(notebookAccountsProvider).value ?? [];
-    final allCategories = ref.watch(notebookCategoriesProvider).value ?? [];
-    final allPeople = ref.watch(notebookPeopleProvider).value ?? [];
-
-    String getAccountName(String? id) => allAccounts
-        .firstWhere((a) => a.id == id,
-            orElse: () => NotebookAccount(
-                id: '',
-                name: '...',
-                type: '',
-                balance: 0,
-                bookId: '',
-                createdAt: DateTime.now(),
-                isArchived: false))
-        .name;
-    String getCategoryName(String? id) => allCategories
-        .firstWhere((c) => c.id == id,
-            orElse: () => NotebookCategory(
-                id: '',
-                name: '...',
-                type: '',
-                bookId: '',
-                createdAt: DateTime.now(),
-                isArchived: false))
-        .name;
-    String getPersonName(String? id) => allPeople
-        .firstWhere((p) => p.id == id,
-            orElse: () => NotebookPerson(
-                id: '',
-                name: '...',
-                amountOwedToMe: 0,
-                amountIOwe: 0,
-                bookId: '',
-                createdAt: DateTime.now(),
-                isArchived: false))
-        .name;
-
-    final peopleAsync = ref.watch(notebookPeopleProvider);
-    final accountsAsync = ref.watch(notebookAccountsProvider);
     final booksAsync = ref.watch(notebookBooksProvider);
+    final accountsAsync = ref.watch(notebookAccountsProvider);
     final categoriesAsync = ref.watch(notebookCategoriesProvider);
+    final peopleAsync = ref.watch(notebookPeopleProvider);
+    final transactionsAsync = ref.watch(notebookTransactionsProvider);
+    final sharedBookId = ref.watch(notebookCurrentBookIdProvider);
 
-    final accounts = accountsAsync.value
-            ?.where(
-                (a) => _selectedBookId == null || a.bookId == _selectedBookId)
-            .toList() ??
-        [];
-    final people = peopleAsync.value
-            ?.where(
-                (p) => _selectedBookId == null || p.bookId == _selectedBookId)
-            .toList() ??
-        [];
-    final categories = categoriesAsync.value
-            ?.where(
-                (c) => _selectedBookId == null || c.bookId == _selectedBookId)
-            .toList() ??
-        [];
+    final books = booksAsync.value ?? [];
+    if (!_initializedBook) {
+      _initializedBook = true;
+      if (sharedBookId != null && books.any((b) => b.id == sharedBookId)) {
+        _selectedBookId = sharedBookId;
+      }
+    }
+
+    final accounts = (accountsAsync.value ?? [])
+        .where((a) => _selectedBookId == null || a.bookId == _selectedBookId)
+        .toList();
+    final categories = (categoriesAsync.value ?? [])
+        .where((c) => _selectedBookId == null || c.bookId == _selectedBookId)
+        .toList();
+    final people = (peopleAsync.value ?? [])
+        .where((p) => _selectedBookId == null || p.bookId == _selectedBookId)
+        .toList();
+
+    String accountName(String? id) => (accountsAsync.value ?? [])
+        .where((a) => a.id == id)
+        .map((a) => a.name)
+        .firstOrNull ??
+        '...';
+    String categoryName(String? id) => (categoriesAsync.value ?? [])
+        .where((c) => c.id == id)
+        .map((c) => c.name)
+        .firstOrNull ??
+        '...';
+    String personName(String? id) => (peopleAsync.value ?? [])
+        .where((p) => p.id == id)
+        .map((p) => p.name)
+        .firstOrNull ??
+        '...';
+    String bookName(String id) => books
+        .where((b) => b.id == id)
+        .map((b) => b.name)
+        .firstOrNull ??
+        '...';
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notebookTransactions)),
@@ -102,27 +81,20 @@ class _NotebookTransactionsScreenState
             margin: const EdgeInsets.fromLTRB(16, 12, 16, 4),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              color: Colors.indigo.withValues(alpha: 0.15),
+              color: Theme.of(context)
+                  .colorScheme
+                  .primaryContainer
+                  .withValues(alpha: 0.45),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.indigo.withValues(alpha: 0.3)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.lightbulb_outline,
-                    color: Colors.amber, size: 26),
+                Icon(Icons.lightbulb_outline,
+                    color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    l10n.notebookGuideTransactions,
-                    style: TextStyle(
-                        fontFamily: 'Tajawal',
-                        fontSize: 13,
-                        height: 1.4,
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.7)),
-                  ),
+                  child: Text(l10n.notebookGuideTransactions,
+                      style: Theme.of(context).textTheme.bodyMedium),
                 ),
               ],
             ),
@@ -135,174 +107,143 @@ class _NotebookTransactionsScreenState
               leading: const Icon(Icons.filter_list),
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0, vertical: 8.0),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: Wrap(
                     spacing: 12,
                     runSpacing: 12,
                     children: [
-                      // TYPE FILTER
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.42,
-                        child: DropdownButtonFormField<String?>(
+                      _filterBox(
+                        context,
+                        DropdownButtonFormField<String?>(
+                          value: _selectedBookId,
                           isExpanded: true,
-                          initialValue: _selectedType,
-                          decoration: InputDecoration(
-                              labelText: l10n.notebookFilterType,
-                              isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8)),
+                          decoration:
+                              InputDecoration(labelText: l10n.notebookFilterBook),
                           items: [
                             DropdownMenuItem(
-                                value: null,
-                                child: Text(l10n.notebookAll,
-                                    overflow: TextOverflow.ellipsis)),
+                                value: null, child: Text(l10n.notebookAll)),
+                            ...books.map((b) => DropdownMenuItem(
+                                value: b.id,
+                                child: Text(b.name,
+                                    overflow: TextOverflow.ellipsis))),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedBookId = value;
+                              _selectedAccountId = null;
+                              _selectedPersonId = null;
+                              _selectedCategoryId = null;
+                            });
+                            if (value != null) {
+                              ref
+                                  .read(notebookCurrentBookIdProvider.notifier)
+                                  .state = value;
+                            }
+                          },
+                        ),
+                      ),
+                      _filterBox(
+                        context,
+                        DropdownButtonFormField<String?>(
+                          value: _selectedType,
+                          isExpanded: true,
+                          decoration:
+                              InputDecoration(labelText: l10n.notebookFilterType),
+                          items: [
                             DropdownMenuItem(
-                                value: 'income',
-                                child: Text(l10n.income,
-                                    overflow: TextOverflow.ellipsis)),
+                                value: null, child: Text(l10n.notebookAll)),
                             DropdownMenuItem(
-                                value: 'expense',
-                                child: Text(l10n.expense,
-                                    overflow: TextOverflow.ellipsis)),
+                                value: 'income', child: Text(l10n.income)),
+                            DropdownMenuItem(
+                                value: 'expense', child: Text(l10n.expense)),
                             DropdownMenuItem(
                                 value: 'receivable',
-                                child: Text(l10n.moneyOwedToMe,
-                                    overflow: TextOverflow.ellipsis)),
+                                child: Text(l10n.moneyOwedToMe)),
                             DropdownMenuItem(
-                                value: 'payable',
-                                child: Text(l10n.moneyIOwe,
-                                    overflow: TextOverflow.ellipsis)),
+                                value: 'payable', child: Text(l10n.moneyIOwe)),
                             DropdownMenuItem(
                                 value: 'receivable_payment',
-                                child: Text(l10n.notebookReceivePayment,
-                                    overflow: TextOverflow.ellipsis)),
+                                child: Text(l10n.notebookReceivePayment)),
                             DropdownMenuItem(
                                 value: 'payable_payment',
-                                child: Text(l10n.notebookPayPayment,
-                                    overflow: TextOverflow.ellipsis)),
+                                child: Text(l10n.notebookPayPayment)),
                             DropdownMenuItem(
                                 value: 'account_transfer',
-                                child: Text(l10n.notebookTransfer,
-                                    overflow: TextOverflow.ellipsis)),
+                                child: Text(l10n.notebookTransfer)),
+                            DropdownMenuItem(
+                                value: 'opening_balance',
+                                child: Text(l10n.notebookOpeningBalance)),
                           ],
-                          onChanged: (val) =>
-                              setState(() => _selectedType = val),
+                          onChanged: (value) =>
+                              setState(() => _selectedType = value),
                         ),
                       ),
-                      // BOOK FILTER
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.42,
-                        child: DropdownButtonFormField<String?>(
+                      _filterBox(
+                        context,
+                        DropdownButtonFormField<String?>(
+                          value: _selectedAccountId,
                           isExpanded: true,
-                          initialValue: _selectedBookId,
                           decoration: InputDecoration(
-                              labelText: l10n.notebookFilterBook,
-                              isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8)),
+                              labelText: l10n.notebookFilterAccount),
                           items: [
                             DropdownMenuItem(
-                                value: null,
-                                child: Text(l10n.notebookAll,
-                                    overflow: TextOverflow.ellipsis)),
-                            ...booksAsync.maybeWhen(
-                              data: (books) => books.map((b) =>
-                                  DropdownMenuItem(
-                                      value: b.id,
-                                      child: Text(b.name,
-                                          overflow: TextOverflow.ellipsis))),
-                              orElse: () => [],
-                            )
-                          ],
-                          onChanged: (val) =>
-                              setState(() => _selectedBookId = val),
-                        ),
-                      ),
-                      // ACCOUNT FILTER
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.42,
-                        child: DropdownButtonFormField<String?>(
-                          isExpanded: true,
-                          initialValue: _selectedAccountId,
-                          decoration: InputDecoration(
-                              labelText: l10n.notebookFilterAccount,
-                              isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8)),
-                          items: [
-                            DropdownMenuItem(
-                                value: null,
-                                child: Text(l10n.notebookAll,
-                                    overflow: TextOverflow.ellipsis)),
+                                value: null, child: Text(l10n.notebookAll)),
                             ...accounts.map((a) => DropdownMenuItem(
                                 value: a.id,
                                 child: Text(a.name,
-                                    overflow: TextOverflow.ellipsis)))
+                                    overflow: TextOverflow.ellipsis))),
                           ],
-                          onChanged: (val) =>
-                              setState(() => _selectedAccountId = val),
+                          onChanged: (value) =>
+                              setState(() => _selectedAccountId = value),
                         ),
                       ),
-                      // PERSON FILTER
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.42,
-                        child: DropdownButtonFormField<String?>(
+                      _filterBox(
+                        context,
+                        DropdownButtonFormField<String?>(
+                          value: _selectedPersonId,
                           isExpanded: true,
-                          initialValue: _selectedPersonId,
-                          decoration: InputDecoration(
-                              labelText: l10n.notebookPerson,
-                              isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8)),
+                          decoration:
+                              InputDecoration(labelText: l10n.notebookPerson),
                           items: [
                             DropdownMenuItem(
-                                value: null,
-                                child: Text(l10n.notebookAll,
-                                    overflow: TextOverflow.ellipsis)),
+                                value: null, child: Text(l10n.notebookAll)),
                             ...people.map((p) => DropdownMenuItem(
                                 value: p.id,
                                 child: Text(p.name,
-                                    overflow: TextOverflow.ellipsis)))
+                                    overflow: TextOverflow.ellipsis))),
                           ],
-                          onChanged: (val) =>
-                              setState(() => _selectedPersonId = val),
+                          onChanged: (value) =>
+                              setState(() => _selectedPersonId = value),
                         ),
                       ),
-                      // CATEGORY FILTER
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.42,
-                        child: DropdownButtonFormField<String?>(
+                      _filterBox(
+                        context,
+                        DropdownButtonFormField<String?>(
+                          value: _selectedCategoryId,
                           isExpanded: true,
-                          initialValue: _selectedCategoryId,
-                          decoration: InputDecoration(
-                              labelText: l10n.notebookCategory,
-                              isDense: true,
-                              contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8)),
+                          decoration:
+                              InputDecoration(labelText: l10n.notebookCategory),
                           items: [
                             DropdownMenuItem(
-                                value: null,
-                                child: Text(l10n.notebookAll,
-                                    overflow: TextOverflow.ellipsis)),
+                                value: null, child: Text(l10n.notebookAll)),
                             ...categories.map((c) => DropdownMenuItem(
                                 value: c.id,
                                 child: Text(c.name,
-                                    overflow: TextOverflow.ellipsis)))
+                                    overflow: TextOverflow.ellipsis))),
                           ],
-                          onChanged: (val) =>
-                              setState(() => _selectedCategoryId = val),
+                          onChanged: (value) =>
+                              setState(() => _selectedCategoryId = value),
                         ),
                       ),
-                      // ACTIONS
                       SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.42,
+                        width: MediaQuery.of(context).size.width < 600
+                            ? MediaQuery.of(context).size.width * 0.42
+                            : 260,
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.date_range,
-                                  color: Colors.blue),
+                              icon: const Icon(Icons.date_range),
                               tooltip: l10n.notebookDateRange,
                               onPressed: () async {
                                 final range = await showDateRangePicker(
@@ -313,38 +254,31 @@ class _NotebookTransactionsScreenState
                                       _startDate != null && _endDate != null
                                           ? DateTimeRange(
                                               start: _startDate!,
-                                              end: _endDate!)
+                                              end: _endDate!
+                                                  .subtract(const Duration(days: 1)))
                                           : null,
                                 );
                                 if (range != null) {
                                   setState(() {
                                     _startDate = range.start;
-                                    _endDate = range.end.add(
-                                        const Duration(days: 1)); // inclusive
+                                    _endDate =
+                                        range.end.add(const Duration(days: 1));
                                   });
                                 }
                               },
                             ),
-                            if (_selectedType != null ||
-                                _startDate != null ||
-                                _selectedPersonId != null ||
-                                _selectedAccountId != null ||
-                                _selectedBookId != null ||
-                                _selectedCategoryId != null)
-                              IconButton(
-                                icon:
-                                    const Icon(Icons.clear, color: Colors.red),
-                                tooltip: l10n.notebookClearFilters,
-                                onPressed: () => setState(() {
-                                  _selectedType = null;
-                                  _startDate = null;
-                                  _endDate = null;
-                                  _selectedPersonId = null;
-                                  _selectedAccountId = null;
-                                  _selectedBookId = null;
-                                  _selectedCategoryId = null;
-                                }),
-                              )
+                            IconButton(
+                              icon: const Icon(Icons.clear),
+                              tooltip: l10n.notebookClearFilters,
+                              onPressed: () => setState(() {
+                                _selectedType = null;
+                                _startDate = null;
+                                _endDate = null;
+                                _selectedPersonId = null;
+                                _selectedAccountId = null;
+                                _selectedCategoryId = null;
+                              }),
+                            ),
                           ],
                         ),
                       ),
@@ -354,142 +288,106 @@ class _NotebookTransactionsScreenState
               ],
             ),
           ),
-          const Divider(),
+          const Divider(height: 1),
           Expanded(
-            child: Builder(builder: (context) {
-              final repo = ref.watch(accountingNotebookRepositoryProvider);
-              if (repo == null)
-                return const Center(child: CircularProgressIndicator());
-
-              var query =
-                  repo.transactionsRef.orderBy('date', descending: true);
-
-              if (_selectedType != null)
-                query = query.where('type', isEqualTo: _selectedType);
-              if (_selectedBookId != null)
-                query = query.where('bookId', isEqualTo: _selectedBookId);
-              if (_selectedAccountId != null)
-                query = query.where('accountId', isEqualTo: _selectedAccountId);
-              if (_selectedPersonId != null)
-                query = query.where('personId', isEqualTo: _selectedPersonId);
-              if (_selectedCategoryId != null)
-                query =
-                    query.where('categoryId', isEqualTo: _selectedCategoryId);
-              if (_startDate != null)
-                query = query.where('date',
-                    isGreaterThanOrEqualTo: Timestamp.fromDate(_startDate!));
-              if (_endDate != null)
-                query = query.where('date',
-                    isLessThan: Timestamp.fromDate(_endDate!));
-
-              final typedQuery = query.withConverter<NotebookTransaction>(
-                fromFirestore: (snapshot, _) =>
-                    NotebookTransaction.fromMap(snapshot.data()!, snapshot.id),
-                toFirestore: (tx, _) => tx.toMap(),
-              );
-
-              return FirestoreListView<NotebookTransaction>(
-                query: typedQuery,
-                pageSize: 50,
-                emptyBuilder: (context) =>
-                    Center(child: Text(l10n.notebookNoTransactionsYet)),
-                loadingBuilder: (context) =>
-                    const Center(child: CircularProgressIndicator()),
-                errorBuilder: (context, error, stackTrace) =>
-                    Center(child: Text('${l10n.genericErrorPrefix}: $error')),
-                itemBuilder: (context, doc) {
-                  final tx = doc.data();
-                  final isPositive =
-                      tx.type == 'income' || tx.type == 'receivable_payment';
-                  final isNeutral = tx.type == 'opening_balance' ||
-                      tx.type == 'account_transfer';
-
-                  final typeStr =
-                      NotebookLocalizationHelper.getNotebookLocalizedTypeCustom(
-                          tx.type, l10n);
-                  final bookStr = booksAsync.value
-                          ?.where((b) => b.id == tx.bookId)
-                          .firstOrNull
-                          ?.name ??
-                      '...';
-                  final accStr = getAccountName(tx.accountId);
-
-                  String? targetStr;
-                  if (tx.type == 'account_transfer') {
-                    final toAccStr = getAccountName(tx.toAccountId);
-                    targetStr =
-                        '${l10n.notebookTransfer}: $accStr -> $toAccStr';
-                  } else if (tx.personId != null) {
-                    targetStr =
-                        '${l10n.notebookPerson}: ${getPersonName(tx.personId)}';
-                  } else if (tx.categoryId != null) {
-                    targetStr =
-                        '${l10n.notebookCategory}: ${getCategoryName(tx.categoryId)}';
+            child: transactionsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (_, __) => Center(child: Text(l10n.genericErrorPrefix)),
+              data: (allTransactions) {
+                // Keep the Firestore query stable and apply user-selected filters
+                // locally. This prevents composite-index explosions when several
+                // filters are combined while preserving correct merchant data.
+                final filtered = allTransactions.where((tx) {
+                  if (_selectedBookId != null &&
+                      tx.bookId != _selectedBookId) return false;
+                  if (_selectedType != null && tx.type != _selectedType) {
+                    return false;
                   }
+                  if (_selectedAccountId != null &&
+                      tx.accountId != _selectedAccountId &&
+                      tx.toAccountId != _selectedAccountId) return false;
+                  if (_selectedPersonId != null &&
+                      tx.personId != _selectedPersonId) return false;
+                  if (_selectedCategoryId != null &&
+                      tx.categoryId != _selectedCategoryId) return false;
+                  if (_startDate != null && tx.date.isBefore(_startDate!)) {
+                    return false;
+                  }
+                  if (_endDate != null && !tx.date.isBefore(_endDate!)) {
+                    return false;
+                  }
+                  return true;
+                }).toList()
+                  ..sort((a, b) => b.date.compareTo(a.date));
 
-                  final dateStr = DateFormat.yMMMd(
-                          Localizations.localeOf(context).languageCode)
-                      .format(tx.date);
+                if (filtered.isEmpty) {
+                  return Center(child: Text(l10n.notebookNoTransactionsYet));
+                }
 
-                  return Card(
-                    margin:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(typeStr,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16)),
-                              Text(
-                                '${isNeutral ? '' : isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',
-                                style: TextStyle(
-                                  color: isNeutral
-                                      ? Colors.blue
-                                      : isPositive
-                                          ? Colors.green
-                                          : Colors.red,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
+                return ListView.builder(
+                  itemCount: filtered.length,
+                  itemBuilder: (context, index) {
+                    final tx = filtered[index];
+                    final isPositive = tx.type == 'income' ||
+                        tx.type == 'receivable_payment';
+                    final isNeutral = tx.type == 'opening_balance' ||
+                        tx.type == 'account_transfer';
+                    final typeText = NotebookLocalizationHelper
+                        .getNotebookLocalizedTypeCustom(tx.type, l10n);
+                    final dateText = DateFormat.yMMMd(
+                            Localizations.localeOf(context).languageCode)
+                        .format(tx.date);
+
+                    String? detail;
+                    if (tx.type == 'account_transfer') {
+                      detail =
+                          '${accountName(tx.accountId)} → ${accountName(tx.toAccountId)}';
+                    } else if (tx.personId != null) {
+                      detail = personName(tx.personId);
+                    } else if (tx.categoryId != null) {
+                      detail = categoryName(tx.categoryId);
+                    }
+
+                    return Card(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 6),
+                      child: ListTile(
+                        title: Text(typeText,
+                            style:
+                                const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text(
+                          '${bookName(tx.bookId)} • $dateText${detail == null ? '' : ' • $detail'}${tx.note == null || tx.note!.isEmpty ? '' : '\n${tx.note}'}',
+                        ),
+                        isThreeLine: tx.note != null && tx.note!.isNotEmpty,
+                        trailing: Text(
+                          '${isNeutral ? '' : isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',
+                          style: TextStyle(
+                            color: isNeutral
+                                ? Theme.of(context).colorScheme.primary
+                                : isPositive
+                                    ? Colors.green
+                                    : Colors.red,
+                            fontWeight: FontWeight.bold,
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                              '${l10n.notebookFilterBook}: $bookStr | ${l10n.notebookFilterAccount}: $accStr',
-                              style: const TextStyle(fontSize: 13)),
-                          if (targetStr != null &&
-                              tx.type != 'account_transfer')
-                            Text(targetStr,
-                                style: const TextStyle(fontSize: 13)),
-                          if (tx.type == 'account_transfer')
-                            Text(targetStr ?? '',
-                                style: const TextStyle(
-                                    fontSize: 13, color: Colors.blueGrey)),
-                          if (tx.note != null && tx.note!.isNotEmpty)
-                            Text('${l10n.note}: ${tx.note}',
-                                style: const TextStyle(
-                                    fontSize: 13, fontStyle: FontStyle.italic)),
-                          const SizedBox(height: 8),
-                          Text(dateStr,
-                              style: const TextStyle(
-                                  fontSize: 12, color: Colors.grey)),
-                        ],
+                        ),
                       ),
-                    ),
-                  );
-                },
-              );
-            }),
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _filterBox(BuildContext context, Widget child) {
+    return SizedBox(
+      width: MediaQuery.of(context).size.width < 600
+          ? MediaQuery.of(context).size.width * 0.42
+          : 260,
+      child: child,
     );
   }
 }
