@@ -2,7 +2,7 @@ name: Build Tajer App
 
 on:
   push:
-    branches: [ "main", "master", "release/v1.0.107-recovered" ]
+    branches: [ "main", "master", "release/v1.0.107-recovered", "feature/accounting-notebook" ]
   workflow_dispatch:
 
 jobs:
