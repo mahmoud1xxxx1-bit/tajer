@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
+import '../utils/notebook_terminology.dart';
 
 class NotebookPaymentScreen extends ConsumerStatefulWidget {
   final String personId;
@@ -36,8 +37,14 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final title = widget.isReceivablePayment
-        ? l10n.notebookReceivePayment
-        : l10n.notebookPayPayment;
+        ? NotebookTerminology.receivePayment(context)
+        : NotebookTerminology.makePayment(context);
+    final partialLabel = widget.isReceivablePayment
+        ? NotebookTerminology.partialReceivePayment(context)
+        : NotebookTerminology.partialMakePayment(context);
+    final fullLabel = widget.isReceivablePayment
+        ? NotebookTerminology.fullReceivePayment(context)
+        : NotebookTerminology.fullMakePayment(context);
     final peopleAsync = ref.watch(notebookPeopleProvider);
 
     return Scaffold(
@@ -131,7 +138,7 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
                             Expanded(
                               child: OutlinedButton(
                                 onPressed: () => _amountController.clear(),
-                                child: Text(l10n.notebookPartialPayment),
+                                child: Text(partialLabel),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -139,7 +146,7 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
                               child: ElevatedButton(
                                 onPressed: () => _amountController.text =
                                     maxAmount.toStringAsFixed(2),
-                                child: Text(l10n.notebookFullPayment),
+                                child: Text(fullLabel),
                               ),
                             ),
                           ],
