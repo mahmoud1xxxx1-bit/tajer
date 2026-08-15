@@ -6,6 +6,7 @@ import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
 import '../../../../core/services/guest_limit_service.dart';
 import '../utils/notebook_localization_helper.dart';
+import '../utils/notebook_terminology.dart';
 
 class NotebookPersonStatementScreen extends ConsumerWidget {
   final String personId;
@@ -57,29 +58,41 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          Column(
-                            children: [
-                              Text(l10n.notebookTotalOwedToMe,
-                                  style: const TextStyle(color: Colors.green)),
-                              const SizedBox(height: 4),
-                              Text(person.amountOwedToMe.toStringAsFixed(2),
-                                  style: const TextStyle(
-                                      color: Colors.green,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16)),
-                            ],
+                          Flexible(
+                            child: Column(
+                              children: [
+                                Text(
+                                  NotebookTerminology.totalAccountsReceivable(
+                                      context),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: Colors.green),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(person.amountOwedToMe.toStringAsFixed(2),
+                                    style: const TextStyle(
+                                        color: Colors.green,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16)),
+                              ],
+                            ),
                           ),
-                          Column(
-                            children: [
-                              Text(l10n.notebookTotalIOwe,
-                                  style: const TextStyle(color: Colors.red)),
-                              const SizedBox(height: 4),
-                              Text(person.amountIOwe.toStringAsFixed(2),
-                                  style: const TextStyle(
-                                      color: Colors.red,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16)),
-                            ],
+                          Flexible(
+                            child: Column(
+                              children: [
+                                Text(
+                                  NotebookTerminology.totalAccountsPayable(
+                                      context),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: Colors.red),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(person.amountIOwe.toStringAsFixed(2),
+                                    style: const TextStyle(
+                                        color: Colors.red,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16)),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -167,7 +180,8 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                                 }
                               }
                             : null,
-                        label: Text(l10n.notebookReceivePayment),
+                        label: Text(
+                            NotebookTerminology.receivePayment(context)),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -188,7 +202,8 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                                 }
                               }
                             : null,
-                        label: Text(l10n.notebookPayPayment),
+                        label:
+                            Text(NotebookTerminology.makePayment(context)),
                       ),
                     ),
                   ],
