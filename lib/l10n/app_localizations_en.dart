@@ -1850,4 +1850,7 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get permCanAccessAccountingNotebookDesc =>
       'Allow employee to access and manage accounting notebook data';
+
+  @override
+  String get notebookBalance => 'Balance';
 }

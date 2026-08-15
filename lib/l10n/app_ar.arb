@@ -753,4 +753,7 @@
   "notebookDebtAndAccounts": "الديون والحسابات",
   "permCanAccessAccountingNotebook": "دفتر المحاسبة",
   "permCanAccessAccountingNotebookDesc": "السماح للموظف بالدخول إلى دفتر المحاسبة وإدارة بياناته"
+,
+  "notebookBalance": "الرصيد",
+  "notebookAccountType": "نوع الحساب"
 }

@@ -753,4 +753,7 @@
   "notebookDebtAndAccounts": "Debt & Accounts",
   "permCanAccessAccountingNotebook": "Accounting Notebook",
   "permCanAccessAccountingNotebookDesc": "Allow employee to access and manage accounting notebook data"
+,
+  "notebookBalance": "Balance",
+  "notebookAccountType": "Account Type"
 }

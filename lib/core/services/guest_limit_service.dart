@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/authentication/domain/app_user.dart';
-import '../../features/authentication/presentation/auth_providers.dart';
+import '../../features/authentication/data/auth_repository.dart';
 import 'limits_service.dart';
 
 class GuestLimitService {

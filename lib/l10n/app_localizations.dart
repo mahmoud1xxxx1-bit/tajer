@@ -3619,6 +3619,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'السماح للموظف بالدخول إلى دفتر المحاسبة وإدارة بياناته'**
   String get permCanAccessAccountingNotebookDesc;
+
+  /// No description provided for @notebookBalance.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرصيد'**
+  String get notebookBalance;
 }
 
 class _AppLocalizationsDelegate

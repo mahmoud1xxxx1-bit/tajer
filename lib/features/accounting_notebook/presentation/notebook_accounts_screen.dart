@@ -24,7 +24,7 @@ class NotebookAccountsScreen extends ConsumerWidget {
               return ListTile(
                 leading: const Icon(Icons.account_balance_wallet),
                 title: Text(a.name),
-                subtitle: Text('${l10n.balance}: ${a.balance.toStringAsFixed(2)} | ${AppLocalizations.of(context)!.notebookType}: ${a.type}'),
+                subtitle: Text('${l10n.notebookBalance}: ${a.balance.toStringAsFixed(2)} | ${l10n.notebookAccountType}: ${a.type}'),
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

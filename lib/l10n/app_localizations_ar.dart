@@ -1849,4 +1849,7 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get permCanAccessAccountingNotebookDesc =>
       'السماح للموظف بالدخول إلى دفتر المحاسبة وإدارة بياناته';
+
+  @override
+  String get notebookBalance => 'الرصيد';
 }
