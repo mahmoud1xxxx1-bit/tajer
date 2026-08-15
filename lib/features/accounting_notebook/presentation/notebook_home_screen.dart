@@ -65,6 +65,8 @@ class NotebookHomeScreen extends ConsumerWidget {
                 Expanded(child: _buildActionCard(context, Icons.arrow_downward, l10n.income, Colors.green, () => context.push('/notebook/income'))),
                 const SizedBox(width: 16),
                 Expanded(child: _buildActionCard(context, Icons.arrow_upward, l10n.expense, Colors.red, () => context.push('/notebook/expense'))),
+                const SizedBox(width: 16),
+                Expanded(child: _buildActionCard(context, Icons.swap_horiz, l10n.notebookTransfer ?? 'Transfer', Colors.blueGrey, () => context.push('/notebook/transfer'))),
               ],
             ),
             const SizedBox(height: 16),

@@ -1658,4 +1658,118 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notebookArchiveCategory => 'أرشفة التصنيف';
+
+  @override
+  String get notebookAddAccount => 'إضافة حساب';
+
+  @override
+  String get notebookEditAccount => 'تعديل حساب';
+
+  @override
+  String get notebookArchiveAccount => 'أرشفة حساب';
+
+  @override
+  String get notebookAccountName => 'اسم الحساب';
+
+  @override
+  String get notebookAccountType => 'نوع الحساب';
+
+  @override
+  String get notebookOpeningBalance => 'الرصيد الافتتاحي';
+
+  @override
+  String get notebookAddPerson => 'إضافة شخص';
+
+  @override
+  String get notebookEditPerson => 'تعديل شخص';
+
+  @override
+  String get notebookArchivePerson => 'أرشفة شخص';
+
+  @override
+  String get notebookPersonName => 'اسم الشخص';
+
+  @override
+  String get notebookPersonPhone => 'رقم الهاتف';
+
+  @override
+  String get notebookNote => 'ملاحظة';
+
+  @override
+  String get notebookTransfer => 'تحويل';
+
+  @override
+  String get notebookSourceAccount => 'حساب المصدر';
+
+  @override
+  String get notebookDestinationAccount => 'حساب الوجهة';
+
+  @override
+  String get notebookPayment => 'سداد';
+
+  @override
+  String get notebookPartialPayment => 'سداد جزئي';
+
+  @override
+  String get notebookFullPayment => 'سداد كامل';
+
+  @override
+  String get notebookStatement => 'كشف حساب';
+
+  @override
+  String get notebookFilters => 'تصفية';
+
+  @override
+  String get notebookTotalOwedToMe => 'إجمالي لي';
+
+  @override
+  String get notebookTotalIOwe => 'إجمالي عليّ';
+
+  @override
+  String get notebookNetBalance => 'صافي الرصيد';
+
+  @override
+  String get notebookTypeCash => 'نقدي';
+
+  @override
+  String get notebookTypeBank => 'بنك';
+
+  @override
+  String get notebookTypeCard => 'بطاقة';
+
+  @override
+  String get notebookTypeWallet => 'محفظة إلكترونية';
+
+  @override
+  String get notebookTypeOther => 'أخرى';
+
+  @override
+  String get notebookDateRange => 'نطاق التاريخ';
+
+  @override
+  String get notebookTransactionType => 'نوع الحركة';
+
+  @override
+  String get notebookPaymentOfDebt => 'سداد دين';
+
+  @override
+  String get notebookCreateBookFirst => 'يرجى إنشاء دفتر أولاً.';
+
+  @override
+  String get notebookCreateCategoryFirst => 'يرجى إنشاء تصنيف أولاً.';
+
+  @override
+  String get notebookAll => 'الكل';
+
+  @override
+  String get notebookStartDate => 'تاريخ البداية';
+
+  @override
+  String get notebookEndDate => 'تاريخ النهاية';
+
+  @override
+  String get notebookApplyFilters => 'تطبيق التصفية';
+
+  @override
+  String get notebookClearFilters => 'مسح التصفية';
 }

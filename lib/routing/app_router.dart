@@ -30,6 +30,10 @@ import '../features/accounting_notebook/presentation/notebook_reports_screen.dar
 import '../features/accounting_notebook/presentation/notebook_books_screen.dart';
 import '../features/accounting_notebook/presentation/notebook_categories_screen.dart';
 import '../features/accounting_notebook/presentation/notebook_transactions_screen.dart';
+import '../features/accounting_notebook/presentation/notebook_transfer_screen.dart';
+import '../features/accounting_notebook/presentation/notebook_payment_screen.dart';
+import '../features/accounting_notebook/presentation/notebook_person_statement_screen.dart';
+
 
 
 final goRouterProvider = Provider<GoRouter>((ref) {
@@ -179,6 +183,22 @@ final goRouterProvider = Provider<GoRouter>((ref) {
         path: '/notebook/transactions',
         builder: (context, state) => const NotebookTransactionsScreen(),
       ),
+      GoRoute(
+        path: '/notebook/transfer',
+        builder: (context, state) => const NotebookTransferScreen(),
+      ),
+      GoRoute(
+        path: '/notebook/people/:id',
+        builder: (context, state) => NotebookPersonStatementScreen(personId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/notebook/payment/:id/:isReceivable',
+        builder: (context, state) => NotebookPaymentScreen(
+          personId: state.pathParameters['id']!,
+          isReceivablePayment: state.pathParameters['isReceivable'] == 'true',
+        ),
+      ),
+
 
     ],
   );

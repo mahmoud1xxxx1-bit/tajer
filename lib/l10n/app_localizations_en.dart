@@ -1659,4 +1659,118 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notebookArchiveCategory => 'Archive Category';
+
+  @override
+  String get notebookAddAccount => 'Add Account';
+
+  @override
+  String get notebookEditAccount => 'Edit Account';
+
+  @override
+  String get notebookArchiveAccount => 'Archive Account';
+
+  @override
+  String get notebookAccountName => 'Account Name';
+
+  @override
+  String get notebookAccountType => 'Account Type';
+
+  @override
+  String get notebookOpeningBalance => 'Opening Balance';
+
+  @override
+  String get notebookAddPerson => 'Add Person';
+
+  @override
+  String get notebookEditPerson => 'Edit Person';
+
+  @override
+  String get notebookArchivePerson => 'Archive Person';
+
+  @override
+  String get notebookPersonName => 'Person Name';
+
+  @override
+  String get notebookPersonPhone => 'Phone';
+
+  @override
+  String get notebookNote => 'Note';
+
+  @override
+  String get notebookTransfer => 'Transfer';
+
+  @override
+  String get notebookSourceAccount => 'Source Account';
+
+  @override
+  String get notebookDestinationAccount => 'Destination Account';
+
+  @override
+  String get notebookPayment => 'Payment';
+
+  @override
+  String get notebookPartialPayment => 'Partial Payment';
+
+  @override
+  String get notebookFullPayment => 'Full Payment';
+
+  @override
+  String get notebookStatement => 'Statement';
+
+  @override
+  String get notebookFilters => 'Filters';
+
+  @override
+  String get notebookTotalOwedToMe => 'Total Owed To Me';
+
+  @override
+  String get notebookTotalIOwe => 'Total I Owe';
+
+  @override
+  String get notebookNetBalance => 'Net Balance';
+
+  @override
+  String get notebookTypeCash => 'Cash';
+
+  @override
+  String get notebookTypeBank => 'Bank';
+
+  @override
+  String get notebookTypeCard => 'Card';
+
+  @override
+  String get notebookTypeWallet => 'Wallet';
+
+  @override
+  String get notebookTypeOther => 'Other';
+
+  @override
+  String get notebookDateRange => 'Date Range';
+
+  @override
+  String get notebookTransactionType => 'Transaction Type';
+
+  @override
+  String get notebookPaymentOfDebt => 'Payment of Debt';
+
+  @override
+  String get notebookCreateBookFirst => 'Please create a Book first.';
+
+  @override
+  String get notebookCreateCategoryFirst => 'Please create a Category first.';
+
+  @override
+  String get notebookAll => 'All';
+
+  @override
+  String get notebookStartDate => 'Start Date';
+
+  @override
+  String get notebookEndDate => 'End Date';
+
+  @override
+  String get notebookApplyFilters => 'Apply Filters';
+
+  @override
+  String get notebookClearFilters => 'Clear Filters';
 }

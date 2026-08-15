@@ -89,7 +89,8 @@ class NotebookCategoriesScreen extends ConsumerWidget {
             ElevatedButton(
               onPressed: () {
                 if (ctrl.text.trim().isNotEmpty) {
-                  ref.read(accountingNotebookProvider).createCategory(bookId: bookId ?? 'default_book', name: ctrl.text.trim(), type: type);
+                  if (bookId == null) { ScaffoldMessenger.of(ctx).showSnackBar(SnackBar(content: Text(l10n.notebookCreateBookFirst ?? 'Please create a book first.'))); return; }
+                ref.read(accountingNotebookProvider).createCategory(bookId: bookId, name: ctrl.text.trim(), type: type);
                   Navigator.pop(ctx);
                 }
               },

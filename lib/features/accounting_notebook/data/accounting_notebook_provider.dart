@@ -298,4 +298,40 @@ class AccountingNotebookService {
     
     await batch.commit();
   }
+
+  // Accounts
+  Future<void> createAccount({required String name, required String type, required double openingBalance}) async {
+    if (_repository == null) return;
+    final id = _uuid.v4();
+    final acc = NotebookAccount(id: id, name: name, type: type, balance: openingBalance, createdAt: DateTime.now());
+    await _repository!.createAccount(acc);
+  }
+
+  Future<void> updateAccount(String id, {required String name, required String type}) async {
+    if (_repository == null) return;
+    await _repository!.accountsRef.doc(id).update({'name': name, 'type': type});
+  }
+
+  Future<void> archiveAccount(String id) async {
+    if (_repository == null) return;
+    await _repository!.accountsRef.doc(id).delete();
+  }
+
+  // People
+  Future<void> createPerson({required String name, String? phone}) async {
+    if (_repository == null) return;
+    final id = _uuid.v4();
+    final p = NotebookPerson(id: id, name: name, phone: phone, amountOwedToMe: 0, amountIOwe: 0, createdAt: DateTime.now());
+    await _repository!.createPerson(p);
+  }
+
+  Future<void> updatePerson(String id, {required String name, String? phone}) async {
+    if (_repository == null) return;
+    await _repository!.peopleRef.doc(id).update({'name': name, 'phone': phone});
+  }
+
+  Future<void> archivePerson(String id) async {
+    if (_repository == null) return;
+    await _repository!.peopleRef.doc(id).delete();
+  }
 }

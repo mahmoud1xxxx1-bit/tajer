@@ -23,9 +23,24 @@ class NotebookAccountsScreen extends ConsumerWidget {
               return ListTile(
                 leading: const Icon(Icons.account_balance_wallet),
                 title: Text(acc.name),
-                trailing: Text(
-                  acc.balance.toStringAsFixed(2),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+                subtitle: Text(acc.type),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      acc.balance.toStringAsFixed(2),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.blue),
+                      onPressed: () => _showEditAccountDialog(context, ref, acc.id, acc.name, acc.type),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.archive, color: Colors.red),
+                      onPressed: () => _showArchiveDialog(context, ref, acc.id),
+                    ),
+                  ],
                 ),
               );
             },
@@ -35,10 +50,154 @@ class NotebookAccountsScreen extends ConsumerWidget {
         error: (err, stack) => Center(child: Text('${AppLocalizations.of(context)!.genericErrorPrefix}: $err')),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: Add account dialog
-        },
+        onPressed: () => _showAddAccountDialog(context, ref),
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  void _showAddAccountDialog(BuildContext context, WidgetRef ref) {
+    final nameCtrl = TextEditingController();
+    final balanceCtrl = TextEditingController();
+    final noteCtrl = TextEditingController();
+    String type = 'Cash';
+    final l10n = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(l10n.notebookAddAccount ?? 'Add Account'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  decoration: InputDecoration(labelText: l10n.notebookAccountName ?? 'Account Name'),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: type,
+                  items: [
+                    DropdownMenuItem(value: 'Cash', child: Text(l10n.notebookTypeCash ?? 'Cash')),
+                    DropdownMenuItem(value: 'Bank', child: Text(l10n.notebookTypeBank ?? 'Bank')),
+                    DropdownMenuItem(value: 'Card', child: Text(l10n.notebookTypeCard ?? 'Card')),
+                    DropdownMenuItem(value: 'Wallet', child: Text(l10n.notebookTypeWallet ?? 'Wallet')),
+                    DropdownMenuItem(value: 'Other', child: Text(l10n.notebookTypeOther ?? 'Other')),
+                  ],
+                  onChanged: (v) => setState(() => type = v!),
+                  decoration: InputDecoration(labelText: l10n.notebookAccountType ?? 'Account Type'),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: balanceCtrl,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(labelText: l10n.notebookOpeningBalance ?? 'Opening Balance'),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: noteCtrl,
+                  decoration: InputDecoration(labelText: l10n.notebookNote ?? 'Note'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+            ElevatedButton(
+              onPressed: () {
+                if (nameCtrl.text.trim().isNotEmpty) {
+                  final bal = double.tryParse(balanceCtrl.text) ?? 0.0;
+                  ref.read(accountingNotebookProvider).createAccount(
+                    name: nameCtrl.text.trim(),
+                    type: type,
+                    openingBalance: bal
+                  );
+                  Navigator.pop(ctx);
+                }
+              },
+              child: Text(l10n.save),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showEditAccountDialog(BuildContext context, WidgetRef ref, String id, String oldName, String oldType) {
+    final nameCtrl = TextEditingController(text: oldName);
+    String type = oldType.isNotEmpty ? oldType : 'Cash';
+    final l10n = AppLocalizations.of(context)!;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(l10n.notebookEditAccount ?? 'Edit Account'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameCtrl,
+                  decoration: InputDecoration(labelText: l10n.notebookAccountName ?? 'Account Name'),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  value: type,
+                  items: [
+                    DropdownMenuItem(value: 'Cash', child: Text(l10n.notebookTypeCash ?? 'Cash')),
+                    DropdownMenuItem(value: 'Bank', child: Text(l10n.notebookTypeBank ?? 'Bank')),
+                    DropdownMenuItem(value: 'Card', child: Text(l10n.notebookTypeCard ?? 'Card')),
+                    DropdownMenuItem(value: 'Wallet', child: Text(l10n.notebookTypeWallet ?? 'Wallet')),
+                    DropdownMenuItem(value: 'Other', child: Text(l10n.notebookTypeOther ?? 'Other')),
+                  ],
+                  onChanged: (v) => setState(() => type = v!),
+                  decoration: InputDecoration(labelText: l10n.notebookAccountType ?? 'Account Type'),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+            ElevatedButton(
+              onPressed: () {
+                if (nameCtrl.text.trim().isNotEmpty) {
+                  ref.read(accountingNotebookProvider).updateAccount(
+                    id,
+                    name: nameCtrl.text.trim(),
+                    type: type,
+                  );
+                  Navigator.pop(ctx);
+                }
+              },
+              child: Text(l10n.save),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showArchiveDialog(BuildContext context, WidgetRef ref, String id) {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.notebookArchiveAccount ?? 'Archive Account'),
+        content: Text(l10n.notebookArchiveConfirm ?? 'Are you sure?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(l10n.cancel)),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              ref.read(accountingNotebookProvider).archiveAccount(id);
+              Navigator.pop(ctx);
+            },
+            child: Text(l10n.archive ?? 'Archive', style: const TextStyle(color: Colors.white)),
+          ),
+        ],
       ),
     );
   }

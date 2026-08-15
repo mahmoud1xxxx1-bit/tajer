@@ -3241,6 +3241,234 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'أرشفة التصنيف'**
   String get notebookArchiveCategory;
+
+  /// No description provided for @notebookAddAccount.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة حساب'**
+  String get notebookAddAccount;
+
+  /// No description provided for @notebookEditAccount.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل حساب'**
+  String get notebookEditAccount;
+
+  /// No description provided for @notebookArchiveAccount.
+  ///
+  /// In ar, this message translates to:
+  /// **'أرشفة حساب'**
+  String get notebookArchiveAccount;
+
+  /// No description provided for @notebookAccountName.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم الحساب'**
+  String get notebookAccountName;
+
+  /// No description provided for @notebookAccountType.
+  ///
+  /// In ar, this message translates to:
+  /// **'نوع الحساب'**
+  String get notebookAccountType;
+
+  /// No description provided for @notebookOpeningBalance.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرصيد الافتتاحي'**
+  String get notebookOpeningBalance;
+
+  /// No description provided for @notebookAddPerson.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة شخص'**
+  String get notebookAddPerson;
+
+  /// No description provided for @notebookEditPerson.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل شخص'**
+  String get notebookEditPerson;
+
+  /// No description provided for @notebookArchivePerson.
+  ///
+  /// In ar, this message translates to:
+  /// **'أرشفة شخص'**
+  String get notebookArchivePerson;
+
+  /// No description provided for @notebookPersonName.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم الشخص'**
+  String get notebookPersonName;
+
+  /// No description provided for @notebookPersonPhone.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم الهاتف'**
+  String get notebookPersonPhone;
+
+  /// No description provided for @notebookNote.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملاحظة'**
+  String get notebookNote;
+
+  /// No description provided for @notebookTransfer.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحويل'**
+  String get notebookTransfer;
+
+  /// No description provided for @notebookSourceAccount.
+  ///
+  /// In ar, this message translates to:
+  /// **'حساب المصدر'**
+  String get notebookSourceAccount;
+
+  /// No description provided for @notebookDestinationAccount.
+  ///
+  /// In ar, this message translates to:
+  /// **'حساب الوجهة'**
+  String get notebookDestinationAccount;
+
+  /// No description provided for @notebookPayment.
+  ///
+  /// In ar, this message translates to:
+  /// **'سداد'**
+  String get notebookPayment;
+
+  /// No description provided for @notebookPartialPayment.
+  ///
+  /// In ar, this message translates to:
+  /// **'سداد جزئي'**
+  String get notebookPartialPayment;
+
+  /// No description provided for @notebookFullPayment.
+  ///
+  /// In ar, this message translates to:
+  /// **'سداد كامل'**
+  String get notebookFullPayment;
+
+  /// No description provided for @notebookStatement.
+  ///
+  /// In ar, this message translates to:
+  /// **'كشف حساب'**
+  String get notebookStatement;
+
+  /// No description provided for @notebookFilters.
+  ///
+  /// In ar, this message translates to:
+  /// **'تصفية'**
+  String get notebookFilters;
+
+  /// No description provided for @notebookTotalOwedToMe.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي لي'**
+  String get notebookTotalOwedToMe;
+
+  /// No description provided for @notebookTotalIOwe.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي عليّ'**
+  String get notebookTotalIOwe;
+
+  /// No description provided for @notebookNetBalance.
+  ///
+  /// In ar, this message translates to:
+  /// **'صافي الرصيد'**
+  String get notebookNetBalance;
+
+  /// No description provided for @notebookTypeCash.
+  ///
+  /// In ar, this message translates to:
+  /// **'نقدي'**
+  String get notebookTypeCash;
+
+  /// No description provided for @notebookTypeBank.
+  ///
+  /// In ar, this message translates to:
+  /// **'بنك'**
+  String get notebookTypeBank;
+
+  /// No description provided for @notebookTypeCard.
+  ///
+  /// In ar, this message translates to:
+  /// **'بطاقة'**
+  String get notebookTypeCard;
+
+  /// No description provided for @notebookTypeWallet.
+  ///
+  /// In ar, this message translates to:
+  /// **'محفظة إلكترونية'**
+  String get notebookTypeWallet;
+
+  /// No description provided for @notebookTypeOther.
+  ///
+  /// In ar, this message translates to:
+  /// **'أخرى'**
+  String get notebookTypeOther;
+
+  /// No description provided for @notebookDateRange.
+  ///
+  /// In ar, this message translates to:
+  /// **'نطاق التاريخ'**
+  String get notebookDateRange;
+
+  /// No description provided for @notebookTransactionType.
+  ///
+  /// In ar, this message translates to:
+  /// **'نوع الحركة'**
+  String get notebookTransactionType;
+
+  /// No description provided for @notebookPaymentOfDebt.
+  ///
+  /// In ar, this message translates to:
+  /// **'سداد دين'**
+  String get notebookPaymentOfDebt;
+
+  /// No description provided for @notebookCreateBookFirst.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجى إنشاء دفتر أولاً.'**
+  String get notebookCreateBookFirst;
+
+  /// No description provided for @notebookCreateCategoryFirst.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجى إنشاء تصنيف أولاً.'**
+  String get notebookCreateCategoryFirst;
+
+  /// No description provided for @notebookAll.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكل'**
+  String get notebookAll;
+
+  /// No description provided for @notebookStartDate.
+  ///
+  /// In ar, this message translates to:
+  /// **'تاريخ البداية'**
+  String get notebookStartDate;
+
+  /// No description provided for @notebookEndDate.
+  ///
+  /// In ar, this message translates to:
+  /// **'تاريخ النهاية'**
+  String get notebookEndDate;
+
+  /// No description provided for @notebookApplyFilters.
+  ///
+  /// In ar, this message translates to:
+  /// **'تطبيق التصفية'**
+  String get notebookApplyFilters;
+
+  /// No description provided for @notebookClearFilters.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح التصفية'**
+  String get notebookClearFilters;
 }
 
 class _AppLocalizationsDelegate
