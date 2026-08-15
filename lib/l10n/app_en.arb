@@ -792,5 +792,10 @@
   "notebookType": "Type",
   "notebookTotalIncome": "Total Income",
   "notebookTotalExpenses": "Total Expenses",
-  "notebookTransactionsHeader": "Transactions:"
+  "notebookTransactionsHeader": "Transactions:",
+  "notebookAccountTypeCash": "Cash",
+  "notebookAccountTypeBank": "Bank",
+  "notebookAccountTypeCustody": "Custody",
+  "notebookGuideDebt": "Here you can add debts or receivables.",
+  "notebookGuideReports": "View and print notebook reports here."
 }

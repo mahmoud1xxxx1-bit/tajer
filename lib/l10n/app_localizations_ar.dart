@@ -1986,4 +1986,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notebookTransactionsHeader => 'المعاملات:';
+
+  @override
+  String get notebookAccountTypeCash => 'صندوق';
+
+  @override
+  String get notebookAccountTypeBank => 'بنك';
+
+  @override
+  String get notebookAccountTypeCustody => 'عهدة';
+
+  @override
+  String get notebookGuideDebt => 'هنا يمكنك إضافة الديون أو المستحقات.';
+
+  @override
+  String get notebookGuideReports => 'استعرض واطبع تقارير الدفاتر من هنا.';
 }

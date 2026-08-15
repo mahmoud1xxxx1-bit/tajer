@@ -792,5 +792,10 @@
   "notebookType": "النوع",
   "notebookTotalIncome": "إجمالي الدخل",
   "notebookTotalExpenses": "إجمالي المصروفات",
-  "notebookTransactionsHeader": "المعاملات:"
+  "notebookTransactionsHeader": "المعاملات:",
+  "notebookAccountTypeCash": "صندوق",
+  "notebookAccountTypeBank": "بنك",
+  "notebookAccountTypeCustody": "عهدة",
+  "notebookGuideDebt": "هنا يمكنك إضافة الديون أو المستحقات.",
+  "notebookGuideReports": "استعرض واطبع تقارير الدفاتر من هنا."
 }

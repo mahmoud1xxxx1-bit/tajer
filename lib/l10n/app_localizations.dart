@@ -3859,6 +3859,36 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'المعاملات:'**
   String get notebookTransactionsHeader;
+
+  /// No description provided for @notebookAccountTypeCash.
+  ///
+  /// In ar, this message translates to:
+  /// **'صندوق'**
+  String get notebookAccountTypeCash;
+
+  /// No description provided for @notebookAccountTypeBank.
+  ///
+  /// In ar, this message translates to:
+  /// **'بنك'**
+  String get notebookAccountTypeBank;
+
+  /// No description provided for @notebookAccountTypeCustody.
+  ///
+  /// In ar, this message translates to:
+  /// **'عهدة'**
+  String get notebookAccountTypeCustody;
+
+  /// No description provided for @notebookGuideDebt.
+  ///
+  /// In ar, this message translates to:
+  /// **'هنا يمكنك إضافة الديون أو المستحقات.'**
+  String get notebookGuideDebt;
+
+  /// No description provided for @notebookGuideReports.
+  ///
+  /// In ar, this message translates to:
+  /// **'استعرض واطبع تقارير الدفاتر من هنا.'**
+  String get notebookGuideReports;
 }
 
 class _AppLocalizationsDelegate

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
@@ -238,7 +239,7 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                             await NotebookCsvService.shareCsv(
                               csvData, 
                               'accounting_report.csv',
-                              l10n, Localizations.localeOf(context).languageCode == 'ar'
+                              l10n
                             );
                           },
                         ),

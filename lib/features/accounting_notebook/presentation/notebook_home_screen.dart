@@ -150,7 +150,7 @@ class NotebookHomeScreen extends ConsumerWidget {
                     final tx = transactions[index];
                     final isPositive = tx.type == 'income' || tx.type == 'receivable_payment';
                     return ListTile(
-                      title: Text(tx.note ?? getNotebookLocalizedType(context, tx.type)),
+                      title: Text(tx.note ?? NotebookLocalizationHelper.getNotebookLocalizedType(context, tx.type)),
                       subtitle: Text(DateFormat.yMMMd(Localizations.localeOf(context).languageCode).format(tx.date)),
                       trailing: Text(
                         '${isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',

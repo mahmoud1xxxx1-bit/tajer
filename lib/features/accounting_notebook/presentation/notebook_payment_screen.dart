@@ -154,9 +154,10 @@ class _NotebookPaymentScreenState extends ConsumerState<NotebookPaymentScreen> {
                             } catch (e) {
                               if (e.toString().contains('insufficient_balance')) {
                                 final selectedAccount = accounts.firstWhere((a) => a.id == _selectedAccountId);
-                                final msg = l10n.notebookInsufficientBalance
-                                    .replaceAll('{balance}', selectedAccount.balance.toStringAsFixed(2))
-                                    .replaceAll('{amount}', amt.toStringAsFixed(2));
+                                final msg = l10n.notebookInsufficientBalance(
+                                    amt.toStringAsFixed(2),
+                                    selectedAccount.balance.toStringAsFixed(2),
+                                );
                                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.red));
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${l10n.genericErrorPrefix}: $e')));

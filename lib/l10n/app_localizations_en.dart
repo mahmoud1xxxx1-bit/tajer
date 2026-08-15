@@ -1989,4 +1989,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notebookTransactionsHeader => 'Transactions:';
+
+  @override
+  String get notebookAccountTypeCash => 'Cash';
+
+  @override
+  String get notebookAccountTypeBank => 'Bank';
+
+  @override
+  String get notebookAccountTypeCustody => 'Custody';
+
+  @override
+  String get notebookGuideDebt => 'Here you can add debts or receivables.';
+
+  @override
+  String get notebookGuideReports => 'View and print notebook reports here.';
 }
