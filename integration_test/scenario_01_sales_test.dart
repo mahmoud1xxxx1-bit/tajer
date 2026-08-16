@@ -57,12 +57,17 @@ void main() {
 
     // Each workflow starts a fresh Firebase Emulator. Do not query/delete
     // collections as a cleanup step because Firestore rules intentionally
-    // reject broad pre-merchant reads. Establish the merchant identity first.
+    // reject broad pre-merchant reads. Establish a complete AppUser identity first.
     await firestore.collection('users').doc(uid).set({
+      'id': uid,
       'uid': uid,
       'merchantId': uid,
       'role': 'merchant',
+      'plan': 'guest',
+      'isAnonymous': true,
+      'permissions': <String, dynamic>{},
       'email': auth.currentUser!.email ?? 'qa-cash-sale@test.local',
+      'name': 'QA Cash Sale Merchant',
       'displayName': 'QA Cash Sale Merchant',
       'createdAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
