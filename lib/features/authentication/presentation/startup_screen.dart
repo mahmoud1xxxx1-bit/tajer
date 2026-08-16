@@ -92,6 +92,7 @@ class _StartupScreenState extends ConsumerState<StartupScreen> {
     try {
       await ref.read(authRepositoryProvider).signInAnonymously();
     } catch (e) {
+      if (!mounted) return;
       final isAr = Localizations.localeOf(context).languageCode == 'ar';
       _showError(isAr ? "حدث خطأ: $e" : "Error: $e");
     } finally {
