@@ -35,7 +35,19 @@ jobs:
         run: dart run build_runner build -d
 
       - name: Flutter Analyze
-        run: flutter analyze --no-fatal-warnings --no-fatal-infos
+        shell: bash
+        run: |
+          set +e
+          flutter analyze --no-fatal-warnings --no-fatal-infos 2>&1 | tee flutter-analyze.log
+          status=${PIPESTATUS[0]}
+          exit $status
+
+      - name: Upload Analyze Diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: flutter-analyze-diagnostics
+          path: flutter-analyze.log
 
       - name: Flutter Tests
         run: flutter test
@@ -78,7 +90,8 @@ jobs:
           username: root
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            rm -rf /home/alldown.uk/public_html/taj/*
+            rm -rf /var/www/tajer/*
+            mkdir -p /var/www/tajer
 
       - name: Deploy to VPS
         if: success()
@@ -88,7 +101,7 @@ jobs:
           username: root
           password: ${{ secrets.VPS_PASSWORD }}
           source: "build/web/*"
-          target: "/home/alldown.uk/public_html/taj"
+          target: "/var/www/tajer"
           strip_components: 2
 
       - name: Set Permissions on VPS
@@ -99,5 +112,5 @@ jobs:
           username: root
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            chown -R nobody:nobody /home/alldown.uk/public_html/taj
-            chmod -R 755 /home/alldown.uk/public_html/taj
+            chown -R www-data:www-data /var/www/tajer
+            chmod -R 755 /var/www/tajer
