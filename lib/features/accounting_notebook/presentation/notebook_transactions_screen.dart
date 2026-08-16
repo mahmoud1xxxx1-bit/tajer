@@ -1,8 +1,10 @@
+import 'package:firebase_ui_firestore/firebase_ui_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/accounting_notebook_provider.dart';
+import '../data/accounting_notebook_repository.dart';
 import '../utils/notebook_localization_helper.dart';
 import '../utils/notebook_terminology.dart';
 
@@ -32,14 +34,18 @@ class _NotebookTransactionsScreenState
     final accountsAsync = ref.watch(notebookAccountsProvider);
     final categoriesAsync = ref.watch(notebookCategoriesProvider);
     final peopleAsync = ref.watch(notebookPeopleProvider);
-    final transactionsAsync = ref.watch(notebookTransactionsProvider);
+    final repository = ref.watch(accountingNotebookRepositoryProvider);
     final sharedBookId = ref.watch(notebookCurrentBookIdProvider);
 
     final books = booksAsync.value ?? [];
-    if (!_initializedBook) {
+    final activeBooks = books.where((b) => !b.isArchived).toList();
+    if (!_initializedBook && activeBooks.isNotEmpty) {
       _initializedBook = true;
-      if (sharedBookId != null && books.any((b) => b.id == sharedBookId)) {
+      if (sharedBookId != null &&
+          activeBooks.any((b) => b.id == sharedBookId)) {
         _selectedBookId = sharedBookId;
+      } else {
+        _selectedBookId = activeBooks.first.id;
       }
     }
 
@@ -120,26 +126,23 @@ class _NotebookTransactionsScreenState
                           isExpanded: true,
                           decoration:
                               InputDecoration(labelText: l10n.notebookFilterBook),
-                          items: [
-                            DropdownMenuItem(
-                                value: null, child: Text(l10n.notebookAll)),
-                            ...books.map((b) => DropdownMenuItem(
-                                value: b.id,
-                                child: Text(b.name,
-                                    overflow: TextOverflow.ellipsis))),
-                          ],
+                          items: activeBooks
+                              .map((b) => DropdownMenuItem(
+                                  value: b.id,
+                                  child: Text(b.name,
+                                      overflow: TextOverflow.ellipsis)))
+                              .toList(),
                           onChanged: (value) {
+                            if (value == null) return;
                             setState(() {
                               _selectedBookId = value;
                               _selectedAccountId = null;
                               _selectedPersonId = null;
                               _selectedCategoryId = null;
                             });
-                            if (value != null) {
-                              ref
-                                  .read(notebookCurrentBookIdProvider.notifier)
-                                  .state = value;
-                            }
+                            ref
+                                .read(notebookCurrentBookIdProvider.notifier)
+                                .state = value;
                           },
                         ),
                       ),
@@ -299,104 +302,102 @@ class _NotebookTransactionsScreenState
           ),
           const Divider(height: 1),
           Expanded(
-            child: transactionsAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (_, __) => Center(child: Text(l10n.genericErrorPrefix)),
-              data: (allTransactions) {
-                final filtered = allTransactions.where((tx) {
-                  if (_selectedBookId != null &&
-                      tx.bookId != _selectedBookId) return false;
-                  if (_selectedType != null && tx.type != _selectedType) {
-                    return false;
-                  }
-                  if (_selectedAccountId != null &&
-                      tx.accountId != _selectedAccountId &&
-                      tx.toAccountId != _selectedAccountId) return false;
-                  if (_selectedPersonId != null &&
-                      tx.personId != _selectedPersonId) return false;
-                  if (_selectedCategoryId != null &&
-                      tx.categoryId != _selectedCategoryId) return false;
-                  if (_startDate != null && tx.date.isBefore(_startDate!)) {
-                    return false;
-                  }
-                  if (_endDate != null && !tx.date.isBefore(_endDate!)) {
-                    return false;
-                  }
-                  return true;
-                }).toList()
-                  ..sort((a, b) => b.date.compareTo(a.date));
+            child: _selectedBookId == null || repository == null
+                ? Center(child: Text(l10n.notebookNoTransactionsYet))
+                : FirestoreListView(
+                    key: ValueKey(_selectedBookId),
+                    query: repository.queryTransactions(
+                        bookId: _selectedBookId!),
+                    pageSize: 50,
+                    padding: const EdgeInsets.only(bottom: 16),
+                    emptyBuilder: (context) =>
+                        Center(child: Text(l10n.notebookNoTransactionsYet)),
+                    errorBuilder: (context, _, __) =>
+                        Center(child: Text(l10n.genericErrorPrefix)),
+                    loadingBuilder: (context) =>
+                        const Center(child: CircularProgressIndicator()),
+                    itemBuilder: (context, doc) {
+                      final tx = doc.data();
+                      if (!_matchesFilters(tx)) {
+                        return const SizedBox.shrink();
+                      }
 
-                if (filtered.isEmpty) {
-                  return Center(child: Text(l10n.notebookNoTransactionsYet));
-                }
+                      final isPositive = tx.type == 'income' ||
+                          tx.type == 'receivable_payment';
+                      final isNeutral = tx.type == 'opening_balance' ||
+                          tx.type == 'account_transfer' ||
+                          tx.type == 'receivable' ||
+                          tx.type == 'payable';
+                      final typeText = tx.type == 'receivable'
+                          ? NotebookTerminology.accountsReceivable(context)
+                          : tx.type == 'payable'
+                              ? NotebookTerminology.accountsPayable(context)
+                              : tx.type == 'receivable_payment'
+                                  ? NotebookTerminology.receivePayment(context)
+                                  : tx.type == 'payable_payment'
+                                      ? NotebookTerminology.makePayment(context)
+                                      : NotebookLocalizationHelper
+                                          .getNotebookLocalizedTypeCustom(
+                                              tx.type, l10n);
+                      final dateText = DateFormat.yMMMd(
+                              Localizations.localeOf(context).languageCode)
+                          .format(tx.date);
 
-                return ListView.builder(
-                  itemCount: filtered.length,
-                  itemBuilder: (context, index) {
-                    final tx = filtered[index];
-                    final isPositive = tx.type == 'income' ||
-                        tx.type == 'receivable_payment';
-                    final isNeutral = tx.type == 'opening_balance' ||
-                        tx.type == 'account_transfer' ||
-                        tx.type == 'receivable' ||
-                        tx.type == 'payable';
-                    final typeText = tx.type == 'receivable'
-                        ? NotebookTerminology.accountsReceivable(context)
-                        : tx.type == 'payable'
-                            ? NotebookTerminology.accountsPayable(context)
-                            : tx.type == 'receivable_payment'
-                                ? NotebookTerminology.receivePayment(context)
-                                : tx.type == 'payable_payment'
-                                    ? NotebookTerminology.makePayment(context)
-                                    : NotebookLocalizationHelper
-                                        .getNotebookLocalizedTypeCustom(
-                                            tx.type, l10n);
-                    final dateText = DateFormat.yMMMd(
-                            Localizations.localeOf(context).languageCode)
-                        .format(tx.date);
+                      String? detail;
+                      if (tx.type == 'account_transfer') {
+                        detail =
+                            '${accountName(tx.accountId)} → ${accountName(tx.toAccountId)}';
+                      } else if (tx.personId != null) {
+                        detail = personName(tx.personId);
+                      } else if (tx.categoryId != null) {
+                        detail = categoryName(tx.categoryId);
+                      }
 
-                    String? detail;
-                    if (tx.type == 'account_transfer') {
-                      detail =
-                          '${accountName(tx.accountId)} → ${accountName(tx.toAccountId)}';
-                    } else if (tx.personId != null) {
-                      detail = personName(tx.personId);
-                    } else if (tx.categoryId != null) {
-                      detail = categoryName(tx.categoryId);
-                    }
-
-                    return Card(
-                      margin: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 6),
-                      child: ListTile(
-                        title: Text(typeText,
-                            style:
-                                const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text(
-                          '${bookName(tx.bookId)} • $dateText${detail == null ? '' : ' • $detail'}${tx.note == null || tx.note!.isEmpty ? '' : '\n${tx.note}'}',
-                        ),
-                        isThreeLine: tx.note != null && tx.note!.isNotEmpty,
-                        trailing: Text(
-                          '${isNeutral ? '' : isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',
-                          style: TextStyle(
-                            color: isNeutral
-                                ? Theme.of(context).colorScheme.primary
-                                : isPositive
-                                    ? Colors.green
-                                    : Colors.red,
-                            fontWeight: FontWeight.bold,
+                      return Card(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 6),
+                        child: ListTile(
+                          title: Text(typeText,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold)),
+                          subtitle: Text(
+                            '${bookName(tx.bookId)} • $dateText${detail == null ? '' : ' • $detail'}${tx.note == null || tx.note!.isEmpty ? '' : '\n${tx.note}'}',
+                          ),
+                          isThreeLine: tx.note != null && tx.note!.isNotEmpty,
+                          trailing: Text(
+                            '${isNeutral ? '' : isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              color: isNeutral
+                                  ? Theme.of(context).colorScheme.primary
+                                  : isPositive
+                                      ? Colors.green
+                                      : Colors.red,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
     );
+  }
+
+  bool _matchesFilters(dynamic tx) {
+    if (_selectedType != null && tx.type != _selectedType) return false;
+    if (_selectedAccountId != null &&
+        tx.accountId != _selectedAccountId &&
+        tx.toAccountId != _selectedAccountId) return false;
+    if (_selectedPersonId != null && tx.personId != _selectedPersonId) {
+      return false;
+    }
+    if (_selectedCategoryId != null &&
+        tx.categoryId != _selectedCategoryId) return false;
+    if (_startDate != null && tx.date.isBefore(_startDate!)) return false;
+    if (_endDate != null && !tx.date.isBefore(_endDate!)) return false;
+    return true;
   }
 
   Widget _filterBox(BuildContext context, Widget child) {
