@@ -21,17 +21,28 @@ Future<String> _login() async {
     _emulatorsConfigured = true;
   }
   final auth = FirebaseAuth.instance;
-  if (auth.currentUser != null) return auth.currentUser!.uid;
-  try {
-    await auth.signInWithEmailAndPassword(email: 'qa-shift@test.local', password: 'password123');
-  } catch (_) {
+  if (auth.currentUser == null) {
     try {
-      await auth.createUserWithEmailAndPassword(email: 'qa-shift@test.local', password: 'password123');
-    } catch (_) {
       await auth.signInWithEmailAndPassword(email: 'qa-shift@test.local', password: 'password123');
+    } catch (_) {
+      try {
+        await auth.createUserWithEmailAndPassword(email: 'qa-shift@test.local', password: 'password123');
+      } catch (_) {
+        await auth.signInWithEmailAndPassword(email: 'qa-shift@test.local', password: 'password123');
+      }
     }
   }
-  return auth.currentUser!.uid;
+  final uid = auth.currentUser!.uid;
+  await FirebaseFirestore.instance.collection('users').doc(uid).set({
+    'id': uid,
+    'name': 'QA Shift Merchant',
+    'email': 'qa-shift@test.local',
+    'role': 'merchant',
+    'plan': 'premium',
+    'isAnonymous': false,
+    'createdAt': FieldValue.serverTimestamp(),
+  }, SetOptions(merge: true));
+  return uid;
 }
 
 void main() {
@@ -42,11 +53,9 @@ void main() {
     final db = FirebaseFirestore.instance;
     final repo = ShiftRepository(db);
 
-    final oldShifts = await db.collection('shifts').where('merchantId', isEqualTo: merchantId).get();
-    for (final d in oldShifts.docs) { await d.reference.delete(); }
+    // The workflow starts a fresh Firebase Emulator. No cleanup query is needed,
+    // and querying/deleting arbitrary prior data would itself be blocked by rules.
     final expenseRef = db.collection('merchants').doc(merchantId).collection('expenses');
-    final oldExpenses = await expenseRef.get();
-    for (final d in oldExpenses.docs) { await d.reference.delete(); }
 
     const shiftId = 'qa_shift_formula';
     final start = DateTime.now().subtract(const Duration(minutes: 5));
