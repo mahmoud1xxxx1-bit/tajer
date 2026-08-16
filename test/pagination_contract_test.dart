@@ -47,16 +47,52 @@ void main() {
       expect(source, contains('pageSize: 30'));
     });
 
+    test('supplier details live view is bounded to the newest 50 records', () {
+      final source =
+          read('lib/features/suppliers/data/supplier_transaction_repository.dart');
+      expect(source, contains('queryTransactions(supplierId).limit(50)'));
+    });
+
     test('expense history uses 50-item Firestore pages', () {
       final source =
           read('lib/features/expenses/presentation/expenses_screen.dart');
       expect(source, contains('pageSize: 50'));
     });
 
+    test('inventory log uses 50-item Firestore pages', () {
+      final source = read(
+          'lib/features/inventory_log/presentation/inventory_logs_screen.dart');
+      expect(source, contains('FirestoreListView<InventoryLog>'));
+      expect(source, contains('pageSize: 50'));
+    });
+
+    test('product management uses Firestore cursor pagination, not the POS stream',
+        () {
+      final source =
+          read('lib/features/products/presentation/products_screen.dart');
+      expect(source, contains('FirestoreListView<Product>'));
+      expect(source, isNot(contains('ref.watch(productsStreamProvider)')));
+    });
+
+    test('raw-material management uses Firestore cursor pagination', () {
+      final source =
+          read('lib/features/products/presentation/raw_materials_screen.dart');
+      expect(source, contains('FirestoreListView<RawMaterial>'));
+      expect(source, contains('queryRawMaterials(merchantId)'));
+    });
+
     test('shift archive uses 30-item Firestore pages', () {
       final source =
           read('lib/features/shifts/presentation/shifts_archive_screen.dart');
       expect(source, contains('pageSize: 30'));
+    });
+
+    test('cashier reports read only the maximum supported one-year history', () {
+      final source = read('lib/features/reports/data/reports_service.dart');
+      expect(source, contains('DateTime(now.year - 1, now.month, now.day)'));
+      expect(source,
+          contains(".where('createdAt', isGreaterThanOrEqualTo: start)"));
+      expect(source, contains(".where('date', isGreaterThanOrEqualTo: start)"));
     });
 
     test('notebook people are queried per book in 30-item pages', () {
@@ -111,6 +147,7 @@ void main() {
         'lib/features/orders/presentation/orders_screen.dart',
         'lib/features/suppliers/presentation/suppliers_screen.dart',
         'lib/features/expenses/presentation/expenses_screen.dart',
+        'lib/features/inventory_log/presentation/inventory_logs_screen.dart',
         'lib/features/shifts/presentation/shifts_archive_screen.dart',
         'lib/features/accounting_notebook/presentation/notebook_transactions_screen.dart',
       ]) {
