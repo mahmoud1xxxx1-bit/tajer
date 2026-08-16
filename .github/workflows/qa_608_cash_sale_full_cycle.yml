@@ -89,3 +89,4 @@ jobs:
           name: cash-sale-firebase-log
           path: cash-sale-firebase.log
           if-no-files-found: ignore
+# CI retry after transient VM service connection timeout on 2026-08-16
