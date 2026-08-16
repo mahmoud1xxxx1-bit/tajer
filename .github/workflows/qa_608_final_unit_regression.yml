@@ -1,0 +1,41 @@
+name: QA 608 - Final Unit Regression
+
+on:
+  push:
+    branches:
+      - qa/release-125-608-34-tests
+    paths:
+      - '.github/workflows/qa_608_final_unit_regression.yml'
+  workflow_dispatch:
+
+jobs:
+  unit-regression:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout QA branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Prove only verified production fixes differ from #608
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=10c53365bb2c8cc15a6dcb88020a03529f98cbb3
+          p='lib/features/employees/presentation/employee_permissions_screen.dart'
+          d='lib/features/orders/data/order_repository.dart'
+          changed=$(git diff --name-only "$BASE"...HEAD -- lib/ pubspec.yaml firestore.rules firebase.json .firebaserc || true)
+          forbidden=$(printf '%s\n' "$changed" | grep -v '^$' | grep -v "^${p}$" | grep -v "^${d}$" || true)
+          test -z "$forbidden" || { echo "$forbidden"; exit 2; }
+          echo PASS_FINAL_SOURCE_GUARD
+      - name: Setup Flutter 3.44.0
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.0'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter gen-l10n
+      - run: dart run build_runner build -d
+      - name: Run full unit and widget suite
+        run: flutter test test --reporter expanded
