@@ -1,0 +1,40 @@
+name: QA 608 - ZATCA Thermal QR Test 11
+
+on:
+  push:
+    branches:
+      - qa/release-125-608-34-tests
+    paths:
+      - '.github/workflows/qa_608_zatca_qr_test.yml'
+      - 'test/qa_608_zatca_qr_test.dart'
+  workflow_dispatch:
+
+jobs:
+  zatca-qr-test:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout QA branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Prove ZATCA/printer source matches #608 except verified Test 8 UI fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=10c53365bb2c8cc15a6dcb88020a03529f98cbb3
+          allowed='lib/features/employees/presentation/employee_permissions_screen.dart'
+          changed=$(git diff --name-only "$BASE"...HEAD -- lib/ pubspec.yaml firestore.rules firebase.json .firebaserc || true)
+          forbidden=$(printf '%s\n' "$changed" | grep -v '^$' | grep -v "^${allowed}$" || true)
+          test -z "$forbidden" || { echo "$forbidden"; exit 2; }
+          git diff --quiet "$BASE"...HEAD -- lib/core/utils/zatca_qr_generator.dart lib/core/services/printer_service.dart
+          echo PASS_SOURCE_GUARD_ZATCA_IS_608
+      - name: Setup Flutter 3.44.0
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.0'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Execute TEST 11
+        run: flutter test test/qa_608_zatca_qr_test.dart
