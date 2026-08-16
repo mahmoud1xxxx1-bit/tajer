@@ -23,41 +23,45 @@ Future<String> _login() async {
     _emulatorsConfigured = true;
   }
   final auth = FirebaseAuth.instance;
-  if (auth.currentUser != null) return auth.currentUser!.uid;
-  try {
-    await auth.signInWithEmailAndPassword(email: 'qa-inventory@test.local', password: 'password123');
-  } catch (_) {
+  if (auth.currentUser == null) {
     try {
-      await auth.createUserWithEmailAndPassword(email: 'qa-inventory@test.local', password: 'password123');
-    } catch (_) {
       await auth.signInWithEmailAndPassword(email: 'qa-inventory@test.local', password: 'password123');
+    } catch (_) {
+      try {
+        await auth.createUserWithEmailAndPassword(email: 'qa-inventory@test.local', password: 'password123');
+      } catch (_) {
+        await auth.signInWithEmailAndPassword(email: 'qa-inventory@test.local', password: 'password123');
+      }
     }
   }
-  return auth.currentUser!.uid;
-}
-
-Future<void> _clear(FirebaseFirestore db, String merchantId) async {
-  final logs = await db.collection('merchants').doc(merchantId).collection('inventory_logs').get();
-  for (final d in logs.docs) { await d.reference.delete(); }
-  final orders = await db.collection('orders').where('merchantId', isEqualTo: merchantId).get();
-  for (final d in orders.docs) { await d.reference.delete(); }
-  await db.collection('products').doc('qa_inventory_product').delete().catchError((_) {});
+  final uid = auth.currentUser!.uid;
+  await FirebaseFirestore.instance.collection('users').doc(uid).set({
+    'id': uid,
+    'name': 'QA Inventory Merchant',
+    'email': 'qa-inventory@test.local',
+    'role': 'merchant',
+    'plan': 'premium',
+    'isAnonymous': false,
+    'createdAt': FieldValue.serverTimestamp(),
+  }, SetOptions(merge: true));
+  return uid;
 }
 
 Future<InventoryLog> _createAdjustment({
   required FirebaseFirestore db,
   required InventoryLogRepository repo,
   required String merchantId,
+  required String productId,
   required double from,
   required double to,
   required String reason,
 }) async {
-  await db.collection('products').doc('qa_inventory_product').update({
+  await db.collection('products').doc(productId).update({
     'quantity': to,
     'updatedAt': FieldValue.serverTimestamp(),
   });
   await repo.logChange(
-    productId: 'qa_inventory_product',
+    productId: productId,
     productName: 'QA Inventory Product',
     previousQuantity: from,
     newQuantity: to,
@@ -67,6 +71,7 @@ Future<InventoryLog> _createAdjustment({
     itemType: 'product',
   );
   final snap = await db.collection('merchants').doc(merchantId).collection('inventory_logs')
+      .where('productId', isEqualTo: productId)
       .orderBy('date', descending: true).limit(1).get();
   return InventoryLog.fromJson({...snap.docs.first.data(), 'id': snap.docs.first.id});
 }
@@ -77,11 +82,11 @@ void main() {
   testWidgets('TEST 6/34 - inventory undo restores quantity atomically and is idempotent', (tester) async {
     final merchantId = await _login();
     final db = FirebaseFirestore.instance;
-    await _clear(db, merchantId);
     final repo = InventoryLogRepository(db, merchantId);
+    const productId = 'qa_inventory_undo_product';
 
-    await db.collection('products').doc('qa_inventory_product').set({
-      'id': 'qa_inventory_product',
+    await db.collection('products').doc(productId).set({
+      'id': productId,
       'merchantId': merchantId,
       'name': 'QA Inventory Product',
       'price': 20.0,
@@ -95,43 +100,45 @@ void main() {
       db: db,
       repo: repo,
       merchantId: merchantId,
+      productId: productId,
       from: 100,
       to: 110,
       reason: 'QA +10 adjustment',
     );
 
-    expect((await db.collection('products').doc('qa_inventory_product').get()).data()?['quantity'], 110.0);
-
+    expect((await db.collection('products').doc(productId).get()).data()?['quantity'], 110.0);
     await repo.revertLog(source, userEmail: 'qa@test.local', userName: 'QA');
 
-    final productAfter = await db.collection('products').doc('qa_inventory_product').get();
+    final productAfter = await db.collection('products').doc(productId).get();
     expect((productAfter.data()?['quantity'] as num).toDouble(), 100.0);
 
     final sourceAfter = await db.collection('merchants').doc(merchantId).collection('inventory_logs').doc(source.id).get();
     expect(sourceAfter.data()?['isReverted'], true);
 
-    final logsAfter = await db.collection('merchants').doc(merchantId).collection('inventory_logs').get();
+    final logsAfter = await db.collection('merchants').doc(merchantId).collection('inventory_logs')
+        .where('productId', isEqualTo: productId).get();
     expect(logsAfter.docs.length, 2, reason: 'Undo must leave source + one reversing log');
     final reversing = logsAfter.docs.firstWhere((d) => d.id != source.id).data();
     expect((reversing['changeQuantity'] as num).toDouble(), -10.0);
     expect((reversing['newQuantity'] as num).toDouble(), 100.0);
 
     await repo.revertLog(source, userEmail: 'qa@test.local', userName: 'QA');
-    final productAgain = await db.collection('products').doc('qa_inventory_product').get();
+    final productAgain = await db.collection('products').doc(productId).get();
     expect((productAgain.data()?['quantity'] as num).toDouble(), 100.0);
-    final logsAgain = await db.collection('merchants').doc(merchantId).collection('inventory_logs').get();
+    final logsAgain = await db.collection('merchants').doc(merchantId).collection('inventory_logs')
+        .where('productId', isEqualTo: productId).get();
     expect(logsAgain.docs.length, 2);
   });
 
   testWidgets('TEST 17/34 - concurrent sale + stock adjustment + undo preserves final stock', (tester) async {
     final merchantId = await _login();
     final db = FirebaseFirestore.instance;
-    await _clear(db, merchantId);
     final logRepo = InventoryLogRepository(db, merchantId);
     final orderRepo = OrderRepository(db);
+    const productId = 'qa_inventory_concurrent_product';
 
-    await db.collection('products').doc('qa_inventory_product').set({
-      'id': 'qa_inventory_product',
+    await db.collection('products').doc(productId).set({
+      'id': productId,
       'merchantId': merchantId,
       'name': 'QA Inventory Product',
       'price': 20.0,
@@ -145,18 +152,18 @@ void main() {
       db: db,
       repo: logRepo,
       merchantId: merchantId,
+      productId: productId,
       from: 100,
       to: 110,
       reason: 'QA base +10 before concurrency',
     );
 
-    final now = DateTime.now();
     final sale = AppOrder(
-      id: 'qa_concurrent_sale',
+      id: 'qa_inventory_concurrent_sale',
       merchantId: merchantId,
       creatorId: merchantId,
       creatorName: 'QA',
-      createdAt: now,
+      createdAt: DateTime.now(),
       paymentMethod: 'cash',
       total: 20.0,
       paidAmount: 20.0,
@@ -165,7 +172,7 @@ void main() {
       customerName: 'Default',
       items: const [
         CartItem(
-          productId: 'qa_inventory_product',
+          productId: productId,
           productName: 'QA Inventory Product',
           quantity: 1,
           price: 20.0,
@@ -177,12 +184,12 @@ void main() {
     );
 
     Future<void> manualPlusFive() async {
-      await db.collection('products').doc('qa_inventory_product').update({
+      await db.collection('products').doc(productId).update({
         'quantity': FieldValue.increment(5),
         'updatedAt': FieldValue.serverTimestamp(),
       });
       await logRepo.logChange(
-        productId: 'qa_inventory_product',
+        productId: productId,
         productName: 'QA Inventory Product',
         previousQuantity: 110,
         newQuantity: 115,
@@ -199,11 +206,11 @@ void main() {
       logRepo.revertLog(source, userEmail: 'qa@test.local', userName: 'QA'),
     ]);
 
-    final product = await db.collection('products').doc('qa_inventory_product').get();
+    final product = await db.collection('products').doc(productId).get();
     expect((product.data()?['quantity'] as num).toDouble(), 104.0,
         reason: 'Concurrent atomic effects must converge to 104 exactly');
 
-    final order = await db.collection('orders').doc('qa_concurrent_sale').get();
+    final order = await db.collection('orders').doc('qa_inventory_concurrent_sale').get();
     expect(order.exists, true);
     final sourceAfter = await db.collection('merchants').doc(merchantId).collection('inventory_logs').doc(source.id).get();
     expect(sourceAfter.data()?['isReverted'], true);
