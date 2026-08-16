@@ -201,6 +201,9 @@ class _EmployeePermissionsScreenState extends ConsumerState<EmployeePermissionsS
               itemBuilder: (context, index) {
                 final key = _permissions.keys.elementAt(index);
                 final isRisky = risks[key] ?? false;
+                final activeTrackColor = isRisky
+                    ? Colors.orange.shade700
+                    : theme.colorScheme.primary;
                 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 12),
@@ -254,7 +257,18 @@ class _EmployeePermissionsScreenState extends ConsumerState<EmployeePermissionsS
                       ),
                     ),
                     value: _permissions[key]!,
-                    activeColor: isRisky ? Colors.orange : theme.colorScheme.primary,
+                    activeThumbColor: Colors.white,
+                    activeTrackColor: activeTrackColor,
+                    inactiveThumbColor: theme.colorScheme.onSurfaceVariant,
+                    inactiveTrackColor: theme.colorScheme.surfaceContainerHighest,
+                    thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
+                      if (!states.contains(WidgetState.selected)) return null;
+                      return Icon(
+                        Icons.check,
+                        size: 16,
+                        color: activeTrackColor,
+                      );
+                    }),
                     onChanged: (val) {
                       setState(() {
                         _permissions[key] = val;
