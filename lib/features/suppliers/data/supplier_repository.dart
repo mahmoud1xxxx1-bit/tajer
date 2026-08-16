@@ -10,25 +10,35 @@ class SupplierRepository {
   SupplierRepository(this._firestore, this._merchantId);
 
   CollectionReference<Map<String, dynamic>> get _suppliersRef =>
-      _firestore.collection('merchants').doc(_merchantId).collection('suppliers');
+      _firestore
+          .collection('merchants')
+          .doc(_merchantId)
+          .collection('suppliers');
 
   Query<Supplier> querySuppliers({
     String? searchQuery,
     String? folderName,
     bool? hasDebt,
-    String sortBy = 'newest', // newest, alpha, debt
+    String sortBy = 'newest',
   }) {
     Query<Map<String, dynamic>> query = _suppliersRef;
 
-    if (folderName != null && folderName.isNotEmpty && folderName != 'موردين عامون' && folderName != 'General Suppliers') {
+    if (folderName != null &&
+        folderName.isNotEmpty &&
+        folderName != 'موردين عامون' &&
+        folderName != 'General Suppliers') {
       query = query.where('folderName', isEqualTo: folderName);
     }
-    
+
     if (searchQuery != null && searchQuery.isNotEmpty) {
+      final normalizedSearch = searchQuery.trim();
+      final isPhoneSearch =
+          RegExp(r'^[+0-9\s-]+$').hasMatch(normalizedSearch);
+      final field = isPhoneSearch ? 'phone' : 'name';
       query = query
-          .where('name', isGreaterThanOrEqualTo: searchQuery)
-          .where('name', isLessThan: searchQuery + '\uf8ff')
-          .orderBy('name');
+          .where(field, isGreaterThanOrEqualTo: normalizedSearch)
+          .where(field, isLessThan: '$normalizedSearch\uf8ff')
+          .orderBy(field);
     } else {
       if (hasDebt == true) {
         query = query.where('totalDebt', isGreaterThan: 0);
@@ -62,23 +72,28 @@ class SupplierRepository {
   }
 
   Stream<List<Supplier>> watchSuppliers() {
-    return _suppliersRef.withConverter(
-      fromFirestore: (snapshot, _) {
-        final data = snapshot.data()!;
-        data['id'] = snapshot.id;
-        data['merchantId'] = data['merchantId']?.toString() ?? '';
-        data['name'] = data['name']?.toString() ?? '';
-        data['phone'] = data['phone']?.toString() ?? '';
-        data['totalDebt'] = (data['totalDebt'] ?? 0.0).toDouble();
-        if (data['createdAt'] == null) {
-          data['createdAt'] = Timestamp.now();
-        }
-        return Supplier.fromJson(data);
-      },
-      toFirestore: (supplier, _) => supplier.toJson(),
-    ).orderBy('createdAt', descending: true).limit(1000).snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => doc.data()).toList();
-    });
+    return _suppliersRef
+        .withConverter(
+          fromFirestore: (snapshot, _) {
+            final data = snapshot.data()!;
+            data['id'] = snapshot.id;
+            data['merchantId'] = data['merchantId']?.toString() ?? '';
+            data['name'] = data['name']?.toString() ?? '';
+            data['phone'] = data['phone']?.toString() ?? '';
+            data['totalDebt'] = (data['totalDebt'] ?? 0.0).toDouble();
+            if (data['createdAt'] == null) {
+              data['createdAt'] = Timestamp.now();
+            }
+            return Supplier.fromJson(data);
+          },
+          toFirestore: (supplier, _) => supplier.toJson(),
+        )
+        .orderBy('createdAt', descending: true)
+        .limit(1000)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs.map((doc) => doc.data()).toList();
+        });
   }
 
   Future<void> addSupplier(Supplier supplier) async {
@@ -96,8 +111,6 @@ class SupplierRepository {
     if (amountPaid <= 0) return;
 
     final supplierDocRef = _suppliersRef.doc(supplierId);
-    
-    // Using a direct update allows offline persistence instead of runTransaction which fails offline.
     await supplierDocRef.update({
       'totalDebt': FieldValue.increment(-amountPaid),
     });
@@ -111,7 +124,8 @@ class SupplierRepository {
 final supplierRepositoryProvider = Provider<SupplierRepository?>((ref) {
   final appUser = ref.watch(appUserProvider).value;
   if (appUser == null) return null;
-  return SupplierRepository(FirebaseFirestore.instance, appUser.merchantId ?? appUser.id);
+  return SupplierRepository(
+      FirebaseFirestore.instance, appUser.merchantId ?? appUser.id);
 });
 
 final suppliersStreamProvider = StreamProvider<List<Supplier>>((ref) {
@@ -119,4 +133,3 @@ final suppliersStreamProvider = StreamProvider<List<Supplier>>((ref) {
   if (repo == null) return Stream.value([]);
   return repo.watchSuppliers();
 });
-
