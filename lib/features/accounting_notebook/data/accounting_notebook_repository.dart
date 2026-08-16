@@ -27,7 +27,6 @@ class AccountingNotebookRepository {
 
   AccountingNotebookRepository(this._firestore, this.merchantId);
 
-  // References
   CollectionReference<Map<String, dynamic>> get booksRef => _firestore
       .collection('merchants')
       .doc(merchantId)
@@ -53,87 +52,94 @@ class AccountingNotebookRepository {
       .doc(merchantId)
       .collection('notebook_transactions');
 
-  // --- Books ---
   Stream<List<NotebookBook>> watchBooks() {
-    return booksRef
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => NotebookBook.fromMap(doc.data(), doc.id))
-          .toList();
-    });
+    return booksRef.orderBy('createdAt', descending: true).snapshots().map(
+          (snapshot) => snapshot.docs
+              .map((doc) => NotebookBook.fromMap(doc.data(), doc.id))
+              .toList(),
+        );
   }
 
   Future<void> createBook(NotebookBook book) async {
     await booksRef.doc(book.id).set(book.toMap());
   }
 
-  // --- Accounts ---
   Stream<List<NotebookAccount>> watchAccounts(String bookId) {
-    return accountsRef
-        .where('bookId', isEqualTo: bookId)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => NotebookAccount.fromMap(doc.data(), doc.id))
-          .toList();
-    });
+    return accountsRef.where('bookId', isEqualTo: bookId).snapshots().map(
+          (snapshot) => snapshot.docs
+              .map((doc) => NotebookAccount.fromMap(doc.data(), doc.id))
+              .toList(),
+        );
   }
 
   Future<void> createAccount(NotebookAccount account) async {
     await accountsRef.doc(account.id).set(account.toMap());
   }
 
-  // --- Categories ---
   Stream<List<NotebookCategory>> watchCategories(String bookId, String type) {
     return categoriesRef
         .where('bookId', isEqualTo: bookId)
         .where('type', isEqualTo: type)
         .snapshots()
-        .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => NotebookCategory.fromMap(doc.data(), doc.id))
-          .toList();
-    });
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => NotebookCategory.fromMap(doc.data(), doc.id))
+              .toList(),
+        );
   }
 
   Future<void> createCategory(NotebookCategory category) async {
     await categoriesRef.doc(category.id).set(category.toMap());
   }
 
-  // --- People ---
   Stream<List<NotebookPerson>> watchPeople(String bookId) {
-    return peopleRef
-        .where('bookId', isEqualTo: bookId)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => NotebookPerson.fromMap(doc.data(), doc.id))
-          .toList();
-    });
+    return peopleRef.where('bookId', isEqualTo: bookId).snapshots().map(
+          (snapshot) => snapshot.docs
+              .map((doc) => NotebookPerson.fromMap(doc.data(), doc.id))
+              .toList(),
+        );
   }
 
   Future<void> createPerson(NotebookPerson person) async {
     await peopleRef.doc(person.id).set(person.toMap());
   }
 
-  // --- Transactions ---
   Stream<List<NotebookTransaction>> watchTransactions(String bookId) {
     return transactionsRef
         .where('bookId', isEqualTo: bookId)
         .orderBy('date', descending: true)
         .snapshots()
-        .map((snapshot) {
-      return snapshot.docs
-          .map((doc) => NotebookTransaction.fromMap(doc.data(), doc.id))
-          .toList();
-    });
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => NotebookTransaction.fromMap(doc.data(), doc.id))
+              .toList(),
+        );
   }
 
-  Query<NotebookTransaction> queryTransactions(String bookId) {
-    return transactionsRef
-        .where('bookId', isEqualTo: bookId)
+  Query<NotebookTransaction> queryTransactions({
+    required String bookId,
+    String? accountId,
+    String? personId,
+    String? categoryId,
+    String? type,
+  }) {
+    Query<Map<String, dynamic>> query =
+        transactionsRef.where('bookId', isEqualTo: bookId);
+
+    if (accountId != null) {
+      query = query.where('accountId', isEqualTo: accountId);
+    }
+    if (personId != null) {
+      query = query.where('personId', isEqualTo: personId);
+    }
+    if (categoryId != null) {
+      query = query.where('categoryId', isEqualTo: categoryId);
+    }
+    if (type != null) {
+      query = query.where('type', isEqualTo: type);
+    }
+
+    return query
         .orderBy('date', descending: true)
         .withConverter<NotebookTransaction>(
           fromFirestore: (snapshot, _) =>
@@ -155,7 +161,6 @@ class AccountingNotebookRepository {
         );
   }
 
-  // Transaction processing logic will go here (batch writes for balance updates)
   Future<void> createTransaction(NotebookTransaction transaction) async {
     await transactionsRef.doc(transaction.id).set(transaction.toMap());
   }
