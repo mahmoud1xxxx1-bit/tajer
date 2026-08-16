@@ -47,6 +47,13 @@ void main() {
       expect(source, contains('pageSize: 30'));
     });
 
+    test('supplier search supports both names and phone numbers in Firestore',
+        () {
+      final source = read('lib/features/suppliers/data/supplier_repository.dart');
+      expect(source, contains("final field = isPhoneSearch ? 'phone' : 'name'"));
+      expect(source, contains('.orderBy(field)'));
+    });
+
     test('supplier details live view is bounded to the newest 50 records', () {
       final source =
           read('lib/features/suppliers/data/supplier_transaction_repository.dart');
@@ -85,6 +92,14 @@ void main() {
       final source =
           read('lib/features/shifts/presentation/shifts_archive_screen.dart');
       expect(source, contains('pageSize: 30'));
+    });
+
+    test('notifications use 30-item Firestore pages', () {
+      final source = read(
+          'lib/features/notifications/presentation/notifications_screen.dart');
+      expect(source, contains('FirestoreListView<AppNotification>'));
+      expect(source, contains('pageSize: 30'));
+      expect(source, isNot(contains('notificationsStreamProvider')));
     });
 
     test('cashier reports read only the maximum supported one-year history', () {
@@ -149,6 +164,7 @@ void main() {
         'lib/features/expenses/presentation/expenses_screen.dart',
         'lib/features/inventory_log/presentation/inventory_logs_screen.dart',
         'lib/features/shifts/presentation/shifts_archive_screen.dart',
+        'lib/features/notifications/presentation/notifications_screen.dart',
         'lib/features/accounting_notebook/presentation/notebook_transactions_screen.dart',
       ]) {
         final source = read(path);
