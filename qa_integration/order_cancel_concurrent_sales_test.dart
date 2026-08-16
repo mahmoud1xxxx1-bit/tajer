@@ -3,18 +3,25 @@ import 'package:integration_test/integration_test.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tajer/firebase_options.dart';
 
 import 'package:tajer/features/orders/data/order_repository.dart';
 import 'package:tajer/features/orders/domain/order.dart';
 import 'package:tajer/features/orders/domain/cart_item.dart';
 
+bool _emulatorsConfigured = false;
+
 Future<String> _login() async {
-  try {
-    await Firebase.initializeApp();
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  }
+  if (!_emulatorsConfigured) {
     FirebaseFirestore.instance.useFirestoreEmulator('10.0.2.2', 8080);
     await FirebaseAuth.instance.useAuthEmulator('10.0.2.2', 9099);
-  } catch (_) {}
+    _emulatorsConfigured = true;
+  }
   final auth = FirebaseAuth.instance;
+  if (auth.currentUser != null) return auth.currentUser!.uid;
   try {
     await auth.signInWithEmailAndPassword(email: 'qa-orders@test.local', password: 'password123');
   } catch (_) {
@@ -96,8 +103,8 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('TEST 3/34 - invoice cancellation reverses stock once and records refund once', (tester) async {
-    final db = FirebaseFirestore.instance;
     final merchantId = await _login();
+    final db = FirebaseFirestore.instance;
     final repo = OrderRepository(db);
     await _deleteQuery(db.collection('orders').where('merchantId', isEqualTo: merchantId));
     await _deleteQuery(db.collection('shifts').where('merchantId', isEqualTo: merchantId));
@@ -131,7 +138,6 @@ void main() {
         .collection('inventory_logs').where('productId', isEqualTo: productId).get();
     final countAfterFirst = logsAfterFirst.docs.length;
 
-    // Repeat the exact cancellation call. Transaction guard must make it a no-op.
     await repo.updateOrderStatus(order, 'cancelled');
     product = await db.collection('products').doc(productId).get();
     shift = await db.collection('shifts').doc(shiftId).get();
@@ -147,8 +153,8 @@ void main() {
   });
 
   testWidgets('TEST 14/34 - 10 concurrent sales preserve order count stock and shift totals', (tester) async {
-    final db = FirebaseFirestore.instance;
     final merchantId = await _login();
+    final db = FirebaseFirestore.instance;
     final repo = OrderRepository(db);
     await _deleteQuery(db.collection('orders').where('merchantId', isEqualTo: merchantId));
     await _deleteQuery(db.collection('shifts').where('merchantId', isEqualTo: merchantId));
