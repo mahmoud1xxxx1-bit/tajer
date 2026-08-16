@@ -1,0 +1,39 @@
+name: QA 608 - Data Migration Test 10
+
+on:
+  push:
+    branches:
+      - qa/release-125-608-34-tests
+    paths:
+      - '.github/workflows/qa_608_data_migration_test.yml'
+      - 'test/qa_608_data_migration_test.dart'
+  workflow_dispatch:
+
+jobs:
+  data-migration-test:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout QA branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Prove #608 app source is untouched
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=10c53365bb2c8cc15a6dcb88020a03529f98cbb3
+          forbidden=$(git diff --name-only "$BASE"...HEAD -- lib/ pubspec.yaml firestore.rules firebase.json .firebaserc || true)
+          test -z "$forbidden" || { echo "$forbidden"; exit 2; }
+          echo PASS_SOURCE_GUARD
+      - name: Setup Flutter 3.44.0
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.0'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter gen-l10n
+      - run: dart run build_runner build -d
+      - name: Execute TEST 10
+        run: flutter test test/qa_608_data_migration_test.dart
