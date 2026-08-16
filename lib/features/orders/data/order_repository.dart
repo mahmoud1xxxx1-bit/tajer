@@ -900,7 +900,7 @@ class OrderRepository {
       final currentDebt =
           (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
       if (amountPaid > currentDebt) {
-        throw Exception('مبلغ السد٧د لا يمكن أ؆ يااوز الدين المستشق.');
+        throw Exception('مبلغ السداد لا يمكن أن يتجاوز الدين المستحق.');
       }
 
       final orders = orderDocs
@@ -919,7 +919,7 @@ class OrderRepository {
         ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
       // From here onward there are writes only. Firestore can safely retry the
-    // transaction if another device collects debt at the same time.
+      // transaction if another device collects debt at the same time.
       transaction.update(customerRef, {
         'totalDebt': FieldValue.increment(-amountPaid),
         'updatedAt': FieldValue.serverTimestamp(),
