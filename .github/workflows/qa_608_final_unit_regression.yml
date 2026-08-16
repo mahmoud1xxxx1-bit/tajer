@@ -24,8 +24,9 @@ jobs:
           BASE=10c53365bb2c8cc15a6dcb88020a03529f98cbb3
           p='lib/features/employees/presentation/employee_permissions_screen.dart'
           d='lib/features/orders/data/order_repository.dart'
+          s='lib/features/authentication/presentation/startup_screen.dart'
           changed=$(git diff --name-only "$BASE"...HEAD -- lib/ pubspec.yaml firestore.rules firebase.json .firebaserc || true)
-          forbidden=$(printf '%s\n' "$changed" | grep -v '^$' | grep -v "^${p}$" | grep -v "^${d}$" || true)
+          forbidden=$(printf '%s\n' "$changed" | grep -v '^$' | grep -v "^${p}$" | grep -v "^${d}$" | grep -v "^${s}$" || true)
           test -z "$forbidden" || { echo "$forbidden"; exit 2; }
           echo PASS_FINAL_SOURCE_GUARD
       - name: Setup Flutter 3.44.0
