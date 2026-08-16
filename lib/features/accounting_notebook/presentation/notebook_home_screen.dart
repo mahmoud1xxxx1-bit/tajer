@@ -14,6 +14,33 @@ final _welcomeDismissedProvider = StateProvider<bool?>((ref) => null);
 class NotebookHomeScreen extends ConsumerWidget {
   const NotebookHomeScreen({super.key});
 
+  Future<bool> _confirmExitNotebook(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    return await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: Text(l10n.confirmExit),
+            content: Text(
+              isArabic
+                  ? 'هل تريد الخروج من دفتر المحاسبة والعودة إلى تاجر؟'
+                  : 'Do you want to leave Accounting Notebook and return to Tajer?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: Text(l10n.cancel),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: Text(l10n.exit),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
@@ -77,87 +104,172 @@ class NotebookHomeScreen extends ConsumerWidget {
       return false;
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.notebookTitle),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          tooltip: l10n.backToTajer,
-          onPressed: () => context.go('/dashboard'),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            tooltip: l10n.notebookGuide,
-            onPressed: () => context.push('/notebook/guide'),
+    Future<void> leaveNotebook() async {
+      final shouldLeave = await _confirmExitNotebook(context);
+      if (shouldLeave && context.mounted) {
+        context.go('/dashboard');
+      }
+    }
+
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
+        await leaveNotebook();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.notebookTitle),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            tooltip: l10n.backToTajer,
+            onPressed: leaveNotebook,
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (books.isEmpty && !hasDismissedWelcome)
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.help_outline),
+              tooltip: l10n.notebookGuide,
+              onPressed: () => context.push('/notebook/guide'),
+            ),
+          ],
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (books.isEmpty && !hasDismissedWelcome)
+                Card(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  margin: const EdgeInsets.only(bottom: 24),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.menu_book,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onPrimaryContainer),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                l10n.notebookWelcomeTitle,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.notebookWelcomeDesc,
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onPrimaryContainer,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Wrap(
+                          alignment: WrapAlignment.end,
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            TextButton(
+                              onPressed: () {
+                                ref.read(sharedPreferencesProvider).setBool(
+                                    'notebook_welcome_dismissed', true);
+                                ref
+                                    .read(_welcomeDismissedProvider.notifier)
+                                    .state = true;
+                              },
+                              child: Text(l10n.notebookLater),
+                            ),
+                            ElevatedButton(
+                              onPressed: () => context.push('/notebook/books'),
+                              child: Text(l10n.notebookSetupNow),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              if (activeBooks.isNotEmpty)
+                DropdownButtonFormField<String>(
+                  value: selectedBookId,
+                  isExpanded: true,
+                  decoration: InputDecoration(labelText: l10n.notebookBook),
+                  items: activeBooks
+                      .map((b) => DropdownMenuItem(
+                            value: b.id,
+                            child: Text(b.name, overflow: TextOverflow.ellipsis),
+                          ))
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) selectCurrentBook(value);
+                  },
+                ),
+              if (activeBooks.isNotEmpty) const SizedBox(height: 16),
               Card(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                margin: const EdgeInsets.only(bottom: 24),
+                elevation: 2,
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Icon(Icons.menu_book,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onPrimaryContainer),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              l10n.notebookWelcomeTitle,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .onPrimaryContainer,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                          ),
-                        ],
+                      Text(
+                        NotebookTerminology.totalAccountBalance(context),
+                        style: Theme.of(context).textTheme.titleLarge,
+                        textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        l10n.notebookWelcomeDesc,
-                        style: TextStyle(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onPrimaryContainer,
-                        ),
+                        NumberFormat.currency(symbol: '$currencyCode ')
+                            .format(totalAccountBalance),
+                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: totalAccountBalance >= 0
+                                  ? Colors.green
+                                  : Colors.red,
+                            ),
+                      ),
+                      const Divider(height: 32),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildSummaryItem(context, l10n.income, totalIncome,
+                              Colors.green, currencyCode),
+                          _buildSummaryItem(context, l10n.expense, totalExpense,
+                              Colors.red, currencyCode),
+                        ],
                       ),
                       const SizedBox(height: 16),
-                      Wrap(
-                        alignment: WrapAlignment.end,
-                        spacing: 8,
-                        runSpacing: 8,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                         children: [
-                          TextButton(
-                            onPressed: () {
-                              ref.read(sharedPreferencesProvider).setBool(
-                                  'notebook_welcome_dismissed', true);
-                              ref
-                                  .read(_welcomeDismissedProvider.notifier)
-                                  .state = true;
-                            },
-                            child: Text(l10n.notebookLater),
+                          _buildSummaryItem(
+                            context,
+                            NotebookTerminology.accountsReceivable(context),
+                            totalOwedToMe,
+                            Colors.blue,
+                            currencyCode,
                           ),
-                          ElevatedButton(
-                            onPressed: () => context.push('/notebook/books'),
-                            child: Text(l10n.notebookSetupNow),
+                          _buildSummaryItem(
+                            context,
+                            NotebookTerminology.accountsPayable(context),
+                            totalIOwe,
+                            Colors.orange,
+                            currencyCode,
                           ),
                         ],
                       ),
@@ -165,209 +277,138 @@ class NotebookHomeScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-            if (activeBooks.isNotEmpty)
-              DropdownButtonFormField<String>(
-                value: selectedBookId,
-                isExpanded: true,
-                decoration: InputDecoration(labelText: l10n.notebookBook),
-                items: activeBooks
-                    .map((b) => DropdownMenuItem(
-                          value: b.id,
-                          child: Text(b.name, overflow: TextOverflow.ellipsis),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  if (value != null) selectCurrentBook(value);
-                },
-              ),
-            if (activeBooks.isNotEmpty) const SizedBox(height: 16),
-            Card(
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    Text(
-                      NotebookTerminology.totalAccountBalance(context),
-                      style: Theme.of(context).textTheme.titleLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      NumberFormat.currency(symbol: '$currencyCode ')
-                          .format(totalAccountBalance),
-                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: totalAccountBalance >= 0
-                                ? Colors.green
-                                : Colors.red,
-                          ),
-                    ),
-                    const Divider(height: 32),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildSummaryItem(context, l10n.income, totalIncome,
-                            Colors.green, currencyCode),
-                        _buildSummaryItem(context, l10n.expense, totalExpense,
-                            Colors.red, currencyCode),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        _buildSummaryItem(
-                          context,
-                          NotebookTerminology.accountsReceivable(context),
-                          totalOwedToMe,
-                          Colors.blue,
-                          currencyCode,
+              const SizedBox(height: 24),
+              _actionRow([
+                _buildActionCard(context, Icons.arrow_downward, l10n.income,
+                    Colors.green, () async {
+                  if (await GuestLimitService.canAddNotebookTransaction(
+                          context, ref) &&
+                      await canStartOperation() &&
+                      context.mounted) {
+                    context.push('/notebook/income');
+                  }
+                }),
+                _buildActionCard(context, Icons.arrow_upward, l10n.expense,
+                    Colors.red, () async {
+                  if (await GuestLimitService.canAddNotebookTransaction(
+                          context, ref) &&
+                      await canStartOperation() &&
+                      context.mounted) {
+                    context.push('/notebook/expense');
+                  }
+                }),
+                _buildActionCard(context, Icons.swap_horiz,
+                    l10n.notebookTransfer, Colors.blueGrey, () async {
+                  if (await GuestLimitService.canAddNotebookTransaction(
+                          context, ref) &&
+                      await canStartOperation() &&
+                      context.mounted) {
+                    context.push('/notebook/transfer');
+                  }
+                }),
+              ]),
+              const SizedBox(height: 16),
+              _actionRow([
+                _buildActionCard(
+                    context,
+                    Icons.person_add,
+                    NotebookTerminology.accountsReceivable(context),
+                    Colors.blue, () async {
+                  if (await GuestLimitService.canAddNotebookTransaction(
+                          context, ref) &&
+                      await canStartOperation() &&
+                      context.mounted) {
+                    context.push('/notebook/debt/me');
+                  }
+                }),
+                _buildActionCard(
+                    context,
+                    Icons.person_remove,
+                    NotebookTerminology.accountsPayable(context),
+                    Colors.orange, () async {
+                  if (await GuestLimitService.canAddNotebookTransaction(
+                          context, ref) &&
+                      await canStartOperation() &&
+                      context.mounted) {
+                    context.push('/notebook/debt/owe');
+                  }
+                }),
+              ]),
+              const SizedBox(height: 16),
+              _actionRow([
+                _buildActionCard(context, Icons.account_balance,
+                    l10n.notebookAccounts, Colors.purple, () {
+                  if (selectedBookId != null) selectCurrentBook(selectedBookId);
+                  context.push('/notebook/accounts');
+                }),
+                _buildActionCard(context, Icons.people, l10n.notebookPeople,
+                    Colors.teal, () {
+                  if (selectedBookId != null) selectCurrentBook(selectedBookId);
+                  context.push('/notebook/people');
+                }),
+                _buildActionCard(context, Icons.bar_chart, l10n.notebookReports,
+                    Colors.brown, () {
+                  if (selectedBookId != null) selectCurrentBook(selectedBookId);
+                  context.push('/notebook/reports');
+                }),
+              ]),
+              const SizedBox(height: 16),
+              _actionRow([
+                _buildActionCard(context, Icons.book, l10n.notebookBooks,
+                    Colors.indigo, () => context.push('/notebook/books')),
+                _buildActionCard(context, Icons.category,
+                    l10n.notebookCategories, Colors.cyan, () {
+                  if (selectedBookId != null) selectCurrentBook(selectedBookId);
+                  context.push('/notebook/categories');
+                }),
+                _buildActionCard(context, Icons.list_alt,
+                    l10n.notebookTransactions, Colors.grey, () {
+                  if (selectedBookId != null) selectCurrentBook(selectedBookId);
+                  context.push('/notebook/transactions');
+                }),
+              ]),
+              const SizedBox(height: 32),
+              Text(l10n.recentTransactions,
+                  style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 16),
+              if (transactions.isEmpty)
+                Center(child: Text(l10n.notebookNoTransactionsYet))
+              else
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: transactions.length > 5 ? 5 : transactions.length,
+                  itemBuilder: (context, index) {
+                    final tx = transactions[index];
+                    final isPositive =
+                        tx.type == 'income' || tx.type == 'receivable_payment';
+                    final isNeutral = tx.type == 'opening_balance' ||
+                        tx.type == 'account_transfer' ||
+                        tx.type == 'receivable' ||
+                        tx.type == 'payable';
+                    return ListTile(
+                      title: Text(tx.note ??
+                          NotebookLocalizationHelper.getNotebookLocalizedType(
+                              context, tx.type)),
+                      subtitle: Text(DateFormat.yMMMd(
+                              Localizations.localeOf(context).languageCode)
+                          .format(tx.date)),
+                      trailing: Text(
+                        '${isNeutral ? '' : isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          color: isNeutral
+                              ? Theme.of(context).colorScheme.primary
+                              : isPositive
+                                  ? Colors.green
+                                  : Colors.red,
+                          fontWeight: FontWeight.bold,
                         ),
-                        _buildSummaryItem(
-                          context,
-                          NotebookTerminology.accountsPayable(context),
-                          totalIOwe,
-                          Colors.orange,
-                          currencyCode,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            _actionRow([
-              _buildActionCard(context, Icons.arrow_downward, l10n.income,
-                  Colors.green, () async {
-                if (await GuestLimitService.canAddNotebookTransaction(
-                        context, ref) &&
-                    await canStartOperation() &&
-                    context.mounted) {
-                  context.push('/notebook/income');
-                }
-              }),
-              _buildActionCard(context, Icons.arrow_upward, l10n.expense,
-                  Colors.red, () async {
-                if (await GuestLimitService.canAddNotebookTransaction(
-                        context, ref) &&
-                    await canStartOperation() &&
-                    context.mounted) {
-                  context.push('/notebook/expense');
-                }
-              }),
-              _buildActionCard(context, Icons.swap_horiz,
-                  l10n.notebookTransfer, Colors.blueGrey, () async {
-                if (await GuestLimitService.canAddNotebookTransaction(
-                        context, ref) &&
-                    await canStartOperation() &&
-                    context.mounted) {
-                  context.push('/notebook/transfer');
-                }
-              }),
-            ]),
-            const SizedBox(height: 16),
-            _actionRow([
-              _buildActionCard(
-                  context,
-                  Icons.person_add,
-                  NotebookTerminology.accountsReceivable(context),
-                  Colors.blue, () async {
-                if (await GuestLimitService.canAddNotebookTransaction(
-                        context, ref) &&
-                    await canStartOperation() &&
-                    context.mounted) {
-                  context.push('/notebook/debt/me');
-                }
-              }),
-              _buildActionCard(
-                  context,
-                  Icons.person_remove,
-                  NotebookTerminology.accountsPayable(context),
-                  Colors.orange, () async {
-                if (await GuestLimitService.canAddNotebookTransaction(
-                        context, ref) &&
-                    await canStartOperation() &&
-                    context.mounted) {
-                  context.push('/notebook/debt/owe');
-                }
-              }),
-            ]),
-            const SizedBox(height: 16),
-            _actionRow([
-              _buildActionCard(context, Icons.account_balance,
-                  l10n.notebookAccounts, Colors.purple, () {
-                if (selectedBookId != null) selectCurrentBook(selectedBookId);
-                context.push('/notebook/accounts');
-              }),
-              _buildActionCard(context, Icons.people, l10n.notebookPeople,
-                  Colors.teal, () {
-                if (selectedBookId != null) selectCurrentBook(selectedBookId);
-                context.push('/notebook/people');
-              }),
-              _buildActionCard(context, Icons.bar_chart, l10n.notebookReports,
-                  Colors.brown, () {
-                if (selectedBookId != null) selectCurrentBook(selectedBookId);
-                context.push('/notebook/reports');
-              }),
-            ]),
-            const SizedBox(height: 16),
-            _actionRow([
-              _buildActionCard(context, Icons.book, l10n.notebookBooks,
-                  Colors.indigo, () => context.push('/notebook/books')),
-              _buildActionCard(context, Icons.category,
-                  l10n.notebookCategories, Colors.cyan, () {
-                if (selectedBookId != null) selectCurrentBook(selectedBookId);
-                context.push('/notebook/categories');
-              }),
-              _buildActionCard(context, Icons.list_alt,
-                  l10n.notebookTransactions, Colors.grey, () {
-                if (selectedBookId != null) selectCurrentBook(selectedBookId);
-                context.push('/notebook/transactions');
-              }),
-            ]),
-            const SizedBox(height: 32),
-            Text(l10n.recentTransactions,
-                style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 16),
-            if (transactions.isEmpty)
-              Center(child: Text(l10n.notebookNoTransactionsYet))
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: transactions.length > 5 ? 5 : transactions.length,
-                itemBuilder: (context, index) {
-                  final tx = transactions[index];
-                  final isPositive =
-                      tx.type == 'income' || tx.type == 'receivable_payment';
-                  final isNeutral = tx.type == 'opening_balance' ||
-                      tx.type == 'account_transfer' ||
-                      tx.type == 'receivable' ||
-                      tx.type == 'payable';
-                  return ListTile(
-                    title: Text(tx.note ??
-                        NotebookLocalizationHelper.getNotebookLocalizedType(
-                            context, tx.type)),
-                    subtitle: Text(DateFormat.yMMMd(
-                            Localizations.localeOf(context).languageCode)
-                        .format(tx.date)),
-                    trailing: Text(
-                      '${isNeutral ? '' : isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        color: isNeutral
-                            ? Theme.of(context).colorScheme.primary
-                            : isPositive
-                                ? Colors.green
-                                : Colors.red,
-                        fontWeight: FontWeight.bold,
                       ),
-                    ),
-                  );
-                },
-              ),
-          ],
+                    );
+                  },
+                ),
+            ],
+          ),
         ),
       ),
     );
