@@ -86,3 +86,4 @@ jobs:
           name: supplier-firebase-log
           path: supplier-firebase.log
           if-no-files-found: ignore
+# CI retry after transient dependency-host 403 on 2026-08-16
