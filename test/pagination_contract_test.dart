@@ -110,12 +110,16 @@ void main() {
       expect(source, contains(".where('date', isGreaterThanOrEqualTo: start)"));
     });
 
-    test('notebook people are queried per book in 30-item pages', () {
+    test('notebook people use the shared provider and stay scoped to the selected book',
+        () {
       final source = read(
           'lib/features/accounting_notebook/presentation/notebook_people_screen.dart');
-      expect(source, contains(".where('bookId', isEqualTo: selectedBookId)"));
-      expect(source, contains('pageSize: 30'));
-      expect(source, isNot(contains('ref.watch(notebookPeopleProvider)')));
+      expect(source, contains('ref.watch(notebookPeopleProvider)'));
+      expect(source,
+          contains('.where((person) => person.bookId == selectedBookId)'));
+      expect(source, contains('..sort((a, b) => b.createdAt.compareTo(a.createdAt))'));
+      expect(source, isNot(contains('FirestoreListView<NotebookPerson>')));
+      expect(source, isNot(contains('pageSize: 30')));
     });
 
     test(
