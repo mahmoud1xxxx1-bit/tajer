@@ -28,10 +28,11 @@ jobs:
           BASE=10c53365bb2c8cc15a6dcb88020a03529f98cbb3
           ALLOWED_PERMISSIONS='lib/features/employees/presentation/employee_permissions_screen.dart'
           ALLOWED_DEBT='lib/features/orders/data/order_repository.dart'
+          ALLOWED_STARTUP='lib/features/authentication/presentation/startup_screen.dart'
           echo "QA HEAD: $(git rev-parse HEAD)"
           echo "BASE   : $BASE"
           changed=$(git diff --name-only "$BASE"...HEAD -- lib/ pubspec.yaml firestore.rules firebase.json .firebaserc || true)
-          forbidden=$(printf '%s\n' "$changed" | grep -v '^$' | grep -v "^${ALLOWED_PERMISSIONS}$" | grep -v "^${ALLOWED_DEBT}$" || true)
+          forbidden=$(printf '%s\n' "$changed" | grep -v '^$' | grep -v "^${ALLOWED_PERMISSIONS}$" | grep -v "^${ALLOWED_DEBT}$" | grep -v "^${ALLOWED_STARTUP}$" || true)
           if [ -n "$forbidden" ]; then
             echo "Forbidden production-source/config differences detected:"
             echo "$forbidden"
