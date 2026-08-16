@@ -864,58 +864,88 @@ class OrderRepository {
   }) async {
     if (amountPaid <= 0) return;
 
-    final paymentId = _firestore.collection('merchants').doc(merchantId).collection('payments').doc().id;
+    final paymentId = _firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection('payments')
+        .doc()
+        .id;
 
-    // Concurrency Lock & execution in a single atomic transaction
+    // Firestore transactions can only guarantee a consistent retryable
+    // snapshot when every transactional read happens before any write.
+    // Resolve the candidate credit-order references first, then re-read their
+    // latest data through the transaction itself.
+    final candidateOrderRefs = (await _firestore
+            .collection('orders')
+            .where('merchantId', isEqualTo: merchantId)
+            .where('customerId', isEqualTo: customerId)
+            .where('isCredit', isEqualTo: true)
+            .get())
+        .docs
+        .map((doc) => doc.reference)
+        .toList(growable: false);
+
+    final customerRef = _firestore.collection('customers').doc(customerId);
+
     await _firestore.runTransaction((transaction) async {
-      final customerRef = _firestore.collection('customers').doc(customerId);
+      // IMPORTANT: keep all transaction reads before all transaction writes.
       final customerDoc = await transaction.get(customerRef);
       if (!customerDoc.exists) return;
 
-      final currentDebt = (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
-      if (amountPaid > currentDebt) {
-        throw Exception('مبلغ السداد لا يمكن أن يتجاوز الدين المستحق.');
+      final orderDocs = <DocumentSnapshot<Map<String, dynamic>>>[];
+      for (final orderRef in candidateOrderRefs) {
+        orderDocs.add(await transaction.get(orderRef));
       }
-      
+
+      final currentDebt =
+          (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
+      if (amountPaid > currentDebt) {
+        throw Exception('مبلغ السد٧د لا يمكن أ؆ يااوز الدين المستشق.');
+      }
+
+      final orders = orderDocs
+          .where((doc) => doc.exists)
+          .map((doc) {
+            final data = Map<String, dynamic>.from(doc.data()!);
+            data['id'] = doc.id;
+            return AppOrder.fromJson(data);
+          })
+          .where(
+            (order) =>
+                order.status != 'cancelled' &&
+                (order.total - order.paidAmount) > 0,
+          )
+          .toList()
+        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+      // From here onward there are writes only. Firestore can safely retry the
+    // transaction if another device collects debt at the same time.
       transaction.update(customerRef, {
         'totalDebt': FieldValue.increment(-amountPaid),
         'updatedAt': FieldValue.serverTimestamp(),
         'lastPaymentId': paymentId,
       });
 
-      // Fetch unpaid credit orders to distribute the payment
-      final allCreditOrdersSnapshot = await _firestore
-          .collection('orders')
-          .where('merchantId', isEqualTo: merchantId)
-          .where('customerId', isEqualTo: customerId)
-          .where('isCredit', isEqualTo: true)
-          .get();
-          
-      var orders = allCreditOrdersSnapshot.docs
-          .map((d) {
-          final data = d.data();
-          data['id'] = d.id;
-          return AppOrder.fromJson(data);
-        })
-          .where((o) => o.status != 'cancelled' && (o.total - o.paidAmount) > 0)
-          .toList();
-      
-      orders.sort((a, b) => a.createdAt.compareTo(b.createdAt));
-
       double remainingToDistribute = amountPaid;
-      for (var order in orders) {
+      for (final order in orders) {
         if (remainingToDistribute <= 0) break;
         final unpaidForOrder = order.total - order.paidAmount;
-        if (unpaidForOrder > 0) {
-          final amountToApply = remainingToDistribute >= unpaidForOrder ? unpaidForOrder : remainingToDistribute;
-          transaction.update(_firestore.collection('orders').doc(order.id), {
-            'paidAmount': FieldValue.increment(amountToApply),
-          });
-          remainingToDistribute -= amountToApply;
-        }
+        if (unpaidForOrder <= 0) continue;
+
+        final amountToApply = remainingToDistribute >= unpaidForOrder
+            ? unpaidForOrder
+            : remainingToDistribute;
+        transaction.update(_firestore.collection('orders').doc(order.id), {
+          'paidAmount': FieldValue.increment(amountToApply),
+        });
+        remainingToDistribute -= amountToApply;
       }
 
-      final paymentRef = _firestore.collection('merchants').doc(merchantId).collection('payments').doc(paymentId);
+      final paymentRef = _firestore
+          .collection('merchants')
+          .doc(merchantId)
+          .collection('payments')
+          .doc(paymentId);
       transaction.set(paymentRef, {
         'amount': amountPaid,
         'merchantId': merchantId,
@@ -931,15 +961,20 @@ class OrderRepository {
           'lastPaymentId': paymentId,
         };
         if (paymentMethod == 'cash') {
-          shiftUpdates['debtCollectionsCash'] = FieldValue.increment(amountPaid);
-        } else if (paymentMethod == 'card' || paymentMethod == 'mada' || paymentMethod == 'apple_pay') {
-          shiftUpdates['debtCollectionsCard'] = FieldValue.increment(amountPaid);
+          shiftUpdates['debtCollectionsCash'] =
+              FieldValue.increment(amountPaid);
+        } else if (paymentMethod == 'card' ||
+            paymentMethod == 'mada' ||
+            paymentMethod == 'apple_pay') {
+          shiftUpdates['debtCollectionsCard'] =
+              FieldValue.increment(amountPaid);
         } else if (paymentMethod == 'transfer') {
-          shiftUpdates['debtCollectionsTransfer'] = FieldValue.increment(amountPaid);
+          shiftUpdates['debtCollectionsTransfer'] =
+              FieldValue.increment(amountPaid);
         }
         transaction.update(shiftRef, shiftUpdates);
       }
-    });
+    }, maxAttempts: 20);
   }
 
   Future<int> getOrderCount(String merchantId) async {
