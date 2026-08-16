@@ -38,15 +38,16 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
       await ActivityLogger.log(
         user: appUser,
         actionType: isAr ? 'تراجع عن سجل مخزون' : 'Inventory Log Reverted',
-        description: isAr
-            ? 'تم التراجع عن سجل المخزون للمنتج (${log.productName})'
-            : 'Reverted inventory log for (${log.productName})',
+        description: isAr ? 'تم التراجع عن سجل المخزون للمنتج (${log.productName})' : 'Reverted inventory log for (${log.productName})',
       );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(isAr ? 'تم التراجع عن السجل وتسوية المخزون بنجاح' : 'Log reverted & inventory reconciled successfully',
-                  style: const TextStyle(fontFamily: 'Tajawal'))),
+            content: Text(
+              isAr ? 'تم التراجع عن السجل وتسوية المخزون بنجاح' : 'Log reverted & inventory reconciled successfully',
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
         );
       }
     }
@@ -63,19 +64,22 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.text73,
-            style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
+        title: Text(AppLocalizations.of(context)!.text73, style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
       ),
       body: query == null
           ? const Center(child: CircularProgressIndicator())
           : FirestoreListView<InventoryLog>(
               query: query,
+              pageSize: 50,
               padding: const EdgeInsets.all(16),
               emptyBuilder: (context) => Center(
                 child: Text(AppLocalizations.of(context)!.text74, style: const TextStyle(fontFamily: 'Tajawal')),
               ),
               errorBuilder: (context, error, stackTrace) => Center(
-                child: Text('خطأ: $error', style: const TextStyle(fontFamily: 'Tajawal')),
+                child: Text(
+                  isAr ? 'تعذر تحميل سجل المخزون. حاول مرة أخرى.' : 'Could not load the inventory log. Please try again.',
+                  style: const TextStyle(fontFamily: 'Tajawal'),
+                ),
               ),
               itemBuilder: (context, doc) {
                 final log = doc.data();
@@ -88,11 +92,7 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.05)),
                     boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.02),
-                        blurRadius: 5,
-                        offset: const Offset(0, 2),
-                      ),
+                      BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 5, offset: const Offset(0, 2)),
                     ],
                   ),
                   child: Opacity(
@@ -107,11 +107,7 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                               color: isPositive ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(
-                              isPositive ? Icons.add : Icons.remove,
-                              color: isPositive ? Colors.green : Colors.red,
-                              size: 24,
-                            ),
+                            child: Icon(isPositive ? Icons.add : Icons.remove, color: isPositive ? Colors.green : Colors.red, size: 24),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -123,12 +119,7 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                                     Expanded(
                                       child: Text(
                                         log.productName,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontFamily: 'Tajawal',
-                                          fontSize: 16,
-                                          decoration: log.isReverted ? TextDecoration.lineThrough : null,
-                                        ),
+                                        style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16, decoration: log.isReverted ? TextDecoration.lineThrough : null),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -138,21 +129,12 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: log.itemType == 'raw_material'
-                                              ? Colors.green.withValues(alpha: 0.1)
-                                              : Colors.blue.withValues(alpha: 0.1),
+                                          color: log.itemType == 'raw_material' ? Colors.green.withValues(alpha: 0.1) : Colors.blue.withValues(alpha: 0.1),
                                           borderRadius: BorderRadius.circular(4),
                                         ),
                                         child: Text(
-                                          log.itemType == 'raw_material'
-                                              ? (isAr ? 'مواد خام' : 'Raw Material')
-                                              : (isAr ? 'منتج جاهز' : 'Product'),
-                                          style: TextStyle(
-                                            color: log.itemType == 'raw_material' ? Colors.green[700] : Colors.blue[700],
-                                            fontSize: 10,
-                                            fontFamily: 'Tajawal',
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                          log.itemType == 'raw_material' ? (isAr ? 'مواد خام' : 'Raw Material') : (isAr ? 'منتج جاهز' : 'Product'),
+                                          style: TextStyle(color: log.itemType == 'raw_material' ? Colors.green[700] : Colors.blue[700], fontSize: 10, fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
                                         ),
                                       ),
                                     ],
@@ -164,12 +146,7 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                                     const Icon(Icons.info_outline, size: 14, color: Colors.grey),
                                     const SizedBox(width: 4),
                                     Expanded(
-                                      child: Text(
-                                        log.reason,
-                                        style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey[400], fontSize: 13),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
+                                      child: Text(log.reason, style: TextStyle(fontFamily: 'Tajawal', color: Colors.grey[400], fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
                                     ),
                                   ],
                                 ),
@@ -180,10 +157,7 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                                   children: [
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey.withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
+                                      decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                                       child: Text(
                                         isAr ? 'من ${log.previousQuantity} إلى ${log.newQuantity}' : 'From ${log.previousQuantity} to ${log.newQuantity}',
                                         style: TextStyle(fontSize: 12, color: Colors.grey[400], fontFamily: 'Tajawal'),
@@ -195,14 +169,7 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                                         children: [
                                           Icon(Icons.person_pin, size: 14, color: Colors.blueAccent.withValues(alpha: 0.7)),
                                           const SizedBox(width: 4),
-                                          Text(
-                                            log.userName!,
-                                            style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.blueAccent,
-                                                fontFamily: 'Tajawal',
-                                                fontWeight: FontWeight.bold),
-                                          ),
+                                          Text(log.userName!, style: const TextStyle(fontSize: 12, color: Colors.blueAccent, fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
                                         ],
                                       ),
                                   ],
@@ -212,10 +179,7 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                                   children: [
                                     const Icon(Icons.access_time, size: 12, color: Colors.grey),
                                     const SizedBox(width: 4),
-                                    Text(
-                                      DateFormat('yyyy/MM/dd hh:mm a').format(log.date),
-                                      style: TextStyle(fontSize: 11, color: Colors.grey[600], fontFamily: 'Tajawal'),
-                                    ),
+                                    Text(DateFormat('yyyy/MM/dd hh:mm a').format(log.date), style: TextStyle(fontSize: 11, color: Colors.grey[600], fontFamily: 'Tajawal')),
                                   ],
                                 ),
                               ],
@@ -226,13 +190,7 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                             children: [
                               Text(
                                 '${isPositive ? '+' : ''}${log.changeQuantity}',
-                                style: TextStyle(
-                                  color: isPositive ? Colors.green : Colors.red,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 18,
-                                  fontFamily: 'Tajawal',
-                                  decoration: log.isReverted ? TextDecoration.lineThrough : null,
-                                ),
+                                style: TextStyle(color: isPositive ? Colors.green : Colors.red, fontWeight: FontWeight.bold, fontSize: 18, fontFamily: 'Tajawal', decoration: log.isReverted ? TextDecoration.lineThrough : null),
                               ),
                               if (isMerchant && !log.isReverted)
                                 IconButton(
@@ -243,10 +201,7 @@ class _InventoryLogsScreenState extends ConsumerState<InventoryLogsScreen> {
                               if (log.isReverted)
                                 Padding(
                                   padding: const EdgeInsets.only(top: 4.0),
-                                  child: Text(
-                                    isAr ? 'تم التراجع' : 'Reverted',
-                                    style: const TextStyle(color: Colors.orange, fontSize: 10, fontFamily: 'Tajawal'),
-                                  ),
+                                  child: Text(isAr ? 'تم التراجع' : 'Reverted', style: const TextStyle(color: Colors.orange, fontSize: 10, fontFamily: 'Tajawal')),
                                 ),
                             ],
                           ),
