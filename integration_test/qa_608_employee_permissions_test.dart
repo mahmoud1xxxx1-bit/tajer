@@ -53,6 +53,20 @@ Future<void> _pumpUntil(WidgetTester tester, Finder finder) async {
   throw StateError('Widget not found: ${finder.description}');
 }
 
+Future<Finder> _findNotebookTile(WidgetTester tester) async {
+  final label = find.text('Accounting Notebook');
+  final scrollable = find.byType(Scrollable).last;
+  await tester.scrollUntilVisible(
+    label,
+    350,
+    scrollable: scrollable,
+  );
+  await tester.pumpAndSettle();
+  final tile = find.ancestor(of: label, matching: find.byType(SwitchListTile));
+  expect(tile, findsOneWidget);
+  return tile;
+}
+
 Widget _host(AuthRepository authRepo, String employeeUid, Map<String, dynamic> data) {
   return ProviderScope(
     overrides: [authRepositoryProvider.overrideWithValue(authRepo)],
@@ -116,13 +130,12 @@ void main() {
     }));
     await tester.pumpAndSettle();
 
-    final switches = find.byType(Switch);
-    expect(switches.evaluate().length, 12);
-    final notebookSwitch = switches.at(11);
-    expect((tester.widget<Switch>(notebookSwitch)).value, false);
-    await tester.tap(notebookSwitch);
+    var notebookTile = await _findNotebookTile(tester);
+    expect(tester.widget<SwitchListTile>(notebookTile).value, false);
+    await tester.tap(notebookTile);
     await tester.pump();
-    expect((tester.widget<Switch>(notebookSwitch)).value, true);
+    notebookTile = find.ancestor(of: find.text('Accounting Notebook'), matching: find.byType(SwitchListTile));
+    expect(tester.widget<SwitchListTile>(notebookTile).value, true);
 
     final save = find.text('Save');
     await _pumpUntil(tester, save);
@@ -144,9 +157,8 @@ void main() {
       'permissions': subPerms,
     }));
     await tester.pumpAndSettle();
-    final switchesAfter = find.byType(Switch);
-    expect(switchesAfter.evaluate().length, 12);
-    expect((tester.widget<Switch>(switchesAfter.at(11))).value, true,
+    final notebookTileAfter = await _findNotebookTile(tester);
+    expect(tester.widget<SwitchListTile>(notebookTileAfter).value, true,
         reason: 'After re-entry the saved accounting notebook permission must still be ON');
   });
 }
