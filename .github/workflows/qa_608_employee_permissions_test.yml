@@ -18,11 +18,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Prove #608 app source is untouched
+      - name: Prove production source is unchanged after verified permission-tile UI fix
         shell: bash
         run: |
           set -euo pipefail
-          BASE=10c53365bb2c8cc15a6dcb88020a03529f98cbb3
+          BASE=ffd92ac89bbc80143b715ae4c493cb2ba2b38f51
           forbidden=$(git diff --name-only "$BASE"...HEAD -- lib/ pubspec.yaml firestore.rules firebase.json .firebaserc || true)
           test -z "$forbidden" || { echo "$forbidden"; exit 2; }
           echo PASS_SOURCE_GUARD
