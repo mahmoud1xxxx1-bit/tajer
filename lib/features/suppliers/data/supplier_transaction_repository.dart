@@ -14,15 +14,21 @@ class SupplierTransactionRepository {
           .collection('suppliers').doc(supplierId)
           .collection('transactions');
 
+  Query<SupplierTransaction> queryTransactions(String supplierId) {
+    return _transactionsRef(supplierId)
+        .withConverter<SupplierTransaction>(
+          fromFirestore: (snapshot, _) {
+            final data = snapshot.data()!;
+            data['id'] = snapshot.id;
+            return SupplierTransaction.fromJson(data);
+          },
+          toFirestore: (transaction, _) => transaction.toJson(),
+        )
+        .orderBy('date', descending: true);
+  }
+
   Stream<List<SupplierTransaction>> watchTransactions(String supplierId) {
-    return _transactionsRef(supplierId).withConverter(
-      fromFirestore: (snapshot, _) {
-        final data = snapshot.data()!;
-        data['id'] = snapshot.id;
-        return SupplierTransaction.fromJson(data);
-      },
-      toFirestore: (transaction, _) => transaction.toJson(),
-    ).orderBy('date', descending: true).snapshots().map((snapshot) {
+    return queryTransactions(supplierId).snapshots().map((snapshot) {
       return snapshot.docs.map((doc) => doc.data()).toList();
     });
   }
