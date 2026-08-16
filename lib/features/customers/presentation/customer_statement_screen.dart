@@ -3,22 +3,32 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../domain/customer.dart';
 import '../data/customer_statement_provider.dart';
-import 'package:tajer/l10n/app_localizations.dart';
+import '../../../core/providers/settings_provider.dart';
 
-class CustomerStatementScreen extends ConsumerWidget {
+class CustomerStatementScreen extends ConsumerStatefulWidget {
   final Customer customer;
 
   const CustomerStatementScreen({super.key, required this.customer});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final statementAsync = ref.watch(customerStatementProvider(customer));
+  ConsumerState<CustomerStatementScreen> createState() => _CustomerStatementScreenState();
+}
+
+class _CustomerStatementScreenState extends ConsumerState<CustomerStatementScreen> {
+  int _limit = 50;
+
+  @override
+  Widget build(BuildContext context) {
+    final statementAsync = ref.watch(customerStatementProvider(widget.customer, _limit));
     final isAr = Localizations.localeOf(context).languageCode == 'ar';
-    final currency = isAr ? 'ريال' : 'SAR'; // Or get it from settings
+    final currency = ref.watch(currencyProvider).code;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isAr ? 'كشف حساب: ${customer.name}' : 'Statement: ${customer.name}', style: const TextStyle(fontFamily: 'Tajawal')),
+        title: Text(
+          isAr ? 'كشف حساب: ${widget.customer.name}' : 'Statement: ${widget.customer.name}',
+          style: const TextStyle(fontFamily: 'Tajawal'),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -26,24 +36,44 @@ class CustomerStatementScreen extends ConsumerWidget {
       body: statementAsync.when(
         data: (items) {
           if (items.isEmpty) {
-            return Center(
-              child: Text(
-                isAr ? 'لا توجد حركات مالية مسجلة.' : 'No financial transactions recorded.',
-                style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16, color: Colors.grey),
-              ),
+            return Column(
+              children: [
+                _buildSummaryCard(context, widget.customer, currency, isAr),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      isAr ? 'لا توجد حركات مالية مسجلة.' : 'No financial transactions recorded.',
+                      style: const TextStyle(fontFamily: 'Tajawal', fontSize: 16, color: Colors.grey),
+                    ),
+                  ),
+                ),
+              ],
             );
           }
 
+          final canLoadMore = items.length >= _limit;
           return Column(
             children: [
-              _buildSummaryCard(context, customer, currency, isAr),
+              _buildSummaryCard(context, widget.customer, currency, isAr),
               Expanded(
                 child: ListView.builder(
                   padding: const EdgeInsets.all(16),
-                  itemCount: items.length,
+                  itemCount: items.length + (canLoadMore ? 1 : 0),
                   itemBuilder: (context, index) {
-                    final item = items[index];
-                    return _buildStatementItemCard(context, item, currency, isAr);
+                    if (index == items.length) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: OutlinedButton.icon(
+                          onPressed: () => setState(() => _limit += 50),
+                          icon: const Icon(Icons.expand_more),
+                          label: Text(
+                            isAr ? 'عرض 50 حركة إضافية' : 'Load 50 more transactions',
+                            style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      );
+                    }
+                    return _buildStatementItemCard(context, items[index], currency, isAr);
                   },
                 ),
               ),
@@ -51,7 +81,16 @@ class CustomerStatementScreen extends ConsumerWidget {
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(child: Text('Error: $error')),
+        error: (error, stack) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(
+              isAr ? 'تعذر تحميل كشف الحساب. حاول مرة أخرى.' : 'Could not load the account statement. Please try again.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontFamily: 'Tajawal'),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -62,10 +101,7 @@ class CustomerStatementScreen extends ConsumerWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            Theme.of(context).colorScheme.primary,
-            Theme.of(context).colorScheme.secondary,
-          ],
+          colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.secondary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -84,15 +120,9 @@ class CustomerStatementScreen extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                isAr ? 'الرصيد الحالي' : 'Current Balance',
-                style: const TextStyle(color: Colors.white70, fontSize: 14, fontFamily: 'Tajawal'),
-              ),
+              Text(isAr ? 'الرصيد الحالي' : 'Current Balance', style: const TextStyle(color: Colors.white70, fontSize: 14, fontFamily: 'Tajawal')),
               const SizedBox(height: 8),
-              Text(
-                '${customer.totalDebt.toStringAsFixed(2)} $currency',
-                style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
-              ),
+              Text('${customer.totalDebt.toStringAsFixed(2)} $currency', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
             ],
           ),
           const Icon(Icons.account_balance_wallet, color: Colors.white, size: 40),
@@ -102,10 +132,10 @@ class CustomerStatementScreen extends ConsumerWidget {
   }
 
   Widget _buildStatementItemCard(BuildContext context, CustomerStatementItem item, String currency, bool isAr) {
-    IconData icon;
-    Color iconColor;
-    String title;
-    
+    late final IconData icon;
+    late final Color iconColor;
+    late String title;
+
     switch (item.type) {
       case StatementItemType.initialBalance:
         icon = Icons.account_balance;
@@ -122,9 +152,7 @@ class CustomerStatementScreen extends ConsumerWidget {
         icon = Icons.payments;
         iconColor = Colors.green;
         title = isAr ? 'سداد' : 'Payment';
-        if (item.paymentMethod != null) {
-          title += ' (${_getPaymentMethodName(item.paymentMethod!, isAr)})';
-        }
+        if (item.paymentMethod != null) title += ' (${_getPaymentMethodName(item.paymentMethod!, isAr)})';
         break;
       case StatementItemType.cancelledInvoice:
         icon = Icons.cancel;
@@ -136,7 +164,7 @@ class CustomerStatementScreen extends ConsumerWidget {
 
     final dateFormat = DateFormat('yyyy/MM/dd HH:mm');
     final isPositive = item.amount > 0;
-    
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -147,10 +175,7 @@ class CustomerStatementScreen extends ConsumerWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: iconColor.withValues(alpha: 0.1), shape: BoxShape.circle),
               child: Icon(icon, color: iconColor, size: 24),
             ),
             const SizedBox(width: 16),
@@ -158,15 +183,9 @@ class CustomerStatementScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16),
-                  ),
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', fontSize: 16)),
                   const SizedBox(height: 4),
-                  Text(
-                    dateFormat.format(item.date),
-                    style: const TextStyle(color: Colors.grey, fontSize: 12, fontFamily: 'Tajawal'),
-                  ),
+                  Text(dateFormat.format(item.date), style: const TextStyle(color: Colors.grey, fontSize: 12, fontFamily: 'Tajawal')),
                 ],
               ),
             ),
@@ -174,17 +193,12 @@ class CustomerStatementScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '${isPositive ? '+' : ''}${item.amount.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    color: isPositive ? Colors.red : Colors.green,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    fontFamily: 'Tajawal',
-                  ),
+                  '${isPositive ? '+' : ''}${item.amount.toStringAsFixed(2)} $currency',
+                  style: TextStyle(color: isPositive ? Colors.red : Colors.green, fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'Tajawal'),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${isAr ? 'رصيد:' : 'Bal:'} ${item.runningBalance.toStringAsFixed(2)}',
+                  '${isAr ? 'رصيد:' : 'Bal:'} ${item.runningBalance.toStringAsFixed(2)} $currency',
                   style: const TextStyle(color: Colors.grey, fontSize: 12, fontFamily: 'Tajawal'),
                 ),
               ],
@@ -197,11 +211,16 @@ class CustomerStatementScreen extends ConsumerWidget {
 
   String _getPaymentMethodName(String method, bool isAr) {
     switch (method) {
-      case 'cash': return isAr ? 'كاش' : 'Cash';
-      case 'card': return isAr ? 'شبكة' : 'Card';
-      case 'transfer': return isAr ? 'تحويل' : 'Transfer';
-      case 'split': return isAr ? 'مقسم' : 'Split';
-      default: return method;
+      case 'cash':
+        return isAr ? 'كاش' : 'Cash';
+      case 'card':
+        return isAr ? 'شبكة' : 'Card';
+      case 'transfer':
+        return isAr ? 'تحويل' : 'Transfer';
+      case 'split':
+        return isAr ? 'مقسم' : 'Split';
+      default:
+        return method;
     }
   }
 }
