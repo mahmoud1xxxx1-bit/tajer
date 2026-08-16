@@ -3,6 +3,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tajer/firebase_options.dart';
 
 import 'package:tajer/features/accounting_notebook/data/accounting_notebook_repository.dart';
 import 'package:tajer/features/accounting_notebook/data/accounting_notebook_provider.dart';
@@ -11,13 +12,19 @@ import 'package:tajer/features/accounting_notebook/domain/notebook_account.dart'
 import 'package:tajer/features/accounting_notebook/domain/notebook_category.dart';
 import 'package:tajer/features/accounting_notebook/domain/notebook_person.dart';
 
+bool _emulatorsConfigured = false;
+
 Future<String> _login() async {
-  try {
-    await Firebase.initializeApp();
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  }
+  if (!_emulatorsConfigured) {
     FirebaseFirestore.instance.useFirestoreEmulator('10.0.2.2', 8080);
     await FirebaseAuth.instance.useAuthEmulator('10.0.2.2', 9099);
-  } catch (_) {}
+    _emulatorsConfigured = true;
+  }
   final auth = FirebaseAuth.instance;
+  if (auth.currentUser != null) return auth.currentUser!.uid;
   try {
     await auth.signInWithEmailAndPassword(email: 'qa-notebook@test.local', password: 'password123');
   } catch (_) {
@@ -39,8 +46,8 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('TEST 7/34 - complete accounting notebook cycle', (tester) async {
-    final db = FirebaseFirestore.instance;
     final merchantId = await _login();
+    final db = FirebaseFirestore.instance;
     final repo = AccountingNotebookRepository(db, merchantId);
     final service = AccountingNotebookService(repo);
 
