@@ -18,14 +18,23 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Prove #608 app source is untouched
+      - name: Prove cash-sale source matches #608 except verified Test 8 UI fix
         shell: bash
         run: |
           set -euo pipefail
           BASE=10c53365bb2c8cc15a6dcb88020a03529f98cbb3
-          forbidden=$(git diff --name-only "$BASE"...HEAD -- lib/ pubspec.yaml firestore.rules firebase.json .firebaserc || true)
+          allowed='lib/features/employees/presentation/employee_permissions_screen.dart'
+          changed=$(git diff --name-only "$BASE"...HEAD -- lib/ pubspec.yaml firestore.rules firebase.json .firebaserc || true)
+          forbidden=$(printf '%s\n' "$changed" | grep -v '^$' | grep -v "^${allowed}$" || true)
           test -z "$forbidden" || { echo "$forbidden"; exit 2; }
-          echo PASS_SOURCE_GUARD
+          git diff --quiet "$BASE"...HEAD -- \
+            lib/features/orders \
+            lib/features/products \
+            lib/features/shifts \
+            lib/features/reports \
+            lib/features/inventory \
+            firestore.rules
+          echo PASS_SOURCE_GUARD_CASH_SALE_IS_608
       - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
