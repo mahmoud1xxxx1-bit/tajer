@@ -1,0 +1,181 @@
+name: QA Apply Customer Debt Concurrency Fix
+
+on:
+  push:
+    branches:
+      - qa/release-125-608-34-tests
+    paths:
+      - '.github/workflows/qa_apply_customer_debt_fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply-fix:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout QA branch
+        uses: actions/checkout@v4
+        with:
+          ref: qa/release-125-608-34-tests
+          fetch-depth: 0
+
+      - name: Patch only payCustomerDebt
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('lib/features/orders/data/order_repository.dart')
+          text = path.read_text(encoding='utf-8')
+          start_marker = '  Future<void> payCustomerDebt({'
+          end_marker = '  Future<int> getOrderCount'
+          start = text.index(start_marker)
+          end = text.index(end_marker, start)
+
+          replacement = r'''  Future<void> payCustomerDebt({
+    required String merchantId,
+    required String customerId,
+    required double amountPaid,
+    required String? shiftId,
+    required String paymentMethod, // 'cash', 'card', 'transfer'
+  }) async {
+    if (amountPaid <= 0) return;
+
+    final paymentId = _firestore
+        .collection('merchants')
+        .doc(merchantId)
+        .collection('payments')
+        .doc()
+        .id;
+
+    // Firestore transactions can only guarantee a consistent retryable
+    // snapshot when every transactional read happens before any write.
+    // Resolve the candidate credit-order references first, then re-read their
+    // latest data through the transaction itself.
+    final candidateOrderRefs = (await _firestore
+            .collection('orders')
+            .where('merchantId', isEqualTo: merchantId)
+            .where('customerId', isEqualTo: customerId)
+            .where('isCredit', isEqualTo: true)
+            .get())
+        .docs
+        .map((doc) => doc.reference)
+        .toList(growable: false);
+
+    final customerRef = _firestore.collection('customers').doc(customerId);
+
+    await _firestore.runTransaction((transaction) async {
+      // IMPORTANT: keep all transaction reads before all transaction writes.
+      final customerDoc = await transaction.get(customerRef);
+      if (!customerDoc.exists) return;
+
+      final orderDocs = <DocumentSnapshot<Map<String, dynamic>>>[];
+      for (final orderRef in candidateOrderRefs) {
+        orderDocs.add(await transaction.get(orderRef));
+      }
+
+      final currentDebt =
+          (customerDoc.data()?['totalDebt'] as num?)?.toDouble() ?? 0.0;
+      if (amountPaid > currentDebt) {
+        throw Exception('مبلغ السداد لا يمكن أن يتجاوز الدين المستحق.');
+      }
+
+      final orders = orderDocs
+          .where((doc) => doc.exists)
+          .map((doc) {
+            final data = Map<String, dynamic>.from(doc.data()!);
+            data['id'] = doc.id;
+            return AppOrder.fromJson(data);
+          })
+          .where(
+            (order) =>
+                order.status != 'cancelled' &&
+                (order.total - order.paidAmount) > 0,
+          )
+          .toList()
+        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+      // From here onward there are writes only. Firestore can safely retry the
+      // transaction if another device collects debt at the same time.
+      transaction.update(customerRef, {
+        'totalDebt': FieldValue.increment(-amountPaid),
+        'updatedAt': FieldValue.serverTimestamp(),
+        'lastPaymentId': paymentId,
+      });
+
+      double remainingToDistribute = amountPaid;
+      for (final order in orders) {
+        if (remainingToDistribute <= 0) break;
+        final unpaidForOrder = order.total - order.paidAmount;
+        if (unpaidForOrder <= 0) continue;
+
+        final amountToApply = remainingToDistribute >= unpaidForOrder
+            ? unpaidForOrder
+            : remainingToDistribute;
+        transaction.update(_firestore.collection('orders').doc(order.id), {
+          'paidAmount': FieldValue.increment(amountToApply),
+        });
+        remainingToDistribute -= amountToApply;
+      }
+
+      final paymentRef = _firestore
+          .collection('merchants')
+          .doc(merchantId)
+          .collection('payments')
+          .doc(paymentId);
+      transaction.set(paymentRef, {
+        'amount': amountPaid,
+        'merchantId': merchantId,
+        'customerId': customerId,
+        'shiftId': shiftId,
+        'createdAt': FieldValue.serverTimestamp(),
+        'paymentMethod': paymentMethod,
+      });
+
+      if (shiftId != null && shiftId.isNotEmpty) {
+        final shiftRef = _firestore.collection('shifts').doc(shiftId);
+        final shiftUpdates = <String, dynamic>{
+          'lastPaymentId': paymentId,
+        };
+        if (paymentMethod == 'cash') {
+          shiftUpdates['debtCollectionsCash'] =
+              FieldValue.increment(amountPaid);
+        } else if (paymentMethod == 'card' ||
+            paymentMethod == 'mada' ||
+            paymentMethod == 'apple_pay') {
+          shiftUpdates['debtCollectionsCard'] =
+              FieldValue.increment(amountPaid);
+        } else if (paymentMethod == 'transfer') {
+          shiftUpdates['debtCollectionsTransfer'] =
+              FieldValue.increment(amountPaid);
+        }
+        transaction.update(shiftRef, shiftUpdates);
+      }
+    }, maxAttempts: 20);
+  }
+
+'''
+
+          new_text = text[:start] + replacement + text[end:]
+          if new_text == text:
+              raise SystemExit('No source change produced')
+          path.write_text(new_text, encoding='utf-8')
+          PY
+
+          git diff --check
+          changed=$(git diff --name-only)
+          test "$changed" = "lib/features/orders/data/order_repository.dart" || {
+            echo "Unexpected changed files:"
+            echo "$changed"
+            exit 2
+          }
+
+      - name: Commit exact source fix
+        shell: bash
+        run: |
+          git config user.name 'tajer-qa-bot'
+          git config user.email 'tajer-qa-bot@users.noreply.github.com'
+          git add lib/features/orders/data/order_repository.dart
+          git commit -m 'fix(debt): make concurrent customer collections retry-safe'
+          git push origin HEAD:qa/release-125-608-34-tests
