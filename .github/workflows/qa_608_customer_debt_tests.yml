@@ -19,21 +19,23 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Prove customer-debt source matches #608 except verified Test 8 UI fix
+      - name: Prove only verified production fixes differ from #608
         shell: bash
         run: |
           set -euo pipefail
           BASE=10c53365bb2c8cc15a6dcb88020a03529f98cbb3
-          allowed='lib/features/employees/presentation/employee_permissions_screen.dart'
+          allowed_permissions='lib/features/employees/presentation/employee_permissions_screen.dart'
+          allowed_debt='lib/features/orders/data/order_repository.dart'
           changed=$(git diff --name-only "$BASE"...HEAD -- lib/ pubspec.yaml firestore.rules firebase.json .firebaserc || true)
-          forbidden=$(printf '%s\n' "$changed" | grep -v '^$' | grep -v "^${allowed}$" || true)
+          forbidden=$(printf '%s\n' "$changed" | grep -v '^$' | grep -v "^${allowed_permissions}$" | grep -v "^${allowed_debt}$" || true)
           test -z "$forbidden" || { echo "$forbidden"; exit 2; }
           git diff --quiet "$BASE"...HEAD -- \
-            lib/features/orders \
             lib/features/customers \
             lib/features/shifts \
             firestore.rules
-          echo PASS_SOURCE_GUARD_CUSTOMER_DEBT_IS_608
+          order_changes=$(git diff --name-only "$BASE"...HEAD -- lib/features/orders || true)
+          test "$order_changes" = "$allowed_debt" || { echo "Unexpected order source differences:"; echo "$order_changes"; exit 2; }
+          echo PASS_SOURCE_GUARD_ONLY_PERMISSION_AND_DEBT_FIXES
       - name: Setup Java 21
         uses: actions/setup-java@v4
         with:
