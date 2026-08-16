@@ -56,7 +56,7 @@ void main() {
     });
 
     test(
-        'supplier pages are bounded and debt/search queries are independent of the first page',
+        'supplier pages are bounded and debt/name/phone searches are independent of the first page',
         () async {
       final firestore = FakeFirebaseFirestore();
       const merchantId = 'merchant-supplier-pagination-test';
@@ -73,7 +73,9 @@ void main() {
           'name': i == 61
               ? 'Target Supplier'
               : 'Supplier ${i.toString().padLeft(2, '0')}',
-          'phone': '050100${i.toString().padLeft(4, '0')}',
+          'phone': i == 63
+              ? '0588888888'
+              : '050100${i.toString().padLeft(4, '0')}',
           'totalDebt': i == 56 ? 500.0 : 0.0,
           'isActive': true,
           'createdAt': Timestamp.fromDate(
@@ -93,6 +95,12 @@ void main() {
           .limit(30)
           .get();
       expect(searchPage.docs.map((doc) => doc.data().id), contains('supplier_61'));
+
+      final phonePage = await repository
+          .querySuppliers(searchQuery: '058888')
+          .limit(30)
+          .get();
+      expect(phonePage.docs.map((doc) => doc.data().id), contains('supplier_63'));
     });
   });
 }
