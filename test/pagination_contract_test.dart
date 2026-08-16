@@ -49,6 +49,22 @@ void main() {
       expect(source, isNot(contains('ref.watch(notebookPeopleProvider)')));
     });
 
+    test('notebook person statement reads one person and paginates that persons transactions', () {
+      final source = read('lib/features/accounting_notebook/presentation/notebook_person_statement_screen.dart');
+      expect(source, contains('.doc(personId).snapshots()'));
+      expect(source, contains('queryTransactions(bookId: person.bookId, personId: personId)'));
+      expect(source, contains('pageSize: 50'));
+      expect(source, isNot(contains('ref.watch(notebookTransactionsProvider)')));
+    });
+
+    test('notebook reports query the selected book and period instead of the global transaction stream', () {
+      final source = read('lib/features/accounting_notebook/presentation/notebook_reports_screen.dart');
+      expect(source, contains("String _period = 'month'"));
+      expect(source, contains(".where('bookId', isEqualTo: selectedBookId)"));
+      expect(source, contains(".where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(start))"));
+      expect(source, isNot(contains('ref.watch(notebookTransactionsProvider)')));
+    });
+
     test('paginated screens do not expose raw Firestore errors', () {
       for (final path in [
         'lib/features/customers/presentation/customers_screen.dart',
