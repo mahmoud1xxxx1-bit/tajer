@@ -42,6 +42,13 @@ void main() {
       expect(source, contains('pageSize: 30'));
     });
 
+    test('notebook people are queried per book in 30-item pages', () {
+      final source = read('lib/features/accounting_notebook/presentation/notebook_people_screen.dart');
+      expect(source, contains(".where('bookId', isEqualTo: selectedBookId)"));
+      expect(source, contains('pageSize: 30'));
+      expect(source, isNot(contains('ref.watch(notebookPeopleProvider)')));
+    });
+
     test('paginated screens do not expose raw Firestore errors', () {
       for (final path in [
         'lib/features/customers/presentation/customers_screen.dart',
