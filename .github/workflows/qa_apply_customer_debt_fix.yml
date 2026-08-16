@@ -1,4 +1,4 @@
-name: QA Apply Customer Debt Concurrency Fix
+name: QA Repair Customer Debt Fix Encoding
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  apply-fix:
+  repair:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout QA branch
@@ -20,19 +20,35 @@ jobs:
           ref: qa/release-125-608-34-tests
           fetch-depth: 0
 
-      - name: Patch only payCustomerDebt
+      - name: Repair only message encoding and comment indentation
         shell: bash
         run: |
-          python3 -c "from pathlib import Path; import base64; p=Path('lib/features/orders/data/order_repository.dart'); t=p.read_text(encoding='utf-8'); s=t.index('  Future<void> payCustomerDebt({'); e=t.index('  Future<int> getOrderCount', s); r=base64.b64decode('ICBGdXR1cmU8dm9pZD4gcGF5Q3VzdG9tZXJEZWJ0KHsKICAgIHJlcXVpcmVkIFN0cmluZyBtZXJjaGFudElkLAogICAgcmVxdWlyZWQgU3RyaW5nIGN1c3RvbWVySWQsCiAgICByZXF1aXJlZCBkb3VibGUgYW1vdW50UGFpZCwKICAgIHJlcXVpcmVkIFN0cmluZz8gc2hpZnRJZCwKICAgIHJlcXVpcmVkIFN0cmluZyBwYXltZW50TWV0aG9kLCAvLyAnY2FzaCcsICdjYXJkJywgJ3RyYW5zZmVyJwogIH0pIGFzeW5jIHsKICAgIGlmIChhbW91bnRQYWlkIDw9IDApIHJldHVybjsKCiAgICBmaW5hbCBwYXltZW50SWQgPSBfZmlyZXN0b3JlCiAgICAgICAgLmNvbGxlY3Rpb24oJ21lcmNoYW50cycpCiAgICAgICAgLmRvYyhtZXJjaGFudElkKQogICAgICAgIC5jb2xsZWN0aW9uKCdwYXltZW50cycpCiAgICAgICAgLmRvYygpCiAgICAgICAgLmlkOwoKICAgIC8vIEZpcmVzdG9yZSB0cmFuc2FjdGlvbnMgY2FuIG9ubHkgZ3VhcmFudGVlIGEgY29uc2lzdGVudCByZXRyeWFibGUKICAgIC8vIHNuYXBzaG90IHdoZW4gZXZlcnkgdHJhbnNhY3Rpb25hbCByZWFkIGhhcHBlbnMgYmVmb3JlIGFueSB3cml0ZS4KICAgIC8vIFJlc29sdmUgdGhlIGNhbmRpZGF0ZSBjcmVkaXQtb3JkZXIgcmVmZXJlbmNlcyBmaXJzdCwgdGhlbiByZS1yZWFkIHRoZWlyCiAgICAvLyBsYXRlc3QgZGF0YSB0aHJvdWdoIHRoZSB0cmFuc2FjdGlvbiBpdHNlbGYuCiAgICBmaW5hbCBjYW5kaWRhdGVPcmRlclJlZnMgPSAoYXdhaXQgX2ZpcmVzdG9yZQogICAgICAgICAgICAuY29sbGVjdGlvbignb3JkZXJzJykKICAgICAgICAgICAgLndoZXJlKCdtZXJjaGFudElkJywgaXNFcXVhbFRvOiBtZXJjaGFudElkKQogICAgICAgICAgICAud2hlcmUoJ2N1c3RvbWVySWQnLCBpc0VxdWFsVG86IGN1c3RvbWVySWQpCiAgICAgICAgICAgIC53aGVyZSgnaXNDcmVkaXQnLCBpc0VxdWFsVG86IHRydWUpCiAgICAgICAgICAgIC5nZXQoKSkKICAgICAgICAuZG9jcwogICAgICAgIC5tYXAoKGRvYykgPT4gZG9jLnJlZmVyZW5jZSkKICAgICAgICAudG9MaXN0KGdyb3dhYmxlOiBmYWxzZSk7CgogICAgZmluYWwgY3VzdG9tZXJSZWYgPSBfZmlyZXN0b3JlLmNvbGxlY3Rpb24oJ2N1c3RvbWVycycpLmRvYyhjdXN0b21lcklkKTsKCiAgICBhd2FpdCBfZmlyZXN0b3JlLnJ1blRyYW5zYWN0aW9uKCh0cmFuc2FjdGlvbikgYXN5bmMgewogICAgICAvLyBJTVBPUlRBTlQ6IGtlZXAgYWxsIHRyYW5zYWN0aW9uIHJlYWRzIGJlZm9yZSBhbGwgdHJhbnNhY3Rpb24gd3JpdGVzLgogICAgICBmaW5hbCBjdXN0b21lckRvYyA9IGF3YWl0IHRyYW5zYWN0aW9uLmdldChjdXN0b21lclJlZik7CiAgICAgIGlmICghY3VzdG9tZXJEb2MuZXhpc3RzKSByZXR1cm47CgogICAgICBmaW5hbCBvcmRlckRvY3MgPSA8RG9jdW1lbnRTbmFwc2hvdDxNYXA8U3RyaW5nLCBkeW5hbWljPj4+W107CiAgICAgIGZvciAoZmluYWwgb3JkZXJSZWYgaW4gY2FuZGlkYXRlT3JkZXJSZWZzKSB7CiAgICAgICAgb3JkZXJEb2NzLmFkZChhd2FpdCB0cmFuc2FjdGlvbi5nZXQob3JkZXJSZWYpKTsKICAgICAgfQoKICAgICAgZmluYWwgY3VycmVudERlYnQgPQogICAgICAgICAgKGN1c3RvbWVyRG9jLmRhdGEoKT9bJ3RvdGFsRGVidCddIGFzIG51bT8pPy50b0RvdWJsZSgpID8/IDAuMDsKICAgICAgaWYgKGFtb3VudFBhaWQgPiBjdXJyZW50RGVidCkgewogICAgICAgIHRocm93IEV4Y2VwdGlvbign2YXYqNmE2Lo g2KfZhNiz2K/Zp9ivINmE2Kcg2YrZhdmD2YYg2KPYhiDZitin2KfZiNiyINin2YTYr9mK2YYg2KfZhNmF2LPYqti02YIuJyk7CiAgICAgIH0KCiAgICAgIGZpbmFsIG9yZGVycyA9IG9yZGVyRG9jcwogICAgICAgICAgLndoZXJlKChkb2MpID0+IGRvYy5leGlzdHMpCiAgICAgICAgICAubWFwKChkb2MpIHsKICAgICAgICAgICAgZmluYWwgZGF0YSA9IE1hcDxTdHJpbmcsIGR5bmFtaWM+LmZyb20oZG9jLmRhdGEoKSEpOwogICAgICAgICAgICBkYXRhWydpZCddID0gZG9jLmlkOwogICAgICAgICAgICByZXR1cm4gQXBwT3JkZXIuZnJvbUpzb24oZGF0YSk7CiAgICAgICAgICB9KQogICAgICAgICAgLndoZXJlKAogICAgICAgICAgICAob3JkZXIpID0+CiAgICAgICAgICAgICAgICBvcmRlci5zdGF0dXMgIT0gJ2NhbmNlbGxlZCcgJiYKICAgICAgICAgICAgICAgIChvcmRlci50b3RhbCAtIG9yZGVyLnBhaWRBbW91bnQpID4gMCwKICAgICAgICAgICkKICAgICAgICAgIC50b0xpc3QoKQogICAgICAgIC4uc29ydCgoYSwgYikgPT4gYS5jcmVhdGVkQXQuY29tcGFyZVRvKGIuY3JlYXRlZEF0KSk7CgogICAgICAvLyBGcm9tIGhlcmUgb253YXJkIHRoZXJlIGFyZSB3cml0ZXMgb25seS4gRmlyZXN0b3JlIGNhbiBzYWZlbHkgcmV0cnkgdGhlCiAgICAvLyB0cmFuc2FjdGlvbiBpZiBhbm90aGVyIGRldmljZSBjb2xsZWN0cyBkZWJ0IGF0IHRoZSBzYW1lIHRpbWUuCiAgICAgIHRyYW5zYWN0aW9uLnVwZGF0ZShjdXN0b21lclJlZiwgewogICAgICAgICd0b3RhbERlYnQnOiBGaWVsZFZhbHVlLmluY3JlbWVudCgtYW1vdW50UGFpZCksCiAgICAgICAgJ3VwZGF0ZWRBdCc6IEZpZWxkVmFsdWUuc2VydmVyVGltZXN0YW1wKCksCiAgICAgICAgJ2xhc3RQYXltZW50SWQnOiBwYXltZW50SWQsCiAgICAgIH0pOwoKICAgICAgZG91YmxlIHJlbWFpbmluZ1RvRGlzdHJpYnV0ZSA9IGFtb3VudFBhaWQ7CiAgICAgIGZvciAoZmluYWwgb3JkZXIgaW4gb3JkZXJzKSB7CiAgICAgICAgaWYgKHJlbWFpbmluZ1RvRGlzdHJpYnV0ZSA8PSAwKSBicmVhazsKICAgICAgICBmaW5hbCB1bnBhaWRGb3JPcmRlciA9IG9yZGVyLnRvdGFsIC0gb3JkZXIucGFpZEFtb3VudDsKICAgICAgICBpZiAodW5wYWlkRm9yT3JkZXIgPD0gMCkgY29udGludWU7CgogICAgICAgIGZpbmFsIGFtb3VudFRvQXBwbHkgPSByZW1haW5pbmdUb0Rpc3RyaWJ1dGUgPj0gdW5wYWlkRm9yT3JkZXIKICAgICAgICAgICAgPyB1bnBhaWRGb3JPcmRlcgogICAgICAgICAgICA6IHJlbWFpbmluZ1RvRGlzdHJpYnV0ZTsKICAgICAgICB0cmFuc2FjdGlvbi51cGRhdGUoX2ZpcmVzdG9yZS5jb2xsZWN0aW9uKCdvcmRlcnMnKS5kb2Mob3JkZXIuaWQpLCB7CiAgICAgICAgICAncGFpZEFtb3VudCc6IEZpZWxkVmFsdWUuaW5jcmVtZW50KGFtb3VudFRvQXBwbHkpLAogICAgICAgIH0pOwogICAgICAgIHJlbWFpbmluZ1RvRGlzdHJpYnV0ZSAtPSBhbW91bnRUb0FwcGx5OwogICAgICB9CgogICAgICBmaW5hbCBwYXltZW50UmVmID0gX2ZpcmVzdG9yZQogICAgICAgICAgLmNvbGxlY3Rpb24oJ21lcmNoYW50cycpCiAgICAgICAgICAuZG9jKG1lcmNoYW50SWQpCiAgICAgICAgICAuY29sbGVjdGlvbigncGF5bWVudHMnKQogICAgICAgICAgLmRvYyhwYXltZW50SWQpOwogICAgICB0cmFuc2FjdGlvbi5zZXQocGF5bWVudFJlZiwgewogICAgICAgICdhbW91bnQnOiBhbW91bnRQYWlkLAogICAgICAgICdtZXJjaGFudElkJzogbWVyY2hhbnRJZCwKICAgICAgICAnY3VzdG9tZXJJZCc6IGN1c3RvbWVySWQsCiAgICAgICAgJ3NoaWZ0SWQnOiBzaGlmdElkLAogICAgICAgICdjcmVhdGVkQXQnOiBGaWVsZFZhbHVlLnNlcnZlclRpbWVzdGFtcCgpLAogICAgICAgICdwYXltZW50TWV0aG9kJzogcGF5bWVudE1ldGhvZCwKICAgICAgfSk7CgogICAgICBpZiAoc2hpZnRJZCAhPSBudWxsICYmIHNoaWZ0SWQuaXNOb3RFbXB0eSkgewogICAgICAgIGZpbmFsIHNoaWZ0UmVmID0gX2ZpcmVzdG9yZS5jb2xsZWN0aW9uKCdzaGlmdHMnKS5kb2Moc2hpZnRJZCk7CiAgICAgICAgZmluYWwgc2hpZnRVcGRhdGVzID0gPFN0cmluZywgZHluYW1pYz57CiAgICAgICAgICAnbGFzdFBheW1lbnRJZCc6IHBheW1lbnRJZCwKICAgICAgICB9OwogICAgICAgIGlmIChwYXltZW50TWV0aG9kID09ICdjYXNoJykgewogICAgICAgICAgc2hpZnRVcGRhdGVzWydkZWJ0Q29sbGVjdGlvbnNDYXNoJ10gPQogICAgICAgICAgICAgIEZpZWxkVmFsdWUuaW5jcmVtZW50KGFtb3VudFBhaWQpOwogICAgICAgIH0gZWxzZSBpZiAocGF5bWVudE1ldGhvZCA9PSAnY2FyZCcgfHwKICAgICAgICAgICAgcGF5bWVudE1ldGhvZCA9PSAnbWFkYScgfHwKICAgICAgICAgICAgcGF5bWVudE1ldGhvZCA9PSAnYXBwbGVfcGF5JykgewogICAgICAgICAgc2hpZnRVcGRhdGVzWydkZWJ0Q29sbGVjdGlvbnNDYXJkJ10gPQogICAgICAgICAgICAgIEZpZWxkVmFsdWUuaW5jcmVtZW50KGFtb3VudFBhaWQpOwogICAgICAgIH0gZWxzZSBpZiAocGF5bWVudE1ldGhvZCA9PSAndHJhbnNmZXInKSB7CiAgICAgICAgICBzaGlmdFVwZGF0ZXNbJ2RlYnRDb2xsZWN0aW9uc1RyYW5zZmVyJ10gPQogICAgICAgICAgICAgIEZpZWxkVmFsdWUuaW5jcmVtZW50KGFtb3VudFBhaWQpOwogICAgICAgIH0KICAgICAgICB0cmFuc2FjdGlvbi51cGRhdGUoc2hpZnRSZWYsIHNoaWZ0VXBkYXRlcyk7CiAgICAgIH0KICAgIH0sIG1heEF0dGVtcHRzOiAyMCk7CiAgfQoK').decode('utf-8'); n=t[:s]+r+t[e:]; assert n!=t; p.write_text(n,encoding='utf-8')"
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, re
+          p = Path('lib/features/orders/data/order_repository.dart')
+          t = p.read_text(encoding='utf-8')
+          s = t.index('  Future<void> payCustomerDebt({')
+          e = t.index('  Future<int> getOrderCount', s)
+          block = t[s:e]
+          msg = base64.b64decode('2YXYqNmE2Log2KfZhNiz2K/Yp9ivINmE2Kcg2YrZhdmD2YYg2KPZhiDZitiq2KzYp9mI2LIg2KfZhNiv2YrZhiDYp9mE2YXYs9iq2K3Zgi4=').decode('utf-8')
+          fixed, count = re.subn(r"throw Exception\('[^']*'\);", lambda _: "throw Exception('" + msg + "');", block, count=1)
+          if count != 1:
+              raise SystemExit(f'Expected one debt exception, got {count}')
+          fixed = fixed.replace("      // From here onward there are writes only. Firestore can safely retry the\n    // transaction if another device collects debt at the same time.", "      // From here onward there are writes only. Firestore can safely retry the\n      // transaction if another device collects debt at the same time.")
+          n = t[:s] + fixed + t[e:]
+          if n == t:
+              raise SystemExit('No repair produced')
+          p.write_text(n, encoding='utf-8')
+          PY
           git diff --check
-          changed=$(git diff --name-only)
-          test "$changed" = "lib/features/orders/data/order_repository.dart" || { echo "$changed"; exit 2; }
+          test "$(git diff --name-only)" = "lib/features/orders/data/order_repository.dart"
 
-      - name: Commit exact source fix
+      - name: Commit repair
         shell: bash
         run: |
           git config user.name 'tajer-qa-bot'
           git config user.email 'tajer-qa-bot@users.noreply.github.com'
           git add lib/features/orders/data/order_repository.dart
-          git commit -m 'fix(debt): make concurrent customer collections retry-safe'
+          git commit -m 'fix(debt): preserve Arabic validation message encoding'
           git push origin HEAD:qa/release-125-608-34-tests
