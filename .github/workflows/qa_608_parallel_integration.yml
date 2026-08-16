@@ -1,0 +1,129 @@
+name: QA 608 - Parallel Integration
+
+on:
+  push:
+    branches:
+      - qa/release-125-608-34-tests
+    paths:
+      - '.github/workflows/qa_608_parallel_integration.yml'
+      - 'integration_test/**'
+      - 'qa/**'
+  workflow_dispatch:
+
+jobs:
+  integration-matrix:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      max-parallel: 7
+      matrix:
+        include:
+          - name: TESTFILE-01 cash-sale
+            file: integration_test/scenario_01_sales_test.dart
+          - name: TESTFILE-02 sales-02-04
+            file: integration_test/scenario_02_04_sales_test.dart
+          - name: TESTFILE-03 logic-02
+            file: integration_test/scenario_02_logic_test.dart
+          - name: TESTFILE-04 advanced-logic-03
+            file: integration_test/scenario_03_advanced_logic_test.dart
+          - name: TESTFILE-05 double-checkout
+            file: integration_test/scenario_04_double_checkout_test.dart
+          - name: TESTFILE-06 isolation
+            file: integration_test/isolation_test.dart
+          - name: TESTFILE-07 app-smoke
+            file: integration_test/app_test.dart
+
+    steps:
+      - name: Checkout QA branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Prove #608 app source is untouched
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE=10c53365bb2c8cc15a6dcb88020a03529f98cbb3
+          forbidden=$(git diff --name-only "$BASE"...HEAD -- lib/ pubspec.yaml firestore.rules firebase.json .firebaserc || true)
+          if [ -n "$forbidden" ]; then
+            echo "FORBIDDEN DIFFERENCES:"
+            echo "$forbidden"
+            exit 2
+          fi
+          echo "PASS_SOURCE_GUARD #608 unchanged"
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: '21'
+
+      - name: Setup Flutter 3.44.0
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.0'
+          channel: stable
+          cache: true
+
+      - name: Flutter dependencies
+        run: flutter pub get
+
+      - name: Generate localizations
+        run: flutter gen-l10n
+
+      - name: Generate code
+        run: dart run build_runner build -d
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firebase CLI
+        run: npm install --global firebase-tools
+
+      - name: Start isolated Firebase emulators
+        shell: bash
+        run: |
+          set -euo pipefail
+          firebase emulators:start --only auth,firestore --project tajer-19289 > firebase-emulator-${{ strategy.job-index }}.log 2>&1 &
+          for i in {1..90}; do
+            if curl -fsS http://127.0.0.1:8080 >/dev/null 2>&1; then
+              echo "FIREBASE_READY"
+              exit 0
+            fi
+            sleep 1
+          done
+          cat firebase-emulator-${{ strategy.job-index }}.log
+          exit 1
+
+      - name: Enable KVM
+        shell: bash
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Execute ${{ matrix.name }} on Android Emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_4
+          ram-size: 2048M
+          cores: 2
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: flutter test ${{ matrix.file }} -d emulator-5554 --dart-define=USE_EMULATOR=true
+
+      - name: Upload Firebase log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firebase-${{ strategy.job-index }}
+          path: firebase-emulator-${{ strategy.job-index }}.log
+          if-no-files-found: ignore
