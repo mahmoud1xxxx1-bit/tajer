@@ -8,6 +8,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:tajer/firebase_options.dart';
 import 'package:tajer/features/authentication/data/auth_repository.dart';
 import 'package:tajer/features/employees/presentation/employee_permissions_screen.dart';
+import 'package:tajer/l10n/app_localizations.dart';
 
 bool _emulatorsConfigured = false;
 
@@ -50,6 +51,18 @@ Future<void> _pumpUntil(WidgetTester tester, Finder finder) async {
     if (finder.evaluate().isNotEmpty) return;
   }
   throw StateError('Widget not found: ${finder.description}');
+}
+
+Widget _host(AuthRepository authRepo, String employeeUid, Map<String, dynamic> data) {
+  return ProviderScope(
+    overrides: [authRepositoryProvider.overrideWithValue(authRepo)],
+    child: MaterialApp(
+      locale: const Locale('en'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: EmployeePermissionsScreen(employeeUid: employeeUid, initialData: data),
+    ),
+  );
 }
 
 void main() {
@@ -96,28 +109,13 @@ void main() {
     Future<Map<String, dynamic>> readEmployeeSubdoc() async =>
         (await db.collection('users').doc(merchantUid).collection('employees').doc(employeeUid).get()).data()!;
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          authRepositoryProvider.overrideWithValue(authRepo),
-        ],
-        child: MaterialApp(
-          locale: const Locale('en'),
-          localizationsDelegates: const [],
-          home: EmployeePermissionsScreen(
-            employeeUid: employeeUid,
-            initialData: {
-              'name': 'QA Employee',
-              'pin': '2468',
-              'permissions': initialPermissions,
-            },
-          ),
-        ),
-      ),
-    );
+    await tester.pumpWidget(_host(authRepo, employeeUid, {
+      'name': 'QA Employee',
+      'pin': '2468',
+      'permissions': initialPermissions,
+    }));
     await tester.pumpAndSettle();
 
-    // The requested #608 behavior specifically uses the Save button in the app bar.
     final switches = find.byType(Switch);
     expect(switches.evaluate().length, 12);
     final notebookSwitch = switches.at(11);
@@ -140,23 +138,11 @@ void main() {
     expect(rootPerms['can_access_accounting_notebook'], true,
         reason: 'Employee root user document must persist notebook access');
 
-    // Re-enter using the actual stored data, matching the user contract.
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [authRepositoryProvider.overrideWithValue(authRepo)],
-        child: MaterialApp(
-          locale: const Locale('en'),
-          home: EmployeePermissionsScreen(
-            employeeUid: employeeUid,
-            initialData: {
-              'name': subdoc['name'],
-              'pin': subdoc['pin'],
-              'permissions': subPerms,
-            },
-          ),
-        ),
-      ),
-    );
+    await tester.pumpWidget(_host(authRepo, employeeUid, {
+      'name': subdoc['name'],
+      'pin': subdoc['pin'],
+      'permissions': subPerms,
+    }));
     await tester.pumpAndSettle();
     final switchesAfter = find.byType(Switch);
     expect(switchesAfter.evaluate().length, 12);
