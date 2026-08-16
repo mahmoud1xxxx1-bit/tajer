@@ -222,58 +222,62 @@ class _EmployeePermissionsScreenState extends ConsumerState<EmployeePermissionsS
                       width: 1,
                     ),
                   ),
-                  child: SwitchListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    title: Row(
-                      children: [
-                        if (isRisky) ...[
-                          const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 22),
-                          const SizedBox(width: 8),
-                        ],
-                        Expanded(
-                          child: Text(
-                            labels[key] ?? key, 
-                            style: TextStyle(
-                              fontFamily: 'Tajawal', 
-                              fontSize: 16, 
-                              fontWeight: FontWeight.bold, 
-                              color: isRisky ? Colors.orange : theme.colorScheme.onSurface
+                  child: Material(
+                    color: Colors.transparent,
+                    borderRadius: BorderRadius.circular(16),
+                    child: SwitchListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      title: Row(
+                        children: [
+                          if (isRisky) ...[
+                            const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 22),
+                            const SizedBox(width: 8),
+                          ],
+                          Expanded(
+                            child: Text(
+                              labels[key] ?? key, 
+                              style: TextStyle(
+                                fontFamily: 'Tajawal', 
+                                fontSize: 16, 
+                                fontWeight: FontWeight.bold, 
+                                color: isRisky ? Colors.orange : theme.colorScheme.onSurface
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        descriptions[key] ?? '', 
-                        style: TextStyle(
-                          fontFamily: 'Tajawal', 
-                          fontSize: 13, 
-                          height: 1.5, 
-                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade600
+                        ],
+                      ),
+                      subtitle: Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          descriptions[key] ?? '', 
+                          style: TextStyle(
+                            fontFamily: 'Tajawal', 
+                            fontSize: 13, 
+                            height: 1.5, 
+                            color: isDark ? Colors.grey.shade400 : Colors.grey.shade600
+                          ),
                         ),
                       ),
+                      value: _permissions[key]!,
+                      activeThumbColor: Colors.white,
+                      activeTrackColor: activeTrackColor,
+                      inactiveThumbColor: theme.colorScheme.onSurfaceVariant,
+                      inactiveTrackColor: theme.colorScheme.surfaceContainerHighest,
+                      thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
+                        if (!states.contains(WidgetState.selected)) return null;
+                        return Icon(
+                          Icons.check,
+                          size: 16,
+                          color: activeTrackColor,
+                        );
+                      }),
+                      onChanged: (val) {
+                        setState(() {
+                          _permissions[key] = val;
+                        });
+                      },
                     ),
-                    value: _permissions[key]!,
-                    activeThumbColor: Colors.white,
-                    activeTrackColor: activeTrackColor,
-                    inactiveThumbColor: theme.colorScheme.onSurfaceVariant,
-                    inactiveTrackColor: theme.colorScheme.surfaceContainerHighest,
-                    thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
-                      if (!states.contains(WidgetState.selected)) return null;
-                      return Icon(
-                        Icons.check,
-                        size: 16,
-                        color: activeTrackColor,
-                      );
-                    }),
-                    onChanged: (val) {
-                      setState(() {
-                        _permissions[key] = val;
-                      });
-                    },
                   ),
                 );
               },
