@@ -28,14 +28,15 @@ void main() {
 
   testWidgets('TEST 1 - CASH SALE: Verify UI, Stock, Shift Cash, and Audit Trail', (WidgetTester tester) async {
     app.main();
-    
-    // Wait for the auth state to resolve
+
+    // Wait for the auth state to resolve.
     await tester.pumpAndSettle(const Duration(seconds: 3));
 
     final auth = FirebaseAuth.instance;
-
-    // Wait until Guest button is found
-    final guestLoginFinder = find.byWidgetPredicate((w) => w is Text && (w.data!.contains('Enter as guest') || w.data!.contains('زائر')));
+    final guestLoginFinder = find.byWidgetPredicate((w) =>
+        w is Text &&
+        w.data != null &&
+        (w.data!.contains('Enter as guest') || w.data!.contains('زائر')));
 
     bool isLoggedIn = false;
     for (int i = 0; i < 30; i++) {
@@ -49,21 +50,25 @@ void main() {
         break;
       }
     }
-    
-    expect(isLoggedIn, true, reason: "User should be logged in");
+
+    expect(isLoggedIn, true, reason: 'User should be logged in');
     final uid = auth.currentUser!.uid;
     final firestore = FirebaseFirestore.instance;
 
-    // Reset data
-    final oldOrders = await firestore.collection('orders').where('merchantId', isEqualTo: uid).get();
-    for (var doc in oldOrders.docs) { await doc.reference.delete(); }
-    
-    final oldShifts = await firestore.collection('shifts').where('merchantId', isEqualTo: uid).get();
-    for (var doc in oldShifts.docs) { await doc.reference.delete(); }
+    // Each workflow starts a fresh Firebase Emulator. Do not query/delete
+    // collections as a cleanup step because Firestore rules intentionally
+    // reject broad pre-merchant reads. Establish the merchant identity first.
+    await firestore.collection('users').doc(uid).set({
+      'uid': uid,
+      'merchantId': uid,
+      'role': 'merchant',
+      'email': auth.currentUser!.email ?? 'qa-cash-sale@test.local',
+      'displayName': 'QA Cash Sale Merchant',
+      'createdAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
 
-    // Inject open shift to bypass Start Shift Dialog
-    await firestore.collection('shifts').doc('test_shift_1').set({
-      'id': 'test_shift_1',
+    await firestore.collection('shifts').doc('qa_test_shift_1').set({
+      'id': 'qa_test_shift_1',
       'merchantId': uid,
       'employeeId': uid,
       'employeeName': 'Guest',
@@ -72,22 +77,20 @@ void main() {
       'status': 'open',
     });
 
-    // Wait for Dashboard to load and find the POS button
+    // Wait for Dashboard to load and find the POS button.
     final posButtonFinder = find.byIcon(Icons.point_of_sale);
     await pumpUntilFound(tester, posButtonFinder);
     await tester.tap(posButtonFinder.first);
-    await tester.pumpAndSettle(const Duration(seconds: 3)); // Wait for POS screen to open
+    await tester.pumpAndSettle(const Duration(seconds: 3));
 
-
-
-    await firestore.collection('products').doc('prod1').set({
-      'id': 'prod1',
+    await firestore.collection('products').doc('qa_cash_prod1').set({
+      'id': 'qa_cash_prod1',
       'merchantId': uid,
       'name': 'Test Cash Product',
       'price': 150.0,
       'costPrice': 50.0,
       'quantity': 10,
-      'categoryId': 'cat1',
+      'categoryId': 'qa_cash_cat1',
       'isTaxInclusive': true,
       'taxPercentage': 15.0,
       'isManufacturedOnDemand': false,
@@ -97,20 +100,18 @@ void main() {
       'createdAt': FieldValue.serverTimestamp(),
     });
 
-    // We must wait for stream providers to fetch the product
     await tester.pumpAndSettle(const Duration(seconds: 3));
 
-    // Ensure we are on POS screen. If on startup screen, it might redirect automatically since we are logged in, or we might need to find drawer.
-    // Wait until product appears
     final productFinder = find.text('Test Cash Product');
     await pumpUntilFound(tester, productFinder);
-
     await tester.tap(productFinder.first);
     await tester.pumpAndSettle();
 
     final payTotalFinder = find.byWidgetPredicate((widget) {
       if (widget is Text) {
-        return widget.data != null && (widget.data!.contains('دفع الإجمالي') || widget.data!.contains('Pay Total'));
+        return widget.data != null &&
+            (widget.data!.contains('دفع الإجمالي') ||
+                widget.data!.contains('Pay Total'));
       }
       return false;
     });
@@ -118,14 +119,14 @@ void main() {
     await tester.tap(payTotalFinder.last);
     await tester.pumpAndSettle();
 
-    // Check for "Open Drawer" dialog
     final openShiftFinder = find.byWidgetPredicate((widget) {
       if (widget is Text) {
-        return widget.data == 'افتح الدرج وأكمل البيع' || widget.data == 'Open Drawer & Continue';
+        return widget.data == 'افتح الدرج وأكمل البيع' ||
+            widget.data == 'Open Drawer & Continue';
       }
       return false;
     });
-    
+
     if (openShiftFinder.evaluate().isNotEmpty) {
       final amountField = find.byType(TextField).first;
       await tester.enterText(amountField, '100');
@@ -135,33 +136,43 @@ void main() {
 
     final confirmFinder = find.byWidgetPredicate((widget) {
       if (widget is Text) {
-        return widget.data == 'تأكيد وإصدار الفاتورة' || widget.data == 'Confirm & Issue Invoice';
+        return widget.data == 'تأكيد وإصدار الفاتورة' ||
+            widget.data == 'Confirm & Issue Invoice';
       }
       return false;
     });
-    
+
     await pumpUntilFound(tester, confirmFinder);
     await tester.tap(confirmFinder);
     await tester.pumpAndSettle(const Duration(seconds: 4));
 
     // VERIFICATIONS
-    final ordersSnap = await firestore.collection('orders').where('merchantId', isEqualTo: uid).get();
-    expect(ordersSnap.docs.length, 1, reason: "Exactly one order should be created");
-    
+    final ordersSnap = await firestore
+        .collection('orders')
+        .where('merchantId', isEqualTo: uid)
+        .get();
+    expect(ordersSnap.docs.length, 1,
+        reason: 'Exactly one order should be created');
+
     final order = ordersSnap.docs.first.data();
-    expect(order['total'], 150.0);
+    expect((order['total'] as num).toDouble(), 150.0);
     expect(order['paymentMethod'], 'cash');
 
-    final prodSnap = await firestore.collection('products').doc('prod1').get();
-    expect(prodSnap.data()?['quantity'], 9, reason: "Stock should decrease by 1");
+    final prodSnap =
+        await firestore.collection('products').doc('qa_cash_prod1').get();
+    expect((prodSnap.data()?['quantity'] as num).toDouble(), 9.0,
+        reason: 'Stock should decrease by 1');
 
-    final logsSnap = await firestore.collection('activity_logs')
+    final logsSnap = await firestore
+        .collection('activity_logs')
         .where('merchantId', isEqualTo: uid)
         .orderBy('timestamp', descending: true)
         .limit(5)
         .get();
-    
-    bool foundOrderLog = logsSnap.docs.any((doc) => doc.data()['actionType'].toString().contains('Order'));
-    expect(foundOrderLog, true, reason: "Audit log for order creation should exist");
+
+    final foundOrderLog = logsSnap.docs.any(
+        (doc) => doc.data()['actionType'].toString().contains('Order'));
+    expect(foundOrderLog, true,
+        reason: 'Audit log for order creation should exist');
   });
 }
