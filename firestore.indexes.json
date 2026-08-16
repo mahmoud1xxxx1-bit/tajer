@@ -9,6 +9,7 @@
     {"collectionGroup":"shifts","queryScope":"COLLECTION","fields":[{"fieldPath":"merchantId","order":"ASCENDING"},{"fieldPath":"startTime","order":"DESCENDING"}]},
     {"collectionGroup":"shifts","queryScope":"COLLECTION","fields":[{"fieldPath":"merchantId","order":"ASCENDING"},{"fieldPath":"status","order":"ASCENDING"},{"fieldPath":"endTime","order":"DESCENDING"}]},
     {"collectionGroup":"customers","queryScope":"COLLECTION","fields":[{"fieldPath":"merchantId","order":"ASCENDING"},{"fieldPath":"name","order":"ASCENDING"}]},
+    {"collectionGroup":"customers","queryScope":"COLLECTION","fields":[{"fieldPath":"merchantId","order":"ASCENDING"},{"fieldPath":"phone","order":"ASCENDING"}]},
     {"collectionGroup":"customers","queryScope":"COLLECTION","fields":[{"fieldPath":"merchantId","order":"ASCENDING"},{"fieldPath":"totalDebt","order":"DESCENDING"}]},
     {"collectionGroup":"customers","queryScope":"COLLECTION","fields":[{"fieldPath":"merchantId","order":"ASCENDING"},{"fieldPath":"createdAt","order":"DESCENDING"}]},
     {"collectionGroup":"suppliers","queryScope":"COLLECTION","fields":[{"fieldPath":"merchantId","order":"ASCENDING"},{"fieldPath":"name","order":"ASCENDING"}]},
