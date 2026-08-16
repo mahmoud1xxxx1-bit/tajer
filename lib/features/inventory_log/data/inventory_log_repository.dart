@@ -99,53 +99,94 @@ class InventoryLogRepository {
     await _logsRef.doc(log.id).set(log.toJson());
   }
 
-  Future<void> revertLog(InventoryLog log, {required String userEmail, required String userName}) async {
+  Future<void> revertLog(
+    InventoryLog log, {
+    required String userEmail,
+    required String userName,
+  }) async {
     if (log.isReverted) return;
 
-    // 1. Mark original log as reverted
-    await _logsRef.doc(log.id).update({'isReverted': true});
+    final sourceLogRef = _logsRef.doc(log.id);
+    final revertLogId = Uuid().v4();
+    final revertLogRef = _logsRef.doc(revertLogId);
+    final revertDate = DateTime.now();
 
-    // 2. Adjust inventory
-    double currentInventory = 0.0;
-    if (log.productId.isNotEmpty && log.changeQuantity != 0) {
-      final productRef = _firestore.collection('products').doc(log.productId);
-      final rawRef = _firestore.collection('raw_materials').doc(log.productId);
-      
-      final pDoc = await productRef.get(const GetOptions(source: Source.serverAndCache));
-      if (pDoc.exists) {
-        currentInventory = (pDoc.data()?['quantity'] as num?)?.toDouble() ?? 0.0;
-        await productRef.update({
-          'quantity': FieldValue.increment(-log.changeQuantity),
-          'updatedAt': FieldValue.serverTimestamp(),
-        });
-      } else {
-        final rDoc = await rawRef.get(const GetOptions(source: Source.serverAndCache));
-        if (rDoc.exists) {
-          currentInventory = (rDoc.data()?['quantity'] as num?)?.toDouble() ?? 0.0;
-          await rawRef.update({
-            'quantity': FieldValue.increment(-log.changeQuantity),
-            'updatedAt': FieldValue.serverTimestamp(),
-          });
+    await _firestore.runTransaction((transaction) async {
+      // Re-read the source inside the transaction. This makes a repeated tap or
+      // a Firestore transaction retry idempotent.
+      final sourceSnapshot = await transaction.get(sourceLogRef);
+      if (!sourceSnapshot.exists) {
+        throw Exception('تعذر العثور على حركة المخزون الأصلية.');
+      }
+
+      final sourceData = sourceSnapshot.data() ?? const <String, dynamic>{};
+      if (sourceData['isReverted'] == true) return;
+
+      final productId = sourceData['productId']?.toString() ?? log.productId;
+      final productName =
+          sourceData['productName']?.toString() ?? log.productName;
+      final itemType = sourceData['itemType']?.toString() ?? log.itemType;
+      final changeQuantity = double.tryParse(
+            sourceData['changeQuantity']?.toString() ??
+                log.changeQuantity.toString(),
+          ) ??
+          log.changeQuantity;
+
+      DocumentReference<Map<String, dynamic>>? inventoryRef;
+      double currentInventory = 0.0;
+
+      // Every read is completed before any write, as required by Firestore
+      // transactions.
+      if (productId.isNotEmpty && changeQuantity != 0) {
+        final productRef = _firestore.collection('products').doc(productId);
+        final productSnapshot = await transaction.get(productRef);
+
+        if (productSnapshot.exists) {
+          inventoryRef = productRef;
+          currentInventory = double.tryParse(
+                productSnapshot.data()?['quantity']?.toString() ?? '0',
+              ) ??
+              0.0;
+        } else {
+          final rawMaterialRef =
+              _firestore.collection('raw_materials').doc(productId);
+          final rawMaterialSnapshot = await transaction.get(rawMaterialRef);
+          if (!rawMaterialSnapshot.exists) {
+            throw Exception('تعذر العثور على المنتج أو المادة الخام المرتبطة بالحركة.');
+          }
+          inventoryRef = rawMaterialRef;
+          currentInventory = double.tryParse(
+                rawMaterialSnapshot.data()?['quantity']?.toString() ?? '0',
+              ) ??
+              0.0;
         }
       }
-    }
 
-    // 3. Create a reverting log
-    final revertLog = InventoryLog(
-      id: Uuid().v4(),
-      merchantId: _merchantId,
-      productId: log.productId,
-      productName: log.productName,
-      changeQuantity: -log.changeQuantity,
-      previousQuantity: currentInventory,
-      newQuantity: currentInventory - log.changeQuantity,
-      reason: 'تراجع عن عملية سابقة / Reverted previous log',
-      userEmail: userEmail,
-      userName: userName,
-      itemType: log.itemType,
-      date: DateTime.now(),
-    );
-    await _logsRef.doc(revertLog.id).set(revertLog.toJson());
+      final reversingLog = InventoryLog(
+        id: revertLogId,
+        merchantId: _merchantId,
+        productId: productId,
+        productName: productName,
+        changeQuantity: -changeQuantity,
+        previousQuantity: currentInventory,
+        newQuantity: currentInventory - changeQuantity,
+        reason: 'تراجع عن عملية سابقة / Reverted previous log',
+        userEmail: userEmail,
+        userName: userName,
+        itemType: itemType,
+        date: revertDate,
+      );
+
+      if (inventoryRef != null) {
+        transaction.update(inventoryRef, {
+          'quantity': FieldValue.increment(-changeQuantity),
+          'updatedAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      transaction.update(sourceLogRef, {'isReverted': true});
+      transaction.set(revertLogRef, reversingLog.toJson());
+    });
   }
 }
 
@@ -160,4 +201,3 @@ final inventoryLogsStreamProvider = StreamProvider<List<InventoryLog>>((ref) {
   if (repo == null) return Stream.value([]);
   return repo.watchLogs();
 });
-
