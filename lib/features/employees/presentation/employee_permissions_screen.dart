@@ -375,7 +375,9 @@ class _EmployeePermissionsScreenState
                       ? Colors.orange.shade700
                       : theme.colorScheme.primary;
 
-                  return Container(
+                  return Material(
+                    color: Colors.transparent,
+                    child: Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
                       color: isDark
@@ -467,6 +469,7 @@ class _EmployeePermissionsScreenState
                         });
                       },
                     ),
+                  ),
                   );
                 },
               ),
