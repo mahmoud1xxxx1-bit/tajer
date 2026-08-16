@@ -24,22 +24,28 @@ Future<String> _login() async {
     _emulatorsConfigured = true;
   }
   final auth = FirebaseAuth.instance;
-  if (auth.currentUser != null) return auth.currentUser!.uid;
-  try {
-    await auth.signInWithEmailAndPassword(email: 'qa-notebook@test.local', password: 'password123');
-  } catch (_) {
+  if (auth.currentUser == null) {
     try {
-      await auth.createUserWithEmailAndPassword(email: 'qa-notebook@test.local', password: 'password123');
-    } catch (_) {
       await auth.signInWithEmailAndPassword(email: 'qa-notebook@test.local', password: 'password123');
+    } catch (_) {
+      try {
+        await auth.createUserWithEmailAndPassword(email: 'qa-notebook@test.local', password: 'password123');
+      } catch (_) {
+        await auth.signInWithEmailAndPassword(email: 'qa-notebook@test.local', password: 'password123');
+      }
     }
   }
-  return auth.currentUser!.uid;
-}
-
-Future<void> _clearCollection(CollectionReference<Map<String, dynamic>> ref) async {
-  final snap = await ref.get();
-  for (final d in snap.docs) { await d.reference.delete(); }
+  final uid = auth.currentUser!.uid;
+  await FirebaseFirestore.instance.collection('users').doc(uid).set({
+    'id': uid,
+    'name': 'QA Merchant',
+    'email': 'qa-notebook@test.local',
+    'role': 'merchant',
+    'plan': 'premium',
+    'isAnonymous': false,
+    'createdAt': FieldValue.serverTimestamp(),
+  }, SetOptions(merge: true));
+  return uid;
 }
 
 void main() {
@@ -50,12 +56,6 @@ void main() {
     final db = FirebaseFirestore.instance;
     final repo = AccountingNotebookRepository(db, merchantId);
     final service = AccountingNotebookService(repo);
-
-    await _clearCollection(repo.transactionsRef);
-    await _clearCollection(repo.peopleRef);
-    await _clearCollection(repo.categoriesRef);
-    await _clearCollection(repo.accountsRef);
-    await _clearCollection(repo.booksRef);
 
     final now = DateTime.now();
     const bookId = 'qa_book';
