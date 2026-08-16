@@ -54,6 +54,18 @@ void main() {
     final uid = auth.currentUser!.uid;
     final db = FirebaseFirestore.instance;
 
+    // Firestore rules resolve merchant access/permissions through users/{uid}.
+    // The isolated harness must therefore finish the same merchant profile
+    // bootstrap expected by the app before it seeds an open shift/product.
+    await db.collection('users').doc(uid).set({
+      'id': uid,
+      'name': 'Guest QA Merchant',
+      'role': 'merchant',
+      'plan': 'guest',
+      'isAnonymous': true,
+      'createdAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+
     // Fresh Firebase Emulator per workflow means no cleanup is needed. This avoids
     // the forbidden pre-test cleanup query that invalidated the legacy TEST 1.
     const shiftId = 'qa608_cash_shift';
