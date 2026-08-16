@@ -23,22 +23,30 @@ Future<String> _login() async {
     _emulatorsConfigured = true;
   }
   final auth = FirebaseAuth.instance;
-  if (auth.currentUser != null) return auth.currentUser!.uid;
-  try {
-    await auth.signInWithEmailAndPassword(email: 'qa-customer@test.local', password: 'password123');
-  } catch (_) {
+  if (auth.currentUser == null) {
     try {
-      await auth.createUserWithEmailAndPassword(email: 'qa-customer@test.local', password: 'password123');
-    } catch (_) {
       await auth.signInWithEmailAndPassword(email: 'qa-customer@test.local', password: 'password123');
+    } catch (_) {
+      try {
+        await auth.createUserWithEmailAndPassword(email: 'qa-customer@test.local', password: 'password123');
+      } catch (_) {
+        await auth.signInWithEmailAndPassword(email: 'qa-customer@test.local', password: 'password123');
+      }
     }
   }
-  return auth.currentUser!.uid;
-}
-
-Future<void> _deleteQuery(Query<Map<String, dynamic>> q) async {
-  final s = await q.get();
-  for (final d in s.docs) { await d.reference.delete(); }
+  final uid = auth.currentUser!.uid;
+  // Firestore permission helpers read users/{uid}; bootstrap the isolated QA
+  // merchant exactly once instead of running forbidden cleanup/list queries.
+  await FirebaseFirestore.instance.collection('users').doc(uid).set({
+    'id': uid,
+    'name': 'QA Customer Merchant',
+    'email': 'qa-customer@test.local',
+    'role': 'merchant',
+    'plan': 'premium',
+    'isAnonymous': false,
+    'createdAt': FieldValue.serverTimestamp(),
+  }, SetOptions(merge: true));
+  return uid;
 }
 
 void main() {
@@ -50,11 +58,8 @@ void main() {
     final orderRepo = OrderRepository(db);
     final customerRepo = CustomerRepository(db);
 
-    await _deleteQuery(db.collection('orders').where('merchantId', isEqualTo: merchantId));
-    await _deleteQuery(db.collection('customers').where('merchantId', isEqualTo: merchantId));
-    await _deleteQuery(db.collection('merchants').doc(merchantId).collection('payments'));
-    await _deleteQuery(db.collection('shifts').where('merchantId', isEqualTo: merchantId));
-
+    // Every workflow starts fresh Auth/Firestore emulators, so destructive
+    // pre-test cleanup is unnecessary and would itself be rejected by rules.
     const customerId = 'qa_credit_customer';
     const productId = 'qa_credit_product';
     const shiftId = 'qa_credit_shift';
@@ -149,11 +154,8 @@ void main() {
     final db = FirebaseFirestore.instance;
     final orderRepo = OrderRepository(db);
 
-    await _deleteQuery(db.collection('orders').where('merchantId', isEqualTo: merchantId));
-    await _deleteQuery(db.collection('customers').where('merchantId', isEqualTo: merchantId));
-    await _deleteQuery(db.collection('merchants').doc(merchantId).collection('payments'));
-    await _deleteQuery(db.collection('shifts').where('merchantId', isEqualTo: merchantId));
-
+    // Use different deterministic document IDs from TEST 2; the emulator is
+    // shared by the two tests but no cleanup is needed.
     const customerId = 'qa_concurrent_customer';
     const orderId = 'qa_concurrent_credit_order';
     const shiftId = 'qa_concurrent_shift';
