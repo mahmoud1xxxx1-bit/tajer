@@ -3,6 +3,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tajer/firebase_options.dart';
 
 import 'package:tajer/features/orders/data/order_repository.dart';
 import 'package:tajer/features/orders/domain/order.dart';
@@ -10,13 +11,19 @@ import 'package:tajer/features/orders/domain/cart_item.dart';
 import 'package:tajer/features/customers/data/customer_repository.dart';
 import 'package:tajer/features/customers/domain/customer.dart';
 
+bool _emulatorsConfigured = false;
+
 Future<String> _login() async {
-  try {
-    await Firebase.initializeApp();
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  }
+  if (!_emulatorsConfigured) {
     FirebaseFirestore.instance.useFirestoreEmulator('10.0.2.2', 8080);
     await FirebaseAuth.instance.useAuthEmulator('10.0.2.2', 9099);
-  } catch (_) {}
+    _emulatorsConfigured = true;
+  }
   final auth = FirebaseAuth.instance;
+  if (auth.currentUser != null) return auth.currentUser!.uid;
   try {
     await auth.signInWithEmailAndPassword(email: 'qa-customer@test.local', password: 'password123');
   } catch (_) {
@@ -38,8 +45,8 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('TEST 2/34 - credit sale and partial customer debt collection', (tester) async {
-    final db = FirebaseFirestore.instance;
     final merchantId = await _login();
+    final db = FirebaseFirestore.instance;
     final orderRepo = OrderRepository(db);
     final customerRepo = CustomerRepository(db);
 
@@ -138,8 +145,8 @@ void main() {
   });
 
   testWidgets('TEST 15/34 - 10 concurrent debt payments never make debt negative', (tester) async {
-    final db = FirebaseFirestore.instance;
     final merchantId = await _login();
+    final db = FirebaseFirestore.instance;
     final orderRepo = OrderRepository(db);
 
     await _deleteQuery(db.collection('orders').where('merchantId', isEqualTo: merchantId));
