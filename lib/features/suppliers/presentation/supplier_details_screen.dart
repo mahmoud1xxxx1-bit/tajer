@@ -14,6 +14,7 @@ import '../domain/supplier.dart';
 import '../domain/supplier_transaction.dart';
 import '../../expenses/data/expense_repository.dart';
 import '../../expenses/domain/expense.dart';
+import '../../shifts/data/shift_repository.dart';
 import '../../../core/services/activity_logger.dart';
 
 class SupplierDetailsScreen extends ConsumerWidget {
@@ -167,46 +168,59 @@ class SupplierDetailsScreen extends ConsumerWidget {
                                           if (appUser != null) {
                                             final isAr = Localizations.localeOf(context).languageCode == 'ar';
                                             final success = await PinConfirmationDialog.requirePinOrSetup(
-                                              context, 
+                                              context,
                                               appUser,
                                               title: isAr ? 'تحذير: إلغاء العملية' : 'Warning: Cancel Transaction',
-                                              warning: isAr 
-                                                ? 'سيتم إلغاء العملية وإعادة حساب المديونية. ' + (isPayment ? '(تنبيه: ستحتاج لإلغاء المصروف من شاشة المصروفات أيضاً)' : '')
-                                                : 'Transaction will be cancelled and debt recalculated.',
+                                              warning: isAr
+                                                ? 'سيتم إلغاء العملية وإعادة حساب المديونية وأثر السداد المرتبط بها.'
+                                                : 'The transaction, debt impact and linked payment expense will be reversed together.',
                                             );
                                             if (!success) return;
                                           }
+
+                                          String? linkedExpenseId;
                                           if (isPayment) {
+                                            // New payments deliberately share the same document ID
+                                            // with their linked expense. For older payments, retain
+                                            // the legacy matching rule so existing data remains
+                                            // cancellable without migration.
+                                            linkedExpenseId = t.id;
                                             final expensesOpt = ref.read(expensesStreamProvider).value;
                                             if (expensesOpt != null) {
-                                              final matchingExpenses = expensesOpt.where((e) => 
-                                                e.isSupplierPayment && 
-                                                e.amount == t.amount && 
-                                                e.title.contains(supplier.name) &&
-                                                !e.isCancelled &&
-                                                e.date.difference(t.date).inMinutes.abs() < 5
+                                              final exactMatches = expensesOpt.where((e) =>
+                                                e.id == t.id &&
+                                                e.isSupplierPayment &&
+                                                !e.isCancelled
                                               );
-                                              if (matchingExpenses.isNotEmpty) {
-                                                try {
-                                                  await ref.read(expenseRepositoryProvider)?.cancelExpense(matchingExpenses.first);
-                                                } catch (e) {
-                                                  if (context.mounted) {
-                                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString().replaceAll('Exception: ', ''), style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.red));
-                                                  }
-                                                  return; // Stop the whole reversal if expense is in a closed shift
+                                              if (exactMatches.isNotEmpty) {
+                                                linkedExpenseId = exactMatches.first.id;
+                                              } else {
+                                                final legacyMatches = expensesOpt.where((e) =>
+                                                  e.isSupplierPayment &&
+                                                  e.amount == t.amount &&
+                                                  e.title.contains(supplier.name) &&
+                                                  !e.isCancelled &&
+                                                  e.date.difference(t.date).inMinutes.abs() < 5
+                                                );
+                                                if (legacyMatches.isNotEmpty) {
+                                                  linkedExpenseId = legacyMatches.first.id;
                                                 }
                                               }
                                             }
                                           }
-                                          
-                                          final updatedTransaction = t.copyWith(isCancelled: true);
-                                          ref.read(supplierTransactionRepositoryProvider)?.updateTransaction(updatedTransaction);
-                                          
-                                          // Update supplier debt
-                                          final newDebt = currentSupplier.totalDebt + (isPayment ? t.amount : -t.amount);
-                                          ref.read(supplierRepositoryProvider)?.updateSupplier(currentSupplier.copyWith(totalDebt: newDebt));
 
-                                          
+                                          try {
+                                            await ref.read(supplierRepositoryProvider)?.cancelSupplierTransaction(
+                                              supplierTransaction: t,
+                                              linkedExpenseId: linkedExpenseId,
+                                            );
+                                          } catch (e) {
+                                            if (context.mounted) {
+                                              AppSnackbar.showError(context, e);
+                                            }
+                                            return;
+                                          }
+
                                           ActivityLogger.log(
                                             user: appUser,
                                             actionType: 'Cancel Supplier Transaction|إلغاء عملية مورد',
@@ -236,8 +250,8 @@ class SupplierDetailsScreen extends ConsumerWidget {
                                 ),
                                 if (isPayment && t.paymentMethod != null)
                                   Container(
-                                    margin: EdgeInsets.only(top: 4),
-                                    padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                                    margin: const EdgeInsets.only(top: 4),
+                                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                                     decoration: BoxDecoration(
                                       color: t.paymentMethod == 'network' ? Colors.blue.withValues(alpha: 0.1) : Colors.orange.withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(4),
@@ -345,11 +359,11 @@ class SupplierDetailsScreen extends ConsumerWidget {
                 final merchantId = user?.merchantId ?? user?.id ?? '';
                 
                 try {
-                  // 1. Update Supplier
+                  // Existing debt-addition flow is intentionally unchanged in
+                  // this release; this repair is scoped to supplier payments.
                   final updatedSupplier = currentSupplier.copyWith(totalDebt: currentSupplier.totalDebt + amount);
                   await ref.read(supplierRepositoryProvider)?.updateSupplier(updatedSupplier).timeout(const Duration(seconds: 1));
                   
-                  // 2. Add Transaction
                   final tx = SupplierTransaction(
                     id: const Uuid().v4(),
                     supplierId: currentSupplier.id,
@@ -362,8 +376,6 @@ class SupplierDetailsScreen extends ConsumerWidget {
                   );
                   await ref.read(supplierTransactionRepositoryProvider)?.addTransaction(tx).timeout(const Duration(seconds: 1));
                 } catch (e) {
-                  // If it's a TimeoutException, it means the cache updated but server is offline. This is expected.
-                  // Only show error if it's not a timeout
                   if (e is! TimeoutException && !e.toString().contains('TimeoutException')) {
                     if (context.mounted) AppSnackbar.showError(context, e);
                   }
@@ -483,51 +495,54 @@ class SupplierDetailsScreen extends ConsumerWidget {
 
               setState(() => isLoading = true);
 
+              final user = ref.read(appUserProvider).value;
+              final merchantId = user?.merchantId ?? user?.id ?? '';
+              final now = DateTime.now();
+              final paymentId = const Uuid().v4();
+              final currentShift = merchantId.isEmpty
+                  ? null
+                  : ref.read(currentShiftProvider(merchantId)).value;
+              final linkedShiftId = paymentMethod == 'cash' && isFromShiftDrawer
+                  ? currentShift?.id
+                  : null;
+
+              final tx = SupplierTransaction(
+                id: paymentId,
+                supplierId: currentSupplier.id,
+                merchantId: merchantId,
+                amount: paid,
+                type: 'payment',
+                paymentMethod: paymentMethod,
+                description: 'دفعة سداد ديون للمورد' + (paymentMethod == 'cash' ? (isFromShiftDrawer ? ' (من الدرج)' : ' (خارج الدرج)') : ''),
+                date: now,
+                createdAt: now,
+              );
+
+              final expense = Expense(
+                id: paymentId,
+                merchantId: merchantId,
+                amount: paid,
+                isSupplierPayment: true,
+                paymentMethod: paymentMethod,
+                date: now,
+                createdAt: now,
+                title: 'دفعة سداد ديون للمورد: ${currentSupplier.name}',
+                creatorName: user?.name ?? 'المدير',
+                isFromShiftDrawer: isFromShiftDrawer,
+                shiftId: linkedShiftId,
+              );
+
               try {
-                await ref.read(supplierRepositoryProvider)?.paySupplierDebt(
-                  supplierId: currentSupplier.id,
-                  amountPaid: paid,
-                ).timeout(const Duration(seconds: 1));
-                
-                final user = ref.read(appUserProvider).value;
-                final merchantId = user?.merchantId ?? user?.id ?? '';
-                
-                // 1. Register as Supplier Transaction
-                final tx = SupplierTransaction(
-                  id: const Uuid().v4(),
-                  supplierId: currentSupplier.id,
-                  merchantId: merchantId,
-                  amount: paid,
-                  type: 'payment',
-                  paymentMethod: paymentMethod,
-                  description: 'دفعة سداد ديون للمورد' + (paymentMethod == 'cash' ? (isFromShiftDrawer ? ' (من الدرج)' : ' (خارج الدرج)') : ''),
-                  date: DateTime.now(),
-                  createdAt: DateTime.now(),
+                await ref.read(supplierRepositoryProvider)?.recordSupplierPayment(
+                  supplierTransaction: tx,
+                  expense: expense,
                 );
-                await ref.read(supplierTransactionRepositoryProvider)?.addTransaction(tx).timeout(const Duration(seconds: 1));
-                
-                // 2. Register as Expense
-                final expense = Expense(
-                  id: const Uuid().v4(),
-                  merchantId: merchantId,
-                  amount: paid,
-                  isSupplierPayment: true,
-                  paymentMethod: paymentMethod,
-                  date: DateTime.now(),
-                  createdAt: DateTime.now(),
-                  title: 'دفعة سداد ديون للمورد: ${currentSupplier.name}',
-                  creatorName: user?.name ?? 'المدير',
-                  isFromShiftDrawer: isFromShiftDrawer,
-                );
-                await ref.read(expenseRepositoryProvider)?.addExpense(expense).timeout(const Duration(seconds: 1));
               } catch (e) {
-                if (e is! TimeoutException && !e.toString().contains('TimeoutException')) {
-                  if (context.mounted) {
-                    AppSnackbar.showError(context, e);
-                    setState(() => isLoading = false);
-                  }
-                  return;
+                if (context.mounted) {
+                  AppSnackbar.showError(context, e);
+                  setState(() => isLoading = false);
                 }
+                return;
               }
               
               if (context.mounted) Navigator.pop(context);
