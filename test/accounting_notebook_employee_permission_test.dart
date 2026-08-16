@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tajer/features/authentication/domain/app_user.dart';
 
@@ -43,6 +45,24 @@ void main() {
       );
 
       expect(employee.hasPermission('can_access_accounting_notebook'), isTrue);
+    });
+
+    test('drawer exposes notebook only through the notebook permission contract',
+        () {
+      final source = File('lib/core/widgets/app_drawer.dart').readAsStringSync();
+      expect(source, contains("can_access_accounting_notebook"));
+      expect(source, contains("l10n.notebookTitle"));
+      expect(source, contains("context.go('/notebook')"));
+    });
+
+    test('notebook home confirms before returning to Tajer', () {
+      final source = File(
+        'lib/features/accounting_notebook/presentation/notebook_home_screen.dart',
+      ).readAsStringSync();
+      expect(source, contains('_confirmExitNotebook'));
+      expect(source, contains('PopScope('));
+      expect(source, contains('onPressed: leaveNotebook'));
+      expect(source, contains("context.go('/dashboard')"));
     });
   });
 }
