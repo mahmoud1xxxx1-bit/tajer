@@ -121,6 +121,17 @@ class AppDrawer extends ConsumerWidget {
               ),
             ),
           ),
+          if (appUser?.role == 'merchant' ||
+              (appUser?.hasPermission('can_access_accounting_notebook') ?? false))
+            ListTile(
+              leading: const Icon(Icons.menu_book),
+              title: Text(l10n.notebookTitle,
+                  style: const TextStyle(fontFamily: 'Tajawal')),
+              onTap: () {
+                Navigator.pop(context);
+                context.go('/notebook');
+              },
+            ),
           if (appUser?.hasPermission('can_manage_expenses') ?? false)
           ListTile(
             leading: const Icon(Icons.money_off),
