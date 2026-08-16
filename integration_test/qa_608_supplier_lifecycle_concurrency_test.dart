@@ -18,15 +18,21 @@ Future<String> _login() async {
     _emulatorsConfigured = true;
   }
   final auth = FirebaseAuth.instance;
-  if (auth.currentUser != null) return auth.currentUser!.uid;
-  try { await auth.signInWithEmailAndPassword(email: 'qa-supplier@test.local', password: 'password123'); }
-  catch (_) { try { await auth.createUserWithEmailAndPassword(email: 'qa-supplier@test.local', password: 'password123'); } catch (_) { await auth.signInWithEmailAndPassword(email: 'qa-supplier@test.local', password: 'password123'); } }
-  return auth.currentUser!.uid;
-}
-Future<void> _clear(FirebaseFirestore db, String merchantId) async {
-  final root = db.collection('merchants').doc(merchantId).collection('suppliers');
-  for (final s in (await root.get()).docs) { for (final t in (await s.reference.collection('transactions').get()).docs) { await t.reference.delete(); } await s.reference.delete(); }
-  for (final e in (await db.collection('merchants').doc(merchantId).collection('expenses').get()).docs) { await e.reference.delete(); }
+  if (auth.currentUser == null) {
+    try { await auth.signInWithEmailAndPassword(email: 'qa-supplier@test.local', password: 'password123'); }
+    catch (_) { try { await auth.createUserWithEmailAndPassword(email: 'qa-supplier@test.local', password: 'password123'); } catch (_) { await auth.signInWithEmailAndPassword(email: 'qa-supplier@test.local', password: 'password123'); } }
+  }
+  final uid = auth.currentUser!.uid;
+  await FirebaseFirestore.instance.collection('users').doc(uid).set({
+    'id': uid,
+    'name': 'QA Supplier Merchant',
+    'email': 'qa-supplier@test.local',
+    'role': 'merchant',
+    'plan': 'premium',
+    'isAnonymous': false,
+    'createdAt': FieldValue.serverTimestamp(),
+  }, SetOptions(merge: true));
+  return uid;
 }
 SupplierTransaction _tx(String id,String sid,String mid,double amount,String method){final n=DateTime.now();return SupplierTransaction(id:id,supplierId:sid,merchantId:mid,amount:amount,type:'payment',paymentMethod:method,description:'QA $id',date:n,createdAt:n);}
 Expense _exp(String id,String mid,double amount,String method,bool drawer){final n=DateTime.now();return Expense(id:id,merchantId:mid,title:'Supplier QA',amount:amount,category:'Supplier Payment',isSupplierPayment:true,paymentMethod:method,date:n,createdAt:n,isFromShiftDrawer:drawer);}
@@ -34,7 +40,7 @@ Expense _exp(String id,String mid,double amount,String method,bool drawer){final
 void main(){
  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
  testWidgets('TEST 5/34 - supplier full lifecycle is atomic and correctly classified',(tester) async {
-  final mid=await _login(); final db=FirebaseFirestore.instance; await _clear(db,mid); final repo=SupplierRepository(db,mid); const sid='qa_supplier_lifecycle';
+  final mid=await _login(); final db=FirebaseFirestore.instance; final repo=SupplierRepository(db,mid); const sid='qa_supplier_lifecycle';
   await repo.addSupplier(Supplier(id:sid,merchantId:mid,name:'QA Supplier',totalDebt:1000,createdAt:DateTime.now()));
   Future<double> debt() async => ((await db.collection('merchants').doc(mid).collection('suppliers').doc(sid).get()).data()?['totalDebt'] as num).toDouble();
   final a=_tx('pay_drawer',sid,mid,200,'cash'); await repo.recordSupplierPayment(supplierTransaction:a,expense:_exp('exp_drawer',mid,200,'cash',true)); expect(await debt(),800.0);
@@ -46,7 +52,7 @@ void main(){
   expect((await db.collection('merchants').doc(mid).collection('expenses').doc('exp_network').get()).data()?['isCancelled'],true);
  });
  testWidgets('TEST 16/34 - concurrent supplier payments preserve final debt and ledger counts',(tester) async {
-  final mid=await _login(); final db=FirebaseFirestore.instance; await _clear(db,mid); final repo=SupplierRepository(db,mid); const sid='qa_supplier_concurrent';
+  final mid=await _login(); final db=FirebaseFirestore.instance; final repo=SupplierRepository(db,mid); const sid='qa_supplier_concurrent';
   await repo.addSupplier(Supplier(id:sid,merchantId:mid,name:'QA Concurrent Supplier',totalDebt:1000,createdAt:DateTime.now()));
   await Future.wait(List.generate(10,(i)=>repo.recordSupplierPayment(supplierTransaction:_tx('ctx_$i',sid,mid,10,i.isEven?'cash':'network'),expense:_exp('cexp_$i',mid,10,i.isEven?'cash':'network',i.isEven))));
   final s=await db.collection('merchants').doc(mid).collection('suppliers').doc(sid).get(); expect((s.data()?['totalDebt'] as num).toDouble(),900.0);
