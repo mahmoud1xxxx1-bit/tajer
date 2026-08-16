@@ -3,42 +3,39 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:printing/printing.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../l10n/app_localizations.dart';
 import '../data/notebook_pdf_service.dart';
 import '../data/accounting_notebook_provider.dart';
 import '../data/notebook_csv_service.dart';
 import '../utils/notebook_terminology.dart';
 import '../../../core/providers/settings_provider.dart';
+import '../domain/notebook_transaction.dart';
+import '../domain/notebook_person.dart';
+import '../domain/notebook_account.dart';
 
 class NotebookReportsScreen extends ConsumerStatefulWidget {
   const NotebookReportsScreen({super.key});
 
   @override
-  ConsumerState<NotebookReportsScreen> createState() =>
-      _NotebookReportsScreenState();
+  ConsumerState<NotebookReportsScreen> createState() => _NotebookReportsScreenState();
 }
 
 class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
-  String _period = 'all';
+  // Month is the useful lightweight default. "All" remains available and is
+  // intentionally loaded only when the user asks for the full history.
+  String _period = 'month';
   String? _selectedBookId;
 
-  bool _isWithinPeriod(DateTime date) {
+  DateTime? _periodStart() {
     final now = DateTime.now();
-    if (_period == 'today') {
-      return date.year == now.year &&
-          date.month == now.month &&
-          date.day == now.day;
-    }
+    if (_period == 'today') return DateTime(now.year, now.month, now.day);
     if (_period == 'week') {
       final today = DateTime(now.year, now.month, now.day);
-      final weekStart =
-          today.subtract(Duration(days: today.weekday - DateTime.monday));
-      return !date.isBefore(weekStart);
+      return today.subtract(Duration(days: today.weekday - DateTime.monday));
     }
-    if (_period == 'month') {
-      return date.year == now.year && date.month == now.month;
-    }
-    return true;
+    if (_period == 'month') return DateTime(now.year, now.month, 1);
+    return null;
   }
 
   Widget _buildPeriodSelector(BuildContext context, AppLocalizations l10n) {
@@ -53,9 +50,7 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
       builder: (context, constraints) {
         const spacing = 8.0;
         final columns = constraints.maxWidth < 430 ? 2 : 4;
-        final itemWidth =
-            (constraints.maxWidth - (spacing * (columns - 1))) / columns;
-
+        final itemWidth = (constraints.maxWidth - (spacing * (columns - 1))) / columns;
         return Wrap(
           spacing: spacing,
           runSpacing: spacing,
@@ -69,12 +64,7 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                 labelPadding: const EdgeInsets.symmetric(horizontal: 4),
                 label: SizedBox(
                   width: double.infinity,
-                  child: Text(
-                    option.$2,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  child: Text(option.$2, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis),
                 ),
                 onSelected: (_) => setState(() => _period = option.$1),
               ),
@@ -89,12 +79,9 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final booksAsync = ref.watch(notebookBooksProvider);
-    final txsAsync = ref.watch(notebookTransactionsProvider);
-    final peopleAsync = ref.watch(notebookPeopleProvider);
-    final accountsAsync = ref.watch(notebookAccountsProvider);
     final sharedBookId = ref.watch(notebookCurrentBookIdProvider);
-    final currentCurrency = ref.watch(currencyProvider);
-    final currencyCode = currentCurrency.code;
+    final currencyCode = ref.watch(currencyProvider).code;
+    final repository = ref.watch(accountingNotebookProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.notebookReports)),
@@ -107,14 +94,9 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(l10n.notebookEmptyBooks,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyLarge),
+                  Text(l10n.notebookEmptyBooks, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyLarge),
                   const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => context.push('/notebook/books'),
-                    child: Text(l10n.notebookCreateBookCTA),
-                  ),
+                  ElevatedButton(onPressed: () => context.push('/notebook/books'), child: Text(l10n.notebookCreateBookCTA)),
                 ],
               ),
             );
@@ -126,13 +108,27 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
               : (books.where((b) => !b.isArchived).firstOrNull ?? books.first).id;
           _selectedBookId = selectedBookId;
 
-          return txsAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, __) => Center(child: Text(l10n.genericErrorPrefix)),
-            data: (allTransactions) {
-              final transactions = allTransactions
-                  .where((t) =>
-                      t.bookId == selectedBookId && _isWithinPeriod(t.date))
+          Query<Map<String, dynamic>> txQuery = repository.transactionsRef
+              .where('bookId', isEqualTo: selectedBookId)
+              .orderBy('date', descending: true);
+          final start = _periodStart();
+          if (start != null) {
+            txQuery = txQuery.where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(start));
+          }
+
+          final peopleQuery = repository.peopleRef.where('bookId', isEqualTo: selectedBookId);
+          final accountsQuery = repository.accountsRef.where('bookId', isEqualTo: selectedBookId);
+
+          return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: txQuery.snapshots(),
+            builder: (context, txSnapshot) {
+              if (txSnapshot.connectionState == ConnectionState.waiting) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              if (txSnapshot.hasError) return Center(child: Text(l10n.genericErrorPrefix));
+
+              final transactions = (txSnapshot.data?.docs ?? const [])
+                  .map((doc) => NotebookTransaction.fromMap(doc.data(), doc.id))
                   .toList();
 
               double income = 0;
@@ -151,33 +147,15 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .primary
-                            .withValues(alpha: 0.1),
+                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.3),
-                        ),
+                        border: Border.all(color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.info_outline,
-                              color: Theme.of(context).colorScheme.primary),
+                          Icon(Icons.info_outline, color: Theme.of(context).colorScheme.primary),
                           const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(l10n.notebookGuideReports,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      color:
-                                          Theme.of(context).colorScheme.primary,
-                                    )),
-                          ),
+                          Expanded(child: Text(l10n.notebookGuideReports, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.primary))),
                         ],
                       ),
                     ),
@@ -187,20 +165,11 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                       isExpanded: true,
                       decoration: InputDecoration(labelText: l10n.notebookBook),
                       items: books
-                          .map((b) => DropdownMenuItem(
-                                value: b.id,
-                                child: Text(
-                                  b.isArchived
-                                      ? '${b.name} (${l10n.notebookArchived})'
-                                      : b.name,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ))
+                          .map((b) => DropdownMenuItem(value: b.id, child: Text(b.isArchived ? '${b.name} (${l10n.notebookArchived})' : b.name, overflow: TextOverflow.ellipsis)))
                           .toList(),
                       onChanged: (value) {
                         if (value == null) return;
-                        ref.read(notebookCurrentBookIdProvider.notifier).state =
-                            value;
+                        ref.read(notebookCurrentBookIdProvider.notifier).state = value;
                         setState(() => _selectedBookId = value);
                       },
                     ),
@@ -212,38 +181,17 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           children: [
-                            Text(l10n.notebookNetIncome,
-                                style: Theme.of(context).textTheme.titleLarge),
+                            Text(l10n.notebookNetIncome, style: Theme.of(context).textTheme.titleLarge),
                             Text(
-                              NumberFormat.currency(symbol: '$currencyCode ')
-                                  .format(netIncome),
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .headlineMedium
-                                  ?.copyWith(
-                                    color: netIncome >= 0
-                                        ? Colors.green
-                                        : Colors.red,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              NumberFormat.currency(symbol: '$currencyCode ').format(netIncome),
+                              style: Theme.of(context).textTheme.headlineMedium?.copyWith(color: netIncome >= 0 ? Colors.green : Colors.red, fontWeight: FontWeight.bold),
                             ),
                             const Divider(),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
-                                Column(children: [
-                                  Text(l10n.income,
-                                      style:
-                                          const TextStyle(color: Colors.green)),
-                                  Text(NumberFormat.currency(symbol: '')
-                                      .format(income)),
-                                ]),
-                                Column(children: [
-                                  Text(l10n.expense,
-                                      style: const TextStyle(color: Colors.red)),
-                                  Text(NumberFormat.currency(symbol: '')
-                                      .format(expense)),
-                                ]),
+                                Column(children: [Text(l10n.income, style: const TextStyle(color: Colors.green)), Text(NumberFormat.currency(symbol: '').format(income))]),
+                                Column(children: [Text(l10n.expense, style: const TextStyle(color: Colors.red)), Text(NumberFormat.currency(symbol: '').format(expense))]),
                               ],
                             ),
                           ],
@@ -256,81 +204,41 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                         padding: const EdgeInsets.all(16),
                         child: Column(
                           children: [
-                            Text(
-                              NotebookTerminology.receivablesPayablesSection(
-                                  context),
-                              style: Theme.of(context).textTheme.titleLarge,
-                              textAlign: TextAlign.center,
-                            ),
+                            Text(NotebookTerminology.receivablesPayablesSection(context), style: Theme.of(context).textTheme.titleLarge, textAlign: TextAlign.center),
                             const SizedBox(height: 8),
-                            peopleAsync.when(
-                              loading: () =>
-                                  const CircularProgressIndicator(),
-                              error: (_, __) => Text(l10n.genericErrorPrefix),
-                              data: (allPeople) {
-                                final people = allPeople
-                                    .where((p) => p.bookId == selectedBookId)
+                            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                              stream: peopleQuery.snapshots(),
+                              builder: (context, peopleSnapshot) {
+                                if (peopleSnapshot.connectionState == ConnectionState.waiting) return const CircularProgressIndicator();
+                                if (peopleSnapshot.hasError) return Text(l10n.genericErrorPrefix);
+                                final people = (peopleSnapshot.data?.docs ?? const [])
+                                    .map((doc) => NotebookPerson.fromMap(doc.data(), doc.id))
                                     .toList();
-                                final owed = people.fold<double>(0,
-                                    (sum, p) => sum + p.amountOwedToMe);
-                                final iOwe = people.fold<double>(
-                                    0, (sum, p) => sum + p.amountIOwe);
+                                final owed = people.fold<double>(0, (sum, p) => sum + p.amountOwedToMe);
+                                final iOwe = people.fold<double>(0, (sum, p) => sum + p.amountIOwe);
                                 return Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                                   children: [
-                                    Flexible(
-                                      child: Column(children: [
-                                        Text(
-                                          NotebookTerminology
-                                              .accountsReceivable(context),
-                                          textAlign: TextAlign.center,
-                                          style: const TextStyle(
-                                              color: Colors.blue),
-                                        ),
-                                        Text(NumberFormat.currency(symbol: '')
-                                            .format(owed)),
-                                      ]),
-                                    ),
-                                    Flexible(
-                                      child: Column(children: [
-                                        Text(
-                                          NotebookTerminology.accountsPayable(
-                                              context),
-                                          textAlign: TextAlign.center,
-                                          style: const TextStyle(
-                                              color: Colors.orange),
-                                        ),
-                                        Text(NumberFormat.currency(symbol: '')
-                                            .format(iOwe)),
-                                      ]),
-                                    ),
+                                    Flexible(child: Column(children: [Text(NotebookTerminology.accountsReceivable(context), textAlign: TextAlign.center, style: const TextStyle(color: Colors.blue)), Text(NumberFormat.currency(symbol: '').format(owed))])),
+                                    Flexible(child: Column(children: [Text(NotebookTerminology.accountsPayable(context), textAlign: TextAlign.center, style: const TextStyle(color: Colors.orange)), Text(NumberFormat.currency(symbol: '').format(iOwe))])),
                                   ],
                                 );
                               },
                             ),
                             const Divider(),
-                            accountsAsync.when(
-                              loading: () =>
-                                  const CircularProgressIndicator(),
-                              error: (_, __) => Text(l10n.genericErrorPrefix),
-                              data: (allAccounts) {
-                                final accounts = allAccounts
-                                    .where((a) => a.bookId == selectedBookId)
+                            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                              stream: accountsQuery.snapshots(),
+                              builder: (context, accountSnapshot) {
+                                if (accountSnapshot.connectionState == ConnectionState.waiting) return const CircularProgressIndicator();
+                                if (accountSnapshot.hasError) return Text(l10n.genericErrorPrefix);
+                                final accounts = (accountSnapshot.data?.docs ?? const [])
+                                    .map((doc) => NotebookAccount.fromMap(doc.data(), doc.id))
                                     .toList();
                                 return Column(
                                   children: accounts
                                       .map((a) => ListTile(
-                                            title: Text(
-                                              a.isArchived
-                                                  ? '${a.name} (${l10n.notebookArchived})'
-                                                  : a.name,
-                                            ),
-                                            trailing: Text(
-                                              NumberFormat.currency(
-                                                      symbol: '$currencyCode ')
-                                                  .format(a.balance),
-                                            ),
+                                            title: Text(a.isArchived ? '${a.name} (${l10n.notebookArchived})' : a.name),
+                                            trailing: Text(NumberFormat.currency(symbol: '$currencyCode ').format(a.balance)),
                                             dense: true,
                                           ))
                                       .toList(),
@@ -351,19 +259,14 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                           icon: const Icon(Icons.picture_as_pdf),
                           label: Text(l10n.notebookExportPdf),
                           onPressed: () async {
-                            final pdfData = await NotebookPdfService
-                                .generateNotebookReportPdf(
+                            final pdfData = await NotebookPdfService.generateNotebookReportPdf(
                               transactions,
                               l10n.notebookReports,
                               currencyCode,
                               l10n,
-                              Localizations.localeOf(context).languageCode ==
-                                  'ar',
+                              Localizations.localeOf(context).languageCode == 'ar',
                             );
-                            await Printing.sharePdf(
-                              bytes: pdfData,
-                              filename: 'accounting_report.pdf',
-                            );
+                            await Printing.sharePdf(bytes: pdfData, filename: 'accounting_report.pdf');
                           },
                         ),
                         ElevatedButton.icon(
@@ -373,15 +276,10 @@ class _NotebookReportsScreenState extends ConsumerState<NotebookReportsScreen> {
                             final csvData = NotebookCsvService.generateCsv(
                               transactions,
                               l10n,
-                              Localizations.localeOf(context).languageCode ==
-                                  'ar',
+                              Localizations.localeOf(context).languageCode == 'ar',
                               currencyCode,
                             );
-                            await NotebookCsvService.shareCsv(
-                              csvData,
-                              'accounting_report.csv',
-                              l10n,
-                            );
+                            await NotebookCsvService.shareCsv(csvData, 'accounting_report.csv', l10n);
                           },
                         ),
                       ],
