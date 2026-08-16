@@ -90,8 +90,7 @@ jobs:
           username: root
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            rm -rf /var/www/tajer/*
-            mkdir -p /var/www/tajer
+            rm -rf /home/alldown.uk/public_html/taj/*
 
       - name: Deploy to VPS
         if: success()
@@ -101,7 +100,7 @@ jobs:
           username: root
           password: ${{ secrets.VPS_PASSWORD }}
           source: "build/web/*"
-          target: "/var/www/tajer"
+          target: "/home/alldown.uk/public_html/taj"
           strip_components: 2
 
       - name: Set Permissions on VPS
@@ -112,5 +111,5 @@ jobs:
           username: root
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            chown -R www-data:www-data /var/www/tajer
-            chmod -R 755 /var/www/tajer
+            chown -R nobody:nobody /home/alldown.uk/public_html/taj
+            chmod -R 755 /home/alldown.uk/public_html/taj
