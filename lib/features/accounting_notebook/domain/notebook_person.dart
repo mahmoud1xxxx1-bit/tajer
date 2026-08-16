@@ -26,17 +26,33 @@ class NotebookPerson {
 
   double get netBalance => amountOwedToMe - amountIOwe;
 
+  static double _asDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value.trim()) ?? 0.0;
+    return 0.0;
+  }
+
+  static bool _asBool(dynamic value) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      return normalized == 'true' || normalized == '1' || normalized == 'yes';
+    }
+    return false;
+  }
+
   factory NotebookPerson.fromMap(Map<String, dynamic> data, String documentId) {
     return NotebookPerson(
       id: documentId,
       name: data['name']?.toString() ?? '',
       phone: data['phone']?.toString(),
       notes: data['notes']?.toString(),
-      amountOwedToMe: (data['amountOwedToMe'] as num?)?.toDouble() ?? 0.0,
-      amountIOwe: (data['amountIOwe'] as num?)?.toDouble() ?? 0.0,
+      amountOwedToMe: _asDouble(data['amountOwedToMe']),
+      amountIOwe: _asDouble(data['amountIOwe']),
       bookId: data['bookId']?.toString() ?? '',
       createdAt: safeParseDate(data['createdAt']),
-      isArchived: data['isArchived'] ?? false,
+      isArchived: _asBool(data['isArchived']),
     );
   }
 
