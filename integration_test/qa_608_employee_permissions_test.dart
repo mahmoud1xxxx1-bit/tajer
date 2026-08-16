@@ -71,6 +71,9 @@ Widget _host(AuthRepository authRepo, String employeeUid, Map<String, dynamic> d
   return ProviderScope(
     overrides: [authRepositoryProvider.overrideWithValue(authRepo)],
     child: MaterialApp(
+      // Saving this screen pops its route. A fresh key guarantees the re-entry
+      // phase gets a brand-new Navigator instead of reusing an empty history.
+      key: UniqueKey(),
       locale: const Locale('en'),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
