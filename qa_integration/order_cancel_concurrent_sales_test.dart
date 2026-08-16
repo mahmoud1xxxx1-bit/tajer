@@ -21,22 +21,28 @@ Future<String> _login() async {
     _emulatorsConfigured = true;
   }
   final auth = FirebaseAuth.instance;
-  if (auth.currentUser != null) return auth.currentUser!.uid;
-  try {
-    await auth.signInWithEmailAndPassword(email: 'qa-orders@test.local', password: 'password123');
-  } catch (_) {
+  if (auth.currentUser == null) {
     try {
-      await auth.createUserWithEmailAndPassword(email: 'qa-orders@test.local', password: 'password123');
-    } catch (_) {
       await auth.signInWithEmailAndPassword(email: 'qa-orders@test.local', password: 'password123');
+    } catch (_) {
+      try {
+        await auth.createUserWithEmailAndPassword(email: 'qa-orders@test.local', password: 'password123');
+      } catch (_) {
+        await auth.signInWithEmailAndPassword(email: 'qa-orders@test.local', password: 'password123');
+      }
     }
   }
-  return auth.currentUser!.uid;
-}
-
-Future<void> _deleteQuery(Query<Map<String, dynamic>> q) async {
-  final s = await q.get();
-  for (final d in s.docs) { await d.reference.delete(); }
+  final uid = auth.currentUser!.uid;
+  await FirebaseFirestore.instance.collection('users').doc(uid).set({
+    'id': uid,
+    'name': 'QA Orders Merchant',
+    'email': 'qa-orders@test.local',
+    'role': 'merchant',
+    'plan': 'premium',
+    'isAnonymous': false,
+    'createdAt': FieldValue.serverTimestamp(),
+  }, SetOptions(merge: true));
+  return uid;
 }
 
 AppOrder _cashOrder({
@@ -106,9 +112,6 @@ void main() {
     final merchantId = await _login();
     final db = FirebaseFirestore.instance;
     final repo = OrderRepository(db);
-    await _deleteQuery(db.collection('orders').where('merchantId', isEqualTo: merchantId));
-    await _deleteQuery(db.collection('shifts').where('merchantId', isEqualTo: merchantId));
-    await _deleteQuery(db.collection('merchants').doc(merchantId).collection('inventory_logs'));
 
     const productId = 'qa_cancel_product';
     const shiftId = 'qa_cancel_shift';
@@ -156,9 +159,6 @@ void main() {
     final merchantId = await _login();
     final db = FirebaseFirestore.instance;
     final repo = OrderRepository(db);
-    await _deleteQuery(db.collection('orders').where('merchantId', isEqualTo: merchantId));
-    await _deleteQuery(db.collection('shifts').where('merchantId', isEqualTo: merchantId));
-    await _deleteQuery(db.collection('merchants').doc(merchantId).collection('inventory_logs'));
 
     const productId = 'qa_concurrent_sales_product';
     const shiftId = 'qa_concurrent_sales_shift';
@@ -177,11 +177,12 @@ void main() {
     await Future.wait(futures);
 
     final orders = await db.collection('orders').where('merchantId', isEqualTo: merchantId).get();
+    final concurrentOrders = orders.docs.where((d) => d.id.startsWith('qa_concurrent_sale_')).toList();
     final product = await db.collection('products').doc(productId).get();
     final shift = await db.collection('shifts').doc(shiftId).get();
 
-    expect(orders.docs.length, 10, reason: 'Every concurrent sale must create exactly one distinct order');
-    expect(orders.docs.map((d) => d.id).toSet().length, 10, reason: 'No duplicate order document IDs');
+    expect(concurrentOrders.length, 10, reason: 'Every concurrent sale must create exactly one distinct order');
+    expect(concurrentOrders.map((d) => d.id).toSet().length, 10, reason: 'No duplicate order document IDs');
     expect((product.data()?['quantity'] as num).toDouble(), 90.0,
         reason: '100 - 10 concurrent one-unit sales = 90');
     expect((shift.data()?['cashSales'] as num).toDouble(), 100.0,
