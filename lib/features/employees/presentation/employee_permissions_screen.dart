@@ -14,13 +14,23 @@ class EmployeePermissionsScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<EmployeePermissionsScreen> createState() => _EmployeePermissionsScreenState();
+  ConsumerState<EmployeePermissionsScreen> createState() =>
+      _EmployeePermissionsScreenState();
 }
 
-class _EmployeePermissionsScreenState extends ConsumerState<EmployeePermissionsScreen> {
+class _EmployeePermissionsScreenState
+    extends ConsumerState<EmployeePermissionsScreen> {
   final _nameController = TextEditingController();
   bool _isSaving = false;
   late Map<String, bool> _permissions;
+  late Map<String, bool> _savedPermissions;
+
+  bool get _hasUnsavedChanges {
+    for (final entry in _permissions.entries) {
+      if (_savedPermissions[entry.key] != entry.value) return true;
+    }
+    return false;
+  }
 
   @override
   void initState() {
@@ -49,17 +59,31 @@ class _EmployeePermissionsScreenState extends ConsumerState<EmployeePermissionsS
         }
       });
     }
+
+    _savedPermissions = Map<String, bool>.from(_permissions);
   }
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message, style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.red),
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(fontFamily: 'Tajawal'),
+        ),
+        backgroundColor: Colors.red,
+      ),
     );
   }
 
   void _showSuccess(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message, style: const TextStyle(fontFamily: 'Tajawal')), backgroundColor: Colors.green),
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(fontFamily: 'Tajawal'),
+        ),
+        backgroundColor: Colors.green,
+      ),
     );
   }
 
@@ -75,30 +99,59 @@ class _EmployeePermissionsScreenState extends ConsumerState<EmployeePermissionsS
       'can_manage_customers': l10n.permCanManageCustomers,
       'can_receive_payments': l10n.permCanReceivePayments,
       'can_manage_expenses': l10n.permCanManageExpenses,
-      'can_view_reports': isAr ? 'السماح برؤية قسم التقارير' : 'Allow viewing reports',
-      'can_view_all_orders': isAr ? 'السماح برؤية جميع الطلبات' : 'Allow viewing all orders',
-      'can_access_accounting_notebook': l10n.permCanAccessAccountingNotebook,
+      'can_view_reports':
+          isAr ? 'السماح برؤية قسم التقارير' : 'Allow viewing reports',
+      'can_view_all_orders':
+          isAr ? 'السماح برؤية جميع الطلبات' : 'Allow viewing all orders',
+      'can_access_accounting_notebook':
+          l10n.permCanAccessAccountingNotebook,
     };
   }
 
-  Map<String, String> _getPermissionDescriptions(BuildContext context, bool isAr) {
+  Map<String, String> _getPermissionDescriptions(
+    BuildContext context,
+    bool isAr,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     return {
-      'can_manage_products': isAr ? 'يتيح للموظف إضافة، تعديل، أو حذف المنتجات والأصناف من المتجر.' : 'Allows the employee to add, edit, or delete products and categories.',
-      'can_view_cost': isAr ? 'يتيح للموظف رؤية سعر التكلفة والأرباح الخاصة بالمنتجات والطلبات.' : 'Allows the employee to view cost price and profits for products and orders.',
-      'can_manage_inventory': isAr ? 'يتيح للموظف إجراء عمليات جرد للمخزون وإدارة المواد الخام والموردين.' : 'Allows the employee to perform inventory checks and manage raw materials.',
-      'can_create_orders': isAr ? 'يتيح للموظف الدخول إلى واجهة الكاشير وإنشاء طلبات أو فواتير جديدة.' : 'Allows the employee to access the POS and create new orders or invoices.',
-      'can_cancel_orders': isAr ? 'يتيح للموظف تعديل أو إلغاء الطلبات بعد إنشائها.' : 'Allows the employee to edit or cancel orders after they are created.',
-      'can_sell_on_credit': isAr ? 'يتيح للموظف بيع المنتجات وتسجيلها كدين (آجل) على العملاء.' : 'Allows the employee to sell products on credit to customers.',
-      'can_manage_customers': isAr ? 'يتيح للموظف إضافة عملاء جدد وتعديل بياناتهم.' : 'Allows the employee to add new customers and edit their details.',
-      'can_receive_payments': isAr ? 'يتيح للموظف استلام وتدوين الدفعات من ديون العملاء.' : 'Allows the employee to receive and record payments for customer debts.',
-      'can_manage_expenses': isAr ? 'يتيح للموظف تسجيل وإدارة المصروفات اليومية للمتجر.' : 'Allows the employee to record and manage daily store expenses.',
-      'can_view_reports': isAr ? 'يتيح للموظف رؤية الإحصائيات العامة للمتجر، المبيعات والمصروفات.' : 'Allows the employee to view general store statistics, sales, and expenses.',
-      'can_view_all_orders': isAr ? 'يتيح للموظف رؤية جميع الطلبات القديمة للمتجر (إذا كان معطلاً سيرى طلبات آخر 7 أيام فقط).' : 'Allows the employee to view all old orders (if disabled, they only see the last 7 days).',
-      'can_access_accounting_notebook': l10n.permCanAccessAccountingNotebookDesc,
+      'can_manage_products': isAr
+          ? 'يتيح للموظف إضافة، تعديل، أو حذف المنتجات والأصناف من المتجر.'
+          : 'Allows the employee to add, edit, or delete products and categories.',
+      'can_view_cost': isAr
+          ? 'يتيح للموظف رؤية سعر التكلفة والأرباح الخاصة بالمنتجات والطلبات.'
+          : 'Allows the employee to view cost price and profits for products and orders.',
+      'can_manage_inventory': isAr
+          ? 'يتيح للموظف إجراء عمليات جرد للمخزون وإدارة المواد الخام والموردين.'
+          : 'Allows the employee to perform inventory checks and manage raw materials.',
+      'can_create_orders': isAr
+          ? 'يتيح للموظف الدخول إلى واجهة الكاشير وإنشاء طلبات أو فواتير جديدة.'
+          : 'Allows the employee to access the POS and create new orders or invoices.',
+      'can_cancel_orders': isAr
+          ? 'يتيح للموظف تعديل أو إلغاء الطلبات بعد إنشائها.'
+          : 'Allows the employee to edit or cancel orders after they are created.',
+      'can_sell_on_credit': isAr
+          ? 'يتيح للموظف بيع المنتجات وتسجيلها كدين (آجل) على العملاء.'
+          : 'Allows the employee to sell products on credit to customers.',
+      'can_manage_customers': isAr
+          ? 'يتيح للموظف إضافة عملاء جدد وتعديل بياناتهم.'
+          : 'Allows the employee to add new customers and edit their details.',
+      'can_receive_payments': isAr
+          ? 'يتيح للموظف استلام وتدوين الدفعات من ديون العملاء.'
+          : 'Allows the employee to receive and record payments for customer debts.',
+      'can_manage_expenses': isAr
+          ? 'يتيح للموظف تسجيل وإدارة المصروفات اليومية للمتجر.'
+          : 'Allows the employee to record and manage daily store expenses.',
+      'can_view_reports': isAr
+          ? 'يتيح للموظف رؤية الإحصائيات العامة للمتجر، المبيعات والمصروفات.'
+          : 'Allows the employee to view general store statistics, sales, and expenses.',
+      'can_view_all_orders': isAr
+          ? 'يتيح للموظف رؤية جميع الطلبات القديمة للمتجر (إذا كان معطلاً سيرى طلبات آخر 7 أيام فقط).'
+          : 'Allows the employee to view all old orders (if disabled, they only see the last 7 days).',
+      'can_access_accounting_notebook':
+          l10n.permCanAccessAccountingNotebookDesc,
     };
   }
-  
+
   Map<String, bool> _getPermissionRisks() {
     return {
       'can_view_cost': true,
@@ -112,16 +165,76 @@ class _EmployeePermissionsScreenState extends ConsumerState<EmployeePermissionsS
   }
 
   Future<void> _saveChanges() async {
+    if (_isSaving) return;
+
     setState(() => _isSaving = true);
     try {
-      await ref.read(authRepositoryProvider).updateEmployeePermissions(widget.employeeUid, _permissions);
+      await ref
+          .read(authRepositoryProvider)
+          .updateEmployeePermissions(widget.employeeUid, _permissions);
+
+      _savedPermissions = Map<String, bool>.from(_permissions);
+
+      if (!mounted) return;
       final isAr = Localizations.localeOf(context).languageCode == 'ar';
-      _showSuccess(isAr ? "تم حفظ الصلاحيات بنجاح" : "Permissions saved successfully");
-      if (mounted) Navigator.of(context).pop();
+      _showSuccess(
+        isAr
+            ? 'تم حفظ الصلاحيات بنجاح'
+            : 'Permissions saved successfully',
+      );
+      Navigator.of(context).pop();
     } catch (e) {
-      _showError(e.toString());
+      if (mounted) _showError(e.toString());
     } finally {
       if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _handleBackWithUnsavedChanges() async {
+    if (!_hasUnsavedChanges || _isSaving) return;
+
+    final isAr = Localizations.localeOf(context).languageCode == 'ar';
+    final result = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          isAr ? 'تغييرات غير محفوظة' : 'Unsaved changes',
+          style: const TextStyle(
+            fontFamily: 'Tajawal',
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        content: Text(
+          isAr
+              ? 'هل تريد حفظ تغييرات صلاحيات الموظف قبل الخروج؟'
+              : 'Save the employee permission changes before leaving?',
+          style: const TextStyle(fontFamily: 'Tajawal'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop('cancel'),
+            child: Text(isAr ? 'إلغاء' : 'Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop('discard'),
+            child: Text(isAr ? 'تجاهل' : 'Discard'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.of(dialogContext).pop('save'),
+            icon: const Icon(Icons.check_rounded),
+            label: Text(isAr ? 'حفظ' : 'Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (result == 'save') {
+      await _saveChanges();
+    } else if (result == 'discard') {
+      _savedPermissions = Map<String, bool>.from(_permissions);
+      Navigator.of(context).pop();
     }
   }
 
@@ -134,152 +247,232 @@ class _EmployeePermissionsScreenState extends ConsumerState<EmployeePermissionsS
 
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
+    final hasUnsavedChanges = _hasUnsavedChanges;
 
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: theme.colorScheme.primaryContainer,
-        title: Text(isAr ? "صلاحيات الموظف" : "Employee Permissions", style: const TextStyle(fontFamily: 'Tajawal', fontWeight: FontWeight.bold)),
-        actions: [
-          if (_isSaving)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16.0),
-              child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
-            )
-          else
-            TextButton(
-              onPressed: _saveChanges,
-              child: Text(isAr ? "حفظ" : "Save", style: TextStyle(fontFamily: 'Tajawal', color: theme.colorScheme.primary, fontWeight: FontWeight.bold, fontSize: 16)),
-            ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.primaryContainer,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(24),
-                bottomRight: Radius.circular(24),
-              ),
-            ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: theme.colorScheme.primary,
-                  child: const Icon(Icons.person, color: Colors.white, size: 32),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(widget.initialData['name'] ?? '', style: TextStyle(fontFamily: 'Tajawal', fontSize: 20, fontWeight: FontWeight.bold, color: theme.colorScheme.onPrimaryContainer)),
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surface.withValues(alpha: 0.5),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text('${isAr ? "رمز الدخول:" : "PIN:"} ${widget.initialData['pin']}', style: TextStyle(fontFamily: 'Tajawal', color: theme.colorScheme.onPrimaryContainer, fontWeight: FontWeight.w600)),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+    return PopScope(
+      canPop: !hasUnsavedChanges || _isSaving,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        await _handleBackWithUnsavedChanges();
+      },
+      child: Scaffold(
+        backgroundColor: theme.colorScheme.surface,
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: theme.colorScheme.primaryContainer,
+          title: Text(
+            isAr ? 'صلاحيات الموظف' : 'Employee Permissions',
+            style: const TextStyle(
+              fontFamily: 'Tajawal',
+              fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              itemCount: _permissions.keys.length,
-              itemBuilder: (context, index) {
-                final key = _permissions.keys.elementAt(index);
-                final isRisky = risks[key] ?? false;
-                final activeTrackColor = isRisky
-                    ? Colors.orange.shade700
-                    : theme.colorScheme.primary;
-                
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: isDark ? theme.colorScheme.surfaceContainerHighest : Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: isDark ? [] : [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      )
-                    ],
-                    border: Border.all(
-                      color: isRisky ? Colors.orange.withValues(alpha: 0.5) : (isDark ? Colors.white12 : Colors.grey.shade200),
-                      width: 1,
+          actions: [
+            if (_isSaving)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Center(
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.4,
+                      color: theme.colorScheme.onPrimaryContainer,
                     ),
                   ),
-                  child: SwitchListTile(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    title: Row(
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsetsDirectional.only(end: 8),
+                child: IconButton.filled(
+                  onPressed: _saveChanges,
+                  tooltip: isAr ? 'حفظ الصلاحيات' : 'Save permissions',
+                  style: IconButton.styleFrom(
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: theme.colorScheme.onPrimary,
+                  ),
+                  icon: const Icon(Icons.check_rounded, size: 24),
+                ),
+              ),
+          ],
+        ),
+        body: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(24),
+                  bottomRight: Radius.circular(24),
+                ),
+              ),
+              child: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 28,
+                    backgroundColor: theme.colorScheme.primary,
+                    child: const Icon(
+                      Icons.person,
+                      color: Colors.white,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (isRisky) ...[
-                          const Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 22),
-                          const SizedBox(width: 8),
-                        ],
-                        Expanded(
+                        Text(
+                          widget.initialData['name'] ?? '',
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.onPrimaryContainer,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surface.withValues(
+                              alpha: 0.5,
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           child: Text(
-                            labels[key] ?? key, 
+                            '${isAr ? 'رمز الدخول:' : 'PIN:'} ${widget.initialData['pin']}',
                             style: TextStyle(
-                              fontFamily: 'Tajawal', 
-                              fontSize: 16, 
-                              fontWeight: FontWeight.bold, 
-                              color: isRisky ? Colors.orange : theme.colorScheme.onSurface
+                              fontFamily: 'Tajawal',
+                              color: theme.colorScheme.onPrimaryContainer,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
                       ],
                     ),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        descriptions[key] ?? '', 
-                        style: TextStyle(
-                          fontFamily: 'Tajawal', 
-                          fontSize: 13, 
-                          height: 1.5, 
-                          color: isDark ? Colors.grey.shade400 : Colors.grey.shade600
-                        ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                itemCount: _permissions.keys.length,
+                itemBuilder: (context, index) {
+                  final key = _permissions.keys.elementAt(index);
+                  final isRisky = risks[key] ?? false;
+                  final activeTrackColor = isRisky
+                      ? Colors.orange.shade700
+                      : theme.colorScheme.primary;
+
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? theme.colorScheme.surfaceContainerHighest
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: isDark
+                          ? []
+                          : [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.05),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                      border: Border.all(
+                        color: isRisky
+                            ? Colors.orange.withValues(alpha: 0.5)
+                            : (isDark
+                                  ? Colors.white12
+                                  : Colors.grey.shade200),
+                        width: 1,
                       ),
                     ),
-                    value: _permissions[key]!,
-                    activeThumbColor: Colors.white,
-                    activeTrackColor: activeTrackColor,
-                    inactiveThumbColor: theme.colorScheme.onSurfaceVariant,
-                    inactiveTrackColor: theme.colorScheme.surfaceContainerHighest,
-                    thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
-                      if (!states.contains(WidgetState.selected)) return null;
-                      return Icon(
-                        Icons.check,
-                        size: 16,
-                        color: activeTrackColor,
-                      );
-                    }),
-                    onChanged: (val) {
-                      setState(() {
-                        _permissions[key] = val;
-                      });
-                    },
-                  ),
-                );
-              },
+                    child: SwitchListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      title: Row(
+                        children: [
+                          if (isRisky) ...[
+                            const Icon(
+                              Icons.warning_amber_rounded,
+                              color: Colors.orange,
+                              size: 22,
+                            ),
+                            const SizedBox(width: 8),
+                          ],
+                          Expanded(
+                            child: Text(
+                              labels[key] ?? key,
+                              style: TextStyle(
+                                fontFamily: 'Tajawal',
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: isRisky
+                                    ? Colors.orange
+                                    : theme.colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      subtitle: Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          descriptions[key] ?? '',
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            fontSize: 13,
+                            height: 1.5,
+                            color: isDark
+                                ? Colors.grey.shade400
+                                : Colors.grey.shade600,
+                          ),
+                        ),
+                      ),
+                      value: _permissions[key]!,
+                      activeThumbColor: Colors.white,
+                      activeTrackColor: activeTrackColor,
+                      inactiveThumbColor: theme.colorScheme.onSurfaceVariant,
+                      inactiveTrackColor:
+                          theme.colorScheme.surfaceContainerHighest,
+                      thumbIcon: WidgetStateProperty.resolveWith<Icon?>((states) {
+                        if (!states.contains(WidgetState.selected)) return null;
+                        return Icon(
+                          Icons.check,
+                          size: 16,
+                          color: activeTrackColor,
+                        );
+                      }),
+                      onChanged: (val) {
+                        setState(() {
+                          _permissions[key] = val;
+                        });
+                      },
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
