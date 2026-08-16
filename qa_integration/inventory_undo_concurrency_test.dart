@@ -3,6 +3,7 @@ import 'package:integration_test/integration_test.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tajer/firebase_options.dart';
 
 import 'package:tajer/features/inventory_log/data/inventory_log_repository.dart';
 import 'package:tajer/features/inventory_log/domain/inventory_log.dart';
@@ -10,13 +11,19 @@ import 'package:tajer/features/orders/data/order_repository.dart';
 import 'package:tajer/features/orders/domain/order.dart';
 import 'package:tajer/features/orders/domain/cart_item.dart';
 
+bool _emulatorsConfigured = false;
+
 Future<String> _login() async {
-  try {
-    await Firebase.initializeApp();
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  }
+  if (!_emulatorsConfigured) {
     FirebaseFirestore.instance.useFirestoreEmulator('10.0.2.2', 8080);
     await FirebaseAuth.instance.useAuthEmulator('10.0.2.2', 9099);
-  } catch (_) {}
+    _emulatorsConfigured = true;
+  }
   final auth = FirebaseAuth.instance;
+  if (auth.currentUser != null) return auth.currentUser!.uid;
   try {
     await auth.signInWithEmailAndPassword(email: 'qa-inventory@test.local', password: 'password123');
   } catch (_) {
@@ -68,8 +75,8 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('TEST 6/34 - inventory undo restores quantity atomically and is idempotent', (tester) async {
-    final db = FirebaseFirestore.instance;
     final merchantId = await _login();
+    final db = FirebaseFirestore.instance;
     await _clear(db, merchantId);
     final repo = InventoryLogRepository(db, merchantId);
 
@@ -109,7 +116,6 @@ void main() {
     expect((reversing['changeQuantity'] as num).toDouble(), -10.0);
     expect((reversing['newQuantity'] as num).toDouble(), 100.0);
 
-    // Repeated undo must not change stock or create another reverse log.
     await repo.revertLog(source, userEmail: 'qa@test.local', userName: 'QA');
     final productAgain = await db.collection('products').doc('qa_inventory_product').get();
     expect((productAgain.data()?['quantity'] as num).toDouble(), 100.0);
@@ -118,8 +124,8 @@ void main() {
   });
 
   testWidgets('TEST 17/34 - concurrent sale + stock adjustment + undo preserves final stock', (tester) async {
-    final db = FirebaseFirestore.instance;
     final merchantId = await _login();
+    final db = FirebaseFirestore.instance;
     await _clear(db, merchantId);
     final logRepo = InventoryLogRepository(db, merchantId);
     final orderRepo = OrderRepository(db);
@@ -193,7 +199,6 @@ void main() {
       logRepo.revertLog(source, userEmail: 'qa@test.local', userName: 'QA'),
     ]);
 
-    // 100 + 10 base adjustment - 1 sale + 5 manual - 10 undo = 104.
     final product = await db.collection('products').doc('qa_inventory_product').get();
     expect((product.data()?['quantity'] as num).toDouble(), 104.0,
         reason: 'Concurrent atomic effects must converge to 104 exactly');
