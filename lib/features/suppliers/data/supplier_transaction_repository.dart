@@ -10,8 +10,11 @@ class SupplierTransactionRepository {
   SupplierTransactionRepository(this._firestore, this._merchantId);
 
   CollectionReference<Map<String, dynamic>> _transactionsRef(String supplierId) =>
-      _firestore.collection('merchants').doc(_merchantId)
-          .collection('suppliers').doc(supplierId)
+      _firestore
+          .collection('merchants')
+          .doc(_merchantId)
+          .collection('suppliers')
+          .doc(supplierId)
           .collection('transactions');
 
   Query<SupplierTransaction> queryTransactions(String supplierId) {
@@ -28,27 +31,34 @@ class SupplierTransactionRepository {
   }
 
   Stream<List<SupplierTransaction>> watchTransactions(String supplierId) {
-    return queryTransactions(supplierId).snapshots().map((snapshot) {
+    return queryTransactions(supplierId).limit(50).snapshots().map((snapshot) {
       return snapshot.docs.map((doc) => doc.data()).toList();
     });
   }
 
   Future<void> addTransaction(SupplierTransaction transaction) async {
-    await _transactionsRef(transaction.supplierId).doc(transaction.id).set(transaction.toJson());
+    await _transactionsRef(transaction.supplierId)
+        .doc(transaction.id)
+        .set(transaction.toJson());
   }
 
   Future<void> updateTransaction(SupplierTransaction transaction) async {
-    await _transactionsRef(transaction.supplierId).doc(transaction.id).update(transaction.toJson());
+    await _transactionsRef(transaction.supplierId)
+        .doc(transaction.id)
+        .update(transaction.toJson());
   }
 }
 
-final supplierTransactionRepositoryProvider = Provider<SupplierTransactionRepository?>((ref) {
+final supplierTransactionRepositoryProvider =
+    Provider<SupplierTransactionRepository?>((ref) {
   final appUser = ref.watch(appUserProvider).value;
   if (appUser == null) return null;
-  return SupplierTransactionRepository(FirebaseFirestore.instance, appUser.merchantId ?? appUser.id);
+  return SupplierTransactionRepository(
+      FirebaseFirestore.instance, appUser.merchantId ?? appUser.id);
 });
 
-final supplierTransactionsStreamProvider = StreamProvider.family<List<SupplierTransaction>, String>((ref, supplierId) {
+final supplierTransactionsStreamProvider =
+    StreamProvider.family<List<SupplierTransaction>, String>((ref, supplierId) {
   final repo = ref.watch(supplierTransactionRepositoryProvider);
   if (repo == null) return Stream.value([]);
   return repo.watchTransactions(supplierId);
