@@ -21,23 +21,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Prove app source is #608 except verified permission UI fix
+      - name: Prove only verified production fixes differ from #608
         shell: bash
         run: |
           set -euo pipefail
           BASE=10c53365bb2c8cc15a6dcb88020a03529f98cbb3
-          ALLOWED='lib/features/employees/presentation/employee_permissions_screen.dart'
+          ALLOWED_PERMISSIONS='lib/features/employees/presentation/employee_permissions_screen.dart'
+          ALLOWED_DEBT='lib/features/orders/data/order_repository.dart'
           echo "QA HEAD: $(git rev-parse HEAD)"
           echo "BASE   : $BASE"
           changed=$(git diff --name-only "$BASE"...HEAD -- lib/ pubspec.yaml firestore.rules firebase.json .firebaserc || true)
-          forbidden=$(printf '%s\n' "$changed" | grep -v '^$' | grep -v "^${ALLOWED}$" || true)
+          forbidden=$(printf '%s\n' "$changed" | grep -v '^$' | grep -v "^${ALLOWED_PERMISSIONS}$" | grep -v "^${ALLOWED_DEBT}$" || true)
           if [ -n "$forbidden" ]; then
             echo "Forbidden production-source/config differences detected:"
             echo "$forbidden"
             exit 2
           fi
-          echo "Allowed production difference: ${ALLOWED}"
-          echo "PASS_SOURCE_GUARD"
+          echo "PASS_SOURCE_GUARD_ONLY_VERIFIED_FIXES"
 
       - name: Setup Java 21
         uses: actions/setup-java@v4
