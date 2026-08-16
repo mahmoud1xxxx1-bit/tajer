@@ -83,8 +83,8 @@ void main() {
         () {
       final source = read(
           'lib/features/accounting_notebook/presentation/notebook_transactions_screen.dart');
-      expect(source,
-          contains('repository.queryTransactions(bookId: _selectedBookId!)'));
+      expect(source, contains('repository.queryTransactions('));
+      expect(source, contains('bookId: _selectedBookId!'));
       expect(source, contains('pageSize: 50'));
       expect(source, isNot(contains('ref.watch(notebookTransactionsProvider)')));
     });
