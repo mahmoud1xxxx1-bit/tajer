@@ -3,19 +3,26 @@ import 'package:integration_test/integration_test.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:tajer/firebase_options.dart';
 
 import 'package:tajer/features/suppliers/data/supplier_repository.dart';
 import 'package:tajer/features/suppliers/domain/supplier.dart';
 import 'package:tajer/features/suppliers/domain/supplier_transaction.dart';
 import 'package:tajer/features/expenses/domain/expense.dart';
 
+bool _emulatorsConfigured = false;
+
 Future<String> _login() async {
-  try {
-    await Firebase.initializeApp();
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  }
+  if (!_emulatorsConfigured) {
     FirebaseFirestore.instance.useFirestoreEmulator('10.0.2.2', 8080);
     await FirebaseAuth.instance.useAuthEmulator('10.0.2.2', 9099);
-  } catch (_) {}
+    _emulatorsConfigured = true;
+  }
   final auth = FirebaseAuth.instance;
+  if (auth.currentUser != null) return auth.currentUser!.uid;
   try {
     await auth.signInWithEmailAndPassword(email: 'qa-supplier@test.local', password: 'password123');
   } catch (_) {
@@ -92,8 +99,8 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   testWidgets('TEST 5/34 - supplier full lifecycle is atomic and correctly classified', (tester) async {
-    final db = FirebaseFirestore.instance;
     final merchantId = await _login();
+    final db = FirebaseFirestore.instance;
     await _clearSupplierSpace(db, merchantId);
     final repo = SupplierRepository(db, merchantId);
 
@@ -149,8 +156,8 @@ void main() {
   });
 
   testWidgets('TEST 16/34 - concurrent supplier payments preserve final debt and ledger counts', (tester) async {
-    final db = FirebaseFirestore.instance;
     final merchantId = await _login();
+    final db = FirebaseFirestore.instance;
     await _clearSupplierSpace(db, merchantId);
     final repo = SupplierRepository(db, merchantId);
 
