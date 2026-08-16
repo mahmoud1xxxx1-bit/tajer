@@ -36,16 +36,15 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
             return Center(child: Text(l10n.genericErrorPrefix));
           }
           final person = personSnapshot.data;
-          if (person == null) return Center(child: Text(l10n.notebookNoData));
+          if (person == null) {
+            return Center(child: Text(l10n.notebookNoData));
+          }
 
           final netBalance = person.amountOwedToMe - person.amountIOwe;
-          final transactionsQuery = repository
-              .queryTransactions(bookId: person.bookId, personId: personId)
-              .withConverter<NotebookTransaction>(
-                fromFirestore: (snapshot, _) =>
-                    NotebookTransaction.fromMap(snapshot.data()!, snapshot.id),
-                toFirestore: (transaction, _) => transaction.toMap(),
-              );
+          final transactionsQuery = repository.queryTransactions(
+            bookId: person.bookId,
+            personId: personId,
+          );
 
           return Column(
             children: [
@@ -56,12 +55,21 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                   child: Column(
                     children: [
                       Text(
-                        person.isArchived ? '${person.name} (${l10n.notebookArchived})' : person.name,
+                        person.isArchived
+                            ? '${person.name} (${l10n.notebookArchived})'
+                            : person.name,
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       if (person.notes != null && person.notes!.isNotEmpty) ...[
                         const SizedBox(height: 4),
-                        Text(person.notes!, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.grey)),
+                        Text(
+                          person.notes!,
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(color: Colors.grey),
+                        ),
                       ],
                       const SizedBox(height: 16),
                       Row(
@@ -70,18 +78,42 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                           Flexible(
                             child: Column(
                               children: [
-                                Text(NotebookTerminology.totalAccountsReceivable(context), textAlign: TextAlign.center, style: const TextStyle(color: Colors.green)),
+                                Text(
+                                  NotebookTerminology.totalAccountsReceivable(
+                                      context),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: Colors.green),
+                                ),
                                 const SizedBox(height: 4),
-                                Text(person.amountOwedToMe.toStringAsFixed(2), style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold, fontSize: 16)),
+                                Text(
+                                  person.amountOwedToMe.toStringAsFixed(2),
+                                  style: const TextStyle(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
                           Flexible(
                             child: Column(
                               children: [
-                                Text(NotebookTerminology.totalAccountsPayable(context), textAlign: TextAlign.center, style: const TextStyle(color: Colors.red)),
+                                Text(
+                                  NotebookTerminology.totalAccountsPayable(
+                                      context),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(color: Colors.red),
+                                ),
                                 const SizedBox(height: 4),
-                                Text(person.amountIOwe.toStringAsFixed(2), style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold, fontSize: 16)),
+                                Text(
+                                  person.amountIOwe.toStringAsFixed(2),
+                                  style: const TextStyle(
+                                    color: Colors.red,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -90,11 +122,18 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                       const SizedBox(height: 12),
                       const Divider(),
                       const SizedBox(height: 8),
-                      Text(l10n.notebookNetBalance, style: Theme.of(context).textTheme.titleMedium),
+                      Text(l10n.notebookNetBalance,
+                          style: Theme.of(context).textTheme.titleMedium),
                       const SizedBox(height: 4),
                       Text(
                         netBalance.toStringAsFixed(2),
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: netBalance > 0 ? Colors.green : (netBalance < 0 ? Colors.red : Colors.grey)),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 20,
+                          color: netBalance > 0
+                              ? Colors.green
+                              : (netBalance < 0 ? Colors.red : Colors.grey),
+                        ),
                       ),
                     ],
                   ),
@@ -104,19 +143,26 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                 child: FirestoreListView<NotebookTransaction>(
                   query: transactionsQuery,
                   pageSize: 50,
-                  emptyBuilder: (context) => Center(child: Text(l10n.notebookNoTransactionsYet)),
-                  errorBuilder: (context, error, stackTrace) => Center(child: Text(l10n.genericErrorPrefix)),
+                  emptyBuilder: (context) =>
+                      Center(child: Text(l10n.notebookNoTransactionsYet)),
+                  errorBuilder: (context, error, stackTrace) =>
+                      Center(child: Text(l10n.genericErrorPrefix)),
                   itemBuilder: (context, doc) {
                     final tx = doc.data();
-                    final isPositive = tx.type == 'receivable' || tx.type == 'payable_payment';
+                    final isPositive = tx.type == 'receivable' ||
+                        tx.type == 'payable_payment';
                     return ListTile(
-                      title: Text(NotebookLocalizationHelper.getNotebookLocalizedTypeCustom(tx.type, l10n)),
+                      title: Text(NotebookLocalizationHelper
+                          .getNotebookLocalizedTypeCustom(tx.type, l10n)),
                       subtitle: Text(
                         '${DateFormat.yMMMd(Localizations.localeOf(context).languageCode).format(tx.date)}${tx.note != null && tx.note!.isNotEmpty ? ' - ${tx.note}' : ''}',
                       ),
                       trailing: Text(
                         '${isPositive ? '+' : '-'}${tx.amount.toStringAsFixed(2)}',
-                        style: TextStyle(color: isPositive ? Colors.green : Colors.red, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: isPositive ? Colors.green : Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     );
                   },
@@ -129,15 +175,25 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                     Expanded(
                       child: ElevatedButton.icon(
                         icon: const Icon(Icons.call_received),
-                        onPressed: !person.isArchived && person.amountOwedToMe > 0
-                            ? () async {
-                                if (await GuestLimitService.canAddNotebookTransaction(context, ref)) {
-                                  ref.read(notebookCurrentBookIdProvider.notifier).state = person.bookId;
-                                  if (context.mounted) context.push('/notebook/payment/$personId/true');
-                                }
-                              }
-                            : null,
-                        label: Text(NotebookTerminology.receivePayment(context)),
+                        onPressed:
+                            !person.isArchived && person.amountOwedToMe > 0
+                                ? () async {
+                                    if (await GuestLimitService
+                                        .canAddNotebookTransaction(
+                                            context, ref)) {
+                                      ref
+                                          .read(notebookCurrentBookIdProvider
+                                              .notifier)
+                                          .state = person.bookId;
+                                      if (context.mounted) {
+                                        context.push(
+                                            '/notebook/payment/$personId/true');
+                                      }
+                                    }
+                                  }
+                                : null,
+                        label: Text(
+                            NotebookTerminology.receivePayment(context)),
                       ),
                     ),
                     const SizedBox(width: 16),
@@ -146,13 +202,20 @@ class NotebookPersonStatementScreen extends ConsumerWidget {
                         icon: const Icon(Icons.call_made),
                         onPressed: !person.isArchived && person.amountIOwe > 0
                             ? () async {
-                                if (await GuestLimitService.canAddNotebookTransaction(context, ref)) {
-                                  ref.read(notebookCurrentBookIdProvider.notifier).state = person.bookId;
-                                  if (context.mounted) context.push('/notebook/payment/$personId/false');
+                                if (await GuestLimitService
+                                    .canAddNotebookTransaction(context, ref)) {
+                                  ref
+                                      .read(notebookCurrentBookIdProvider.notifier)
+                                      .state = person.bookId;
+                                  if (context.mounted) {
+                                    context.push(
+                                        '/notebook/payment/$personId/false');
+                                  }
                                 }
                               }
                             : null,
-                        label: Text(NotebookTerminology.makePayment(context)),
+                        label:
+                            Text(NotebookTerminology.makePayment(context)),
                       ),
                     ),
                   ],
