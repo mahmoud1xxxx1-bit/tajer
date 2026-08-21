@@ -66,6 +66,12 @@ android {
     }
 }
 
+dependencies {
+    // CameraX 1.4+ ships image_processing_util_jni with 16 KB ELF alignment.
+    // Pin camera-core so transitive scanner/ML dependencies cannot resolve an older 4 KB binary.
+    implementation("androidx.camera:camera-core:1.4.2")
+}
+
 kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
