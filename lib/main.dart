@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +10,6 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:tajer/l10n/app_localizations.dart';
 import 'package:flutter/foundation.dart';
-import 'dart:io';
 import 'firebase_options.dart';
 import 'routing/app_router.dart';
 import 'core/providers/settings_provider.dart';
@@ -19,6 +21,9 @@ import 'core/services/subscription_service.dart';
 import 'core/services/fcm_service.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 
+final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
 @pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
@@ -28,23 +33,21 @@ void callbackDispatcher() {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  
-  // Initialize FCM
-  await FCMService.initialize();
-  
-  // Initialize Analytics
-  FirebaseAnalytics analytics = FirebaseAnalytics.instance;
-  analytics.logAppOpen();
 
-  const bool useEmulator = bool.fromEnvironment('USE_EMULATOR', defaultValue: false);
+  // Analytics must never delay the first frame.
+  unawaited(FirebaseAnalytics.instance.logAppOpen());
+
+  const bool useEmulator =
+      bool.fromEnvironment('USE_EMULATOR', defaultValue: false);
   if (useEmulator) {
     // Safety check ensuring we only use the emulator for tests
-    String emulatorHost = !kIsWeb && Platform.isAndroid ? '10.0.2.2' : '127.0.0.1';
+    String emulatorHost =
+        !kIsWeb && Platform.isAndroid ? '10.0.2.2' : '127.0.0.1';
     FirebaseFirestore.instance.useFirestoreEmulator(emulatorHost, 8080);
     await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
   }
@@ -89,6 +92,36 @@ void main() async {
       child: const TajerApp(),
     ),
   );
+
+  // FCM is intentionally initialized only after the first app frame.
+  // Slow Play Services/network calls must never block Tajer startup.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    unawaited(
+      FCMService.initialize(
+        onForegroundMessage: (message) {
+          final title = message.notification?.title?.trim();
+          final body = message.notification?.body?.trim();
+          final text = [title, body]
+              .whereType<String>()
+              .where((value) => value.isNotEmpty)
+              .join('\n');
+
+          rootScaffoldMessengerKey.currentState?.showSnackBar(
+            SnackBar(
+              content: Text(text.isEmpty ? 'إشعار جديد' : text),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+        onNotificationTap: (message) {
+          final route = message.data['route']?.toString();
+          if (route != null && route.startsWith('/')) {
+            container.read(goRouterProvider).go(route);
+          }
+        },
+      ),
+    );
+  });
 }
 
 class TajerApp extends ConsumerWidget {
@@ -103,6 +136,7 @@ class TajerApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Tajer',
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: rootScaffoldMessengerKey,
       locale: locale,
       localizationsDelegates: [
         AppLocalizations.delegate,
@@ -110,7 +144,7 @@ class TajerApp extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
-      supportedLocales: [
+      supportedLocales: const [
         Locale('ar'),
         Locale('en'),
       ],
