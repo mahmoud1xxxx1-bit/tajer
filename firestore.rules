@@ -142,6 +142,12 @@ service cloud.firestore {
       allow list, delete: if false;
     }
 
+    match /support_tickets/{ticketId} {
+      allow read: if isAuthenticated() && (resource == null || request.auth.uid == resource.data.userId || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.userId;
+      allow update, delete: if isAdmin();
+    }
+
     // --- ROOT COLLECTIONS ---
     match /products/{productId} {
       allow read: if resource == null || hasAccess(resource.data.get('merchantId', ''));

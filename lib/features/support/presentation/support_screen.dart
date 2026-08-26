@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/support_repository.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -77,8 +77,18 @@ class _SupportScreenState extends ConsumerState<SupportScreen> {
               child: StreamBuilder<QuerySnapshot>(
                 stream: ref.watch(supportRepositoryProvider).getUserTickets(),
                 builder: (context, snapshot) {
+                  if (snapshot.hasError) return Center(child: Text(isAr ? 'حدث خطأ: ${snapshot.error}' : 'Error: ${snapshot.error}', style: const TextStyle(color: Colors.red, fontFamily: 'Tajawal')));
                   if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                  final docs = snapshot.data!.docs;
+                  final rawDocs = snapshot.data!.docs;
+                  final docs = rawDocs.toList()..sort((a, b) {
+                    final tA = (a.data() as Map<String, dynamic>)['timestamp'] as Timestamp?;
+                    final tB = (b.data() as Map<String, dynamic>)['timestamp'] as Timestamp?;
+                    if (tA == null && tB == null) return 0;
+                    if (tA == null) return 1;
+                    if (tB == null) return -1;
+                    return tB.compareTo(tA);
+                  });
+                  
                   if (docs.isEmpty) return Center(child: Text(isAr ? 'لا توجد رسائل سابقة' : 'No previous messages', style: const TextStyle(fontFamily: 'Tajawal')));
                   return ListView.builder(
                     itemCount: docs.length,

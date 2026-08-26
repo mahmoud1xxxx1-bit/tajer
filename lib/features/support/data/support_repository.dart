@@ -28,7 +28,6 @@ class SupportRepository {
     return _firestore
         .collection('support_tickets')
         .where('userId', isEqualTo: user.uid)
-        .orderBy('timestamp', descending: true)
         .snapshots();
   }
 }
