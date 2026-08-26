@@ -16,6 +16,8 @@ import 'package:workmanager/workmanager.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'core/services/subscription_service.dart';
+import 'core/services/fcm_service.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 @pragma('vm:entry-point')
 void callbackDispatcher() {
@@ -32,6 +34,13 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   
+  // Initialize FCM
+  await FCMService.initialize();
+  
+  // Initialize Analytics
+  FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+  analytics.logAppOpen();
+
   const bool useEmulator = bool.fromEnvironment('USE_EMULATOR', defaultValue: false);
   if (useEmulator) {
     // Safety check ensuring we only use the emulator for tests

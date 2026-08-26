@@ -152,6 +152,15 @@ class SettingsScreen extends ConsumerWidget {
             children: [
               _buildSettingsTile(
                 context: context,
+                icon: Icons.headset_mic_rounded,
+                iconColor: Colors.deepPurpleAccent,
+                title: isAr ? 'الدعم الفني' : 'Technical Support',
+                subtitle: isAr ? 'تواصل معنا لحل مشكلتك' : 'Contact us for help',
+                onTap: () => context.push('/support'),
+              ),
+              const _CustomDivider(),
+              _buildSettingsTile(
+                context: context,
                 icon: Icons.computer_rounded,
                 iconColor: Colors.blueAccent,
                 title: isAr ? 'العمل من الكمبيوتر (نسخة الويب)' : 'Work from PC (Web Version)',

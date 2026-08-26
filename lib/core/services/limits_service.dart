@@ -10,7 +10,7 @@ class LimitsService {
   LimitsService(this._firestore);
 
   static const int freeMaxCustomers = 10;
-  static const int freeMaxOrders = 20;
+  static const int freeMaxOrders = 50;
   static const int freeMaxProducts = 10;
   static const int freeMaxExpenses = 10;
   static const int freeMaxCategories = 5;

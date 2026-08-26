@@ -7,6 +7,7 @@ import '../features/dashboard/presentation/dashboard_screen.dart';
 import '../features/products/presentation/raw_materials_screen.dart';
 import '../features/subscriptions/presentation/paywall_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/support/presentation/support_screen.dart';
 import '../features/settings/presentation/backup_security_screen.dart';
 import '../features/settings/presentation/printer_settings_screen.dart';
 import '../features/settings/presentation/store_branding_screen.dart';
@@ -78,6 +79,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/support',
+        builder: (context, state) => const SupportScreen(),
       ),
       GoRoute(
         path: '/user_guide',
