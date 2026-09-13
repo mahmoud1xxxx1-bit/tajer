@@ -26,24 +26,35 @@ void callbackDispatcher() {
   });
 }
 
+Future<void> _initializePostStartupServices(ProviderContainer container) async {
+  // These services must never block the first Flutter frame.
+  // Each service is isolated so one failure cannot prevent the others.
+  try {
+    await FCMService.initialize();
+  } catch (e) {
+    debugPrint('Failed to initialize FCM after startup: $e');
+  }
+
+  try {
+    await container.read(subscriptionServiceProvider).initPlatformState();
+  } catch (e) {
+    debugPrint('Failed to initialize RevenueCat after startup: $e');
+  }
+
+  try {
+    await FirebaseAnalytics.instance.logAppOpen();
+  } catch (e) {
+    debugPrint('Analytics failed after startup: $e');
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Firebase
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  
-  // Initialize FCM
-  await FCMService.initialize();
-  
-  // Initialize Analytics Safely
-  try {
-    FirebaseAnalytics analytics = FirebaseAnalytics.instance;
-    analytics.logAppOpen();
-  } catch (e) {
-    debugPrint('Analytics failed: ');
-  }
 
   const bool useEmulator = bool.fromEnvironment('USE_EMULATOR', defaultValue: false);
   if (useEmulator) {
@@ -59,13 +70,6 @@ void main() async {
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
 
-  // Initialize Workmanager
-  if (!kIsWeb) {
-    await Workmanager().initialize(
-      callbackDispatcher,
-    );
-  }
-
   // Initialize Hive
   await Hive.initFlutter();
 
@@ -75,16 +79,20 @@ void main() async {
   // Initialize SharedPreferences
   final prefs = await SharedPreferences.getInstance();
 
-  // Initialize RevenueCat Subscription Service
   final container = ProviderContainer(
     overrides: [
       sharedPreferencesProvider.overrideWithValue(prefs),
     ],
   );
-  try {
-    await container.read(subscriptionServiceProvider).initPlatformState();
-  } catch (e) {
-    debugPrint('Failed to initialize RevenueCat: $e');
+
+  // Workmanager registration is not required to render the first frame.
+  // Defer it until after startup so it cannot delay the launch screen.
+  if (!kIsWeb) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Workmanager().initialize(callbackDispatcher).catchError((e) {
+        debugPrint('Failed to initialize Workmanager after startup: $e');
+      });
+    });
   }
 
   runApp(
@@ -93,6 +101,14 @@ void main() async {
       child: const TajerApp(),
     ),
   );
+
+  // RevenueCat, FCM and Analytics are intentionally initialized only after
+  // the first Flutter frame. This keeps startup independent of network,
+  // Play Services and store-service latency while preserving their existing
+  // initialization and subscription logic.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    _initializePostStartupServices(container);
+  });
 }
 
 class TajerApp extends ConsumerWidget {
