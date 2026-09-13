@@ -85,7 +85,7 @@ dev_dependencies:
 
   integration_test:
     sdk: flutter
-  fake_cloud_firestore: ^3.0.0
+  fake_cloud_firestore: ^3.0.2
   mockito: ^5.4.4
 
 flutter_launcher_icons:
