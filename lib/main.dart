@@ -37,9 +37,13 @@ void main() async {
   // Initialize FCM
   await FCMService.initialize();
   
-  // Initialize Analytics
-  FirebaseAnalytics analytics = FirebaseAnalytics.instance;
-  analytics.logAppOpen();
+  // Initialize Analytics Safely
+  try {
+    FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+    analytics.logAppOpen();
+  } catch (e) {
+    debugPrint('Analytics failed: ');
+  }
 
   const bool useEmulator = bool.fromEnvironment('USE_EMULATOR', defaultValue: false);
   if (useEmulator) {

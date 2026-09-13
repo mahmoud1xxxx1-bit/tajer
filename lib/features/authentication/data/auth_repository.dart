@@ -107,6 +107,8 @@ class AuthRepository {
         final data = docSnap.data()!;
         if (data['createdAt'] != null) {
           data['createdAt'] = safeParseDate(data['createdAt']).toIso8601String();
+        } else {
+          data['createdAt'] = DateTime(2023, 1, 1).toIso8601String();
         }
         return AppUser.fromJson(data);
       }
@@ -475,6 +477,8 @@ Stream<AppUser?> appUser(AppUserRef ref) {
         final data = snapshot.data()!;
         if (data['createdAt'] != null) {
           data['createdAt'] = safeParseDate(data['createdAt']).toIso8601String();
+        } else {
+          data['createdAt'] = DateTime(2023, 1, 1).toIso8601String();
         }
         if (data['email'] == 'love.dotk@gmail.com') {
           data['plan'] = 'premium';
