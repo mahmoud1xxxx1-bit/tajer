@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
-import 'package:tajer/l10n/app_localizations.dart';
+import '../../../core/services/guest_limit_service.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../products/data/product_repository.dart';
 import '../../products/domain/product.dart';
 import '../../authentication/data/auth_repository.dart';
