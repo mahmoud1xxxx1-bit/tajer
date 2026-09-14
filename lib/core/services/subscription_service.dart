@@ -5,12 +5,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // IMPORTANT: Replace these with your actual RevenueCat API keys from the RevenueCat dashboard.
 const String _appleApiKey = 'appl_YOUR_APPLE_API_KEY';
 const String _googleApiKey = 'goog_aHEwHuppHHWdppTTPZJizeCDEGr';
 
 class SubscriptionService {
+  static const String _expirationKey = 'tajer_subscription_expiration';
+  static bool _customerInfoListenerRegistered = false;
+
   Future<void> initPlatformState() async {
     if (kIsWeb) return; // RevenueCat is not supported on web
 
@@ -30,9 +34,35 @@ class SubscriptionService {
         configuration.appUserID = uid;
       }
       await Purchases.configure(configuration);
-      
-      // Update our database based on the latest customer info
+
+      // Keep the Firestore plan synchronized whenever RevenueCat refreshes CustomerInfo.
+      if (!_customerInfoListenerRegistered) {
+        Purchases.addCustomerInfoUpdateListener((customerInfo) {
+          updatePlanFromCustomerInfo(customerInfo).catchError((e) {
+            debugPrint('Failed to sync RevenueCat customer update: $e');
+          });
+        });
+        _customerInfoListenerRegistered = true;
+      }
+
+      // Update our database based on the latest customer info.
       await _syncSubscriptionStatus();
+    }
+  }
+
+  Future<bool?> refreshSubscriptionStatus() async {
+    if (kIsWeb) return null;
+
+    try {
+      final customerInfo = await Purchases.getCustomerInfo();
+      await updatePlanFromCustomerInfo(customerInfo);
+      return customerInfo.entitlements.all['premium']?.isActive == true;
+    } on PlatformException catch (e) {
+      debugPrint('Failed to refresh subscription status: $e');
+      return _getCachedPremiumAccess();
+    } catch (e) {
+      debugPrint('Unexpected subscription refresh error: $e');
+      return _getCachedPremiumAccess();
     }
   }
 
@@ -41,34 +71,59 @@ class SubscriptionService {
       final customerInfo = await Purchases.getCustomerInfo();
       await updatePlanFromCustomerInfo(customerInfo);
     } on PlatformException catch (e) {
-      print("Failed to sync subscription status: $e");
+      debugPrint("Failed to sync subscription status: $e");
+    }
+  }
+
+  Future<bool?> _getCachedPremiumAccess() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final expiration = prefs.getString(_expirationKey);
+      if (expiration == null || expiration.isEmpty) return null;
+      final expiresAt = DateTime.tryParse(expiration);
+      if (expiresAt == null) return null;
+      return DateTime.now().isBefore(expiresAt);
+    } catch (_) {
+      return null;
     }
   }
 
   Future<void> updatePlanFromCustomerInfo(CustomerInfo customerInfo) async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
-    
-    // Default plan is merchant (free), unless they are active in the 'premium' entitlement
-    String currentPlan = 'merchant';
-    
-    // Check if the user has active entitlements (e.g. they paid)
-    if (customerInfo.entitlements.all['premium']?.isActive == true) {
-      currentPlan = 'premium';
+
+    final premiumEntitlement = customerInfo.entitlements.all['premium'];
+    final isPremiumActive = premiumEntitlement?.isActive == true;
+    final expirationDate = premiumEntitlement?.expirationDate;
+
+    // Cache the entitlement expiration locally so a known expired subscription
+    // cannot remain premium merely because Firestore was last synced earlier.
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (expirationDate != null && expirationDate.isNotEmpty) {
+        await prefs.setString(_expirationKey, expirationDate);
+      } else if (!isPremiumActive) {
+        await prefs.remove(_expirationKey);
+      }
+    } catch (e) {
+      debugPrint('Failed to cache subscription expiration: $e');
     }
 
-    // Don't downgrade 'premium' if they are hardcoded as love.dotk@gmail.com
+    // Default plan is merchant (free), unless they are active in the 'premium' entitlement.
+    String currentPlan = isPremiumActive ? 'premium' : 'merchant';
+
+    // Don't downgrade 'premium' if they are hardcoded as love.dotk@gmail.com.
     final userDoc = await FirebaseFirestore.instance.collection('users').doc(uid).get();
     if (userDoc.exists && userDoc.data()?['email'] == 'love.dotk@gmail.com') {
       currentPlan = 'premium';
     }
-    
-    // Don't override 'employee' plan, employees inherit from their merchant
+
+    // Don't override 'employee' plan, employees inherit from their merchant.
     if (userDoc.exists && userDoc.data()?['role'] == 'employee') {
-      return; 
+      return;
     }
 
-    // Update Firestore
+    // Update Firestore.
     await FirebaseFirestore.instance.collection('users').doc(uid).update({
       'plan': currentPlan,
     });
