@@ -5,7 +5,7 @@ final forceUpdateProvider = StreamProvider<bool>((ref) {
   return FirebaseFirestore.instance.collection('config').doc('app').snapshots().map((doc) {
     if (doc.exists) {
       final minVersion = doc.data()?['minVersion'] as int? ?? 0;
-      return minVersion > 137;
+      return minVersion > 138;
     }
     return false;
   });
