@@ -12,7 +12,7 @@ const String _appleApiKey = 'appl_YOUR_APPLE_API_KEY';
 const String _googleApiKey = 'goog_aHEwHuppHHWdppTTPZJizeCDEGr';
 
 class SubscriptionService {
-  static const String _expirationKey = 'tajer_subscription_expiration';
+  static const String _expirationKeyPrefix = 'tajer_subscription_expiration_';
   static bool _customerInfoListenerRegistered = false;
 
   Future<void> initPlatformState() async {
@@ -75,10 +75,19 @@ class SubscriptionService {
     }
   }
 
+  String? _currentUserExpirationKey() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null || uid.isEmpty) return null;
+    return '$_expirationKeyPrefix$uid';
+  }
+
   Future<bool?> _getCachedPremiumAccess() async {
     try {
+      final key = _currentUserExpirationKey();
+      if (key == null) return null;
+
       final prefs = await SharedPreferences.getInstance();
-      final expiration = prefs.getString(_expirationKey);
+      final expiration = prefs.getString(key);
       if (expiration == null || expiration.isEmpty) return null;
       final expiresAt = DateTime.tryParse(expiration);
       if (expiresAt == null) return null;
@@ -100,10 +109,11 @@ class SubscriptionService {
     // cannot remain premium merely because Firestore was last synced earlier.
     try {
       final prefs = await SharedPreferences.getInstance();
+      final expirationKey = '$_expirationKeyPrefix$uid';
       if (expirationDate != null && expirationDate.isNotEmpty) {
-        await prefs.setString(_expirationKey, expirationDate);
+        await prefs.setString(expirationKey, expirationDate);
       } else if (!isPremiumActive) {
-        await prefs.remove(_expirationKey);
+        await prefs.remove(expirationKey);
       }
     } catch (e) {
       debugPrint('Failed to cache subscription expiration: $e');
