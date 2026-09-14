@@ -141,7 +141,8 @@ class LimitsService {
           }
           return activeCount < limit;
         } catch (_) {
-          return true; // Safe fallback
+          // Security control: never allow a failed limit check to grant extra access.
+          return false;
         }
       }
       rethrow;
@@ -203,7 +204,8 @@ class LimitsService {
             return snapshot.docs.length < maxLimit;
           }
         } catch (cacheError) {
-          return true; // Safe fallback to avoid blocking offline usage
+          // Security control: never allow a failed limit check to grant extra access.
+          return false;
         }
       }
       rethrow;

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/authentication/domain/app_user.dart';
 import '../../features/authentication/data/auth_repository.dart';
 import 'limits_service.dart';
+import 'subscription_service.dart';
 
 class GuestLimitService {
   static Future<bool> canAddCustomer(BuildContext context, WidgetRef ref) async {
@@ -68,7 +69,27 @@ class GuestLimitService {
         return false;
       }
 
-      final canAdd = await checkFunction(user);
+      // RevenueCat is the source of truth for merchant subscription access.
+      // Check it before applying any premium/unlimited limits so an expired
+      // subscription cannot remain premium solely because Firestore is stale.
+      var effectiveUser = user;
+      if (!user.isAnonymous && user.role == 'merchant') {
+        final subscriptionStatus = await ref
+            .read(subscriptionServiceProvider)
+            .refreshSubscriptionStatus();
+
+        if (subscriptionStatus == true) {
+          if (context.mounted) Navigator.pop(context);
+          return true;
+        }
+
+        if (subscriptionStatus == false &&
+            (user.plan == 'premium' || user.plan == 'pro')) {
+          effectiveUser = user.copyWith(plan: 'merchant');
+        }
+      }
+
+      final canAdd = await checkFunction(effectiveUser);
       
       if (context.mounted) {
         Navigator.pop(context);
@@ -116,7 +137,24 @@ class GuestLimitService {
         return false;
       }
 
-      final canAdd = await checkFunction(user);
+      var effectiveUser = user;
+      if (!user.isAnonymous && user.role == 'merchant') {
+        final subscriptionStatus = await ref
+            .read(subscriptionServiceProvider)
+            .refreshSubscriptionStatus();
+
+        if (subscriptionStatus == true) {
+          if (context.mounted) Navigator.pop(context);
+          return true;
+        }
+
+        if (subscriptionStatus == false &&
+            (user.plan == 'premium' || user.plan == 'pro')) {
+          effectiveUser = user.copyWith(plan: 'merchant');
+        }
+      }
+
+      final canAdd = await checkFunction(effectiveUser);
       
       if (context.mounted) {
         Navigator.pop(context);
