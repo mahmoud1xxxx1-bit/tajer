@@ -12,6 +12,8 @@ import 'firebase_options.dart';
 import 'routing/app_router.dart';
 import 'core/providers/settings_provider.dart';
 import 'core/theme/app_theme.dart';
+import 'core/services/force_update_service.dart';
+import 'features/settings/presentation/force_update_screen.dart';
 import 'package:workmanager/workmanager.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -119,6 +121,29 @@ class TajerApp extends ConsumerWidget {
     final goRouter = ref.watch(goRouterProvider);
     final locale = ref.watch(localeProvider);
     final themeMode = ref.watch(themeProvider);
+    final isForceUpdate = ref.watch(forceUpdateProvider).value ?? false;
+
+    if (isForceUpdate) {
+      return MaterialApp(
+        title: 'Tajer',
+        debugShowCheckedModeBanner: false,
+        locale: locale,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale('ar'),
+          Locale('en'),
+        ],
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: themeMode,
+        home: const ForceUpdateScreen(),
+      );
+    }
 
     return MaterialApp.router(
       title: 'Tajer',
