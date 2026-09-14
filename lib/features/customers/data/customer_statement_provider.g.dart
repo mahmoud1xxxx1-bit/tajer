@@ -6,7 +6,7 @@ part of 'customer_statement_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$customerStatementHash() => r'9e84e0683439009e58487ac0452d8658d2e2bcb9';
+String _$customerStatementHash() => r'160445007a81c0836f920a425817705617f0cc82';
 
 /// Copied from Dart SDK
 class _SystemHash {
@@ -42,9 +42,11 @@ class CustomerStatementFamily
   /// See also [customerStatement].
   CustomerStatementProvider call(
     Customer customer,
+    int limit,
   ) {
     return CustomerStatementProvider(
       customer,
+      limit,
     );
   }
 
@@ -54,6 +56,7 @@ class CustomerStatementFamily
   ) {
     return call(
       provider.customer,
+      provider.limit,
     );
   }
 
@@ -78,10 +81,12 @@ class CustomerStatementProvider
   /// See also [customerStatement].
   CustomerStatementProvider(
     Customer customer,
+    int limit,
   ) : this._internal(
           (ref) => customerStatement(
             ref as CustomerStatementRef,
             customer,
+            limit,
           ),
           from: customerStatementProvider,
           name: r'customerStatementProvider',
@@ -93,6 +98,7 @@ class CustomerStatementProvider
           allTransitiveDependencies:
               CustomerStatementFamily._allTransitiveDependencies,
           customer: customer,
+          limit: limit,
         );
 
   CustomerStatementProvider._internal(
@@ -103,9 +109,11 @@ class CustomerStatementProvider
     required super.debugGetCreateSourceHash,
     required super.from,
     required this.customer,
+    required this.limit,
   }) : super.internal();
 
   final Customer customer;
+  final int limit;
 
   @override
   Override overrideWith(
@@ -122,6 +130,7 @@ class CustomerStatementProvider
         allTransitiveDependencies: null,
         debugGetCreateSourceHash: null,
         customer: customer,
+        limit: limit,
       ),
     );
   }
@@ -134,13 +143,16 @@ class CustomerStatementProvider
 
   @override
   bool operator ==(Object other) {
-    return other is CustomerStatementProvider && other.customer == customer;
+    return other is CustomerStatementProvider &&
+        other.customer == customer &&
+        other.limit == limit;
   }
 
   @override
   int get hashCode {
     var hash = _SystemHash.combine(0, runtimeType.hashCode);
     hash = _SystemHash.combine(hash, customer.hashCode);
+    hash = _SystemHash.combine(hash, limit.hashCode);
 
     return _SystemHash.finish(hash);
   }
@@ -150,6 +162,9 @@ mixin CustomerStatementRef
     on AutoDisposeStreamProviderRef<List<CustomerStatementItem>> {
   /// The parameter `customer` of this provider.
   Customer get customer;
+
+  /// The parameter `limit` of this provider.
+  int get limit;
 }
 
 class _CustomerStatementProviderElement
@@ -159,6 +174,8 @@ class _CustomerStatementProviderElement
 
   @override
   Customer get customer => (origin as CustomerStatementProvider).customer;
+  @override
+  int get limit => (origin as CustomerStatementProvider).limit;
 }
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
