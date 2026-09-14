@@ -38,17 +38,24 @@ import '../features/accounting_notebook/presentation/notebook_guide_screen.dart'
 
 
 
+import '../core/services/force_update_service.dart';
+import '../features/settings/presentation/force_update_screen.dart';
+
 final goRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateChangesProvider);
+  final isForceUpdate = ref.watch(forceUpdateProvider).value ?? false;
 
   return GoRouter(
     initialLocation: '/',
     redirect: (context, state) {
+      if (isForceUpdate && state.uri.path != '/force_update') {
+        return '/force_update';
+      }
       if (authState.isLoading) return null; // Wait for auth to resolve before redirecting
       final isAuthenticated = authState.value != null && !authState.hasError;
       final isStartupRoute = state.uri.path == '/';
 
-      if (!isAuthenticated && !isStartupRoute) {
+      if (!isAuthenticated && !isStartupRoute && !isForceUpdate) {
         return '/';
       }
 
@@ -68,6 +75,10 @@ final goRouterProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
+      GoRoute(
+        path: '/force_update',
+        builder: (context, state) => const ForceUpdateScreen(),
+      ),
       GoRoute(
         path: '/',
         builder: (context, state) => const StartupScreen(),

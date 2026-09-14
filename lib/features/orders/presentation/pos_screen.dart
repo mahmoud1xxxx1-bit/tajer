@@ -328,6 +328,11 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
   Future<void> _processOrder(OrderDetails details) async {
     if (_isLoading) return; // Prevent double submission
+    
+    // 🛡️ SECURITY FIX: Check free limit BEFORE processing order in POS
+    final canAdd = await GuestLimitService.canAddOrder(context, ref);
+    if (!canAdd) return;
+
     setState(() => _isLoading = true);
     try {
       final user = ref.read(authRepositoryProvider).currentUser;
@@ -742,7 +747,10 @@ class _CheckoutSheetState extends ConsumerState<_CheckoutSheet> {
     }
   }
 
-  void _showQuickAddCustomerDialog() {
+  Future<void> _showQuickAddCustomerDialog() async {
+    final canAdd = await GuestLimitService.canAddCustomer(context, ref);
+    if (!canAdd) return;
+
     final nameController = TextEditingController();
     final phoneController = TextEditingController();
     

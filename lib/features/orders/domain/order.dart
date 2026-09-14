@@ -87,6 +87,7 @@ class AppOrder {
 
   Map<String, dynamic> toJson() {
     return {
+      'appVersion': 137,
       'id': id,
       'merchantId': merchantId,
       'customerId': customerId,

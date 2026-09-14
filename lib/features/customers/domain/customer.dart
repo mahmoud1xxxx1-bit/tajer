@@ -88,6 +88,7 @@ class Customer {
 
   Map<String, dynamic> toJson() {
     return {
+      'appVersion': 137,
       'id': id,
       'merchantId': merchantId,
       'name': name,
